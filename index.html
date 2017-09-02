@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+
+    <meta property="og:title" content="">
+    <meta property="og:site_name" content="">
+    <meta property="og:url" content="">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="">
+    <meta property="og:image" content="">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="">
+    <meta name="twitter:creator" content="">
+    <meta name="twitter:title" content="">
+    <meta name="twitter:description" content="">
+    <meta name="twitter:image:src" content="">
+
+    <title>Metro Map Maker</title>
+
+    <link rel="icon" href="">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel='stylesheet' href='css/spectrum.css' />
+    <script src="https://use.fontawesome.com/9f1aeb80e7.js"></script>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <!-- TODO: ADD GOOGLE ANALYTICS SNIPPET -->
+
+    <style>
+
+    #metro-map {
+      border: 2px solid black;
+    }
+
+    div#toolbox {
+      text-align: center;
+    }
+
+    #toolbox button {
+      display: block;
+      margin: 3px;
+      width: 100%;
+      color: #fff;
+    }
+
+    #grid {
+      display: flex;
+      cursor: crosshair;
+      overflow: scroll;
+    }
+
+    .grid-col {
+      border: 1px solid;
+      border-color: #80CEFF;
+      width: 12px;
+      height: 12px;
+    }
+
+    button.rail-line {
+      height: 48px;
+      text-align: center;
+    }
+
+    #rail-line-bd1038 {
+      background-color: #bd1038;
+    }
+
+    #rail-line-df8600 {
+      background-color: #df8600;
+    }
+
+    #rail-line-f0ce15 {
+      background-color: #f0ce15;
+    }
+
+    #rail-line-00b251 {
+      background-color: #00b251;
+    }
+
+    #rail-line-0896d7 {
+      background-color: #0896d7;
+    }
+
+    #rail-line-662c90 {
+      background-color: #662c90;
+    }
+
+    #rail-line-a2a2a2 {
+      background-color: #a2a2a2;
+    }
+
+    #rail-line-new {
+      background-color: #ff8e88;
+    }
+
+    #create-new-rail-line {
+      background-color: #5cb85c;
+      border-color: #4cae4c;
+    }
+
+    .station {
+      outline: 1px solid black;
+      border: 3px solid white;
+      width: 150%;
+      height: 150%;
+      position: relative;
+      left: -25%;
+      top: -25%;
+    }
+
+    .transfer-station {
+      outline: 3px solid black;
+      border: 9px solid white;
+      width: 300%;
+      height: 300%;
+      position: relative;
+      left: -100%;
+      top: -100%;
+    }
+
+    </style>
+
+
+  </head>
+
+<body>
+
+<a name="top"></a>
+
+<div class="container-fluid">
+  <!-- Start editing! Your content goes below -->
+
+  <div id="grid" class="col-lg-10">
+    <!-- <canvas id='metro-map' width="1600" height="1600"></canvas> -->
+
+  </div>
+  <div id="controls" class="col-lg-2">
+    <h3>Metro Map Maker</h3>
+
+    <div id="toolbox">
+
+      <button id="tool-line" class="btn btn-info"><i class="fa fa-subway" aria-hidden="true"></i> Rail Line</button>
+      <div id="tool-line-options" class="start-hidden">
+        <button id="rail-line-bd1038" class="rail-line">Red Line</button>
+        <button id="rail-line-df8600" class="rail-line">Orange Line</button>
+        <button id="rail-line-f0ce15" class="rail-line">Yellow Line</button>
+        <button id="rail-line-00b251" class="rail-line">Green Line</button>
+        <button id="rail-line-0896d7" class="rail-line">Blue Line</button>
+        <button id="rail-line-662c90" class="rail-line">Purple Line</button>
+        <button id="rail-line-a2a2a2" class="rail-line">Silver Line</button>
+        <button id="rail-line-new" class="rail-line">+ Add New Line</button>
+      </div>
+      <div id="tool-new-line-options" class="start-hidden">
+        <h4 id="tool-new-line-errors" class="bg-danger"></h4>
+        <h4>Color of this line</h4>
+        <input id="new-rail-line-color" type="color">
+
+        <h4>Name of this line</h4>
+        <input id="new-rail-line-name" type="text" placeholder="Blue Line">
+        <button id="create-new-rail-line" class="btn btn-success">Create new line</button>
+      </div>
+      <button id="tool-station" class="btn btn-info"><i class="fa fa-map-pin" aria-hidden="true"></i> Station</button>
+      <div id="tool-station-options" class="start-hidden">
+        <h4>Station Name</h4>
+        <input id="station-coordinates-x" type="hidden">
+        <input id="station-coordinates-y" type="hidden">
+        <input id="station-name" type="text" placeholder="Silver Spring">
+        <h4>This station is on these rail lines:</h4>
+        <div id="station-on-lines"></div>
+        <h4>Add other lines this station serves:</h4>
+        <div id="station-other-lines"></div>
+      </div>
+      <button id="tool-eraser" class="btn btn-info"><i class="fa fa-eraser" aria-hidden="true"></i> Eraser</button>
+      <button id="tool-look" class="btn btn-info"><i class="fa fa-eye" aria-hidden="true"></i> Just look</button>
+      <button id="tool-grid" class="btn btn-info"><i class="fa fa-table" aria-hidden="true"></i> Hide grid</button>
+      <button id="tool-zoom-in" class="btn btn-info"><i class="fa fa-search-plus" aria-hidden="true"></i> Zoom +</button>
+      <button id="tool-zoom-out" class="btn btn-info"><i class="fa fa-search-minus" aria-hidden="true"></i> Zoom -</button>
+      <button id="tool-move-all" class="btn btn-info"><i class="fa fa-arrows" aria-hidden="true"></i> Move map</button>
+      <div id="tool-move-options" class="start-hidden">
+        <h5>Be careful! If you move your map out of bounds, you'll lose your work.</h5>
+        <button id="tool-move-up" class="btn btn-info"><i class="fa fa-chevron-circle-up" aria-hidden="true"></i> Move everything up</button>
+        <button id="tool-move-left" class="btn btn-info"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Move everything left</button>
+        <button id="tool-move-right" class="btn btn-info"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Move everything right</button>
+        <button id="tool-move-down" class="btn btn-info"><i class="fa fa-chevron-circle-down" aria-hidden="true"></i> Move everything down</button>
+      </div>
+      <button id="tool-save-map" class="btn btn-info">Save &amp; Share map</button>
+      <button id="tool-clear-map" class="btn btn-info"><i class="fa fa-trash-o" aria-hidden="true"></i> Clear map</button>
+      <!-- TODO: A tool to move everything 5 'pixels' in a direction so you can center your map -->
+
+    </div> <!-- #toolbox -->
+
+  </div>
+
+  <!-- End editing! Your content goes above -->
+</div>
+
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <script src='js/spectrum.js'></script>
+
+  <script type="text/javascript">
+
+  String.prototype.replaceAll = function(search, replacement) {
+      var target = this;
+      return target.replace(new RegExp(search, 'g'), replacement);
+  };
+
+  function getActiveLine(x, y) {
+    // Given an x, y coordinate pair, return the hex code for the line you're on.
+    // Use this to retrieve the line for a given point on a map.
+    var classes = document.getElementById('coord-x-' + x + '-y-' + y).className.split(/\s+/);
+    for (var z=0; z<classes.length; z++) {
+      if (classes[z].indexOf('has-line-') >= 0) {
+        var activeLine = classes[z].slice(9, 15);
+      }
+    }
+    return activeLine;
+  }
+
+  function getStationLines(x, y) {
+    // Given an x, y coordinate pair, return the hex codes for the lines this station services.
+    var classes = document.getElementById('coord-x-' + x + '-y-' + y).children[0].className.split(/\s+/);  
+    var stationLines = [];
+    for (var z=0; z<classes.length; z++) {
+      if (classes[z].indexOf('has-line-') >= 0) {
+        stationLines.push(classes[z].slice(9, 15));
+      }
+    }
+    return stationLines;
+  }
+
+  function bindRailLineEvents() {
+    $('.rail-line').click(function() {
+      if ($(this).attr('id') == 'rail-line-new') {
+        // New Rail Line
+        $('#tool-new-line-options').show();
+      } else {
+        // Existing Rail Line
+        activeTool = 'line';
+        activeToolOption = $(this).css('background-color');
+      }
+    });  
+  }
+
+  function drawGrid() {
+    var gridRows = 80, gridCols = 80, grid = "";
+
+    // Generate the grid
+    for (var x=0; x<gridRows; x++) {
+      grid += '<div class="grid-row">';
+      for (var y=0; y<gridCols; y++) {
+        grid += '<div id="coord-x-' + x + '-y-' + y + '" class="grid-col"></div>';
+      }
+      grid += '</div> <!-- div.grid-row -->';
+    }
+
+    $('#grid').html(grid);
+
+    // Then bind events to the grid
+    $('.grid-col').click(function() {
+
+      $('#station-coordinates-x').val('');
+      $('#station-coordinates-y').val('');
+
+      if (activeTool == 'line') {
+        $(this).css({
+          'background-color': activeToolOption
+        });
+        $(this).addClass('has-line')
+        $(this).addClass('has-line-' + rgb2hex(activeToolOption).slice(1, 7));
+      } else if (activeTool == 'eraser') {
+        $(this).css({
+          'background-color': '#fff'
+        });
+        $(this).removeClass();
+        $(this).addClass('grid-col');
+        $(this).html('');
+      } else if (activeTool == 'station') {
+
+        $('#station-name').val('');
+        $('#station-on-lines').html('');
+        var x = $(this).attr('id').slice(8, 10).replace('-', '');
+        var y = $(this).attr('id').slice( -2 ).replace('-', '');
+        $('#station-coordinates-x').val(x);
+        $('#station-coordinates-y').val(y);
+        var allLines = $('.rail-line');
+
+        if ($(this).hasClass('has-station')) {
+          // Already has a station, so clicking again shouldn't clear the existing station but should allow you to rename it and assign lines
+          $('#tool-station-options').show();
+          if ($(this).children().attr('id')) {
+            // This station already has a name, show it in the textfield
+            var stationName = $(this).children().attr('id').replaceAll('_', ' ');
+            $('#station-name').val(stationName);
+
+            var stationOnLines = "";
+            // var stationLines = getStationLines($("#station-coordinates-x").val(), $("#station-coordinates-y").val());
+            var stationLines = getStationLines(x, y);
+            for (var z=0; z<stationLines.length; z++) {
+              if (stationLines[z]) {
+                stationOnLines += "<button style='background-color: #" + stationLines[z] + "' class='station-add-lines' id='add-line-" + stationLines[z] + "'>" + $('#rail-line-' + stationLines[z]).text() + "</button>";  
+              }
+            }
+          } else {
+            // This only happens when you create a new station and then click on it again.
+            // This fixes the bug where it would erroneously clear the station that it was sitting on and not allow you to add it back
+            activeLine = getActiveLine(x, y);
+            if (activeLine) {
+              $(this).children().addClass('has-line-' + activeLine);
+              stationOnLines = "<button style='background-color: #" + activeLine + "' class='station-add-lines' id='add-line-" + activeLine + "'>" + $('#rail-line-' + activeLine).text() + "</button>";
+              stationLines = activeLine;
+            }
+          }
+        } else {
+          // Create a new station
+          $(this).addClass('has-station');
+          $(this).html('<div class="station"></div>');
+          $('#tool-station-options').show();
+
+          // Pre-populate the station with the line it sits on
+          // activeLine = getActiveLine($("#station-coordinates-x").val(), $("#station-coordinates-y").val());
+          activeLine = getActiveLine(x, y);
+          if (activeLine) {
+            // If the station is added to a space with no rail line, don't add any active lines
+            $(this).children().addClass('has-line-' + activeLine);
+            stationOnLines = "<button style='background-color: #" + activeLine + "' class='station-add-lines' id='add-line-" + activeLine + "'>" + $('#rail-line-' + activeLine).text() + "</button>";
+            stationLines = activeLine;
+          }
+        }
+
+        // Make the station options button collapsible
+        if ($('#tool-station-options').is(':visible')) {
+          $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Hide Station Options');
+        }
+
+        // Add lines to the "Other lines this station serves" option
+        if (stationOnLines) {
+          console.log('stationOnLines is: ' + stationOnLines);
+          $('#station-on-lines').html(stationOnLines);  
+          console.log('#station-on-lines is: ' + $('#station-on-lines').html());
+
+          var linesToAdd = "";
+          
+          for (var z=0; z<allLines.length; z++) {
+            if ((stationLines == allLines[z].id.slice(10, 16) || stationLines.indexOf(allLines[z].id.slice(10,16)) >= 0) || allLines[z].id.slice(10,16) == 'new') {
+              // Looping through all of the lines, if this line is already in the station's lines, don't add it
+              // Don't add the "Add new line" button either
+            } else {
+              linesToAdd += '<button style="background-color: #' + allLines[z].id.slice(10, 16) + '" class="station-add-lines" id="add-line-' + allLines[z].id.slice(10, 16) + '">' + $('#' + allLines[z].id).text() + '</button>';
+            }
+          } // for allLines
+          if (linesToAdd) {
+            $('#station-other-lines').html(linesToAdd);
+            // Bind the event to the .station-add-lines buttons here since they are newly created.
+            $('.station-add-lines').click(function() {
+              // TODO: Don't move it to #station-on-lines if it's already there.
+              console.log($(this).parent().attr('id'));
+              if ($(this).parent().attr('id') == 'station-other-lines') {
+                $('#station-on-lines').append($(this));
+                $('#coord-x-' + x + '-y-' + y).children().addClass('has-line-' + $(this).attr('id').slice(9, 15));
+
+              } else {
+                // Remove it
+                $('#station-other-lines').append($(this));
+                $('#coord-x-' + x + '-y-' + y).children().removeClass('has-line-' + $(this).attr('id').slice(9, 15));
+              }
+              
+            });
+          } // if linesToAdd
+        } // if stationOnLines
+      } // if activeTool == station
+    });
+
+    $('.grid-col').mouseover(function() {
+      if (mouseIsDown) {
+        $(this).click();
+        saveMapAsObject();
+      }
+    });
+
+  }
+
+  function rgb2hex(rgb) {
+      if (/^#[0-9A-F]{6}$/i.test(rgb)) return rgb;
+
+      rgb = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+      function hex(x) {
+          return ("0" + parseInt(x).toString(16)).slice(-2);
+      }
+      return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
+  }
+
+  function autoSave() {
+    // TODO
+  }
+
+  function autoLoad() {
+    // TODO: load from a specific URL
+    if (window.localStorage.getItem('metroMap')) {
+      // Load from local storage
+      loadMapFromObject(JSON.parse(window.localStorage.getItem('metroMap'))); 
+    }
+  }
+
+  function loadMapFromObject(metroMapObject) {
+
+    // loadMapFromObject(metroMap)
+
+    for (var x in metroMapObject) {
+      if (metroMapObject.hasOwnProperty(x)) {
+        for (var y in metroMapObject[x]) {
+          if (metroMapObject[x].hasOwnProperty(y)) {
+            $('#coord-x-' + x + '-y-' + y).addClass('has-line');
+            $('#coord-x-' + x + '-y-' + y).addClass('has-line-' + metroMapObject[x][y]['line']);
+            $('#coord-x-' + x + '-y-' + y).css({
+                'background-color': '#' + metroMapObject[x][y]['line']
+            });
+            if (metroMapObject[x][y]["station"]) {
+              $('#coord-x-' + x + '-y-' + y).addClass('has-station');
+              $('#coord-x-' + x + '-y-' + y).html('<div id="' + metroMapObject[x][y]["station"]["name"] +'" class="station"></div>')
+              if (metroMapObject[x][y]["station"]["lines"] && metroMapObject[x][y]['station']['name']) {
+                for (var z=0; z<metroMapObject[x][y]["station"]["lines"].length; z++) {
+                  $('#' + metroMapObject[x][y]["station"]["name"]).addClass('has-line-' + metroMapObject[x][y]["station"]["lines"][z]);
+                  // Rail line buttons should use their color for the buttons, too.
+                  $('<style>').prop('type', 'text/css')
+                  .html('#rail-line-' + metroMapObject[x][y]["station"]["lines"][z] + ', .has-line-' + metroMapObject[x][y]["station"]["lines"][z] + '{ background-color: #' + metroMapObject[x][y]["station"]["lines"][z] + '; }').appendTo('head');
+                }  
+              }
+            } // if station
+          } // if y
+        } // for y in x
+      } // if x
+    } // for x in map
+
+    var originalLines = ['bd1038', 'df8600', 'f0ce15', '00b251', '0896d7', '662c90', 'a2a2a2'];
+
+    for (var line in metroMapObject['global']['lines']) {
+      if (metroMapObject['global']['lines'].hasOwnProperty(line)) {
+        if (originalLines.indexOf(line) >= 0) {
+          // Don't add lines that already appear pre-populated in the menu or they will show up duplicated on every refresh
+        } else {
+          $('#rail-line-new').before('<button id="rail-line-' + line + '" class="rail-line btn-info" style="background-color: #' + line + ';">' + metroMapObject['global']['lines'][line]['displayName'] + '</button>')  
+        }
+      }
+    }
+  } // function loadMapFromObject
+
+  function saveMapAsObject() {
+    // TODO
+    console.log('saving');
+    var gridRows = 80, gridCols = 80;
+
+    metroMap = new Object;
+
+    for (var x=0; x<gridRows; x++) {
+      for (var y=0; y<gridCols; y++) {
+        var classes = document.getElementById('coord-x-' + x + '-y-' + y).className.split(/\s+/);
+        // Example: ["grid-col", "has-line", "has-line-f0ce15", "has-station"]
+        if (classes.indexOf('has-line') >= 0) {
+          if (metroMap[x] === undefined) {
+            metroMap[x] = new Object;
+          }
+          if (metroMap[x][y] === undefined) {
+            metroMap[x][y] = new Object;
+          }
+
+          activeLine = getActiveLine(x, y);
+          metroMap[x][y]['line'] = activeLine;
+
+          // Stations must exist on a line in order to be valid.
+          if (classes.indexOf('has-station') >= 0) {
+            var stationLines = getStationLines(x, y);
+            var activeStation = document.getElementById('coord-x-' + x + '-y-' + y).children[0].id;
+            if (activeStation) {
+              // Stations must have a name in order to be valid.
+                metroMap[x][y]['station'] = {
+                'name': activeStation,
+                'lines': stationLines
+              }
+            } // if station name
+          } // if has-station
+        } // if has-line
+      } // for y
+    } // for x
+
+    // Save the names of the rail lines
+    metroMap['global'] = new Object;
+    metroMap['global']['lines'] = new Object;
+    $('.rail-line').each(function() {
+      if ($(this).attr('id') != 'rail-line-new') {
+        // rail-line-
+        metroMap['global']['lines'][$(this).attr('id').slice(10, 16)] = {
+          'displayName': $(this).text()
+        }
+      }
+    });
+
+    window.localStorage.setItem('metroMap', JSON.stringify(metroMap));
+
+    return JSON.stringify(metroMap);
+  } // function saveMapAsObject()
+
+  $(document).ready(function() {
+
+    // Bind to the mousedown and mouseup events so we can implement dragging easily
+    mouseIsDown = false;
+    $(document).mousedown(function() {
+        mouseIsDown = true;
+    }).mouseup(function() {
+        mouseIsDown = false;
+    });
+
+    drawGrid();
+    autoLoad();
+    bindRailLineEvents();
+    
+    $('.start-hidden').each(function() {
+      $(this).hide();
+    })
+
+    activeTool = 'look';
+
+    $('#toolbox button').click(function() {
+      console.log('#toolbox button');
+      $('#toolbox button').removeClass('btn-primary').addClass('btn-info');
+      $(this).removeClass('btn-info');
+      $(this).addClass('btn-primary')
+    })
+
+    // Toolbox
+    $('#tool-line').click(function() {
+      // Expand Rail line options
+      if ($('#tool-line-options').is(':visible')) {
+        $('#tool-line-options').hide();
+        $('#tool-new-line-options').hide();
+        $('#tool-line').html('<i class="fa fa-subway" aria-hidden="true"></i> Rail Line');
+      } else {
+        $('#tool-line-options').show();
+        $('#tool-line').html('<i class="fa fa-subway" aria-hidden="true"></i> Hide Rail Line options');
+      }
+    });
+    $('#tool-station').click(function() {
+      activeTool = 'station';
+      if ($('#tool-station-options').is(':visible')) {
+        $('#tool-station-options').hide();
+        $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
+      }
+    });
+    $('#tool-eraser').click(function() {
+      activeTool = 'eraser';
+    })
+    $('#tool-look').click(function() {
+      activeTool = 'look';
+    });
+    $('#tool-grid').click(function() {
+      if ($('.grid-col').css('border-color') == 'rgb(128, 206, 255)' || $('.grid-col').css('border-top-color') == 'rgb(128, 206, 255)') {
+        $('.grid-col').css('border-color', '#fff');
+        $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> Show grid');
+      } else {
+        $('.grid-col').css('border-color', '#80CEFF');
+        $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> Hide grid');
+      }
+    });
+    $('#tool-zoom-in').click(function() {
+      var gridSize = $('.grid-col').width();
+      if (gridSize < 50) {
+        $('.grid-col').width(gridSize + 2);
+        $('.grid-col').height(gridSize + 2);
+      }
+    });
+    $('#tool-zoom-out').click(function() {
+      var gridSize = $('.grid-col').width();
+      if (gridSize > 8) {
+        $('.grid-col').width(gridSize - 2);
+        $('.grid-col').height(gridSize - 2); 
+      }
+    });
+    $('#tool-move-all').click(function() {
+      if ($('#tool-move-options').is(':visible')) {
+        $('#tool-move-options').hide();
+        $('#tool-move-all').html('<i class="fa fa-arrows" aria-hidden="true"></i> Move map')
+      } else {
+        $('#tool-move-options').show();
+        $('#tool-move-all').html('<i class="fa fa-arrows" aria-hidden="true"></i> Hide Move options')
+      }
+    });
+    $('#tool-save-map').click(function() {
+      // TODO: Save map
+      var savedMap = saveMapAsObject();
+      if (window.location.href.slice(0,4)) {
+        // FOR DEBUG USE
+        var saveMapURL = 'http://127.0.0.1:8000/';
+      } else {
+        // TODO: What is the URL?
+        // var saveMapURL = ???
+      }
+      $.post( saveMapURL, {
+        'metroMap': savedMap
+      }).done(function(data) {
+        console.log('Saved, data is: ' + data);
+      });
+    });
+    $('#tool-clear-map').click(function() {
+      drawGrid();
+      window.localStorage.removeItem('metroMap');
+    });
+
+    $('#create-new-rail-line').click(function() {
+
+      $('#new-rail-line-name').val($('#new-rail-line-name').val().replaceAll('<', '').replaceAll('>', '').replaceAll('"', '').replaceAll('&', '&amp;').replaceAll('/', '&#x2f;').replaceAll("'", '&#27;'));
+
+      var allColors = [], allNames = [];
+      $('.rail-line').each(function() {
+        allColors.push($(this).attr('id').slice(10, 16));
+        allNames.push($(this).text());
+      });
+
+      if (allColors.indexOf($('#new-rail-line-color').val().slice(1, 7)) >= 0) {
+        // This color already exists!
+        $('#tool-new-line-errors').text('This color already exists! Please choose a new color.');
+      } else if (allNames.indexOf($('#new-rail-line-name').val()) >= 0) {
+        // This rail name already exists!
+        $('#tool-new-line-errors').text('This rail line name already exists! Please choose a new name.');
+      } else if ($('#new-rail-line-name').val().length == 0) {
+        $('#tool-new-line-errors').text('This rail line name cannot be blank. Please enter a name.');
+      } else {
+        $('#tool-new-line-errors').text('');
+        $('#rail-line-new').before('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line btn-info" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');
+        saveMapAsObject();
+      }
+
+      // Re-bind events to .rail-line -- otherwise, newly created lines won't have events
+      bindRailLineEvents();
+
+    })
+
+    $('#station-name').change(function() {
+      // Get the coordinates where this station was placed
+      // Use this to pre-populate which line this station services
+      $(this).val($(this).val().replaceAll('"', '').replaceAll("'", '').replaceAll('<', '').replaceAll('>', '').replaceAll('&', '').replaceAll('/', ''))
+      var x = $('#station-coordinates-x').val();
+      var y = $('#station-coordinates-y').val();
+      if (x >= 0 && y >= 0 ) {
+        $('#coord-x-' + x + '-y-' + y + ' .station').attr('id', $('#station-name').val().replaceAll(' ', '_'));  
+      }
+
+      saveMapAsObject();
+    });
+
+  });
+
+  
+
+  </script>
+
+  </body>
+</html>
