@@ -25,7 +25,10 @@ SECRET_KEY = 'qs@c5xdw6r%(e8e3v55@@x5v!ik!bi%yr%t+ofku-*0&rhd69g'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'metromapmaker.com',
+    'www.metromapmaker.com'
+]
 
 
 # Application definition
