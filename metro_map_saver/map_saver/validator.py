@@ -57,6 +57,8 @@ def validate_metro_map(metro_map):
 
     validated_metro_map = {}
 
+    metro_map = json.loads(metro_map)
+
     assert type(metro_map) == dict
     assert metro_map.get('global')
     assert metro_map['global'].get('lines')
