@@ -407,9 +407,17 @@
     // TODO
   }
 
+  function getURLParameter(name) {
+      return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
+  }
+
   function autoLoad() {
-    // TODO: load from a specific URL
-    if (window.localStorage.getItem('metroMap')) {
+    var savedMapHash = getURLParameter('map');
+    if (savedMapHash) {
+      $.get('http://metromapmaker.com/save/' + savedMapHash).done(function (savedMapData) {
+        loadMapFromObject(JSON.parse(savedMapData));
+      });
+    } else if (window.localStorage.getItem('metroMap')) {
       // Load from local storage
       loadMapFromObject(JSON.parse(window.localStorage.getItem('metroMap'))); 
     }
@@ -600,11 +608,16 @@
     $('#tool-save-map').click(function() {
       // TODO: Save map
       var savedMap = saveMapAsObject();
+      // console.log("savedMap is: " + savedMap);
       var saveMapURL = 'http://metromapmaker.com/save/';
       $.post( saveMapURL, {
         'metroMap': savedMap
       }).done(function(data) {
-        console.log('Saved, data is: ' + data);
+        if (data.slice(0,7) == '[ERROR]') {
+          // TODO: some error handling
+        } else {
+          console.log('Saved, data is: ' + data);  
+        }
       });
     });
     $('#tool-clear-map').click(function() {
