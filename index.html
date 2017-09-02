@@ -600,13 +600,7 @@
     $('#tool-save-map').click(function() {
       // TODO: Save map
       var savedMap = saveMapAsObject();
-      if (window.location.href.slice(0,4)) {
-        // FOR DEBUG USE
-        var saveMapURL = 'http://127.0.0.1:8000/';
-      } else {
-        // TODO: What is the URL?
-        // var saveMapURL = ???
-      }
+      var saveMapURL = 'http://metromapmaker.com/save/';
       $.post( saveMapURL, {
         'metroMap': savedMap
       }).done(function(data) {
