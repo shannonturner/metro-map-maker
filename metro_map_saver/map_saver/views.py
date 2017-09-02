@@ -41,8 +41,8 @@ class MapDataView(TemplateView):
 
         try:
             mapdata = validate_metro_map(mapdata)
-        except AssertionError:
-            context['error'] = '[ERROR] Map failed validation!'
+        except AssertionError, e:
+            context['error'] = '[ERROR] Map failed validation! ({0})'.format(e)
         else:
             urlhash = hashlib.sha256(str(mapdata)).hexdigest()
             try:
