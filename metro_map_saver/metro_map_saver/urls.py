@@ -21,5 +21,5 @@ from map_saver.views import MapDataView
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^(?:save/)?$', MapDataView.as_view(), name='save_map'),
-    url(r'^(?:save/)?(?P<urlhash>[0-9a-f]+)$', MapDataView.as_view(), name='load_map'),
+    url(r'^(?:save/)?(?P<urlhash>[0-9a-zA-Z\-\_]+)$', MapDataView.as_view(), name='load_map'),
 ]
