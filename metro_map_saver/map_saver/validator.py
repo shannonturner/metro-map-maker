@@ -14,25 +14,30 @@ def is_hex(string):
     else:
         return True
 
-# def hex64(string):
+def hex2b64(hexthree):
 
-#     """ Given a base16 hexdigest string, shorten it using a base64 variant
-#     """
+    """ Convert a three-digit hex value to a two-digit base64 value
+    """
 
-#     # 3 hex: 0-4095
-#     # 2 b64: 0-4095
+    hexthree = int(hexthree, 16)
+    assert 0 <= hexthree <= 4095
 
-#     # TODO: Implement this so I can shorten URLs too
+    base64_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_'
 
-#     string = string[:12]
+    if hexthree < 64:
+        # Add "a" (the base64 equivalent of zero) -padding to the result
+        return 'a{0}'.format(base64_chars[hexthree])
+    else:
+        return '{0}{1}'.format(base64_chars[hexthree / 64], base64_chars[hexthree % 64])
 
-#     def b64(hex_three):
-#         hex_three = int(hex_three, 16)
+def hex64(hexdigest):
 
+    # The first 12 digits of a hexdigest give us 16^12, or 281,474,976,710,656 (281 trillion)
+    # This is equivalent to 64^8
+    # So instead of a 12-digit long URL, we can shorten down to 8 characters and still retain a high level of collision resistance
+    hexdigest = hexdigest[:12]
 
-#     base64_chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_'
-
-#     return
+    return '{0}{1}{2}{3}'.format(hex2b64(hexdigest[:3]), hex2b64(hexdigest[3:6]), hex2b64(hexdigest[6:9]), hex2b64(hexdigest[9:]))
 
 def sanitize_string(string):
     return string.replace('<', '').replace('>', '').replace('"', '').replace("'", '&#27;').replace('&', '&amp;').replace('/', '&#x2f;')

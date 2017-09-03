@@ -8,7 +8,7 @@ from django.views.generic.base import TemplateView
 
 import hashlib
 from .models import SavedMap
-from .validator import is_hex, sanitize_string, validate_metro_map
+from .validator import is_hex, sanitize_string, validate_metro_map, hex64
 
 # Create your views here.
 
@@ -44,7 +44,7 @@ class MapDataView(TemplateView):
         except AssertionError, e:
             context['error'] = '[ERROR] Map failed validation! ({0}) -- map was {1}'.format(e, mapdata)
         else:
-            urlhash = hashlib.sha256(str(mapdata)).hexdigest()
+            urlhash = hex64(hashlib.sha256(str(mapdata)).hexdigest()[:12])
             try:
                 # Doesn't override the saved map if it already exists.
                 saved_map = SavedMap.objects.get(urlhash=urlhash)
