@@ -94,6 +94,11 @@
       height: 12px;
     }
 
+    button {
+      /* This makes lighter-colored rail line buttons (and every other button, really) easier to read */
+      text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+    }
+
     button.rail-line {
       height: 48px;
       text-align: center;
@@ -133,11 +138,17 @@
 
     #rail-line-delete {
       background-color: #fc3700;
+      height: 48px;
     }
 
     #create-new-rail-line {
       background-color: #5cb85c;
       border-color: #4cae4c;
+    }
+
+    #autosave-indicator {
+      margin-top: 10px;
+      height: 16px;
     }
 
     .station {
@@ -186,14 +197,18 @@
       <h3>Metro Map Maker</h3>
       <h5>Create your own metro maps, save them, and share with friends!</h5>
       <h5>To get started, all the tools you need are below the grid.</h5>
-      <h5>(This works best on desktop; not all features may work correctly on your mobile device.)</h5>
+      <h5>(This works best on desktop; some features may not work correctly on your mobile device.)</h5>
     </div>
   </div>
 
   <div id="grid" class="col-lg-10">
-    <!-- <canvas id='metro-map' width="1600" height="1600"></canvas> -->
-
+    
   </div>
+
+  <div id="canvas-container" class="col-lg-10 start-hidden">
+    <canvas id='metro-map-canvas' width="1600" height="1600" class="img-responsive"></canvas>
+  </div>
+
   <div id="controls" class="col-lg-2 text-center">
     <h3>Metro Map Maker</h3>
 
@@ -209,18 +224,19 @@
         <button id="rail-line-662c90" class="rail-line">Purple Line</button>
         <button id="rail-line-a2a2a2" class="rail-line">Silver Line</button>
         <button id="rail-line-new" class="rail-line">+ Add New Line</button>
+        <div id="tool-new-line-options" class="start-hidden">
+          <h4 id="tool-new-line-errors" class="bg-danger"></h4>
+          <h4>Color of this line</h4>
+          <input id="new-rail-line-color" type="color">
+
+          <h4>Name of this line</h4>
+          <input id="new-rail-line-name" type="text" placeholder="Blue Line">
+          <button id="create-new-rail-line" class="btn btn-success">Create new line</button>
+        </div>
         <hr>
         <button id="rail-line-delete">- Delete Unused Lines</button>
       </div>
-      <div id="tool-new-line-options" class="start-hidden">
-        <h4 id="tool-new-line-errors" class="bg-danger"></h4>
-        <h4>Color of this line</h4>
-        <input id="new-rail-line-color" type="color">
-
-        <h4>Name of this line</h4>
-        <input id="new-rail-line-name" type="text" placeholder="Blue Line">
-        <button id="create-new-rail-line" class="btn btn-success">Create new line</button>
-      </div>
+      
       <button id="tool-station" class="btn btn-info"><i class="fa fa-map-pin" aria-hidden="true"></i> Station</button>
       <div id="tool-station-options" class="start-hidden">
         <h4>Station Name</h4>
@@ -250,9 +266,16 @@
       </div>
       <button id="tool-save-map" class="btn btn-info"><i class="fa fa-share" aria-hidden="true"></i> Save &amp; Share map</button>
       <div id="tool-save-options" class="start-hidden"></div>
+      <button id="tool-export-canvas" class="btn btn-info"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
+      <div id="export-canvas-help" class="start-hidden">
+        <h5>Right click the map and click "Save Image As" to save your finished map.</h5>
+        <h5>Or click "Edit map" to continue editing your map.</h5>
+      </div>
+      <hr>
       <button id="tool-clear-map" class="btn btn-info"><i class="fa fa-trash-o" aria-hidden="true"></i> Clear map</button>
       <hr>
-
+      <div id="autosave-indicator"></div>
+      <hr>
       <div id="credits">
         <h5>Created by <a href="https://shannonvturner.com" target="_blank">Shannon Turner</a></h5>
         <h5>Inspired by <a href="https://www.wired.com/2014/01/fantasy-transit-maps/" target="_blank">this</a> and <a href="https://io9.gizmodo.com/5513914/speculative-subway-maps-from-our-underground-future/" target="_blank">this</a></h5>
@@ -423,9 +446,7 @@
 
         // Add lines to the "Other lines this station serves" option
         if (stationOnLines) {
-          console.log('stationOnLines is: ' + stationOnLines);
-          $('#station-on-lines').html(stationOnLines);  
-          console.log('#station-on-lines is: ' + $('#station-on-lines').html());
+          $('#station-on-lines').html(stationOnLines);
 
           var linesToAdd = "";
           
@@ -441,8 +462,6 @@
             $('#station-other-lines').html(linesToAdd);
             // Bind the event to the .station-add-lines buttons here since they are newly created.
             $('.station-add-lines').click(function() {
-              // TODO: Don't move it to #station-on-lines if it's already there.
-              console.log($(this).parent().attr('id'));
               if ($(this).parent().attr('id') == 'station-other-lines') {
                 $('#station-on-lines').append($(this));
                 $('#coord-x-' + x + '-y-' + y).children().addClass('has-line-' + $(this).attr('id').slice(9, 15));
@@ -546,8 +565,7 @@
   } // function loadMapFromObject
 
   function saveMapAsObject() {
-    // TODO
-    console.log('saving');
+    console.log('Saving');
     var gridRows = 80, gridCols = 80;
 
     metroMap = new Object;
@@ -600,6 +618,11 @@
 
     window.localStorage.setItem('metroMap', JSON.stringify(metroMap));
 
+    $('#autosave-indicator').html('<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Saving ...')
+    setTimeout(function() {
+      $('#autosave-indicator').html('');
+    }, 1500)
+
     return JSON.stringify(metroMap);
   } // function saveMapAsObject()
 
@@ -624,7 +647,6 @@
     activeTool = 'look';
 
     $('#toolbox button').click(function() {
-      console.log('#toolbox button');
       $('#toolbox button').removeClass('btn-primary').addClass('btn-info');
       $(this).removeClass('btn-info');
       $(this).addClass('btn-primary')
@@ -862,9 +884,8 @@
       } // for x
     });
     $('#tool-save-map').click(function() {
-      // TODO: Save map
+      activeTool = 'look';
       var savedMap = saveMapAsObject();
-      // console.log("savedMap is: " + savedMap);
       var saveMapURL = 'http://metromapmaker.com/save/';
       $.post( saveMapURL, {
         'metroMap': savedMap
@@ -877,6 +898,115 @@
         }
       });
     });
+    $('#tool-export-canvas').click(function() {
+      activeTool = 'look';
+
+      if ($('#grid').is(':visible')) {
+        $('#grid').hide();
+        $('#canvas-container').show();
+        $('#export-canvas-help').show();
+        $('#tool-export-canvas').html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit map');
+      } else {
+        $('#grid').show();
+        $('#canvas-container').hide();
+        $('#export-canvas-help').hide();
+        $('#tool-export-canvas').html('<i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image');
+      }
+      
+      var canvas = document.getElementById('metro-map-canvas');
+      var ctx = canvas.getContext('2d');
+      var gridRows = 80, gridCols = 80;
+      // How much larger is the canvas than the grid has in squares?
+      // If the grid has 80x80 squares and the canvas is 1600x1600,
+      //    then the gridPixelMultiplier is 20 (1600 / 80)
+      var gridPixelMultiplier = canvas.width / gridCols; // 20
+
+      // Clear the old canvas if it was drawn
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Make the background white instead of transparent
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (var x=0; x<gridRows; x++){
+        for (var y=0; y<gridCols; y++) {
+
+          if ($('#coord-x-' + x + '-y-' + y).hasClass('has-line')) {
+            // Get color of the line
+            ctx.fillStyle = '#' + getActiveLine(x, y);
+            // ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier); // I'm not sure this does anything
+
+            // arc(x, y, radius, startAngle, endAngle, anticlockwise)
+            // Draw an arc centered at x, y position with radius r
+            ctx.beginPath();
+            ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
+            ctx.closePath();
+            ctx.fill();
+          } // if .has-line
+        } // for y
+      } // for x
+
+      // Draw the stations last (and separately), or they will be painted over by the lines themselves.
+      ctx.font = '20px sans-serif';
+
+      for (var x=0; x<gridRows; x++){
+        for (var y=0; y<gridCols; y++) {
+          if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station') && $('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+            // Outer circle
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * 1.2, 0, Math.PI * 2, true); 
+            ctx.closePath();
+            ctx.fill();
+
+            // Inner circle
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); 
+            ctx.closePath();
+            ctx.fill();
+
+            // Outer circle
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true); 
+            ctx.closePath();
+            ctx.fill();
+
+            // Inner circle
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true); 
+            ctx.closePath();
+            ctx.fill();
+
+
+            var activeStation = document.getElementById('coord-x-' + x + '-y-' + y).children[0].id;
+            ctx.fillStyle = '#000000';
+            ctx.fillText(activeStation, (x * gridPixelMultiplier) + (gridPixelMultiplier * 1.5), (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+          } else if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station')) {
+            // Outer circle
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true); 
+            ctx.closePath();
+            ctx.fill();
+
+            // Inner circle
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true); 
+            ctx.closePath();
+            ctx.fill();
+
+            var activeStation = document.getElementById('coord-x-' + x + '-y-' + y).children[0].id;
+            ctx.fillStyle = '#000000';
+            ctx.fillText(activeStation, (x * gridPixelMultiplier) + gridPixelMultiplier, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+          } // if .has-station
+
+        } // for y
+      } // for x
+    }); // #tool-export-canvas.click()
     $('#tool-clear-map').click(function() {
       drawGrid();
       window.localStorage.removeItem('metroMap');
