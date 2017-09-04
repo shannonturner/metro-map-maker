@@ -6,26 +6,27 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
+    <meta name="description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
 
-    <meta property="og:title" content="">
-    <meta property="og:site_name" content="">
-    <meta property="og:url" content="">
+    <meta property="og:title" content="Metro Map Maker">
+    <meta property="og:site_name" content="Metro Map Maker">
+    <meta property="og:url" content="http://metromapmaker.com">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="">
+    <meta property="og:description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
     <meta property="og:image" content="">
 
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="">
-    <meta name="twitter:creator" content="">
-    <meta name="twitter:title" content="">
-    <meta name="twitter:description" content="">
+    <meta name="twitter:site" content="http://metromapmaker.com">
+    <meta name="twitter:creator" content="@svthmc">
+    <meta name="twitter:title" content="Metro Map Maker">
+    <meta name="twitter:description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
     <meta name="twitter:image:src" content="">
 
     <title>Metro Map Maker</title>
 
-    <link rel="icon" href="">
+    <link rel="icon" href="favicon.ico">
 
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel='stylesheet' href='css/spectrum.css' />
     <script src="https://use.fontawesome.com/9f1aeb80e7.js"></script>
@@ -37,9 +38,32 @@
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-    <!-- TODO: ADD GOOGLE ANALYTICS SNIPPET -->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-49936574-4', 'auto');
+      ga('send', 'pageview');
+
+    </script>
 
     <style>
+
+    body {
+      font-family: 'PT Sans', sans-serif;
+    }
+
+    #main-container {
+      margin-top: 15px;
+      margin-bottom: 15px;
+    }
+
+    #controls {
+      border: 6px solid #666;
+      background-color: #eee;
+    }
 
     #metro-map {
       border: 2px solid black;
@@ -60,6 +84,7 @@
       display: flex;
       cursor: crosshair;
       overflow: scroll;
+      padding-left: 0;
     }
 
     .grid-col {
@@ -106,6 +131,10 @@
       background-color: #ff8e88;
     }
 
+    #rail-line-delete {
+      background-color: #fc3700;
+    }
+
     #create-new-rail-line {
       background-color: #5cb85c;
       border-color: #4cae4c;
@@ -131,6 +160,16 @@
       top: -100%;
     }
 
+    hr {
+      border-top: 1px solid #666;
+    }
+
+    @media (max-width: 767px) {
+      #controls {
+        margin-top: 10px;
+      }
+    }
+
     </style>
 
 
@@ -140,14 +179,22 @@
 
 <a name="top"></a>
 
-<div class="container-fluid">
-  <!-- Start editing! Your content goes below -->
+<div id="main-container" class="container-fluid">
+
+  <div class="visible-xs text-center row">
+    <div class="col-lg-10 col-offset-1">
+      <h3>Metro Map Maker</h3>
+      <h5>Create your own metro maps, save them, and share with friends!</h5>
+      <h5>To get started, all the tools you need are below the grid.</h5>
+      <h5>(This works best on desktop; not all features may work correctly on your mobile device.)</h5>
+    </div>
+  </div>
 
   <div id="grid" class="col-lg-10">
     <!-- <canvas id='metro-map' width="1600" height="1600"></canvas> -->
 
   </div>
-  <div id="controls" class="col-lg-2">
+  <div id="controls" class="col-lg-2 text-center">
     <h3>Metro Map Maker</h3>
 
     <div id="toolbox">
@@ -162,6 +209,8 @@
         <button id="rail-line-662c90" class="rail-line">Purple Line</button>
         <button id="rail-line-a2a2a2" class="rail-line">Silver Line</button>
         <button id="rail-line-new" class="rail-line">+ Add New Line</button>
+        <hr>
+        <button id="rail-line-delete">- Delete Unused Lines</button>
       </div>
       <div id="tool-new-line-options" class="start-hidden">
         <h4 id="tool-new-line-errors" class="bg-danger"></h4>
@@ -178,6 +227,9 @@
         <input id="station-coordinates-x" type="hidden">
         <input id="station-coordinates-y" type="hidden">
         <input id="station-name" type="text" placeholder="Silver Spring">
+        <div style="margin: 10px;">
+          <input id="station-transfer" type="checkbox"> <label for="station-transfer">Transfer Station</label>
+        </div>
         <h4>This station is on these rail lines:</h4>
         <div id="station-on-lines"></div>
         <h4>Add other lines this station serves:</h4>
@@ -196,10 +248,25 @@
         <button id="tool-move-right" class="btn btn-info"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Move everything right</button>
         <button id="tool-move-down" class="btn btn-info"><i class="fa fa-chevron-circle-down" aria-hidden="true"></i> Move everything down</button>
       </div>
-      <button id="tool-save-map" class="btn btn-info">Save &amp; Share map</button>
+      <button id="tool-save-map" class="btn btn-info"><i class="fa fa-share" aria-hidden="true"></i> Save &amp; Share map</button>
       <div id="tool-save-options" class="start-hidden"></div>
       <button id="tool-clear-map" class="btn btn-info"><i class="fa fa-trash-o" aria-hidden="true"></i> Clear map</button>
-      <!-- TODO: A tool to move everything 5 'pixels' in a direction so you can center your map -->
+      <hr>
+
+      <div id="credits">
+        <h5>Created by <a href="https://shannonvturner.com" target="_blank">Shannon Turner</a></h5>
+        <h5>Inspired by <a href="https://www.wired.com/2014/01/fantasy-transit-maps/" target="_blank">this</a> and <a href="https://io9.gizmodo.com/5513914/speculative-subway-maps-from-our-underground-future/" target="_blank">this</a></h5>
+      </div>
+
+      <hr>
+
+      <div id="remix">
+        <h5>Remix these pre-made maps!</h5>
+          <p><a href="#">TODO: DC Metro, 2017</a></p>
+          <p><a href="#">TODO: DC Metro + Purple Line</a></p>
+          <p><a href="#">TODO: SF BART</a></p>
+        </ul>
+      </div>
 
     </div> <!-- #toolbox -->
 
@@ -307,6 +374,13 @@
             var stationName = $(this).children().attr('id').replaceAll('_', ' ');
             $('#station-name').val(stationName);
 
+            // Pre-check the box if this is a transfer station
+            if ($(this).children().hasClass('transfer-station')) {
+              $('#station-transfer').attr('checked', true);
+            } else {
+              $('#station-transfer').attr('checked', false);
+            }
+
             var stationOnLines = "";
             // var stationLines = getStationLines($("#station-coordinates-x").val(), $("#station-coordinates-y").val());
             var stationLines = getStationLines(x, y);
@@ -316,7 +390,7 @@
               }
             }
           } else {
-            // This only happens when you create a new station and then click on it again.
+            // This only happens when you create a new station and then click on it again (without having named it first)
             // This fixes the bug where it would erroneously clear the station that it was sitting on and not allow you to add it back
             activeLine = getActiveLine(x, y);
             if (activeLine) {
@@ -440,7 +514,10 @@
             });
             if (metroMapObject[x][y]["station"]) {
               $('#coord-x-' + x + '-y-' + y).addClass('has-station');
-              $('#coord-x-' + x + '-y-' + y).html('<div id="' + metroMapObject[x][y]["station"]["name"] +'" class="station"></div>')
+              $('#coord-x-' + x + '-y-' + y).html('<div id="' + metroMapObject[x][y]["station"]["name"] +'" class="station"></div>');
+              if (metroMapObject[x][y]["station"]["transfer"] == 1) {
+                $('#' + metroMapObject[x][y]["station"]["name"]).addClass('transfer-station');
+              }
               if (metroMapObject[x][y]["station"]["lines"] && metroMapObject[x][y]['station']['name']) {
                 for (var z=0; z<metroMapObject[x][y]["station"]["lines"].length; z++) {
                   $('#' + metroMapObject[x][y]["station"]["name"]).addClass('has-line-' + metroMapObject[x][y]["station"]["lines"][z]);
@@ -500,6 +577,9 @@
                 'name': activeStation,
                 'lines': stationLines
               }
+              if ($('#' + activeStation).hasClass('transfer-station')) {
+                metroMap[x][y]['station']['transfer'] = 1;
+              } // if transfer station
             } // if station name
           } // if has-station
         } // if has-line
@@ -562,6 +642,24 @@
         $('#tool-line').html('<i class="fa fa-subway" aria-hidden="true"></i> Hide Rail Line options');
       }
     });
+    $('#rail-line-delete').click(function() {
+      // Only delete lines that aren't in use
+      var allLines = $('.rail-line');
+      var linesToDelete = [];
+      for (var a=0; a<allLines.length; a++) {
+        if ($('.rail-line')[a].id != 'rail-line-new') {
+          // Is this line in use at all?
+          if ($('.has-line-' + $('.rail-line')[a].id.slice(10, 16)).length == 0) {
+            linesToDelete.push($('#' + $('.rail-line')[a].id));
+          }
+        }
+      }
+      if (linesToDelete.length > 0) {
+        for (var d=0; d<linesToDelete.length; d++) {
+          linesToDelete[d].remove();
+        }
+      }
+    });
     $('#tool-station').click(function() {
       activeTool = 'station';
       if ($('#tool-station-options').is(':visible')) {
@@ -606,6 +704,162 @@
         $('#tool-move-options').show();
         $('#tool-move-all').html('<i class="fa fa-arrows" aria-hidden="true"></i> Hide Move options')
       }
+    });
+    $('#tool-move-up').click(function() {
+      var gridRows = 80, gridCols = 80;
+      for (var y=0; y<gridCols; y++) {
+        for (var x=0; x<gridRows; x++) {
+
+          // Remove all classes from current grid item (except .grid-col)
+          var classes = document.getElementById('coord-x-' + x + '-y-' + y).className.split(/\s+/);
+          for (var c=0; c<classes.length; c++) {
+            if (classes[c] != 'grid-col') {
+              // Don't remove .grid-col or you'll have to re-bind all of the .grid-col events
+              $('#coord-x-' + x + '-y-' + y).removeClass(classes[c]);
+            }
+          }
+
+          if (y == 79) {
+            // Clear the last row
+            $('#coord-x-' + x + '-y-' + y).html('');
+            $('#coord-x-' + x + '-y-' + y).removeAttr('style');
+          } else {
+            // Get all classes from the next grid item
+            var classes = document.getElementById('coord-x-' + x + '-y-' + parseInt(y + 1)).className.split(/\s+/);
+
+            // Move all classes from the next grid item to the current
+            for (var c=0; c<classes.length; c++) {
+              // Move all classes
+              if (classes[c] != 'grid-col') {
+                $('#coord-x-' + x + '-y-' + y).addClass(classes[c]);
+              }
+              // Move all styling
+              $('#coord-x-' + x + '-y-' + y).removeAttr('style');
+              $('#coord-x-' + x + '-y-' + y).attr('style', $('#coord-x-' + x + '-y-' + parseInt(y + 1)).attr('style'));
+            }
+
+            // Move any children too, overwriting any existing contents
+            $('#coord-x-' + x + '-y-' + y).html($('#coord-x-' + x + '-y-' + parseInt(y + 1)).html());
+          }
+        } // for x
+      } // for y
+    });
+    $('#tool-move-down').click(function() {
+      var gridRows = 80, gridCols = 80;
+      for (var y=gridCols - 1; y>=0; y--) {
+        for (var x=0; x<gridRows; x++) {
+
+          // Remove all classes from current grid item (except .grid-col)
+          var classes = document.getElementById('coord-x-' + x + '-y-' + y).className.split(/\s+/);
+          for (var c=0; c<classes.length; c++) {
+            if (classes[c] != 'grid-col') {
+              // Don't remove .grid-col or you'll have to re-bind all of the .grid-col events
+              $('#coord-x-' + x + '-y-' + y).removeClass(classes[c]);
+            }
+          }
+
+          if (y == 0) {
+            // Clear the last row
+            $('#coord-x-' + x + '-y-' + y).html('');
+            $('#coord-x-' + x + '-y-' + y).removeAttr('style');
+          } else {
+            // Get all classes from the next grid item
+            var classes = document.getElementById('coord-x-' + x + '-y-' + parseInt(y - 1)).className.split(/\s+/);
+
+            // Move all classes from the next grid item to the current
+            for (var c=0; c<classes.length; c++) {
+              // Move all classes
+              if (classes[c] != 'grid-col') {
+                $('#coord-x-' + x + '-y-' + y).addClass(classes[c]);
+              }
+              // Move all styling
+              $('#coord-x-' + x + '-y-' + y).removeAttr('style');
+              $('#coord-x-' + x + '-y-' + y).attr('style', $('#coord-x-' + x + '-y-' + parseInt(y - 1)).attr('style'));
+            }
+
+            // Move any children too, overwriting any existing contents
+            $('#coord-x-' + x + '-y-' + y).html($('#coord-x-' + x + '-y-' + parseInt(y - 1)).html());
+          }
+        } // for x
+      } // for y
+    });
+    $('#tool-move-left').click(function() {
+      var gridRows = 80, gridCols = 80;
+      for (var x=0; x<gridRows; x++) {
+        for (var y=0; y<gridCols; y++) {
+
+          // Remove all classes from current grid item (except .grid-col)
+          var classes = document.getElementById('coord-x-' + x + '-y-' + y).className.split(/\s+/);
+          for (var c=0; c<classes.length; c++) {
+            if (classes[c] != 'grid-col') {
+              // Don't remove .grid-col or you'll have to re-bind all of the .grid-col events
+              $('#coord-x-' + x + '-y-' + y).removeClass(classes[c]);
+            }
+          }
+
+          if (x == 79) {
+            // Clear the last column
+            $('#coord-x-' + x + '-y-' + y).html('');
+            $('#coord-x-' + x + '-y-' + y).removeAttr('style');
+          } else {
+            // Get all classes from the next grid item
+            var classes = document.getElementById('coord-x-' + parseInt(x + 1) + '-y-' + y).className.split(/\s+/);
+
+            // Move all classes from the next grid item to the current
+            for (var c=0; c<classes.length; c++) {
+              // Move all classes
+              if (classes[c] != 'grid-col') {
+                $('#coord-x-' + x + '-y-' + y).addClass(classes[c]);
+              }
+              // Move all styling
+              $('#coord-x-' + x + '-y-' + y).removeAttr('style');
+              $('#coord-x-' + x + '-y-' + y).attr('style', $('#coord-x-' + parseInt(x + 1) + '-y-' + y).attr('style'));
+            }
+
+            // Move any children too, overwriting any existing contents
+            $('#coord-x-' + x + '-y-' + y).html($('#coord-x-' + parseInt(x + 1) + '-y-' + y).html());
+          }
+        } // for y
+      } // for x
+    });
+    $('#tool-move-right').click(function() {
+      var gridRows = 80, gridCols = 80;
+      for (var x=gridRows - 1; x>=0; x--) {
+        for (var y=0; y<gridCols; y++) {
+
+          // Remove all classes from current grid item (except .grid-col)
+          var classes = document.getElementById('coord-x-' + x + '-y-' + y).className.split(/\s+/);
+          for (var c=0; c<classes.length; c++) {
+            if (classes[c] != 'grid-col') {
+              // Don't remove .grid-col or you'll have to re-bind all of the .grid-col events
+              $('#coord-x-' + x + '-y-' + y).removeClass(classes[c]);
+            }
+          }
+
+          if (x == 0) {
+            // Clear the last column
+            $('#coord-x-' + x + '-y-' + y).html('');
+            $('#coord-x-' + x + '-y-' + y).removeAttr('style');
+          } else {
+            // Get all classes from the next grid item
+            var classes = document.getElementById('coord-x-' + parseInt(x - 1) + '-y-' + y).className.split(/\s+/);
+
+            // Move all classes from the next grid item to the current
+            for (var c=0; c<classes.length; c++) {
+              // Move all classes
+              if (classes[c] != 'grid-col') {
+                $('#coord-x-' + x + '-y-' + y).addClass(classes[c]);
+              }
+              // Move all styling
+              $('#coord-x-' + x + '-y-' + y).removeAttr('style');
+              $('#coord-x-' + x + '-y-' + y).attr('style', $('#coord-x-' + parseInt(x - 1) + '-y-' + y).attr('style'));
+            }
+
+            // Move any children too, overwriting any existing contents
+            $('#coord-x-' + x + '-y-' + y).html($('#coord-x-' + parseInt(x - 1) + '-y-' + y).html());
+          }
+        } // for y
+      } // for x
     });
     $('#tool-save-map').click(function() {
       // TODO: Save map
@@ -668,6 +922,21 @@
       }
 
       saveMapAsObject();
+    });
+
+    $('#station-transfer').click(function() {
+      // Get the coordinates where this station was placed
+      // Use this to pre-populate which line this station services
+
+      var x = $('#station-coordinates-x').val();
+      var y = $('#station-coordinates-y').val();
+      if (x >= 0 && y >= 0 ) {
+        if ($(this).is(':checked')) {
+           $('#coord-x-' + x + '-y-' + y + ' .station').addClass('transfer-station');
+        } else {
+           $('#coord-x-' + x + '-y-' + y + ' .station').removeClass('transfer-station');
+        }
+      }
     });
 
   });

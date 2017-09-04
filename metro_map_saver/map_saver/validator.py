@@ -120,5 +120,7 @@ def validate_metro_map(metro_map):
                             assert len(station_line) == 6
                             assert station_line in valid_lines
                             validated_metro_map[x][y]["station"]["lines"].append(station_line)
+                        if metro_map[x][y]["station"].get('transfer'):
+                           validated_metro_map[x][y]["station"]["transfer"] = 1
 
     return validated_metro_map
