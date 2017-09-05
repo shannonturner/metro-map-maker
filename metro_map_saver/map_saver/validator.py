@@ -48,7 +48,7 @@ def html_dom_id_safe(string):
     """ Returns a string santized of any characters that are not suitable for an HTML DOM's ID
     """
 
-    return re.sub('[^A-Za-z0-9\- ]', '', string)
+    return re.sub('[^A-Za-z0-9\- \_]', '', string)
 
 def validate_metro_map(metro_map):
     
