@@ -127,6 +127,10 @@ hr {
   border-top: 1px solid #666;
 }
 
+.active {
+  border-color: #ffff00;
+}
+
 @media (max-width: 767px) {
   #controls {
     margin-top: 10px;

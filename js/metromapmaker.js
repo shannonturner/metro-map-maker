@@ -189,6 +189,12 @@ function drawGrid() {
           });
         } // if linesToAdd
       } // if stationOnLines
+
+      // Indicate which station is currently selected
+      // First, remove all existing selections
+      $('.active').removeClass('active');
+      // Then add the active class
+      $(this).children().addClass('active');
     } // if activeTool == station
   });
 
