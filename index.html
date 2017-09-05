@@ -13,14 +13,14 @@
     <meta property="og:url" content="http://metromapmaker.com">
     <meta property="og:type" content="website">
     <meta property="og:description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
-    <meta property="og:image" content="">
+    <meta property="og:image" content="http://metromapmaker.com/metromapmaker.png">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="http://metromapmaker.com">
     <meta name="twitter:creator" content="@svthmc">
     <meta name="twitter:title" content="Metro Map Maker">
     <meta name="twitter:description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
-    <meta name="twitter:image:src" content="">
+    <meta name="twitter:image:src" content="http://metromapmaker.com/metromapmaker.png">
 
     <title>Metro Map Maker</title>
 
@@ -171,6 +171,11 @@
       top: -100%;
     }
 
+    #station-name-orientation {
+      width: 100%;
+      margin: 3px;
+    }
+
     hr {
       border-top: 1px solid #666;
     }
@@ -250,6 +255,14 @@
         <div id="station-on-lines"></div>
         <h4>Add other lines this station serves:</h4>
         <div id="station-other-lines"></div>
+        <h4>Station Name Orientation</h4>
+        <h5>(Visible when you click Download as Image)</h5>
+        <select id="station-name-orientation">
+          <option value="0">Left to Right</option>
+          <option value="-90">Upward</option>
+          <option value="-45">45 degree angle upward</option>
+          <option value="45">45 degree angle downward</option>
+        </select>
       </div>
       <button id="tool-eraser" class="btn btn-info"><i class="fa fa-eraser" aria-hidden="true"></i> Eraser</button>
       <button id="tool-look" class="btn btn-info"><i class="fa fa-eye" aria-hidden="true"></i> Just look</button>
@@ -285,9 +298,9 @@
 
       <div id="remix">
         <h5>Remix these pre-made maps!</h5>
-          <p><a href="#">TODO: DC Metro, 2017</a></p>
-          <p><a href="#">TODO: DC Metro + Purple Line</a></p>
-          <p><a href="#">TODO: SF BART</a></p>
+          <p><a href="http://metromapmaker.com/?map=NHlcWcFN">DC Metro, 2017</a></p>
+          <p><a href="http://metromapmaker.com/?map=jDcOQFl6">DC Metro + Purple Line</a></p>
+          <!-- <p><a href="#">TODO: SF BART</a></p> -->
         </ul>
       </div>
 
@@ -323,7 +336,7 @@
 
   function getStationLines(x, y) {
     // Given an x, y coordinate pair, return the hex codes for the lines this station services.
-    var classes = document.getElementById('coord-x-' + x + '-y-' + y).children[0].className.split(/\s+/);  
+    var classes = document.getElementById('coord-x-' + x + '-y-' + y).children[0].className.split(/\s+/);
     var stationLines = [];
     for (var z=0; z<classes.length; z++) {
       if (classes[z].indexOf('has-line-') >= 0) {
@@ -343,6 +356,8 @@
         activeTool = 'line';
         activeToolOption = $(this).css('background-color');
       }
+      $('#tool-station-options').hide();
+      $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
     });  
   }
 
@@ -398,10 +413,24 @@
             $('#station-name').val(stationName);
 
             // Pre-check the box if this is a transfer station
-            if ($(this).children().hasClass('transfer-station')) {
-              $('#station-transfer').attr('checked', true);
+            var existingStationClasses = document.getElementById('coord-x-' + x + '-y-' + y).children[0].className.split(/\s+/);
+            if (existingStationClasses.indexOf('transfer-station') >= 0) {
+              $('#station-transfer').prop('checked', true);
             } else {
-              $('#station-transfer').attr('checked', false);
+              $('#station-transfer').prop('checked', false);
+            }
+
+            console.log(document.getElementById('station-name-orientation').value);
+
+            // Select the correct orientation too.
+            if (existingStationClasses.indexOf('rot-90') >= 0) {
+              document.getElementById('station-name-orientation').value = '-90';
+            } else if (existingStationClasses.indexOf('rot-45') >= 0) {
+              document.getElementById('station-name-orientation').value = '-45';
+            } else if (existingStationClasses.indexOf('rot45') >= 0) {
+              document.getElementById('station-name-orientation').value = '45';
+            } else {
+              document.getElementById('station-name-orientation').value = '0';
             }
 
             var stationOnLines = "";
@@ -427,6 +456,8 @@
           $(this).addClass('has-station');
           $(this).html('<div class="station"></div>');
           $('#tool-station-options').show();
+          $('#station-transfer').prop('checked', false);
+          document.getElementById('station-name-orientation').value = '0';
 
           // Pre-populate the station with the line it sits on
           // activeLine = getActiveLine($("#station-coordinates-x").val(), $("#station-coordinates-y").val());
@@ -543,8 +574,15 @@
                   // Rail line buttons should use their color for the buttons, too.
                   $('<style>').prop('type', 'text/css')
                   .html('#rail-line-' + metroMapObject[x][y]["station"]["lines"][z] + ', .has-line-' + metroMapObject[x][y]["station"]["lines"][z] + '{ background-color: #' + metroMapObject[x][y]["station"]["lines"][z] + '; }').appendTo('head');
-                }  
-              }
+                } // for lines
+                if (metroMapObject[x][y]["station"]["orientation"] == '-90') {
+                  $('#' + metroMapObject[x][y]["station"]["name"]).addClass('rot-90');
+                } else if (metroMapObject[x][y]["station"]["orientation"] == '-45') {
+                  $('#' + metroMapObject[x][y]["station"]["name"]).addClass('rot-45');
+                } else if (metroMapObject[x][y]["station"]["orientation"] == '45') {
+                  $('#' + metroMapObject[x][y]["station"]["name"]).addClass('rot45');
+                } // if station orientation
+              } // if station name, lines
             } // if station
           } // if y
         } // for y in x
@@ -598,6 +636,15 @@
               if ($('#' + activeStation).hasClass('transfer-station')) {
                 metroMap[x][y]['station']['transfer'] = 1;
               } // if transfer station
+              if ($('#' + activeStation).hasClass('rot-90')) {
+                metroMap[x][y]['station']['orientation'] = '-90';
+              } else if ($('#' + activeStation).hasClass('rot-45')) {
+                metroMap[x][y]['station']['orientation'] = '-45';
+              } else if ($('#' + activeStation).hasClass('rot45')) {
+                metroMap[x][y]['station']['orientation'] = '45';
+              } else {
+                metroMap[x][y]['station']['orientation'] = '0';
+              }
             } // if station name
           } // if has-station
         } // if has-line
@@ -691,6 +738,8 @@
     });
     $('#tool-eraser').click(function() {
       activeTool = 'eraser';
+      $('#tool-station-options').hide();
+      $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
     })
     $('#tool-look').click(function() {
       activeTool = 'look';
@@ -891,7 +940,7 @@
         'metroMap': savedMap
       }).done(function(data) {
         if (data.slice(0,7) == '[ERROR]') {
-          // TODO: some error handling
+
         } else {
           $('#tool-save-options').html('<h5 style="overflow-x: hidden;">Map Saved! You can share your map with a friend by using this link: <a href="http://metromapmaker.com/?map=' + data + ' " target="_blank">http://metromapmaker.com/?map=' + data + '</a></h5> <h5>You can then share this URL with a friend - and they can remix your map without you losing your original! If you make changes to this map, click Save and Share again to get a new URL.</h5>');
           $('#tool-save-options').show();
@@ -900,16 +949,21 @@
     });
     $('#tool-export-canvas').click(function() {
       activeTool = 'look';
+      $('#tool-station-options').hide();
+      $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
 
       if ($('#grid').is(':visible')) {
         $('#grid').hide();
         $('#canvas-container').show();
         $('#export-canvas-help').show();
+        $('button').attr('disabled', true);
+        $(this).attr('disabled', false);
         $('#tool-export-canvas').html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit map');
       } else {
         $('#grid').show();
         $('#canvas-container').hide();
         $('#export-canvas-help').hide();
+        $('button').attr('disabled', false);
         $('#tool-export-canvas').html('<i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image');
       }
       
@@ -947,7 +1001,7 @@
       } // for x
 
       // Draw the stations last (and separately), or they will be painted over by the lines themselves.
-      ctx.font = '20px sans-serif';
+      ctx.font = '700 20px sans-serif';
 
       for (var x=0; x<gridRows; x++){
         for (var y=0; y<gridCols; y++) {
@@ -980,10 +1034,7 @@
             ctx.closePath();
             ctx.fill();
 
-
-            var activeStation = document.getElementById('coord-x-' + x + '-y-' + y).children[0].id;
-            ctx.fillStyle = '#000000';
-            ctx.fillText(activeStation, (x * gridPixelMultiplier) + (gridPixelMultiplier * 1.5), (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+            
           } else if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station')) {
             // Outer circle
             ctx.fillStyle = '#000000';
@@ -998,12 +1049,37 @@
             ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true); 
             ctx.closePath();
             ctx.fill();
-
-            var activeStation = document.getElementById('coord-x-' + x + '-y-' + y).children[0].id;
-            ctx.fillStyle = '#000000';
-            ctx.fillText(activeStation, (x * gridPixelMultiplier) + gridPixelMultiplier, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
           } // if .has-station
 
+          // Write the station name
+          if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station')) {
+            ctx.save();
+            ctx.fillStyle = '#000000';
+            var activeStation = document.getElementById('coord-x-' + x + '-y-' + y).children[0].id.replaceAll('_', ' ');
+
+            // Rotate the canvas if specified in the station name orientation
+            if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot-45')) {
+              ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);  
+              ctx.rotate(-45 * (Math.PI/ 180));
+              ctx.fillText(activeStation, 15, 5);
+            } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot45')) {
+              ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);  
+              ctx.rotate(45 * (Math.PI/ 180));
+              ctx.fillText(activeStation, 15, 5);
+            } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot-90')) {
+              ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);  
+              ctx.rotate(-90 * (Math.PI/ 180));
+              ctx.fillText(activeStation, 15, 5);
+            } else  {
+              if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+                ctx.fillText(activeStation, (x * gridPixelMultiplier) + (gridPixelMultiplier * 1.5), (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+              } else {
+                ctx.fillText(activeStation, (x * gridPixelMultiplier) + gridPixelMultiplier, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+              }  
+            }
+
+            ctx.restore();
+          } // if .has-station (to write the station name)
         } // for y
       } // for x
     }); // #tool-export-canvas.click()
@@ -1044,7 +1120,11 @@
     $('#station-name').change(function() {
       // Get the coordinates where this station was placed
       // Use this to pre-populate which line this station services
-      $(this).val($(this).val().replaceAll('"', '').replaceAll("'", '').replaceAll('<', '').replaceAll('>', '').replaceAll('&', '').replaceAll('/', ''))
+      
+      // Remove invalid characters
+      // $(this).val($(this).val().replaceAll('"', '').replaceAll("'", '').replaceAll('<', '').replaceAll('>', '').replaceAll('&', '').replaceAll('/', '').replaceAll('`', ''))
+      $(this).val($(this).val().replace(/[^A-Za-z0-9\- ]/g, ''));
+
       var x = $('#station-coordinates-x').val();
       var y = $('#station-coordinates-y').val();
       if (x >= 0 && y >= 0 ) {
@@ -1052,6 +1132,25 @@
       }
 
       saveMapAsObject();
+    });
+
+    $('#station-name-orientation').change(function() {
+      var x = $('#station-coordinates-x').val();
+      var y = $('#station-coordinates-y').val();
+
+      $('#coord-x-' + x + '-y-' + y + ' .station').removeClass('rot45').removeClass('rot-45').removeClass('rot-90');
+
+      if (x >= 0 && y >= 0) {
+        if ($(this).val() == '0') {
+          // Default orientation, no class needed.
+        } else if ($(this).val() == '-45') {
+          $('#coord-x-' + x + '-y-' + y + ' .station').addClass('rot-45');
+        } else if ($(this).val() == '45') {
+          $('#coord-x-' + x + '-y-' + y + ' .station').addClass('rot45');
+        } else if ($(this).val() == '-90') {
+          $('#coord-x-' + x + '-y-' + y + ' .station').addClass('rot-90');
+        }
+      }
     });
 
     $('#station-transfer').click(function() {
