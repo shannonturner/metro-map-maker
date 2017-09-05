@@ -1,0 +1,134 @@
+body {
+  font-family: 'PT Sans', sans-serif;
+}
+
+#main-container {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+#controls {
+  border: 6px solid #666;
+  background-color: #eee;
+}
+
+#metro-map {
+  border: 2px solid black;
+}
+
+div#toolbox {
+  text-align: center;
+}
+
+#toolbox button {
+  display: block;
+  margin: 3px;
+  width: 100%;
+  color: #fff;
+}
+
+#grid {
+  display: flex;
+  cursor: crosshair;
+  overflow: scroll;
+  padding-left: 0;
+}
+
+.grid-col {
+  border: 1px solid;
+  border-color: #80CEFF;
+  width: 12px;
+  height: 12px;
+}
+
+button {
+  /* This makes lighter-colored rail line buttons (and every other button, really) easier to read */
+  text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+}
+
+button.rail-line {
+  height: 48px;
+  text-align: center;
+}
+
+#rail-line-bd1038 {
+  background-color: #bd1038;
+}
+
+#rail-line-df8600 {
+  background-color: #df8600;
+}
+
+#rail-line-f0ce15 {
+  background-color: #f0ce15;
+}
+
+#rail-line-00b251 {
+  background-color: #00b251;
+}
+
+#rail-line-0896d7 {
+  background-color: #0896d7;
+}
+
+#rail-line-662c90 {
+  background-color: #662c90;
+}
+
+#rail-line-a2a2a2 {
+  background-color: #a2a2a2;
+}
+
+#rail-line-new {
+  background-color: #ff8e88;
+}
+
+#rail-line-delete {
+  background-color: #fc3700;
+  height: 48px;
+}
+
+#create-new-rail-line {
+  background-color: #5cb85c;
+  border-color: #4cae4c;
+}
+
+#autosave-indicator {
+  margin-top: 10px;
+  height: 16px;
+}
+
+.station {
+  outline: 1px solid black;
+  border: 3px solid white;
+  width: 150%;
+  height: 150%;
+  position: relative;
+  left: -25%;
+  top: -25%;
+}
+
+.transfer-station {
+  outline: 3px solid black;
+  border: 9px solid white;
+  width: 300%;
+  height: 300%;
+  position: relative;
+  left: -100%;
+  top: -100%;
+}
+
+#station-name-orientation {
+  width: 100%;
+  margin: 3px;
+}
+
+hr {
+  border-top: 1px solid #666;
+}
+
+@media (max-width: 767px) {
+  #controls {
+    margin-top: 10px;
+  }
+}
