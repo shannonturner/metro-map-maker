@@ -257,11 +257,13 @@
         <div id="station-other-lines"></div>
         <h4>Station Name Orientation</h4>
         <h5>(Visible when you click Download as Image)</h5>
+        <h5>In relation to the station marker, where should the name begin?</h5>
         <select id="station-name-orientation">
-          <option value="0">Left to Right</option>
-          <option value="-90">Upward</option>
-          <option value="-45">45 degree angle upward</option>
-          <option value="45">45 degree angle downward</option>
+          <option value="0">On the right</option>
+          <option value="180">On the left</option>
+          <option value="-45">Above-right, 45&deg;</option>
+          <option value="45">Below-right, 45&deg;</option>
+          <option value="135">Below-left, 45&deg;</option>
         </select>
       </div>
       <button id="tool-eraser" class="btn btn-info"><i class="fa fa-eraser" aria-hidden="true"></i> Eraser</button>
@@ -420,15 +422,15 @@
               $('#station-transfer').prop('checked', false);
             }
 
-            console.log(document.getElementById('station-name-orientation').value);
-
             // Select the correct orientation too.
-            if (existingStationClasses.indexOf('rot-90') >= 0) {
-              document.getElementById('station-name-orientation').value = '-90';
+            if (existingStationClasses.indexOf('rot135') >= 0) {
+              document.getElementById('station-name-orientation').value = '135';
             } else if (existingStationClasses.indexOf('rot-45') >= 0) {
               document.getElementById('station-name-orientation').value = '-45';
             } else if (existingStationClasses.indexOf('rot45') >= 0) {
               document.getElementById('station-name-orientation').value = '45';
+            } else if (existingStationClasses.indexOf('rot180') >= 0) {
+              document.getElementById('station-name-orientation').value = '180';
             } else {
               document.getElementById('station-name-orientation').value = '0';
             }
@@ -575,12 +577,14 @@
                   $('<style>').prop('type', 'text/css')
                   .html('#rail-line-' + metroMapObject[x][y]["station"]["lines"][z] + ', .has-line-' + metroMapObject[x][y]["station"]["lines"][z] + '{ background-color: #' + metroMapObject[x][y]["station"]["lines"][z] + '; }').appendTo('head');
                 } // for lines
-                if (metroMapObject[x][y]["station"]["orientation"] == '-90') {
-                  $('#' + metroMapObject[x][y]["station"]["name"]).addClass('rot-90');
+                if (metroMapObject[x][y]["station"]["orientation"] == '180') {
+                  $('#' + metroMapObject[x][y]["station"]["name"]).addClass('rot180');
                 } else if (metroMapObject[x][y]["station"]["orientation"] == '-45') {
                   $('#' + metroMapObject[x][y]["station"]["name"]).addClass('rot-45');
                 } else if (metroMapObject[x][y]["station"]["orientation"] == '45') {
                   $('#' + metroMapObject[x][y]["station"]["name"]).addClass('rot45');
+                } else if (metroMapObject[x][y]["station"]["orientation"] == '135') {
+                  $('#' + metroMapObject[x][y]["station"]["name"]).addClass('rot135');
                 } // if station orientation
               } // if station name, lines
             } // if station
@@ -636,12 +640,14 @@
               if ($('#' + activeStation).hasClass('transfer-station')) {
                 metroMap[x][y]['station']['transfer'] = 1;
               } // if transfer station
-              if ($('#' + activeStation).hasClass('rot-90')) {
-                metroMap[x][y]['station']['orientation'] = '-90';
+              if ($('#' + activeStation).hasClass('rot180')) {
+                metroMap[x][y]['station']['orientation'] = '180';
               } else if ($('#' + activeStation).hasClass('rot-45')) {
                 metroMap[x][y]['station']['orientation'] = '-45';
               } else if ($('#' + activeStation).hasClass('rot45')) {
                 metroMap[x][y]['station']['orientation'] = '45';
+              } else if ($('#' + activeStation).hasClass('rot135')) {
+                metroMap[x][y]['station']['orientation'] = '135';
               } else {
                 metroMap[x][y]['station']['orientation'] = '0';
               }
@@ -1061,22 +1067,44 @@
             if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot-45')) {
               ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);  
               ctx.rotate(-45 * (Math.PI/ 180));
-              ctx.fillText(activeStation, 15, 5);
+              if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+                ctx.fillText(activeStation, 30, 5);
+              } else {
+                ctx.fillText(activeStation, 15, 5);
+              }
             } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot45')) {
-              ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);  
+              ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
               ctx.rotate(45 * (Math.PI/ 180));
-              ctx.fillText(activeStation, 15, 5);
-            } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot-90')) {
-              ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);  
-              ctx.rotate(-90 * (Math.PI/ 180));
-              ctx.fillText(activeStation, 15, 5);
+              if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+                ctx.fillText(activeStation, 30, 5);
+              } else {
+                ctx.fillText(activeStation, 15, 5);
+              }
+            } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot135')) {
+              var textSize = ctx.measureText(activeStation).width;
+              ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
+              ctx.rotate(-45 * (Math.PI/ 180));
+              if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+                ctx.fillText(activeStation, -1 * textSize - 30, 5);
+              } else {
+                ctx.fillText(activeStation, -1 * textSize - 15, 5);
+              }
+            } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot180')) {
+              // When drawing on the left, this isn't very different from drawing on the right 
+              //      with no rotation, except that we measure the text first
+              var textSize = ctx.measureText(activeStation).width;
+              if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+                ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier * 1.5) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+              } else {
+                ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+              }
             } else  {
               if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
                 ctx.fillText(activeStation, (x * gridPixelMultiplier) + (gridPixelMultiplier * 1.5), (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
               } else {
                 ctx.fillText(activeStation, (x * gridPixelMultiplier) + gridPixelMultiplier, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
               }  
-            }
+            } // else (of if station hasClass .rot-45)
 
             ctx.restore();
           } // if .has-station (to write the station name)
@@ -1121,7 +1149,7 @@
       // Get the coordinates where this station was placed
       // Use this to pre-populate which line this station services
       
-      // Remove invalid characters
+      // Remove characters that are invalid for an HTML DOM ID
       // $(this).val($(this).val().replaceAll('"', '').replaceAll("'", '').replaceAll('<', '').replaceAll('>', '').replaceAll('&', '').replaceAll('/', '').replaceAll('`', ''))
       $(this).val($(this).val().replace(/[^A-Za-z0-9\- ]/g, ''));
 
@@ -1147,8 +1175,10 @@
           $('#coord-x-' + x + '-y-' + y + ' .station').addClass('rot-45');
         } else if ($(this).val() == '45') {
           $('#coord-x-' + x + '-y-' + y + ' .station').addClass('rot45');
-        } else if ($(this).val() == '-90') {
-          $('#coord-x-' + x + '-y-' + y + ' .station').addClass('rot-90');
+        } else if ($(this).val() == '180') {
+          $('#coord-x-' + x + '-y-' + y + ' .station').addClass('rot180');
+        } else if ($(this).val() == '135') {
+          $('#coord-x-' + x + '-y-' + y + ' .station').addClass('rot135');
         }
       }
     });
