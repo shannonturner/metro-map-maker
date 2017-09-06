@@ -14,12 +14,12 @@ Features
 
 Get Started
 -----
-###Remix these pre-made maps!
+### Remix these pre-made maps!
 
-[DC Metro](https://metromapmaker.com/?map=1G_CzWEg)
-[DC Metro + Purple Line](https://metromapmaker.com/?map=RLTaZDPk)
+- [DC Metro](https://metromapmaker.com/?map=1G_CzWEg)
+- [DC Metro + Purple Line](https://metromapmaker.com/?map=RLTaZDPk)
 
-###Made something cool?
+### Made something cool?
 
 I'd love to see it! [Say hi!](https://twitter.com/svthmc)
 
@@ -27,4 +27,4 @@ Check it out
 -----
 This metro map was made with https://metromapmaker.com - pretty cool, right?
 
-[metromapimage]: https://github.com/shannonturner/metro-map-maker/raw/master/metromapmaker.png "This metro map was made with MetroMapMaker.com"
+[logo]: https://github.com/shannonturner/metro-map-maker/raw/master/metromapmaker.png "This metro map was made with MetroMapMaker.com"
