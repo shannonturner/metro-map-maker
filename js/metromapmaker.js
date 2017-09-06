@@ -228,7 +228,7 @@ function getURLParameter(name) {
 function autoLoad() {
   var savedMapHash = getURLParameter('map');
   if (savedMapHash) {
-    $.get('http://metromapmaker.com/save/' + savedMapHash).done(function (savedMapData) {
+    $.get('https://metromapmaker.com/save/' + savedMapHash).done(function (savedMapData) {
       savedMapData = savedMapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
       loadMapFromObject(JSON.parse(savedMapData));
     });
@@ -648,14 +648,14 @@ $(document).ready(function() {
   $('#tool-save-map').click(function() {
     activeTool = 'look';
     var savedMap = saveMapAsObject();
-    var saveMapURL = 'http://metromapmaker.com/save/';
+    var saveMapURL = 'https://metromapmaker.com/save/';
     $.post( saveMapURL, {
       'metroMap': savedMap
     }).done(function(data) {
       if (data.slice(0,7) == '[ERROR]') {
 
       } else {
-        $('#tool-save-options').html('<h5 style="overflow-x: hidden;">Map Saved! You can share your map with a friend by using this link: <a href="http://metromapmaker.com/?map=' + data + ' " target="_blank">http://metromapmaker.com/?map=' + data + '</a></h5> <h5>You can then share this URL with a friend - and they can remix your map without you losing your original! If you make changes to this map, click Save and Share again to get a new URL.</h5>');
+        $('#tool-save-options').html('<h5 style="overflow-x: hidden;">Map Saved! You can share your map with a friend by using this link: <a href="https://metromapmaker.com/?map=' + data + ' " target="_blank">https://metromapmaker.com/?map=' + data + '</a></h5> <h5>You can then share this URL with a friend - and they can remix your map without you losing your original! If you make changes to this map, click Save and Share again to get a new URL.</h5>');
         $('#tool-save-options').show();
       }
     });
@@ -872,7 +872,7 @@ $(document).ready(function() {
     var x = $('#station-coordinates-x').val();
     var y = $('#station-coordinates-y').val();
 
-    $('#coord-x-' + x + '-y-' + y + ' .station').removeClass('rot45').removeClass('rot-45').removeClass('rot-90');
+    $('#coord-x-' + x + '-y-' + y + ' .station').removeClass('rot45').removeClass('rot-45').removeClass('rot180').removeClass('rot135');
 
     if (x >= 0 && y >= 0) {
       if ($(this).val() == '0') {
