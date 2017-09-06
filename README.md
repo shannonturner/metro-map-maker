@@ -27,4 +27,4 @@ Check it out
 -----
 This metro map was made with https://metromapmaker.com - pretty cool, right?
 
-[logo]: https://github.com/shannonturner/metro-map-maker/raw/master/metromapmaker.png "This metro map was made with MetroMapMaker.com"
+![alt text](https://github.com/shannonturner/metro-map-maker/raw/master/metromapmaker.png "This metro map was made with MetroMapMaker.com")
