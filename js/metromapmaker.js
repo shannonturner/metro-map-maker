@@ -655,7 +655,7 @@ $(document).ready(function() {
       if (data.slice(0,7) == '[ERROR]') {
 
       } else {
-        $('#tool-save-options').html('<h5 style="overflow-x: hidden;">Map Saved! You can share your map with a friend by using this link: <a href="https://metromapmaker.com/?map=' + data.replace(/\s/g,'') + ' " target="_blank">https://metromapmaker.com/?map=' + data.replace(/\s/g,'') + '</a></h5> <h5>You can then share this URL with a friend - and they can remix your map without you losing your original! If you make changes to this map, click Save and Share again to get a new URL.</h5>');
+        $('#tool-save-options').html('<h5 style="overflow-x: hidden;">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="https://metromapmaker.com/?map=' + data.replace(/\s/g,'') + ' " target="_blank">https://metromapmaker.com/?map=' + data.replace(/\s/g,'') + '</a></h5> <h5>You can then share this URL with a friend - and they can remix your map without you losing your original! If you make changes to this map, click Save and Share again to get a new URL.</h5>');
         $('#tool-save-options').show();
       }
     });
@@ -817,6 +817,24 @@ $(document).ready(function() {
         } // if .has-station (to write the station name)
       } // for y
     } // for x
+
+    // Has a shareable link been created for this map? If so, add it to the corner
+    if ($('#shareable-map-link').length) {
+      ctx.font = '700 20px serif';
+      ctx.fillStyle = '#000000';
+      var shareableLink = $('#shareable-map-link').text();
+      var remixCredit = 'Remix this map! Go to ' + shareableLink;
+      var textWidth = ctx.measureText(remixCredit).width;
+      ctx.fillText(remixCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 25);
+    }
+
+    // Add a map credit to help promote the site
+    ctx.font = '700 20px sans-serif';
+    ctx.fillStyle = '#000000';
+    var mapCredit = 'Created with MetroMapMaker.com';
+    var textWidth = ctx.measureText(mapCredit).width;
+    ctx.fillText(mapCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 50);
+
   }); // #tool-export-canvas.click()
   $('#tool-clear-map').click(function() {
     drawGrid();
