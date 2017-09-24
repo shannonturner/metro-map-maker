@@ -823,9 +823,11 @@ $(document).ready(function() {
       ctx.font = '700 20px serif';
       ctx.fillStyle = '#000000';
       var shareableLink = $('#shareable-map-link').text();
-      var remixCredit = 'Remix this map! Go to ' + shareableLink;
-      var textWidth = ctx.measureText(remixCredit).width;
-      ctx.fillText(remixCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 25);
+      if (shareableLink.length > 0 && shareableLink.slice(0, 26) == "https://metromapmaker.com/") {
+        var remixCredit = 'Remix this map! Go to ' + shareableLink;
+        var textWidth = ctx.measureText(remixCredit).width;
+        ctx.fillText(remixCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 25);
+      }
     }
 
     // Add a map credit to help promote the site
