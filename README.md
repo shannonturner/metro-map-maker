@@ -18,6 +18,7 @@ Get Started
 
 - [DC Metro](https://metromapmaker.com/?map=1G_CzWEg)
 - [DC Metro + Purple Line](https://metromapmaker.com/?map=RLTaZDPk)
+- [SF BART](https://metromapmaker.com/?map=st11ur5Q)
 
 ### Made something cool?
 
@@ -28,3 +29,23 @@ Check it out
 This metro map was made with https://metromapmaker.com - pretty cool, right?
 
 ![alt text](https://github.com/shannonturner/metro-map-maker/raw/master/metromapmaker.png "This metro map was made with MetroMapMaker.com")
+
+Gallery
+-----
+
+Here are some select maps created by visitors to the site:
+
+- [WMATA, expanded!](https://metromapmaker.com/?map=TKurH7zL)
+- [DC + Brown Line](https://metromapmaker.com/?map=lt65HuSO)
+- [SF MUNI](https://metromapmaker.com/?map=47jyKfXF)
+- [A fictional city in the Netherlands?](https://metromapmaker.com/?map=UXcinsKg)
+- [Chicago, a small part](https://metromapmaker.com/?map=peVMbwRF)
+- [DC University Connector](https://metromapmaker.com/?map=V_mwOdnh)
+- [WMATA, but too much and a reason to made a bigger grid](https://metromapmaker.com/?map=e4xWuCds)
+- [Osaka, Japan](https://metromapmaker.com/?map=qVgjCfWO)
+- [Kyoto, Japan](https://metromapmaker.com/?map=AB13BtdC)
+- [Hong Kong](https://metromapmaker.com/?map=7mp56Cqj)
+- [Los Angeles Metro](https://metromapmaker.com/?map=xDdrOTq2)
+- [WMATA, expanded + Pink Line](https://metromapmaker.com/?map=SqppaM_q)
+- [Daegu Metro, Korea](https://metromapmaker.com/?map=2TwtLhxK)
+- [Bangalore, India](https://metromapmaker.com/?map=jVHF2CM-)
