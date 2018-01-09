@@ -333,10 +333,14 @@
     {% for map in saved_maps %}
       mapData = "{{ map.mapdata }}";
       mapData = mapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
-      mapData = JSON.parse(mapData);
-      galleryDrawGrid({{ map.id }});
-      galleryLoadMapFromSavedMapData(mapData, {{ map.id }});
-      galleryExportToCanvas({{ map.id }});
+      try {
+        mapData = JSON.parse(mapData);
+        galleryDrawGrid({{ map.id }});
+        galleryLoadMapFromSavedMapData(mapData, {{ map.id }});
+        galleryExportToCanvas({{ map.id }});
+      } catch (e) {
+        console.log("[WARN] Skipping #{{ map.id }} ({{ map.urlhash }}) - bad JSON")
+      }
     {% endfor %}
 
   });
