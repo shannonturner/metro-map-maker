@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
+
+    <meta property="og:title" content="Metro Map Maker">
+    <meta property="og:site_name" content="Metro Map Maker">
+    <meta property="og:url" content="https://metromapmaker.com">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
+    <meta property="og:image" content="https://metromapmaker.com/metromapmaker.png">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="https://metromapmaker.com">
+    <meta name="twitter:creator" content="@svthmc">
+    <meta name="twitter:title" content="Metro Map Maker">
+    <meta name="twitter:description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
+    <meta name="twitter:image:src" content="https://metromapmaker.com/metromapmaker.png">
+
+    <title>Metro Map Maker</title>
+
+    <link rel="icon" href="favicon.ico">
+
+    <link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel='stylesheet' href='css/spectrum.css' />
+    <script src="https://use.fontawesome.com/9f1aeb80e7.js"></script>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+      ga('create', 'UA-49936574-4', 'auto');
+      ga('send', 'pageview');
+
+    </script>
+
+    <link rel="stylesheet" href="css/metromapmaker.css">
+
+  </head>
+
+<body>
+
+<a name="top"></a>
+
+<div id="main-container" class="container-fluid">
+
+  <div class="visible-xs text-center row">
+    <div class="col-lg-10 col-offset-1">
+      <h3>Metro Map Maker</h3>
+      <h5>Create your own metro maps, save them, and share with friends!</h5>
+      <h5>To get started, all the tools you need are below the grid.</h5>
+      <h5>(This works best on desktop; some features may not work correctly on your mobile device.)</h5>
+    </div>
+  </div>
+
+  <div id="gallery-grids" class="col-lg-10 start-hidden">
+    {% for map in saved_maps %}
+        <div id="grid-m-{{ map.id }}" class="col-lg-10"></div>
+    {% endfor %}
+  </div>
+
+  <div id="gallery" class="col-lg-10">
+
+    {% for map in saved_maps %}
+
+        <h3>Saved Map #{{ map.id }} (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>)</h3>
+
+        <canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive"></canvas>
+        
+        <hr>
+
+    {% endfor %}
+
+  </div>
+
+</div> <!-- #main-container -->
+
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+  <script type="text/javascript">
+
+  String.prototype.replaceAll = function(search, replacement) {
+    var target = this;
+    return target.replace(new RegExp(search, 'g'), replacement);
+  };
+
+  function galleryDrawGrid(mapId) {
+    var gridRows = 80, gridCols = 80, grid = "";
+    for (var x=0; x<gridRows; x++) {
+      grid += '<div class="grid-row">';
+      for (var y=0; y<gridCols; y++) {
+        grid += '<div id="m-' + mapId + 'coord-x-' + x + '-y-' + y + '" class="grid-col"></div>';
+      }
+      grid += '</div> <!-- div.grid-row -->';
+    }
+
+    $('#grid-m-' + mapId).html(grid);
+  } // function galleryDrawGrid(mapId)
+
+  function galleryGetActiveLine(x, y, mapId) {
+    // Given an x, y coordinate pair, return the hex code for the line you're on.
+    // Use this to retrieve the line for a given point on a map.
+    var classes = document.getElementById('m-' + mapId + 'coord-x-' + x + '-y-' + y).className.split(/\s+/);
+    for (var z=0; z<classes.length; z++) {
+      if (classes[z].indexOf('has-line-') >= 0) {
+        var activeLine = classes[z].slice(9, 15);
+      }
+    }
+    return activeLine;
+  }
+
+  function galleryLoadMapFromSavedMapData(metroMapObject, mapId) {
+     for (var x in metroMapObject) {
+        if (metroMapObject.hasOwnProperty(x)) {
+          for (var y in metroMapObject[x]) {
+            if (metroMapObject[x].hasOwnProperty(y)) {
+              $('#m-' + mapId + 'coord-x-' + x + '-y-' + y).addClass('has-line');
+              $('#m-' + mapId + 'coord-x-' + x + '-y-' + y).addClass('has-line-' + metroMapObject[x][y]['line']);
+              $('#m-' + mapId + 'coord-x-' + x + '-y-' + y).css({
+                  'background-color': '#' + metroMapObject[x][y]['line']
+              });
+              if (metroMapObject[x][y]["station"]) {
+                $('#m-' + mapId + 'coord-x-' + x + '-y-' + y).addClass('has-station');
+                $('#m-' + mapId + 'coord-x-' + x + '-y-' + y).html('<div id="m-' + mapId + '-' + metroMapObject[x][y]["station"]["name"] +'" class="station"></div>');
+                if (metroMapObject[x][y]["station"]["transfer"] == 1) {
+                  $('#m-' + mapId + '-' + metroMapObject[x][y]["station"]["name"]).addClass('transfer-station');
+                }
+                if (metroMapObject[x][y]["station"]["lines"] && metroMapObject[x][y]['station']['name']) {
+                  for (var z=0; z<metroMapObject[x][y]["station"]["lines"].length; z++) {
+                    $('#m-' + mapId + '-' + metroMapObject[x][y]["station"]["name"]).addClass('has-line-' + metroMapObject[x][y]["station"]["lines"][z]);
+                    // Rail line buttons should use their color for the buttons, too.
+                    $('<style>').prop('type', 'text/css')
+                    .html('#m-' + mapId + 'rail-line-' + metroMapObject[x][y]["station"]["lines"][z] + ', .has-line-' + metroMapObject[x][y]["station"]["lines"][z] + '{ background-color: #' + metroMapObject[x][y]["station"]["lines"][z] + '; }').appendTo('head');
+                  } // for lines
+                  if (metroMapObject[x][y]["station"]["orientation"] == '180') {
+                    $('#m-' + mapId + '-' + metroMapObject[x][y]["station"]["name"]).addClass('rot180');
+                  } else if (metroMapObject[x][y]["station"]["orientation"] == '-45') {
+                    $('#m-' + mapId + '-' + metroMapObject[x][y]["station"]["name"]).addClass('rot-45');
+                  } else if (metroMapObject[x][y]["station"]["orientation"] == '45') {
+                    $('#m-' + mapId + '-' + metroMapObject[x][y]["station"]["name"]).addClass('rot45');
+                  } else if (metroMapObject[x][y]["station"]["orientation"] == '135') {
+                    $('#m-' + mapId + '-' + metroMapObject[x][y]["station"]["name"]).addClass('rot135');
+                  } // if station orientation
+                } // if station name, lines
+              } // if station
+            } // if y
+          } // for y in x
+        } // if x
+      } // for x in map
+
+  } // function galleryLoadMapFromSavedMapData(metroMapObject, mapId)
+
+  function galleryExportToCanvas(mapId) {
+    var canvas = document.getElementById('metro-map-gallery-canvas-' + mapId);
+    var ctx = canvas.getContext('2d');
+    var gridRows = 80, gridCols = 80;
+    // How much larger is the canvas than the grid has in squares?
+    // If the grid has 80x80 squares and the canvas is 1600x1600,
+    //    then the gridPixelMultiplier is 20 (1600 / 80)
+    var gridPixelMultiplier = canvas.width / gridCols; // 20
+
+    // Clear the old canvas if it was drawn
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Make the background white instead of transparent
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    for (var x=0; x<gridRows; x++){
+      for (var y=0; y<gridCols; y++) {
+
+        if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).hasClass('has-line')) {
+          // Get color of the line
+          ctx.fillStyle = '#' + galleryGetActiveLine(x, y, mapId);
+          // ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier); // I'm not sure this does anything
+
+          // arc(x, y, radius, startAngle, endAngle, anticlockwise)
+          // Draw an arc centered at x, y position with radius r
+          ctx.beginPath();
+          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
+          ctx.closePath();
+          ctx.fill();
+        } // if .has-line
+      } // for y
+    } // for x
+
+    // Draw the stations last (and separately), or they will be painted over by the lines themselves.
+    ctx.font = '700 20px sans-serif';
+
+    for (var x=0; x<gridRows; x++){
+      for (var y=0; y<gridCols; y++) {
+        if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).hasClass('has-station') && $('#m-' + mapId + 'coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+          // Outer circle
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * 1.2, 0, Math.PI * 2, true); 
+          ctx.closePath();
+          ctx.fill();
+
+          // Inner circle
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); 
+          ctx.closePath();
+          ctx.fill();
+
+          // Outer circle
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true); 
+          ctx.closePath();
+          ctx.fill();
+
+          // Inner circle
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true); 
+          ctx.closePath();
+          ctx.fill();
+
+          
+        } else if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).hasClass('has-station')) {
+          // Outer circle
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true); 
+          ctx.closePath();
+          ctx.fill();
+
+          // Inner circle
+          ctx.fillStyle = '#ffffff';
+          ctx.beginPath();
+          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true); 
+          ctx.closePath();
+          ctx.fill();
+        } // if .has-station
+
+        // Write the station name
+        if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).hasClass('has-station')) {
+          ctx.save();
+          ctx.fillStyle = '#000000';
+          var activeStation = document.getElementById('m-' + mapId + 'coord-x-' + x + '-y-' + y).children[0].id.replaceAll('_', ' ');
+
+          // For the Gallery View, I want to remove the mapId prefixing the document ID
+          activeStation = activeStation.slice(String("#m-" + mapId).length);
+
+          // Rotate the canvas if specified in the station name orientation
+          if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y + ' .station').hasClass('rot-45')) {
+            ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);  
+            ctx.rotate(-45 * (Math.PI/ 180));
+            if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+              ctx.fillText(activeStation, 30, 5);
+            } else {
+              ctx.fillText(activeStation, 15, 5);
+            }
+          } else if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y + ' .station').hasClass('rot45')) {
+            ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
+            ctx.rotate(45 * (Math.PI/ 180));
+            if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+              ctx.fillText(activeStation, 30, 5);
+            } else {
+              ctx.fillText(activeStation, 15, 5);
+            }
+          } else if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y + ' .station').hasClass('rot135')) {
+            var textSize = ctx.measureText(activeStation).width;
+            ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
+            ctx.rotate(-45 * (Math.PI/ 180));
+            if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+              ctx.fillText(activeStation, -1 * textSize - 30, 5);
+            } else {
+              ctx.fillText(activeStation, -1 * textSize - 15, 5);
+            }
+          } else if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y + ' .station').hasClass('rot180')) {
+            // When drawing on the left, this isn't very different from drawing on the right 
+            //      with no rotation, except that we measure the text first
+            var textSize = ctx.measureText(activeStation).width;
+            if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+              ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier * 1.5) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+            } else {
+              ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+            }
+          } else  {
+            if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+              ctx.fillText(activeStation, (x * gridPixelMultiplier) + (gridPixelMultiplier * 1.5), (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+            } else {
+              ctx.fillText(activeStation, (x * gridPixelMultiplier) + gridPixelMultiplier, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+            }  
+          } // else (of if station hasClass .rot-45)
+
+          ctx.restore();
+        } // if .has-station (to write the station name)
+      } // for y
+    } // for x
+
+    // Has a shareable link been created for this map? If so, add it to the corner
+    if ($('#shareable-map-link').length) {
+      ctx.font = '700 20px serif';
+      ctx.fillStyle = '#000000';
+      var shareableLink = $('#shareable-map-link').text();
+      if (shareableLink.length > 0 && shareableLink.slice(0, 26) == "https://metromapmaker.com/") {
+        var remixCredit = 'Remix this map! Go to ' + shareableLink;
+        var textWidth = ctx.measureText(remixCredit).width;
+        ctx.fillText(remixCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 25);
+      }
+    }
+
+    // Add a map credit to help promote the site
+    ctx.font = '700 20px sans-serif';
+    ctx.fillStyle = '#000000';
+    var mapCredit = 'Created with MetroMapMaker.com';
+    var textWidth = ctx.measureText(mapCredit).width;
+    ctx.fillText(mapCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 50);
+  } // function galleryExportToCanvas(mapId)
+
+  $(document).ready(function() {
+
+    {% for map in saved_maps %}
+      mapData = "{{ map.mapdata }}";
+      mapData = mapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
+      mapData = JSON.parse(mapData);
+      galleryDrawGrid({{ map.id }});
+      galleryLoadMapFromSavedMapData(mapData, {{ map.id }});
+      galleryExportToCanvas({{ map.id }});
+    {% endfor %}
+
+  });
+
+  </script>
+
+  </body>
+</html>
+

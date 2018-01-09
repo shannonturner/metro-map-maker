@@ -12,6 +12,22 @@ from .validator import is_hex, sanitize_string, validate_metro_map, hex64
 
 # Create your views here.
 
+class MapGalleryView(TemplateView):
+
+    """ Get: Display a gallery of maps that have been saved in the system.
+             This is helpful for quickly browsing maps that have been created.
+    """
+
+    def get(self, request, **kwargs):
+
+        saved_maps = SavedMap.objects.filter(gallery_visible=True).order_by('id')
+
+        context = {
+            'saved_maps': saved_maps
+        }
+
+        return render(request, 'MapGalleryView.html', context)
+
 class MapDataView(TemplateView):
 
     """ Get: Given a hash URL, load a saved map

@@ -10,6 +10,7 @@ class SavedMap(models.Model):
 
     urlhash = models.CharField(max_length=64)
     mapdata = models.TextField()
+    gallery_visible = models.BooleanField(default=True)
 
     def __unicode__(self):
         return self.urlhash
