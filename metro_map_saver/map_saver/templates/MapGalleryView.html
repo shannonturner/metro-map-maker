@@ -28,7 +28,7 @@
 
     <link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel='stylesheet' href='css/spectrum.css' />
+
     <script src="https://use.fontawesome.com/9f1aeb80e7.js"></script>
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -48,8 +48,6 @@
       ga('send', 'pageview');
 
     </script>
-
-    <link rel="stylesheet" href="css/metromapmaker.css">
 
   </head>
 
@@ -78,6 +76,7 @@
     <div class="pagination">
         <span class="step-links">
             {% if saved_maps.has_previous %}
+                <a href="./1"><button class="btn-primary">First Page</button></a>
                 <a href="./{{ saved_maps.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
             {% endif %}
 
@@ -87,6 +86,7 @@
 
             {% if saved_maps.has_next %}
                 <a href="./{{ saved_maps.next_page_number }}"><button class="btn-info">Next Page</button></a>
+                <a href="./{{ saved_maps.paginator.num_pages }}"><button class="btn-primary">Last Page</button></a>
             {% endif %}
         </span>
     </div>
@@ -110,6 +110,7 @@
     <div class="pagination">
         <span class="step-links">
             {% if saved_maps.has_previous %}
+                <a href="./1"><button class="btn-primary">First Page</button></a>
                 <a href="./{{ saved_maps.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
             {% endif %}
 
@@ -119,6 +120,7 @@
 
             {% if saved_maps.has_next %}
                 <a href="./{{ saved_maps.next_page_number }}"><button class="btn-info">Next Page</button></a>
+                <a href="./{{ saved_maps.paginator.num_pages }}"><button class="btn-primary">Last Page</button></a>
             {% endif %}
         </span>
     </div>
