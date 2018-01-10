@@ -106,6 +106,24 @@
 
   </div>
 
+  <div id="gallery-controls" class="col-lg-6 col-lg-offset-3 text-center">
+    <div class="pagination">
+        <span class="step-links">
+            {% if saved_maps.has_previous %}
+                <a href="./{{ saved_maps.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
+            {% endif %}
+
+            <span class="current" style="margin: 10px;">
+                <b>Page {{ saved_maps.number }} of {{ saved_maps.paginator.num_pages }}</b>
+            </span>
+
+            {% if saved_maps.has_next %}
+                <a href="./{{ saved_maps.next_page_number }}"><button class="btn-info">Next Page</button></a>
+            {% endif %}
+        </span>
+    </div>
+  </div>
+
 </div> <!-- #main-container -->
 
   <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
