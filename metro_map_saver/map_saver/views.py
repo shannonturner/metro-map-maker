@@ -25,10 +25,15 @@ class MapGalleryView(TemplateView):
         maps_total = SavedMap.objects.filter(gallery_visible=True).count()
 
         visible_maps = SavedMap.objects.filter(gallery_visible=True).order_by('id')
-        paginator = Paginator(saved_maps, MAPS_PER_PAGE)
+        paginator = Paginator(visible_maps, MAPS_PER_PAGE)
 
         page = kwargs.get('page')
-        saved_maps = paginator.get_page(page)
+        try:
+            saved_maps = paginator.page(page)
+        except PageNotAnInteger:
+            saved_maps = paginator.page(1)
+        except EmptyPage:
+            saved_maps = paginator.page(paginator.num_pages)
 
         context = {
             'saved_maps': saved_maps,

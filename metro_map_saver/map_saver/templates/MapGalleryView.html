@@ -77,18 +77,16 @@
   <div id="gallery-controls" class="col-lg-6 col-lg-offset-3 text-center">
     <div class="pagination">
         <span class="step-links">
-            {% if contacts.has_previous %}
-                <a href="?page=1">&laquo; first</a>
-                <a href="?page={{ contacts.previous_page_number }}">previous</a>
+            {% if saved_maps.has_previous %}
+                <a href="./{{ saved_maps.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
             {% endif %}
 
-            <span class="current">
-                Page {{ contacts.number }} of {{ contacts.paginator.num_pages }}.
+            <span class="current" style="margin: 10px;">
+                <b>Page {{ saved_maps.number }} of {{ saved_maps.paginator.num_pages }}</b>
             </span>
 
-            {% if contacts.has_next %}
-                <a href="?page={{ contacts.next_page_number }}">next</a>
-                <a href="?page={{ contacts.paginator.num_pages }}">last &raquo;</a>
+            {% if saved_maps.has_next %}
+                <a href="./{{ saved_maps.next_page_number }}"><button class="btn-info">Next Page</button></a>
             {% endif %}
         </span>
     </div>
