@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
-
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 import hashlib
 from .models import SavedMap
@@ -20,10 +20,19 @@ class MapGalleryView(TemplateView):
 
     def get(self, request, **kwargs):
 
-        saved_maps = SavedMap.objects.filter(gallery_visible=True).order_by('id')
+        MAPS_PER_PAGE = 10
+
+        maps_total = SavedMap.objects.filter(gallery_visible=True).count()
+
+        visible_maps = SavedMap.objects.filter(gallery_visible=True).order_by('id')
+        paginator = Paginator(saved_maps, MAPS_PER_PAGE)
+
+        page = kwargs.get('page')
+        saved_maps = paginator.get_page(page)
 
         context = {
-            'saved_maps': saved_maps
+            'saved_maps': saved_maps,
+            'maps_total': maps_total,
         }
 
         return render(request, 'MapGalleryView.html', context)

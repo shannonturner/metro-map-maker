@@ -68,13 +68,33 @@
     </div>
   </div>
 
-  <div id="gallery-grids" class="col-lg-10 start-hidden">
+  <div id="gallery-grids" class="col-lg-10 hidden">
     {% for map in saved_maps %}
         <div id="grid-m-{{ map.id }}" class="col-lg-10"></div>
     {% endfor %}
   </div>
 
-  <div id="gallery" class="col-lg-10">
+  <div id="gallery-controls" class="col-lg-6 col-lg-offset-3 text-center">
+    <div class="pagination">
+        <span class="step-links">
+            {% if contacts.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ contacts.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ contacts.number }} of {{ contacts.paginator.num_pages }}.
+            </span>
+
+            {% if contacts.has_next %}
+                <a href="?page={{ contacts.next_page_number }}">next</a>
+                <a href="?page={{ contacts.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+  </div>
+
+  <div id="gallery" class="col-lg-10 col-lg-offset-1">
 
     {% for map in saved_maps %}
 

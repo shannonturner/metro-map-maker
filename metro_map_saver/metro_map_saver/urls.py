@@ -20,7 +20,7 @@ from map_saver.views import MapDataView, MapGalleryView
 
 urlpatterns = [
     url(r'^(?:save/)?admin/', admin.site.urls),
-    url(r'^(?:save/)?admin/gallery/', MapGalleryView.as_view(), name='gallery'),
+    url(r'^(?:save/)?admin/gallery/(?P<page>[0-9]+)?$', MapGalleryView.as_view(), name='gallery'),
     url(r'^(?:save/)?$', MapDataView.as_view(), name='save_map'),
     url(r'^(?:save/)?(?P<urlhash>[0-9a-zA-Z\-\_]+)$', MapDataView.as_view(), name='load_map'),
 ]
