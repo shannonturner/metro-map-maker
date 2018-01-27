@@ -1,0 +1,18 @@
+<style>
+
+.addition {
+    background-color: #acf2bd;
+}
+
+.deletion {
+    background-color: #fdb8c0;
+}
+
+</style>
+
+<h4>Difference between {{ maps.0.urlhash }} and {{ maps.1.urlhash }}</h4>
+<pre>
+{% for line in diff %}
+    <span class="{% if line.0 == '+' %}addition{% elif line.0 == '-' %}deletion{% endif %}">{{line}}</span>
+{% endfor %}
+</pre>

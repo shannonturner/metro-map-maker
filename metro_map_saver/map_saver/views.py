@@ -6,7 +6,10 @@ from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
+import difflib
 import hashlib
+import json
+import pprint
 from .models import SavedMap
 from .validator import is_hex, sanitize_string, validate_metro_map, hex64
 
@@ -41,6 +44,58 @@ class MapGalleryView(TemplateView):
         }
 
         return render(request, 'MapGalleryView.html', context)
+
+
+class MapDiffView(TemplateView):
+
+    def get(self, request, **kwargs):
+
+        """ Compare two similar maps and return a diff
+        """
+
+        context = {}
+        maps = []
+
+        pretty_printer = pprint.PrettyPrinter(indent=1)
+
+        try:
+            maps.append(SavedMap.objects.get(urlhash=kwargs.get('urlhash_first')))
+            maps.append(SavedMap.objects.get(urlhash=kwargs.get('urlhash_second')))
+        except ObjectDoesNotExist:
+            context['error'] = '[ERROR] One or both of the maps does not exist (either {0} or {1})'.format(kwargs.get('urlhash_first'), kwargs.get('urlhash_second'))
+        except MultipleObjectsReturned:
+            context['error'] = '[ERROR] Multiple objects returned during an objects.get() call. This should never happen.'
+        else:
+
+            context['maps'] = maps[:]
+
+            for index, metro_map in enumerate(maps):
+                # It's excessively silly that I need to json.loads() twice here
+                #       but this is the ONLY thing that I could actually get to work after
+                #       many, many hours of trying.
+                # Maybe this is easier in Python 3?
+                maps[index] = pretty_printer.pformat(
+                    json.loads(
+                        str(
+                            json.loads(
+                                json.dumps(
+                                    metro_map.mapdata.replace("u'", "'").replace("'", '"').strip('"').strip("'")
+                                )
+                            )
+                        )
+                    )
+                )
+
+            diff = difflib.ndiff(maps[0].splitlines(1), maps[1].splitlines(1))
+
+            context['diff'] = []
+
+            for line in diff:
+                if line[0] in ('+', '-'):
+                    context['diff'].append(line.strip().replace("u'", "'").replace('  ', ' ').replace('  ', ' '))
+
+        return render(request, 'MapDiffView.html', context)
+
 
 class MapDataView(TemplateView):
 

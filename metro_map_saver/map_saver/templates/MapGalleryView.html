@@ -49,6 +49,27 @@
 
     </script>
 
+    <style>
+
+    .map-link {
+      display: inline;
+      margin-right: 25px;
+    }
+
+    .diff-a, .diff-b {
+      display: inline;
+    }
+
+    #diff-sidebar {
+      position: fixed;
+      left: 75%;
+      background: #eee;
+      padding-top: 20px;
+      padding-bottom: 20px;
+    }
+
+    </style>
+
   </head>
 
 <body>
@@ -72,31 +93,40 @@
     {% endfor %}
   </div>
 
-  <div id="gallery-controls" class="col-lg-6 col-lg-offset-3 text-center">
-    <div class="pagination">
-        <span class="step-links">
-            {% if saved_maps.has_previous %}
-                <a href="./1"><button class="btn-primary">First Page</button></a>
-                <a href="./{{ saved_maps.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
-            {% endif %}
+  <!-- Gallery Controls (Top) -->
+  <div class="row">
+    <div class="col-lg-3"></div>
+    <div id="gallery-controls" class="col-lg-6 text-center">
+      <div class="pagination">
+          <span class="step-links">
+              {% if saved_maps.has_previous %}
+                  <a href="./1"><button class="btn-primary">First Page</button></a>
+                  <a href="./{{ saved_maps.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
+              {% endif %}
 
-            <span class="current" style="margin: 10px;">
-                <b>Page {{ saved_maps.number }} of {{ saved_maps.paginator.num_pages }}</b>
-            </span>
+              <span class="current" style="margin: 10px;">
+                  <b>Page {{ saved_maps.number }} of {{ saved_maps.paginator.num_pages }}</b>
+              </span>
 
-            {% if saved_maps.has_next %}
-                <a href="./{{ saved_maps.next_page_number }}"><button class="btn-info">Next Page</button></a>
-                <a href="./{{ saved_maps.paginator.num_pages }}"><button class="btn-primary">Last Page</button></a>
-            {% endif %}
-        </span>
-    </div>
-  </div>
+              {% if saved_maps.has_next %}
+                  <a href="./{{ saved_maps.next_page_number }}"><button class="btn-info">Next Page</button></a>
+                  <a href="./{{ saved_maps.paginator.num_pages }}"><button class="btn-primary">Last Page</button></a>
+              {% endif %}
+          </span>
+      </div>
+    </div> <!-- div#gallery-controls -->
+    <div class="col-lg-3"></div>
+  </div> <!-- div.row -->
 
-  <div id="gallery" class="col-lg-10 col-lg-offset-1">
+  <div class="col-lg-1"></div>
+
+  <div id="gallery" class="col-lg-7">
 
     {% for map in saved_maps %}
 
-        <h3>Saved Map #{{ map.id }} (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>)</h3>
+        <h3 class="map-link">Saved Map #{{ map.id }} (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>)</h3> 
+        <button id="diff-a-{{ map.urlhash }}-{{ map.id }}" class="diff diff-a btn-info">Diff A</button> 
+        <button id="diff-b-{{ map.urlhash }}-{{ map.id }}" class="diff diff-b btn-primary">Diff B</button>
 
         <canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive"></canvas>
         
@@ -104,7 +134,23 @@
 
     {% endfor %}
 
-  </div>
+  </div> <!-- div#gallery -->
+
+  <div id="diff-sidebar" class="col-lg-3">
+    <h4 class="text-center">Calculate Map Difference</h4>
+    <h4>Map A: <input id="diff-map-a" type="text" placeholder="Click 'Diff A' to fill" disabled><input id="diff-map-id-a" type="hidden"></h4>
+    <h4>Map B: <input id="diff-map-b" type="text" placeholder="Click 'Diff B' to fill" disabled><input id="diff-map-id-b" type="hidden"></h4>
+    <div id="diff-pane"> </div>
+    <div class="text-center">
+      <button id="keep-a" class="diff-keep btn-info">Keep A</button>
+      <button id="keep-b" class="diff-keep btn-primary">Keep B</button>
+    </div>
+    <div id="diff-discard" class="start-hidden">
+      <h4 class="text-center">Maps to Hide from Gallery View</h4>
+    </div>
+  </div> <!-- div#diff-sidebar -->
+
+  <div class="col-lg-1"></div>
 
   <div id="gallery-controls" class="col-lg-6 col-lg-offset-3 text-center">
     <div class="pagination">
@@ -380,6 +426,42 @@
         console.log("[WARN] Skipping #{{ map.id }} ({{ map.urlhash }}) - bad JSON")
       }
     {% endfor %}
+
+    $('.start-hidden').hide();
+
+    // Calculate diffs!
+    $('.diff').click(function() {
+
+      var thisMapUrlhash = $(this).attr('id').split('-').slice(2, 3);
+      var thisMapId = $(this).attr('id').split('-').slice(3);
+
+      if ($(this).hasClass('diff-a')) {
+        $('#diff-map-a').val(thisMapUrlhash);
+        $('#diff-map-id-a').val(thisMapId);
+      } else if ($(this).hasClass('diff-b')) {
+        $('#diff-map-b').val(thisMapUrlhash);
+        $('#diff-map-id-b').val(thisMapId);
+      }
+
+      if ($('#diff-map-a').val().length > 0 && $('#diff-map-b').val().length > 0) {
+        $.get('/save/admin/diff/' + $('#diff-map-a').val() + '/' + $('#diff-map-b').val()).done(function(data) {
+          $('#diff-pane').html(data);
+        });
+      }
+    });
+
+    $('.diff-keep').click(function() {
+      // If I can figure out how to get the Admin interface working
+      //    then TODO: make this @staff_required and have it update the map's gallery visibility directly
+      //               because having to edit visibility directly is a major pain
+      if ($(this).attr('id') == 'keep-a') {
+        var thisMapId = $('#diff-map-id-b').val();
+      } else if ($(this).attr('id') == 'keep-b') {
+        var thisMapId = $('#diff-map-id-a').val();
+      }
+      $('#diff-discard').show();
+      $('#diff-discard').append('<h5>' + thisMapId + '</h5>');
+    });
 
   });
 
