@@ -63,9 +63,16 @@
     #diff-sidebar {
       position: fixed;
       left: 75%;
+      top: 0%;
       background: #eee;
       padding-top: 20px;
       padding-bottom: 20px;
+      max-height: 100%;
+      overflow-y: auto;
+    }
+
+    #diff-pane {
+      overflow-y: auto;
     }
 
     </style>
@@ -125,7 +132,7 @@
     {% for map in saved_maps %}
 
         <h3 class="map-link">Saved Map #{{ map.id }} (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>)</h3> 
-        <button id="diff-a-{{ map.urlhash }}-{{ map.id }}" class="diff diff-a btn-info">Diff A</button> 
+        <button id="diff-a-{{ map.urlhash }}-{{ map.id }}" class="diff diff-a btn-info">Diff A</button>
         <button id="diff-b-{{ map.urlhash }}-{{ map.id }}" class="diff diff-b btn-primary">Diff B</button>
 
         <canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive"></canvas>
