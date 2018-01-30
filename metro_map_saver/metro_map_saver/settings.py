@@ -30,7 +30,6 @@ ALLOWED_HOSTS = [
     'www.metromapmaker.com'
 ]
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -122,3 +121,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# When a static site is on the root level and Django is not, use
+# FORCE_SCRIPT_NAME in order to resolve the URL paths properly
+# This was my problem with not being able to reach the admin
+# See https://docs.djangoproject.com/en/1.11/ref/settings/#force-script-name for more details
+FORCE_SCRIPT_NAME = '/save'
+
+if not DEBUG:
+    STATIC_ROOT = '/home/sturner/webapps/metro_map_maker_static/static/'
