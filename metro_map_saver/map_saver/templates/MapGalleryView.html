@@ -134,6 +134,9 @@
         <h3 class="map-link">Saved Map #{{ map.id }} (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>)</h3> 
         <button id="diff-a-{{ map.urlhash }}-{{ map.id }}" class="diff diff-a btn-info">Diff A</button>
         <button id="diff-b-{{ map.urlhash }}-{{ map.id }}" class="diff diff-b btn-primary">Diff B</button>
+        {% if is_staff %}
+        <button id="hide-{{ map.id }}" class="hide-map btn-warning">Hide</button>
+        {% endif %}
 
         <canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive"></canvas>
         
@@ -469,6 +472,28 @@
       $('#diff-discard').show();
       $('#diff-discard').append('<h5>' + thisMapId + '</h5>');
     });
+
+    {% if is_staff %}
+    $('.hide-map').click(function() {
+      var hideMapButton = $(this);
+      var thisMapId = $(this).attr('id').slice(5);
+      $.post('/save/admin/action/', {
+        "action": "hide",
+        "map": thisMapId
+      }).done(function(data) {
+        if (data == 'Success') {
+          hideMapButton.removeClass('hide-map');
+          hideMapButton.removeClass('btn-warning');
+          hideMapButton.addClass('btn-success');
+          hideMapButton.html('&#10004; Hidden');
+        } else {
+          hideMapButton.removeClass('btn-warning');
+          hideMapButton.addClass('btn-danger');
+          hideMapButton.text('Error: Could not hide');
+        }
+      });
+    });
+    {% endif %}
 
   });
 

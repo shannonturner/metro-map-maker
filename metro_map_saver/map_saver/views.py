@@ -5,6 +5,8 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.utils.decorators import method_decorator
+from django.contrib.admin.views.decorators import staff_member_required
 
 import difflib
 import hashlib
@@ -41,9 +43,33 @@ class MapGalleryView(TemplateView):
         context = {
             'saved_maps': saved_maps,
             'maps_total': maps_total,
+            'is_staff': request.user.is_staff,
         }
 
         return render(request, 'MapGalleryView.html', context)
+
+
+class MapAdminActionView(TemplateView):
+
+    @method_decorator(staff_member_required)
+    def post(self, request, **kwargs):
+
+        """ Perform an administrator action on a map
+        """
+
+        context = {}
+
+        if request.POST.get('action') in ('hide', ) and request.POST.get('map'):
+            try:
+                this_map = SavedMap.objects.get(id=request.POST.get('map'))
+            except ObjectDoesNotExist:
+                context['status'] = '[ERROR] Map does not exist.'
+            else:
+                if request.POST.get('action') == 'hide':
+                    this_map.gallery_visible = False
+                    this_map.save()
+                context['status'] = 'Success'
+            return render(request, 'MapAdminActionView.html', context)
 
 
 class MapDiffView(TemplateView):

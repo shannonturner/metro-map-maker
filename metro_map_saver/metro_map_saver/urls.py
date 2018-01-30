@@ -16,12 +16,13 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from map_saver.views import MapDataView, MapDiffView, MapGalleryView
+from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminActionView
 
 urlpatterns = [
-    url(r'^(?:save/)?admin/', admin.site.urls),
+    url(r'^admin/', admin.site.urls),
     url(r'^(?:save/)?admin/gallery/(?P<page>[0-9]+)?$', MapGalleryView.as_view(), name='gallery'),
     url(r'^(?:save/)?admin/diff/(?P<urlhash_first>[0-9a-zA-Z\-\_]+)/(?P<urlhash_second>[0-9a-zA-Z\-\_]+)', MapDiffView.as_view(), name='diff'),
+    url(r'^(?:save/)?admin/action/', MapAdminActionView.as_view(), name='admin_action'),
     url(r'^(?:save/)?$', MapDataView.as_view(), name='save_map'),
     url(r'^(?:save/)?(?P<urlhash>[0-9a-zA-Z\-\_]+)$', MapDataView.as_view(), name='load_map'),
 ]
