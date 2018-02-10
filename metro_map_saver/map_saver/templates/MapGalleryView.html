@@ -442,7 +442,14 @@
     // Calculate diffs!
     $('.diff').click(function() {
 
-      var thisMapUrlhash = $(this).attr('id').split('-').slice(2, 3);
+
+      // This version will fail when the URLhash contains a hyphen:
+      // var thisMapUrlhash = $(this).attr('id').split('-').slice(2, 3);
+      // Since the id of the button is as follows:
+      //    id="diff-a-{{ map.urlhash }}-{{ map.id }}"
+      // A more straightforward and correct way to obtain the urlhash
+      //    would be to just slice, since the urlhashes always have the same length
+      var thisMapUrlhash = $(this).attr('id').slice(7, 15);
       var thisMapId = $(this).attr('id').split('-').slice(3);
 
       if ($(this).hasClass('diff-a')) {
@@ -461,9 +468,6 @@
     });
 
     $('.diff-keep').click(function() {
-      // If I can figure out how to get the Admin interface working
-      //    then TODO: make this @staff_required and have it update the map's gallery visibility directly
-      //               because having to edit visibility directly is a major pain
       if ($(this).attr('id') == 'keep-a') {
         var thisMapId = $('#diff-map-id-b').val();
       } else if ($(this).attr('id') == 'keep-b') {
