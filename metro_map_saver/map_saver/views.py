@@ -49,6 +49,81 @@ class MapGalleryView(TemplateView):
         return render(request, 'MapGalleryView.html', context)
 
 
+class MapSimilarView(TemplateView):
+
+    """ Get: Display a gallery of maps that are similar to the specified map.
+             This is helpful for quickly browsing maps that are similar to the specified map
+                and hopefully hiding ones that are too similar / older versions.
+
+        Since this is so computationally taxing, it's important that this is available
+            only to site admins.
+    """
+
+    @method_decorator(staff_member_required)
+    def get(self, request, **kwargs):
+
+        visible_maps = SavedMap.objects.filter(gallery_visible=True).order_by('id')
+
+        try:
+            this_map = SavedMap.objects.get(urlhash=kwargs.get('urlhash'))
+        except ObjectDoesNotExist:
+            similar_maps = []
+        else:
+            similar_maps = [this_map]
+            possible_matches = []
+
+            sequence_matcher = difflib.SequenceMatcher(a=this_map.mapdata)
+
+            for one_map in visible_maps:
+                if one_map.id == this_map.id:
+                    # Comparing a map to itself would be a perfect match.
+                    #   So don't do it.
+                    continue
+                else:
+                    sequence_matcher.set_seq2(one_map.mapdata)
+                    similarity = sequence_matcher.quick_ratio()
+                    if similarity >= 0.75:
+                        # Similar enough to take a closer look
+                        possible_matches.append(one_map)
+
+            similarity_scores = {}
+            urlhash_to_map = {} # this is so I can access the map object once it has been sorted by similarity
+
+            # Re-check the maps that were approximated to be pretty close
+            for one_map in possible_matches:
+                sequence_matcher.set_seq2(one_map.mapdata)
+                similarity = sequence_matcher.ratio()
+                if similarity >= 0.75:
+                    similarity_scores[one_map.urlhash] = similarity
+                    urlhash_to_map[one_map.urlhash] = one_map
+
+            # Sort maps by similarity score in descending order
+            for map_hash in sorted(similarity_scores, key=similarity_scores.get, reverse=True):
+                # How do I sort it in similarity descending?
+                # https://docs.python.org/2/library/functions.html#sorted
+                # It looks a little something like:
+                # a = {
+                #     'abcdef01': 0.80,
+                #     '12345678': 0.92,
+                #     'beeeeeef': 0.76,
+                #     '0a0a0a0a': 0.93,
+                # }
+                # I would want the order to then be:
+                #   0a > 12 > ab > be
+                # >>> sorted(a, key=a.get, reverse=True)
+                # ['0a0a0a0a', '12345678', 'abcdef01', 'beeeeeef']
+                similar_maps.append(urlhash_to_map[map_hash])
+
+        context = {
+            'headline': 'Maps similar to {0}'.format(kwargs.get('urlhash')),
+            'saved_maps': similar_maps,
+            'similarity_scores': similarity_scores,
+            'is_staff': request.user.is_staff,
+        }
+
+        return render(request, 'MapGalleryView.html', context)
+
+
 class MapAdminActionView(TemplateView):
 
     @method_decorator(staff_member_required)

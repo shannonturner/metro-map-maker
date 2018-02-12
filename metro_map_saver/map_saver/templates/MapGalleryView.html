@@ -105,15 +105,20 @@
     <div class="col-lg-3"></div>
     <div id="gallery-controls" class="col-lg-6 text-center">
       <div class="pagination">
+          {% if headline %}
+          <h3>{{ saved_maps|length }} {{ headline }}</h3>
+          {% endif %}
           <span class="step-links">
               {% if saved_maps.has_previous %}
                   <a href="./1"><button class="btn-primary">First Page</button></a>
                   <a href="./{{ saved_maps.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
               {% endif %}
 
+              {% if saved_maps.paginator %}
               <span class="current" style="margin: 10px;">
                   <b>Page {{ saved_maps.number }} of {{ saved_maps.paginator.num_pages }}</b>
               </span>
+              {% endif %}
 
               {% if saved_maps.has_next %}
                   <a href="./{{ saved_maps.next_page_number }}"><button class="btn-info">Next Page</button></a>
@@ -134,8 +139,17 @@
         <h3 class="map-link">Saved Map #{{ map.id }} (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>)</h3> 
         <button id="diff-a-{{ map.urlhash }}-{{ map.id }}" class="diff diff-a btn-info">Diff A</button>
         <button id="diff-b-{{ map.urlhash }}-{{ map.id }}" class="diff diff-b btn-primary">Diff B</button>
+
         {% if is_staff %}
-        <button id="hide-{{ map.id }}" class="hide-map btn-warning">Hide</button>
+          <button id="hide-{{ map.id }}" class="hide-map btn-warning">Hide</button>
+          <a href="{% url 'similar' urlhash=map.urlhash %}"><button class="btn-default">View Similar</button></a>
+          {% if similarity_scores %}
+            {% for urlhash, score in similarity_scores.items %}
+              {% if urlhash == map.urlhash %}
+                {% widthratio score 1 100 %}% similar
+              {% endif %}
+            {% endfor %}
+          {% endif %}
         {% endif %}
 
         <canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive"></canvas>
@@ -170,9 +184,11 @@
                 <a href="./{{ saved_maps.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
             {% endif %}
 
+            {% if saved_maps.paginator %}
             <span class="current" style="margin: 10px;">
                 <b>Page {{ saved_maps.number }} of {{ saved_maps.paginator.num_pages }}</b>
             </span>
+            {% endif %}
 
             {% if saved_maps.has_next %}
                 <a href="./{{ saved_maps.next_page_number }}"><button class="btn-info">Next Page</button></a>
