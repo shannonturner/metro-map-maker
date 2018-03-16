@@ -235,6 +235,15 @@ function autoLoad() {
   } else if (window.localStorage.getItem('metroMap')) {
     // Load from local storage
     loadMapFromObject(JSON.parse(window.localStorage.getItem('metroMap'))); 
+  } else {
+    // If no map URLParameter and no locally stored map, default to the WMATA map
+    // I think this would be more intuitive than the blank slate,
+    //    and might limit the number of blank / red-squiggle maps created.
+    // If the WMATA map ever changes, I'll need to update it here too.
+    $.get('https://metromapmaker.com/save/1G_CzWEg').done(function (savedMapData) {
+      savedMapData = savedMapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
+      loadMapFromObject(JSON.parse(savedMapData));
+    });
   }
 }
 
