@@ -71,7 +71,7 @@ def validate_metro_map(metro_map):
     validated_metro_map = {}
 
     # The map is passed through as a string, which needs to be converted to a dictionary first
-    metro_map = json.loads(metro_map)
+    metro_map = json.loads(unicode(metro_map, errors='ignore'))
 
     assert type(metro_map) == dict
     assert metro_map.get('global')
