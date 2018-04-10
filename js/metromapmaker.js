@@ -393,6 +393,11 @@ $(document).ready(function() {
     $(this).hide();
   })
 
+  // Enable the tooltips
+  $(function () {
+    $('[data-toggle="tooltip"]').tooltip()
+  })
+
   activeTool = 'look';
 
   $('#toolbox button').click(function() {

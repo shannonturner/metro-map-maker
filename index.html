@@ -81,7 +81,7 @@
 
     <div id="toolbox">
 
-      <button id="tool-line" class="btn btn-info"><i class="fa fa-subway" aria-hidden="true"></i> Rail Line</button>
+      <button id="tool-line" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Paint a rail line on the grid"><i class="fa fa-subway" aria-hidden="true"></i> Rail Line</button>
       <div id="tool-line-options" class="start-hidden">
         <button id="rail-line-bd1038" class="rail-line">Red Line</button>
         <button id="rail-line-df8600" class="rail-line">Orange Line</button>
@@ -104,7 +104,7 @@
         <button id="rail-line-delete">- Delete Unused Lines</button>
       </div>
       
-      <button id="tool-station" class="btn btn-info"><i class="fa fa-map-pin" aria-hidden="true"></i> Station</button>
+      <button id="tool-station" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Place a station on an existing rail line, or select an existing station"><i class="fa fa-map-pin" aria-hidden="true"></i> Station</button>
       <div id="tool-station-options" class="start-hidden">
         <h4>Station Name</h4>
         <input id="station-coordinates-x" type="hidden">
@@ -128,12 +128,12 @@
           <option value="135">Below-left, 45&deg;</option>
         </select>
       </div>
-      <button id="tool-eraser" class="btn btn-info"><i class="fa fa-eraser" aria-hidden="true"></i> Eraser</button>
-      <button id="tool-look" class="btn btn-info"><i class="fa fa-eye" aria-hidden="true"></i> Just look</button>
+      <button id="tool-eraser" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station"><i class="fa fa-eraser" aria-hidden="true"></i> Eraser</button>
+      <button id="tool-look" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Click without making any changes"><i class="fa fa-eye" aria-hidden="true"></i> Just look</button>
       <button id="tool-grid" class="btn btn-info"><i class="fa fa-table" aria-hidden="true"></i> Hide grid</button>
       <button id="tool-zoom-in" class="btn btn-info"><i class="fa fa-search-plus" aria-hidden="true"></i> Zoom +</button>
       <button id="tool-zoom-out" class="btn btn-info"><i class="fa fa-search-minus" aria-hidden="true"></i> Zoom -</button>
-      <button id="tool-move-all" class="btn btn-info"><i class="fa fa-arrows" aria-hidden="true"></i> Move map</button>
+      <button id="tool-move-all" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Recenter your Metro map"><i class="fa fa-arrows" aria-hidden="true"></i> Move map</button>
       <div id="tool-move-options" class="start-hidden">
         <h5>Be careful! If you move your map out of bounds, you'll lose your work.</h5>
         <button id="tool-move-up" class="btn btn-info"><i class="fa fa-chevron-circle-up" aria-hidden="true"></i> Move everything up</button>
@@ -141,15 +141,15 @@
         <button id="tool-move-right" class="btn btn-info"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Move everything right</button>
         <button id="tool-move-down" class="btn btn-info"><i class="fa fa-chevron-circle-down" aria-hidden="true"></i> Move everything down</button>
       </div>
-      <button id="tool-save-map" class="btn btn-info"><i class="fa fa-share" aria-hidden="true"></i> Save &amp; Share map</button>
+      <button id="tool-save-map" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Creates a unique, shareable URL for your map"><i class="fa fa-share" aria-hidden="true"></i> Save &amp; Share map</button>
       <div id="tool-save-options" class="start-hidden"></div>
-      <button id="tool-export-canvas" class="btn btn-info"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
+      <button id="tool-export-canvas" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="See what your finished map looks like"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
       <div id="export-canvas-help" class="start-hidden">
         <h5>Right click the map and click "Save Image As" to save your finished map.</h5>
         <h5>Or click "Edit map" to continue editing your map.</h5>
       </div>
       <hr>
-      <button id="tool-clear-map" class="btn btn-info"><i class="fa fa-trash-o" aria-hidden="true"></i> Clear map</button>
+      <button id="tool-clear-map" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Be careful: this will delete your map"><i class="fa fa-trash-o" aria-hidden="true"></i> Clear map</button>
       <hr>
       <div id="autosave-indicator"></div>
       <hr>
@@ -181,7 +181,7 @@
   <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
   <script src='js/spectrum.js'></script>
-  <script src='js/metromapmaker.js'></script>
+  <script src='js/metromapmaker.js?version=20180410'></script>
 
   </body>
 </html>
