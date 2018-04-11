@@ -395,7 +395,7 @@ $(document).ready(function() {
 
   // Enable the tooltips
   $(function () {
-    $('[data-toggle="tooltip"]').tooltip()
+    $('[data-toggle="tooltip"]').tooltip();
   })
 
   activeTool = 'look';
@@ -686,12 +686,14 @@ $(document).ready(function() {
       $('button').attr('disabled', true);
       $(this).attr('disabled', false);
       $('#tool-export-canvas').html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit map');
+      $(this).attr('title', "Go back to editing your map").tooltip('fixTitle').tooltip('show');
     } else {
       $('#grid').show();
       $('#canvas-container').hide();
       $('#export-canvas-help').hide();
       $('button').attr('disabled', false);
       $('#tool-export-canvas').html('<i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image');
+      $(this).attr('title', "See what your finished map looks like").tooltip('fixTitle').tooltip('show');
     }
     
     var canvas = document.getElementById('metro-map-canvas');
