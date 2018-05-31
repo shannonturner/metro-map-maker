@@ -298,11 +298,36 @@
         if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).hasClass('has-line')) {
           // Get color of the line
           ctx.fillStyle = '#' + galleryGetActiveLine(x, y, mapId);
-          // ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier); // I'm not sure this does anything
 
+          ctx.beginPath();
+          ctx.strokeStyle = '#' + galleryGetActiveLine(x, y, mapId);
+          ctx.lineWidth = gridPixelMultiplier * 1.75;
+
+          if (galleryGetActiveLine(x, y, mapId) == galleryGetActiveLine(x + 1, y + 1, mapId)) {
+            // Direction: SE
+            ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
+            ctx.lineTo((x + 1) * gridPixelMultiplier, (y + 1) * gridPixelMultiplier);
+            ctx.stroke();
+          } else if (galleryGetActiveLine(x, y, mapId) == galleryGetActiveLine(x + 1, y - 1, mapId)) {
+            // Direction: NE
+            ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
+            ctx.lineTo((x + 1) * gridPixelMultiplier, (y - 1) * gridPixelMultiplier);
+            ctx.stroke();
+          } else if (galleryGetActiveLine(x, y, mapId) == galleryGetActiveLine(x + 1, y, mapId)) {
+            // Direction: E
+            ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
+            ctx.lineTo((x + 1.5) * gridPixelMultiplier, y * gridPixelMultiplier);
+            ctx.stroke();
+          } else if (galleryGetActiveLine(x, y, mapId) == galleryGetActiveLine(x, y + 1, mapId)) {
+            // Direction: S
+            ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
+            ctx.lineTo(x * gridPixelMultiplier, (y + 1.5) * gridPixelMultiplier);
+            ctx.stroke();
+          }
+
+          // Always: draw a circle, to smooth out the edges
           // arc(x, y, radius, startAngle, endAngle, anticlockwise)
           // Draw an arc centered at x, y position with radius r
-          ctx.beginPath();
           ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
           ctx.closePath();
           ctx.fill();
