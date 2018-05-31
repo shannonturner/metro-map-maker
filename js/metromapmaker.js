@@ -717,11 +717,36 @@ $(document).ready(function() {
         if ($('#coord-x-' + x + '-y-' + y).hasClass('has-line')) {
           // Get color of the line
           ctx.fillStyle = '#' + getActiveLine(x, y);
-          // ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier); // I'm not sure this does anything
 
+          ctx.beginPath();
+          ctx.strokeStyle = '#' + getActiveLine(x, y);
+          ctx.lineWidth = gridPixelMultiplier * 1.75;
+
+          if (getActiveLine(x, y) == getActiveLine(x + 1, y + 1)) {
+            // Direction: SE
+            ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
+            ctx.lineTo((x + 1) * gridPixelMultiplier, (y + 1) * gridPixelMultiplier);
+            ctx.stroke();
+          } else if (getActiveLine(x, y) == getActiveLine(x + 1, y - 1)) {
+            // Direction: NE
+            ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
+            ctx.lineTo((x + 1) * gridPixelMultiplier, (y - 1) * gridPixelMultiplier);
+            ctx.stroke();
+          } else if (getActiveLine(x, y) == getActiveLine(x + 1, y)) {
+            // Direction: E
+            ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
+            ctx.lineTo((x + 1.5) * gridPixelMultiplier, y * gridPixelMultiplier);
+            ctx.stroke();
+          } else if (getActiveLine(x, y) == getActiveLine(x, y + 1)) {
+            // Direction: S
+            ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
+            ctx.lineTo(x * gridPixelMultiplier, (y + 1.5) * gridPixelMultiplier);
+            ctx.stroke();
+          }
+
+          // Always: draw a circle, to smooth out the edges
           // arc(x, y, radius, startAngle, endAngle, anticlockwise)
           // Draw an arc centered at x, y position with radius r
-          ctx.beginPath();
           ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
           ctx.closePath();
           ctx.fill();
