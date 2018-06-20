@@ -33,6 +33,8 @@ This metro map was made with https://metromapmaker.com - pretty cool, right?
 Gallery
 -----
 
+### [Here are some of my favorite maps created by MetroMapMaker.com visitors like you!](http://metromapmaker.com/gallery/)
+
 Here are some select maps created by visitors to the site:
 
 - [WMATA, expanded!](https://metromapmaker.com/?map=TKurH7zL)
@@ -48,4 +50,4 @@ Here are some select maps created by visitors to the site:
 - [Los Angeles Metro](https://metromapmaker.com/?map=xDdrOTq2)
 - [WMATA, expanded + Pink Line](https://metromapmaker.com/?map=SqppaM_q)
 - [Daegu Metro, Korea](https://metromapmaker.com/?map=2TwtLhxK)
-- [Bangalore, India](https://metromapmaker.com/?map=jVHF2CM-)
+- [Bangalore, India ?](https://metromapmaker.com/?map=jVHF2CM-)
