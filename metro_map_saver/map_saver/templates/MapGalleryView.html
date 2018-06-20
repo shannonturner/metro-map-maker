@@ -226,7 +226,11 @@
   function galleryGetActiveLine(x, y, mapId) {
     // Given an x, y coordinate pair, return the hex code for the line you're on.
     // Use this to retrieve the line for a given point on a map.
-    var classes = document.getElementById('m-' + mapId + 'coord-x-' + x + '-y-' + y).className.split(/\s+/);
+    try {
+      var classes = document.getElementById('m-' + mapId + 'coord-x-' + x + '-y-' + y).className.split(/\s+/);
+    } catch (e) {
+        return 'With the new straight lines replacing the old bubbles system of drawing the maps onto the canvas, you will land here on occasion when the maps reach the borders. (For example, y-80 which does not exist in the 80x80 grid.) Do not panic, instead just keep on keeping on.'
+    }
     for (var z=0; z<classes.length; z++) {
       if (classes[z].indexOf('has-line-') >= 0) {
         var activeLine = classes[z].slice(9, 15);
