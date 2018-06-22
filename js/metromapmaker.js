@@ -306,6 +306,10 @@ function loadMapFromObject(metroMapObject) {
       }
     }
   }
+
+  $(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+  }); // Do this here because it looks like the call to this below doesn't happen in time to load all the tooltips created by the map being loaded
 } // function loadMapFromObject
 
 function saveMapAsObject() {
