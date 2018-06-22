@@ -55,7 +55,7 @@ function drawGrid() {
   for (var x=0; x<gridRows; x++) {
     grid += '<div class="grid-row">';
     for (var y=0; y<gridCols; y++) {
-      grid += '<div id="coord-x-' + x + '-y-' + y + '" class="grid-col" data-toggle="tooltip" title=""></div>';
+      grid += '<div id="coord-x-' + x + '-y-' + y + '" class="grid-col"></div>';
     }
     grid += '</div> <!-- div.grid-row -->';
   }
@@ -930,6 +930,7 @@ $(document).ready(function() {
     var y = $('#station-coordinates-y').val();
     if (x >= 0 && y >= 0 ) {
       $('#coord-x-' + x + '-y-' + y + ' .station').attr('id', $('#station-name').val().replaceAll(' ', '_'));
+      $('#coord-x-' + x + '-y-' + y + ' .station').attr('data-toggle', 'tooltip');
       $('#coord-x-' + x + '-y-' + y + ' .station').attr('title', $('#station-name').val()).tooltip('fixTitle').tooltip('show');
     }
 
