@@ -266,6 +266,8 @@ function loadMapFromObject(metroMapObject) {
           });
           if (metroMapObject[x][y]["station"]) {
             $('#coord-x-' + x + '-y-' + y).addClass('has-station');
+            $('#coord-x-' + x + '-y-' + y).attr('data-toggle', 'tooltip');
+            $('#coord-x-' + x + '-y-' + y).attr('title', metroMapObject[x][y]["station"]["name"]);
             $('#coord-x-' + x + '-y-' + y).html('<div id="' + metroMapObject[x][y]["station"]["name"] +'" class="station"></div>');
             if (metroMapObject[x][y]["station"]["transfer"] == 1) {
               $('#' + metroMapObject[x][y]["station"]["name"]).addClass('transfer-station');
