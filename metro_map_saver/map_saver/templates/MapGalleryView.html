@@ -134,7 +134,7 @@
 
     {% for map in saved_maps %}
 
-        <h3 class="map-link">Saved Map #{{ map.id }} (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>)</h3> 
+        <h3 class="map-link">Saved Map <a href="https://metromapmaker.com/save/admin/map_saver/savedmap/{{ map.id }}/change/" target="_blank">#{{ map.id }}</a> (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>)</h3>
         <button id="diff-a-{{ map.urlhash }}-{{ map.id }}" class="diff diff-a btn-info">Diff A</button>
         <button id="diff-b-{{ map.urlhash }}-{{ map.id }}" class="diff diff-b btn-primary">Diff B</button>
 
@@ -149,7 +149,7 @@
             {% endfor %}
           {% endif %}
 
-          <p>
+          <p style="margin-top: 10px;">
             {% for tag in tags %}
               {% if tag in map.tags.all %}
                 <button id="removetag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map removetag-map btn-primary">{{ tag.name }}</button>

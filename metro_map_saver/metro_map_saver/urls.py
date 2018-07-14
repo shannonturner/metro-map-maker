@@ -20,7 +20,7 @@ from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminAc
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'^(?:save/)?admin/gallery/(?P<page>[0-9notags]+)?$', MapGalleryView.as_view(), name='gallery'),
+    url(r'^(?:save/)?admin/gallery/(?P<page>[0-9\w]+)?$', MapGalleryView.as_view(), name='gallery'),
     url(r'^(?:save/)?admin/similar/(?P<urlhash>[0-9a-zA-Z\-\_]+)$', MapSimilarView.as_view(), name='similar'),
     url(r'^(?:save/)?admin/diff/(?P<urlhash_first>[0-9a-zA-Z\-\_]+)/(?P<urlhash_second>[0-9a-zA-Z\-\_]+)', MapDiffView.as_view(), name='diff'),
     url(r'^(?:save/)?admin/action/', MapAdminActionView.as_view(), name='admin_action'),
