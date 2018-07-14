@@ -29,8 +29,6 @@
     <link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
-    <script src="https://use.fontawesome.com/9f1aeb80e7.js"></script>
-
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -150,6 +148,17 @@
               {% endif %}
             {% endfor %}
           {% endif %}
+
+          <p>
+            {% for tag in tags %}
+              {% if tag in map.tags.all %}
+                <button id="removetag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map removetag-map btn-primary">{{ tag.name }}</button>
+              {% else %}
+                <button id="addtag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map addtag-map btn-default">{{ tag.name }}</button>
+              {% endif %}
+            {% endfor %}
+          </p>
+
         {% endif %}
 
         <canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive"></canvas>
@@ -541,6 +550,43 @@
           hideMapButton.text('Error: Could not hide');
         }
       });
+    });
+
+    $('.changetag-map').click(function() {
+      var tagMapButton = $(this);
+      var thisMapId = $(this).attr('id').split('-').slice(2, 3);
+      var tag = $(this).text();
+
+      if ($(this).hasClass('removetag-map')) {
+        var action = "removetag";
+      } else if ($(this).hasClass('addtag-map')) {
+        var action = "addtag";
+      }
+
+      $.post('/save/admin/action/', {
+        "action": action,
+        "map": parseInt(thisMapId),
+        "tag": tag
+      }).done(function(data) {
+        if (data == 'Success') {
+          if (action == "addtag") {
+            tagMapButton.removeClass('btn-default');
+            tagMapButton.removeClass('addtag-map');
+            tagMapButton.addClass('btn-primary');
+            tagMapButton.addClass('removetag-map');
+          } else if (action == "removetag") {
+            tagMapButton.removeClass('btn-primary');
+            tagMapButton.removeClass('removetag-map');
+            tagMapButton.addClass('btn-default');
+            tagMapButton.addClass('addtag-map');
+          }
+        } else {
+          tagMapButton.removeClass();
+          tagMapButton.addClass('btn-danger');
+          tagMapButton.text('Error: Could not change tag: ' + tag);
+        }
+      })
+
     });
     {% endif %}
 

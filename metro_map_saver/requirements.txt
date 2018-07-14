@@ -1,2 +1,4 @@
 Django==1.11.4
+django-taggit==0.22.2
+psycopg2==2.7.4
 pytz==2017.2

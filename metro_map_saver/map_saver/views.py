@@ -12,6 +12,9 @@ import difflib
 import hashlib
 import json
 import pprint
+
+from taggit.models import Tag
+
 from .models import SavedMap
 from .validator import is_hex, sanitize_string, validate_metro_map, hex64
 
@@ -29,8 +32,14 @@ class MapGalleryView(TemplateView):
 
         maps_total = SavedMap.objects.filter(gallery_visible=True).count()
 
-        visible_maps = SavedMap.objects.filter(gallery_visible=True).order_by('id')
+        if kwargs.get('page') == 'notags':
+            visible_maps = SavedMap.objects.filter(gallery_visible=True).filter(tags__exact=None).order_by('id')
+        else:
+            visible_maps = SavedMap.objects.filter(gallery_visible=True).order_by('id')
+
         paginator = Paginator(visible_maps, MAPS_PER_PAGE)
+
+        tags = Tag.objects.all()
 
         page = kwargs.get('page')
         try:
@@ -43,6 +52,7 @@ class MapGalleryView(TemplateView):
         context = {
             'saved_maps': saved_maps,
             'maps_total': maps_total,
+            'tags': tags,
             'is_staff': request.user.is_staff,
         }
 
@@ -134,7 +144,7 @@ class MapAdminActionView(TemplateView):
 
         context = {}
 
-        if request.POST.get('action') in ('hide', ) and request.POST.get('map'):
+        if request.POST.get('action') in ('hide', 'addtag', 'removetag',) and request.POST.get('map'):
             try:
                 this_map = SavedMap.objects.get(id=request.POST.get('map'))
             except ObjectDoesNotExist:
@@ -143,6 +153,14 @@ class MapAdminActionView(TemplateView):
                 if request.POST.get('action') == 'hide':
                     this_map.gallery_visible = False
                     this_map.save()
+                elif request.POST.get('action') in ('addtag', 'removetag'):
+                    tag = request.POST.get('tag')
+                    if tag:
+                        if request.POST.get('action') == 'addtag':
+                            this_map.tags.add(tag)
+                        elif request.POST.get('action') == 'removetag':
+                            this_map.tags.remove(tag)
+                        this_map.save()
                 context['status'] = 'Success'
             return render(request, 'MapAdminActionView.html', context)
 

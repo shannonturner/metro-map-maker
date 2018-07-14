@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 from django.db import models
 
+from taggit.managers import TaggableManager
+
 class SavedMap(models.Model):
 
     """ Saves map data and its corresponding urlhash together so that maps can be easily shared
@@ -11,6 +13,8 @@ class SavedMap(models.Model):
     urlhash = models.CharField(max_length=64)
     mapdata = models.TextField()
     gallery_visible = models.BooleanField(default=True)
+
+    tags = TaggableManager()
 
     def __unicode__(self):
         return self.urlhash
