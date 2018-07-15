@@ -199,6 +199,8 @@ function drawGrid() {
       $('.active').removeClass('active');
       // Then add the active class
       $(this).children().addClass('active');
+
+      $('#station-name').focus(); // Set focus to the station name box to save you a click each time
     } // if activeTool == station
   });
 
@@ -936,6 +938,13 @@ $(document).ready(function() {
       $('#coord-x-' + x + '-y-' + y + ' .station').attr('id', $('#station-name').val().replaceAll(' ', '_'));
       $('#coord-x-' + x + '-y-' + y + ' .station').attr('data-toggle', 'tooltip');
       $('#coord-x-' + x + '-y-' + y + ' .station').attr('title', $('#station-name').val()).tooltip('fixTitle').tooltip('show');
+
+      setTimeout(function() {
+        // Hide newly-created station name tooltip after 2 seconds
+        // So you don't have to mouse over it to clear, but
+        // it still shows for long enough to be useful
+        $('#coord-x-' + x + '-y-' + y + ' .station').tooltip('hide');
+      }, 2000);
     }
 
     saveMapAsObject();
