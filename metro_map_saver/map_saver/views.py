@@ -32,7 +32,7 @@ class MapGalleryView(TemplateView):
 
         maps_total = SavedMap.objects.filter(gallery_visible=True).count()
 
-        tags = Tag.objects.all()
+        tags = Tag.objects.all().order_by('id')
 
         if kwargs.get('tag') == 'notags':
             visible_maps = SavedMap.objects.filter(gallery_visible=True).filter(tags__exact=None).order_by('id')
