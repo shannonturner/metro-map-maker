@@ -297,15 +297,14 @@ function loadMapFromObject(metroMapObject) {
     } // if x
   } // for x in map
 
-  var originalLines = ['bd1038', 'df8600', 'f0ce15', '00b251', '0896d7', '662c90', 'a2a2a2'];
+  if (Object.keys(metroMapObject['global']['lines']).length > 0) {
+    // Remove original rail lines if the map has its own preset rail lines
+    $('#tool-line-options button.original-rail-line').remove();
+  }
 
   for (var line in metroMapObject['global']['lines']) {
     if (metroMapObject['global']['lines'].hasOwnProperty(line)) {
-      if (originalLines.indexOf(line) >= 0) {
-        // Don't add lines that already appear pre-populated in the menu or they will show up duplicated on every refresh
-      } else {
-        $('#rail-line-new').before('<button id="rail-line-' + line + '" class="rail-line btn-info" style="background-color: #' + line + ';">' + metroMapObject['global']['lines'][line]['displayName'] + '</button>')  
-      }
+        $('#rail-line-new').before('<button id="rail-line-' + line + '" class="rail-line btn-info" style="background-color: #' + line + ';">' + metroMapObject['global']['lines'][line]['displayName'] + '</button>');
     }
   }
 
