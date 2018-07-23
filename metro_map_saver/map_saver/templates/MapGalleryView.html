@@ -219,8 +219,38 @@
     return target.replace(new RegExp(search, 'g'), replacement);
   };
 
+  var gridSize = 80;
+
+  function galleryGetMapSize(metroMapObject) {
+    highestValue = 0;
+    for (var x in metroMapObject) {
+        if (metroMapObject.hasOwnProperty(x)) {
+          if (parseInt(x) > highestValue) {
+            highestValue = parseInt(x);
+          }
+          for (var y in metroMapObject[x]) {
+            if (metroMapObject[x].hasOwnProperty(y)) {
+              if (parseInt(y) > highestValue) {
+                highestValue = parseInt(y);
+              }
+            }
+          } // for var y
+        } // if has x
+      } // for var x
+
+    if (highestValue >= 160) {
+      console.log('highest value is: ' + highestValue);
+      gridSize = 160;
+    } else if (highestValue >= 120) {
+      console.log('highest value is: ' + highestValue);
+      gridSize = 120;
+    } else {
+      gridSize = 80;
+    }
+  }
+
   function galleryDrawGrid(mapId) {
-    var gridRows = 80, gridCols = 80, grid = "";
+    var gridRows = gridSize, gridCols = gridSize, grid = "";
     for (var x=0; x<gridRows; x++) {
       grid += '<div class="grid-row">';
       for (var y=0; y<gridCols; y++) {
@@ -292,7 +322,7 @@
   function galleryExportToCanvas(mapId) {
     var canvas = document.getElementById('metro-map-gallery-canvas-' + mapId);
     var ctx = canvas.getContext('2d');
-    var gridRows = 80, gridCols = 80;
+    var gridRows = gridSize, gridCols = gridSize;
     // How much larger is the canvas than the grid has in squares?
     // If the grid has 80x80 squares and the canvas is 1600x1600,
     //    then the gridPixelMultiplier is 20 (1600 / 80)
@@ -483,6 +513,7 @@
       mapData = mapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
       try {
         mapData = JSON.parse(mapData);
+        galleryGetMapSize(mapData);
         galleryDrawGrid({{ map.id }});
         galleryLoadMapFromSavedMapData(mapData, {{ map.id }});
         galleryExportToCanvas({{ map.id }});

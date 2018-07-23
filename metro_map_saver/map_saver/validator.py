@@ -69,6 +69,8 @@ def validate_metro_map(metro_map):
     #                         displayName: "the display name", sanitized
     #         {"lines":{"bd1038":{"displayName":"Red Line"},"df8600":{"displayName":"Orange Line"},"f0ce15":{"displayName":"Yellow Line"},"00b251":{"displayName":"Green Line"},"0896d7":{"displayName":"Blue Line"},"662c90":{"displayName":"Purple Line"},"a2a2a2":{"displayName":"Silver Line"}}}}
 
+
+    max_map_size = 160
     validated_metro_map = {}
 
     # The map is passed through as a string, which needs to be converted to a dictionary first
@@ -87,7 +89,7 @@ def validate_metro_map(metro_map):
         }
     }
 
-    valid_xy = [str(x) for x in range(80)]
+    valid_xy = [str(x) for x in range(max_map_size)]
     valid_lines = []
 
     for global_line in metro_map['global']['lines'].keys():

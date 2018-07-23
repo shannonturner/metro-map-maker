@@ -1,9 +1,22 @@
 // MetroMapMaker.js
 
+var gridRows = 80, gridCols = 80;
+
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
     return target.replace(new RegExp(search, 'g'), replacement);
 };
+
+function resizeGrid(size) {
+  // Change the grid size to the specified size.
+
+  saveMapAsObject(); // Save map as we currently have it so we can autoLoad it
+
+  // Resize the grid and paint the map on it
+  gridRows = size, gridCols = size;
+  drawGrid();
+  autoLoad();
+}
 
 function getActiveLine(x, y) {
   // Given an x, y coordinate pair, return the hex code for the line you're on.
@@ -49,7 +62,7 @@ function bindRailLineEvents() {
 }
 
 function drawGrid() {
-  var gridRows = 80, gridCols = 80, grid = "";
+  var grid = "";
 
   // Generate the grid
   for (var x=0; x<gridRows; x++) {
@@ -303,7 +316,7 @@ function loadMapFromObject(metroMapObject) {
   }
 
   for (var line in metroMapObject['global']['lines']) {
-    if (metroMapObject['global']['lines'].hasOwnProperty(line)) {
+    if (metroMapObject['global']['lines'].hasOwnProperty(line) && document.getElementById('rail-line-' + line) === null) {
         $('#rail-line-new').before('<button id="rail-line-' + line + '" class="rail-line btn-info" style="background-color: #' + line + ';">' + metroMapObject['global']['lines'][line]['displayName'] + '</button>');
     }
   }
@@ -315,13 +328,13 @@ function loadMapFromObject(metroMapObject) {
 
 function saveMapAsObject() {
   console.log('Saving');
-  var gridRows = 80, gridCols = 80;
 
   metroMap = new Object;
 
   for (var x=0; x<gridRows; x++) {
     for (var y=0; y<gridCols; y++) {
       var classes = document.getElementById('coord-x-' + x + '-y-' + y).className.split(/\s+/);
+
       // Example: ["grid-col", "has-line", "has-line-f0ce15", "has-station"]
       if (classes.indexOf('has-line') >= 0) {
         if (metroMap[x] === undefined) {
@@ -485,6 +498,19 @@ $(document).ready(function() {
       $('.grid-col').height(gridSize - 2); 
     }
   });
+  $('#tool-resize-all').click(function() {
+    if ($('#tool-resize-options').is(':visible')) {
+      $('#tool-resize-options').hide();
+      $('#tool-resize-all').html('<i class="fa fa-expand" aria-hidden="true"></i> Resize grid');
+    } else {
+      $('#tool-resize-options').show();
+      $('#tool-resize-all').html('<i class="fa fa-expand" aria-hidden="true"></i> Hide Resize options');
+    }
+  });
+  $('.resize-grid').click(function() {
+    size = $(this).attr('id').split('-').slice(2);
+    resizeGrid(size);
+  })
   $('#tool-move-all').click(function() {
     if ($('#tool-move-options').is(':visible')) {
       $('#tool-move-options').hide();
@@ -498,7 +524,6 @@ $(document).ready(function() {
     // If the grid has been zoomed in or out, preserve that sizing
     var gridSize = $('.grid-col').width();
 
-    var gridRows = 80, gridCols = 80;
     for (var y=0; y<gridCols; y++) {
       for (var x=0; x<gridRows; x++) {
 
@@ -511,7 +536,7 @@ $(document).ready(function() {
           }
         }
 
-        if (y == 79) {
+        if (y == gridRows - 1) {
           // Clear the last row
           $('#coord-x-' + x + '-y-' + y).html('');
           $('#coord-x-' + x + '-y-' + y).removeAttr('style');
@@ -542,7 +567,6 @@ $(document).ready(function() {
     // If the grid has been zoomed in or out, preserve that sizing
     var gridSize = $('.grid-col').width();
 
-    var gridRows = 80, gridCols = 80;
     for (var y=gridCols - 1; y>=0; y--) {
       for (var x=0; x<gridRows; x++) {
 
@@ -586,7 +610,6 @@ $(document).ready(function() {
     // If the grid has been zoomed in or out, preserve that sizing
     var gridSize = $('.grid-col').width();
 
-    var gridRows = 80, gridCols = 80;
     for (var x=0; x<gridRows; x++) {
       for (var y=0; y<gridCols; y++) {
 
@@ -599,7 +622,7 @@ $(document).ready(function() {
           }
         }
 
-        if (x == 79) {
+        if (x == gridCols -1) {
           // Clear the last column
           $('#coord-x-' + x + '-y-' + y).html('');
           $('#coord-x-' + x + '-y-' + y).removeAttr('style');
@@ -630,7 +653,6 @@ $(document).ready(function() {
     // If the grid has been zoomed in or out, preserve that sizing
     var gridSize = $('.grid-col').width();
 
-    var gridRows = 80, gridCols = 80;
     for (var x=gridRows - 1; x>=0; x--) {
       for (var y=0; y<gridCols; y++) {
 
@@ -709,7 +731,7 @@ $(document).ready(function() {
     
     var canvas = document.getElementById('metro-map-canvas');
     var ctx = canvas.getContext('2d');
-    var gridRows = 80, gridCols = 80;
+
     // How much larger is the canvas than the grid has in squares?
     // If the grid has 80x80 squares and the canvas is 1600x1600,
     //    then the gridPixelMultiplier is 20 (1600 / 80)
