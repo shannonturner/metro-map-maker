@@ -16,6 +16,7 @@ function resizeGrid(size) {
   gridRows = size, gridCols = size;
   drawGrid();
   autoLoad();
+  bindRailLineEvents();
 }
 
 function getActiveLine(x, y) {
@@ -266,9 +267,35 @@ function autoLoad() {
   }
 }
 
+function getMapSize(metroMapObject) {
+    highestValue = 0;
+    for (var x in metroMapObject) {
+        if (metroMapObject.hasOwnProperty(x)) {
+          if (parseInt(x) > highestValue) {
+            highestValue = parseInt(x);
+          }
+          for (var y in metroMapObject[x]) {
+            if (metroMapObject[x].hasOwnProperty(y)) {
+              if (parseInt(y) > highestValue) {
+                highestValue = parseInt(y);
+              }
+            }
+          } // for var y
+        } // if has x
+      } // for var x
+
+    if (highestValue >= 160) {
+      gridRows = 160, gridCols = 160;
+    } else if (highestValue >= 120) {
+      gridRows = 120, gridCols = 120;
+    }
+  } // getMapSize()
+
 function loadMapFromObject(metroMapObject) {
 
   // loadMapFromObject(metroMap)
+  getMapSize(metroMapObject);
+  drawGrid();
 
   for (var x in metroMapObject) {
     if (metroMapObject.hasOwnProperty(x)) {
