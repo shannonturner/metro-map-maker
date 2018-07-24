@@ -14,7 +14,7 @@ class SavedMap(models.Model):
     mapdata = models.TextField()
     gallery_visible = models.BooleanField(default=True)
 
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)
 
     def __unicode__(self):
         return self.urlhash

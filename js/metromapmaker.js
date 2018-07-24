@@ -10,12 +10,11 @@ String.prototype.replaceAll = function(search, replacement) {
 function resizeGrid(size) {
   // Change the grid size to the specified size.
 
-  saveMapAsObject(); // Save map as we currently have it so we can autoLoad it
+  saveMapAsObject(); // Save map as we currently have it so we can load it
 
   // Resize the grid and paint the map on it
   gridRows = size, gridCols = size;
-  drawGrid();
-  autoLoad();
+  loadMapFromObject(JSON.parse(window.localStorage.getItem('metroMap')));
   bindRailLineEvents();
 }
 
@@ -250,11 +249,14 @@ function autoLoad() {
   if (savedMapHash) {
     $.get('https://metromapmaker.com/save/' + savedMapHash).done(function (savedMapData) {
       savedMapData = savedMapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
+      getMapSize(savedMapData);
       loadMapFromObject(JSON.parse(savedMapData));
     });
   } else if (window.localStorage.getItem('metroMap')) {
     // Load from local storage
-    loadMapFromObject(JSON.parse(window.localStorage.getItem('metroMap'))); 
+    metroMapObject = JSON.parse(window.localStorage.getItem('metroMap'));
+    getMapSize(metroMapObject);
+    loadMapFromObject(metroMapObject);
   } else {
     // If no map URLParameter and no locally stored map, default to the WMATA map
     // I think this would be more intuitive than the blank slate,
@@ -262,6 +264,7 @@ function autoLoad() {
     // If the WMATA map ever changes, I'll need to update it here too.
     $.get('https://metromapmaker.com/save/1G_CzWEg').done(function (savedMapData) {
       savedMapData = savedMapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
+      getMapSize(metroMapObject);
       loadMapFromObject(JSON.parse(savedMapData));
     });
   }
@@ -284,17 +287,15 @@ function getMapSize(metroMapObject) {
         } // if has x
       } // for var x
 
-    if (highestValue >= 160) {
+    if (highestValue >= 120) {
       gridRows = 160, gridCols = 160;
-    } else if (highestValue >= 120) {
+    } else if (highestValue >= 80) {
       gridRows = 120, gridCols = 120;
     }
-  } // getMapSize()
+} // getMapSize()
 
 function loadMapFromObject(metroMapObject) {
 
-  // loadMapFromObject(metroMap)
-  getMapSize(metroMapObject);
   drawGrid();
 
   for (var x in metroMapObject) {
@@ -468,6 +469,7 @@ $(document).ready(function() {
       $('#tool-line-options').show();
       $('#tool-line').html('<i class="fa fa-subway" aria-hidden="true"></i> Hide Rail Line options');
     }
+    $('.tooltip').hide();
   });
   $('#rail-line-delete').click(function() {
     // Only delete lines that aren't in use
@@ -493,11 +495,13 @@ $(document).ready(function() {
       $('#tool-station-options').hide();
       $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
     }
+    $('.tooltip').hide();
   });
   $('#tool-eraser').click(function() {
     activeTool = 'eraser';
     $('#tool-station-options').hide();
     $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
+    $('.tooltip').hide();
   })
   $('#tool-look').click(function() {
     activeTool = 'look';
@@ -533,6 +537,7 @@ $(document).ready(function() {
       $('#tool-resize-options').show();
       $('#tool-resize-all').html('<i class="fa fa-expand" aria-hidden="true"></i> Hide Resize options');
     }
+    $('.tooltip').hide();
   });
   $('.resize-grid').click(function() {
     size = $(this).attr('id').split('-').slice(2);
@@ -546,6 +551,7 @@ $(document).ready(function() {
       $('#tool-move-options').show();
       $('#tool-move-all').html('<i class="fa fa-arrows" aria-hidden="true"></i> Hide Move options')
     }
+    $('.tooltip').hide();
   });
   $('#tool-move-up').click(function() {
     // If the grid has been zoomed in or out, preserve that sizing
@@ -733,12 +739,14 @@ $(document).ready(function() {
         $('#tool-save-options').show();
       }
     });
+    $('.tooltip').hide();
   });
   $('#tool-export-canvas').click(function() {
     activeTool = 'look';
     $('#tool-station-options').hide();
     $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
 
+    $('.tooltip').hide();
     if ($('#grid').is(':visible')) {
       $('#grid').hide();
       $('#canvas-container').show();
@@ -755,6 +763,10 @@ $(document).ready(function() {
       $('#tool-export-canvas').html('<i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image');
       $(this).attr('title', "See what your finished map looks like").tooltip('fixTitle').tooltip('show');
     }
+    // Hide the changed tooltip after a moment
+    setTimeout(function() {
+      $('.tooltip').hide();
+    }, 1500);
     
     var canvas = document.getElementById('metro-map-canvas');
     var ctx = canvas.getContext('2d');
@@ -941,6 +953,7 @@ $(document).ready(function() {
   }); // #tool-export-canvas.click()
   $('#tool-clear-map').click(function() {
     drawGrid();
+    $('.tooltip').hide();
   });
 
   $('#create-new-rail-line').click(function() {

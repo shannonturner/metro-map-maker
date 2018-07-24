@@ -136,3 +136,16 @@ hr {
     margin-top: 10px;
   }
 }
+
+@media (min-width: 768px) {
+  #controls {
+    position: fixed;
+    overflow-y: auto;
+    top: 0;
+    bottom: 0;
+    right: 5px;
+  }
+  .tooltip, .tooltip span {
+    position: fixed;
+  }
+}
