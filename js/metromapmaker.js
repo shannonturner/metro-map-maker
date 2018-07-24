@@ -16,6 +16,11 @@ function resizeGrid(size) {
   gridRows = size, gridCols = size;
   loadMapFromObject(JSON.parse(window.localStorage.getItem('metroMap')));
   bindRailLineEvents();
+
+  $('.resize-grid').removeClass('btn-primary');
+  $('.resize-grid').addClass('btn-info');
+  $('#tool-resize-' + size).removeClass('btn-info');
+  $('#tool-resize-' + size).addClass('btn-primary');
 }
 
 function getActiveLine(x, y) {
@@ -268,6 +273,7 @@ function autoLoad() {
       loadMapFromObject(JSON.parse(savedMapData));
     });
   }
+  $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
 }
 
 function getMapSize(metroMapObject) {
