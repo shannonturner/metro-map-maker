@@ -278,7 +278,9 @@ function autoLoad() {
 
 function getMapSize(metroMapObject) {
     highestValue = 0;
-    metroMapObject = JSON.parse(metroMapObject);
+    if (typeof metroMapObject !== 'object') {
+      metroMapObject = JSON.parse(metroMapObject);
+    }
     for (var x in metroMapObject) {
         if (metroMapObject.hasOwnProperty(x)) {
           if (parseInt(x) > highestValue) {
@@ -360,6 +362,7 @@ function loadMapFromObject(metroMapObject) {
 
   $(function () {
     $('[data-toggle="tooltip"]').tooltip();
+    bindRailLineEvents();
   }); // Do this here because it looks like the call to this below doesn't happen in time to load all the tooltips created by the map being loaded
 } // function loadMapFromObject
 
