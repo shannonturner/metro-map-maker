@@ -278,6 +278,7 @@ function autoLoad() {
 
 function getMapSize(metroMapObject) {
     highestValue = 0;
+    metroMapObject = JSON.parse(metroMapObject);
     for (var x in metroMapObject) {
         if (metroMapObject.hasOwnProperty(x)) {
           if (parseInt(x) > highestValue) {
