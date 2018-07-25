@@ -297,6 +297,8 @@ function getMapSize(metroMapObject) {
       gridRows = 160, gridCols = 160;
     } else if (highestValue >= 80) {
       gridRows = 120, gridCols = 120;
+    } else {
+      gridRows = 80, gridCols = 80;
     }
 } // getMapSize()
 
