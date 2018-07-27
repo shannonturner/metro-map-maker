@@ -49,7 +49,7 @@
 
     </script>
 
-    <link rel="stylesheet" href="css/metromapmaker.css?version=201807232052">
+    <link rel="stylesheet" href="css/metromapmaker.css?version=201807271850">
 
   </head>
 
@@ -114,10 +114,6 @@
         <div style="margin: 10px;">
           <input id="station-transfer" type="checkbox"> <label for="station-transfer">Transfer Station</label>
         </div>
-        <h4>This station is on these rail lines:</h4>
-        <div id="station-on-lines"></div>
-        <h4>Add other lines this station serves:</h4>
-        <div id="station-other-lines"></div>
         <h4>Station Name Orientation</h4>
         <h5>(Visible when you click Download as Image)</h5>
         <h5>In relation to the station marker, where should the name begin?</h5>
@@ -128,6 +124,10 @@
           <option value="45">Below-right, 45&deg;</option>
           <option value="135">Below-left, 45&deg;</option>
         </select>
+        <h4>This station is on these rail lines:</h4>
+        <div id="station-on-lines"></div>
+        <h4>Add other lines this station serves:</h4>
+        <div id="station-other-lines"></div>
       </div>
       <button id="tool-eraser" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station"><i class="fa fa-eraser" aria-hidden="true"></i> Eraser</button>
       <!-- <button id="tool-look" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Click without making any changes"><i class="fa fa-eye" aria-hidden="true"></i> Just look</button> -->
@@ -140,10 +140,10 @@
       <div id="tool-save-options" class="start-hidden"></div>
       <button id="tool-grid" class="btn btn-info"><i class="fa fa-table" aria-hidden="true"></i> Hide grid</button>
       <div id="tool-zoom-controls" class="row">
-        <div class="col-md-6" style="padding-right: 0;">
+        <div class="col-md-6" id="zoom-in-container">
         <button id="tool-zoom-in" class="btn btn-info"><i class="fa fa-search-plus" aria-hidden="true"></i> Zoom +</button>
         </div>
-        <div class="col-md-6" style="padding-left: 0;">
+        <div class="col-md-6" id="zoom-out-container">
         <button id="tool-zoom-out" class="btn btn-info"><i class="fa fa-search-minus" aria-hidden="true"></i> Zoom -</button>
         </div>
       </div>
@@ -197,7 +197,7 @@
   <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
   <script src='js/spectrum.js'></script>
-  <script src='js/metromapmaker.js?version=201807251850'></script>
+  <script src='js/metromapmaker.js?version=201807271850'></script>
 
   </body>
 </html>

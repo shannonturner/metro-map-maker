@@ -269,7 +269,7 @@ function autoLoad() {
     // If the WMATA map ever changes, I'll need to update it here too.
     $.get('https://metromapmaker.com/save/1G_CzWEg').done(function (savedMapData) {
       savedMapData = savedMapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
-      getMapSize(metroMapObject);
+      getMapSize(savedMapData);
       loadMapFromObject(JSON.parse(savedMapData));
     });
   }

@@ -118,6 +118,11 @@ button.rail-line {
   top: -100%;
 }
 
+#station-name {
+  font-weight: bold;
+  padding-left: 5px;
+}
+
 #station-name-orientation {
   width: 100%;
   margin: 3px;
@@ -147,5 +152,11 @@ hr {
   }
   .tooltip, .tooltip span {
     position: fixed;
+  }
+  #zoom-in-container {
+    padding-right: 0;
+  }
+  #zoom-out-container {
+    padding-left: 0;
   }
 }
