@@ -104,8 +104,8 @@ function drawGrid() {
 
       $('#station-name').val('');
       $('#station-on-lines').html('');
-      var x = $(this).attr('id').slice(8, 10).replace('-', '');
-      var y = $(this).attr('id').slice( -2 ).replace('-', '');
+      var x = $(this).attr('id').split('-').slice(2, 3);
+      var y = $(this).attr('id').split('-').slice(4);
       $('#station-coordinates-x').val(x);
       $('#station-coordinates-y').val(y);
       var allLines = $('.rail-line');
