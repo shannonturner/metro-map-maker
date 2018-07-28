@@ -29,7 +29,8 @@ function getActiveLine(x, y) {
   try {
     var classes = document.getElementById('coord-x-' + x + '-y-' + y).className.split(/\s+/);
   } catch (e) {
-    return 'With the new straight lines replacing the old bubbles system of drawing the maps onto the canvas, you will land here on occasion when the maps reach the borders. (For example, y-80 which does not exist in the 80x80 grid.) Do not panic, instead just keep on keeping on.'
+    // 'With the new straight lines replacing the old bubbles system of drawing the maps onto the canvas, you will land here on occasion when the maps reach the borders. (For example, y-80 which does not exist in the 80x80 grid.) Do not panic, instead just keep on keeping on.'
+    return false; 
   }
   for (var z=0; z<classes.length; z++) {
     if (classes[z].indexOf('has-line-') >= 0) {
@@ -162,7 +163,13 @@ function drawGrid() {
         $(this).html('<div class="station"></div>');
         $('#tool-station-options').show();
         $('#station-transfer').prop('checked', false);
-        document.getElementById('station-name-orientation').value = '0';
+        var lastStationOrientation = window.localStorage.getItem('metroMapStationOrientation');
+        if (lastStationOrientation) {
+          document.getElementById('station-name-orientation').value = lastStationOrientation;
+          $('#station-name-orientation').change(); // This way, it will be saved
+        } else {
+          document.getElementById('station-name-orientation').value = '0';
+        }
 
         // Pre-populate the station with the line it sits on
         // activeLine = getActiveLine($("#station-coordinates-x").val(), $("#station-coordinates-y").val());
@@ -172,7 +179,27 @@ function drawGrid() {
           $(this).children().addClass('has-line-' + activeLine);
           stationOnLines = "<button style='background-color: #" + activeLine + "' class='station-add-lines' id='add-line-" + activeLine + "'>" + $('#rail-line-' + activeLine).text() + "</button>";
           stationLines = activeLine;
-        }
+
+          // Pre-populate the station with its neighboring lines
+          for (var nx=-1; nx<=1; nx+=1) {
+            for (var ny=-1; ny<=1; ny+=1) {
+              neighboringLine = getActiveLine(parseInt(x) + parseInt(nx), parseInt(y) + parseInt(ny));  
+              if (neighboringLine) {
+                $(this).children().addClass('has-line-' + neighboringLine);
+                if (typeof stationLines == "string") {
+                  stationLines = [stationLines]
+                }
+                if (stationOnLines && stationOnLines.indexOf(neighboringLine) >= 0) {
+                  // Don't add lines that are already added
+                } else {
+                  stationOnLines += "<button style='background-color: #" + neighboringLine + "' class='station-add-lines' id='add-line-" + neighboringLine + "'>" + $('#rail-line-' + neighboringLine).text() + "</button>";
+                  stationLines.push(neighboringLine);
+                }
+              } // if (neighboringLine)
+            } // for ny
+          } // for nx
+        } // if (activeLine)
+        
       }
 
       // Make the station options button collapsible
@@ -1042,6 +1069,8 @@ $(document).ready(function() {
         $('#coord-x-' + x + '-y-' + y + ' .station').addClass('rot135');
       }
     }
+
+    window.localStorage.setItem('metroMapStationOrientation', $(this).val());
   });
 
   $('#station-transfer').click(function() {
