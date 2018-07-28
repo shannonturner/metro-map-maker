@@ -106,6 +106,7 @@ button.rail-line {
   position: relative;
   left: -25%;
   top: -25%;
+  background-color: transparent !important;
 }
 
 .transfer-station {
