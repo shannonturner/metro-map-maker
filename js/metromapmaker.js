@@ -519,6 +519,8 @@ $(document).ready(function() {
         // Is this line in use at all?
         if ($('.has-line-' + $('.rail-line')[a].id.slice(10, 16)).length == 0) {
           linesToDelete.push($('#' + $('.rail-line')[a].id));
+          // Also delete unused lines from the "Add lines this station serves" section
+          linesToDelete.push($('#add-line-' + [a].id));
         }
       }
     }
