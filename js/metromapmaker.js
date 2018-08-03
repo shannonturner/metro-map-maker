@@ -40,6 +40,47 @@ function getActiveLine(x, y) {
   return activeLine;
 }
 
+function getNeighbors(x, y) {
+  // Given an x,y coordinate pair, return the number of neighboring coordinates with any rail line
+  var neighbors = 0;
+  for (var nx=-1; nx<=1; nx+=1) {
+    for (var ny=-1; ny<=1; ny+=1) {
+      if (nx == 0 && ny == 0) {
+        continue;
+      }
+      neighboringLine = getActiveLine(parseInt(x) + parseInt(nx), parseInt(y) + parseInt(ny));
+      if (neighboringLine) {
+        neighbors++;
+      } // if (neighboringLine)
+    } // for ny
+  } // for nx
+  return neighbors;
+} // getNeighbors()
+
+function getSameNeighbors(x, y) {
+  // Given an x,y coordinate pair, return the number of neighboring coordinates of the same rail line
+  var neighbors = 0;
+  for (var nx=-1; nx<=1; nx+=1) {
+    for (var ny=-1; ny<=1; ny+=1) {
+      if (nx == 0 && ny == 0) {
+        continue;
+      }
+      neighboringLine = getActiveLine(parseInt(x) + parseInt(nx), parseInt(y) + parseInt(ny));
+      if (neighboringLine && neighboringLine == getActiveLine(x, y)) {
+        neighbors++;
+      } // if (neighboringLine)
+    } // for ny
+  } // for nx
+  return neighbors;
+} // getSameNeighbors()
+
+function moveLineStroke(ctx, x, y, lineToX, lineToY) {
+  ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
+  ctx.lineTo(lineToX * gridPixelMultiplier, lineToY * gridPixelMultiplier);
+  ctx.stroke();
+  singleton = false;
+}
+
 function getStationLines(x, y) {
   // Given an x, y coordinate pair, return the hex codes for the lines this station services.
   var classes = document.getElementById('coord-x-' + x + '-y-' + y).children[0].className.split(/\s+/);
@@ -815,7 +856,7 @@ $(document).ready(function() {
     // How much larger is the canvas than the grid has in squares?
     // If the grid has 80x80 squares and the canvas is 1600x1600,
     //    then the gridPixelMultiplier is 20 (1600 / 80)
-    var gridPixelMultiplier = canvas.width / gridCols; // 20
+    gridPixelMultiplier = canvas.width / gridCols; // 20
 
     // Clear the old canvas if it was drawn
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -824,45 +865,107 @@ $(document).ready(function() {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // When y is the outermost for loop: vertical scanning
+    // When x is the outermost for loop: horizontal scanning
+
     for (var x=0; x<gridRows; x++){
       for (var y=0; y<gridCols; y++) {
 
         if ($('#coord-x-' + x + '-y-' + y).hasClass('has-line')) {
+
           // Get color of the line
           ctx.fillStyle = '#' + getActiveLine(x, y);
 
           ctx.beginPath();
           ctx.strokeStyle = '#' + getActiveLine(x, y);
-          ctx.lineWidth = gridPixelMultiplier * 1.75;
+          ctx.lineWidth = gridPixelMultiplier * 1.175;
 
+          ctx.lineCap = 'round';
+          singleton = true;
+
+          // Diagonals
           if (getActiveLine(x, y) == getActiveLine(x + 1, y + 1)) {
             // Direction: SE
-            ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
-            ctx.lineTo((x + 1) * gridPixelMultiplier, (y + 1) * gridPixelMultiplier);
-            ctx.stroke();
-          } else if (getActiveLine(x, y) == getActiveLine(x + 1, y - 1)) {
+            moveLineStroke(ctx, x, y, x+1, y+1);
+          } if (getActiveLine(x, y) == getActiveLine(x + 1, y - 1)) {
             // Direction: NE
-            ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
-            ctx.lineTo((x + 1) * gridPixelMultiplier, (y - 1) * gridPixelMultiplier);
-            ctx.stroke();
-          } else if (getActiveLine(x, y) == getActiveLine(x + 1, y)) {
-            // Direction: E
-            ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
-            ctx.lineTo((x + 1.5) * gridPixelMultiplier, y * gridPixelMultiplier);
-            ctx.stroke();
-          } else if (getActiveLine(x, y) == getActiveLine(x, y + 1)) {
-            // Direction: S
-            ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
-            ctx.lineTo(x * gridPixelMultiplier, (y + 1.5) * gridPixelMultiplier);
-            ctx.stroke();
+            moveLineStroke(ctx, x, y, x+1, y-1);
+          } if (getActiveLine(x, y) == getActiveLine(x - 1, y - 1)) {
+            // Direction: NW
+            moveLineStroke(ctx, x, y, x-1, y-1);
+          } if (getActiveLine(x, y) == getActiveLine(x - 1, y + 1)) {
+            // Direction: SW
+            moveLineStroke(ctx, x, y, x-1, y+1)
           }
 
-          // Always: draw a circle, to smooth out the edges
-          // arc(x, y, radius, startAngle, endAngle, anticlockwise)
-          // Draw an arc centered at x, y position with radius r
-          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
-          ctx.closePath();
-          ctx.fill();
+          cardinals = {
+            "north": false,
+            "east": false,
+            "south": false,
+            "west": false
+          }
+
+          // Cardinals
+          if (getActiveLine(x, y) == getActiveLine(x + 1, y)) {
+              // Direction: E
+              if (getSameNeighbors(x, y) == 1) {
+                ctx.lineCap = 'round';
+              } else {
+                ctx.lineCap = 'butt';
+              }
+              moveLineStroke(ctx, x, y, x+1, y);
+              cardinals["east"] = true;
+          } if (getActiveLine(x, y) == getActiveLine(x, y + 1)) {
+              // Direction: S
+              if (getSameNeighbors(x, y) == 1) {
+                ctx.lineCap = 'round';
+              } else {
+                ctx.lineCap = 'butt';
+              }
+              moveLineStroke(ctx, x, y, x, y+1);
+              cardinals["south"] = true;
+          } if (getActiveLine(x, y) == getActiveLine(x, y - 1)) {
+              // Direction: N
+              if (getSameNeighbors(x, y) == 1) {
+                ctx.lineCap = 'round';
+              } else {
+                ctx.lineCap = 'butt';
+              }
+              moveLineStroke(ctx, x, y, x, y-1);
+              cardinals["north"] = true;
+          } if (getActiveLine(x, y) == getActiveLine(x - 1, y)) {
+              // Direction: W
+              if (getSameNeighbors(x, y) == 1) {
+                ctx.lineCap = 'round';
+              } else {
+                ctx.lineCap = 'butt';
+              }
+              moveLineStroke(ctx, x, y, x-1, y);
+              cardinals["west"] = true;
+          }
+
+          // Corners
+          ctx.lineCap = 'round';
+
+          if (cardinals["north"] && cardinals["west"]) {
+            moveLineStroke(ctx, x, y, x, y);
+          }
+          if (cardinals["north"] && cardinals["east"]) {
+            moveLineStroke(ctx, x, y, x, y);
+          }
+          if (cardinals["south"] && cardinals["west"]) {
+            moveLineStroke(ctx, x, y, x, y);
+          }
+          if (cardinals["south"] && cardinals["east"]) {
+            moveLineStroke(ctx, x, y, x, y);
+          }
+
+          if (singleton) {
+            // Without this, singletons with no neighbors won't be painted at all.
+            // So "under construction" or similar lines should be painted.
+            moveLineStroke(ctx, x, y, x, y)
+          }
+
         } // if .has-line
       } // for y
     } // for x
