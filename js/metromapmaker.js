@@ -962,8 +962,10 @@ $(document).ready(function() {
 
           if (singleton) {
             // Without this, singletons with no neighbors won't be painted at all.
-            // So "under construction" or similar lines should be painted.
-            moveLineStroke(ctx, x, y, x, y)
+            // So map legends, "under construction", or similar lines should be painted.
+            ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
+            ctx.closePath();
+            ctx.fill();
           }
 
         } // if .has-line
