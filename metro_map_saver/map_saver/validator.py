@@ -95,7 +95,7 @@ def validate_metro_map(metro_map):
     for global_line in metro_map['global']['lines'].keys():
         assert is_hex(global_line), "[VALIDATIONFAILED] 05: global_line {0} FAILED is_hex()".format(global_line)
         assert len(global_line) == 6, "[VALIDATIONFAILED] 06: global_line {0} IS NOT 6 CHARACTERS".format(global_line)
-        assert 2 < len(metro_map['global']['lines'][global_line].get('displayName')) < 256, "[VALIDATIONFAILED] 07: displayName BAD SIZE"
+        assert 1 <= len(metro_map['global']['lines'][global_line].get('displayName')) < 256, "[VALIDATIONFAILED] 07: displayName BAD SIZE"
         valid_lines.append(global_line)
         validated_metro_map['global']['lines'][global_line] = {
             'displayName': sanitize_string(metro_map['global']['lines'][global_line]['displayName'])
@@ -119,7 +119,7 @@ def validate_metro_map(metro_map):
                     validated_metro_map[x][y]["line"] = metro_map[x][y]["line"]
                     if metro_map[x][y].get('station'):
                         assert type(metro_map[x][y]["station"]) == dict, "[VALIDATIONFAILED] 11: metro_map[x][y]['station'] at ({0}, {1}) IS NOT DICT".format(x, y)
-                        assert 2 < len(metro_map[x][y]["station"]["name"]) < 256, "[VALIDATIONFAILED] 12: station name at ({0}, {1}) BAD SIZE".format(x, y)
+                        assert 1 <= len(metro_map[x][y]["station"]["name"]) < 256, "[VALIDATIONFAILED] 12: station name at ({0}, {1}) BAD SIZE".format(x, y)
                         assert type(metro_map[x][y]["station"]["lines"]) == list, "[VALIDATIONFAILED] 13: station lines at ({0}, {1}) NOT A LIST".format(x, y)
                         # Okay, this probably *should* pass - but I think I have some bug in the javascript somewhere because https://metromapmaker.com/?map=zCq7R223 obviously passed validation but once reconstituted, fails. But this isn't a big enough deal that I can't wave this validation through while I figure out what's going on.
                         # assert len(metro_map[x][y]["station"]["lines"]) > 0, "[VALIDATIONFAILED] 14: station lines at ({0}, {1}) HAS ZERO LENGTH".format(x, y)
