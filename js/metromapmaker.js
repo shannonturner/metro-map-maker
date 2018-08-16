@@ -21,6 +21,22 @@ function resizeGrid(size) {
   $('.resize-grid').addClass('btn-info');
   $('#tool-resize-' + size).removeClass('btn-info');
   $('#tool-resize-' + size).addClass('btn-primary');
+  redrawCanvasContainerSize();
+}
+
+function redrawCanvasContainerSize() {
+  // Whenever the pixel width or height of the grid changes,
+  // like on page load, map resize, or zoom in/out, 
+  // the #canvas-container size needs to be updated as well so they overlap
+
+
+  $('#grid').width($('#canvas-container').width());
+  $('#grid').height($('#canvas-container').height());
+
+  var computedSquareSize = window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0];
+  $('#metro-map-canvas').width(computedSquareSize * gridCols);
+  $('#metro-map-canvas').height(computedSquareSize * gridCols);
+  drawCanvas();
 }
 
 function getActiveLine(x, y) {
@@ -57,6 +73,15 @@ function getNeighbors(x, y) {
   return neighbors;
 } // getNeighbors()
 
+function redrawNeighbors(x, y) {
+  // Given an x,y coordinate pair, redraw the neighboring coordinates
+  for (var nx=-1; nx<=1; nx+=1) {
+    for (var ny=-1; ny<=1; ny+=1) {
+      drawPoint(parseInt(x) + parseInt(nx), parseInt(y) + parseInt(ny), activeTool);
+    }
+  }
+}
+
 function getSameNeighbors(x, y) {
   // Given an x,y coordinate pair, return the number of neighboring coordinates of the same rail line
   var neighbors = 0;
@@ -75,8 +100,8 @@ function getSameNeighbors(x, y) {
 } // getSameNeighbors()
 
 function moveLineStroke(ctx, x, y, lineToX, lineToY) {
-  ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
-  ctx.lineTo(lineToX * gridPixelMultiplier, lineToY * gridPixelMultiplier);
+  ctx.moveTo(Math.floor(x * gridPixelMultiplier), Math.floor(y * gridPixelMultiplier));
+  ctx.lineTo(Math.floor(lineToX * gridPixelMultiplier), Math.floor(lineToY * gridPixelMultiplier));
   ctx.stroke();
   singleton = false;
 }
@@ -121,6 +146,11 @@ function drawGrid() {
   }
 
   $('#grid').html(grid);
+  $('.grid-col').css({
+    "width": $('#grid').width() / gridCols,
+    "height": $('#grid').width() / gridCols
+  });
+  redrawCanvasContainerSize();
 
   // Then bind events to the grid
   $('.grid-col').click(function() {
@@ -134,6 +164,13 @@ function drawGrid() {
       });
       $(this).addClass('has-line')
       $(this).addClass('has-line-' + rgb2hex(activeToolOption).slice(1, 7));
+      var x = parseInt($(this).attr('id').split('-').slice(2, 3));
+      var y = parseInt($(this).attr('id').split('-').slice(4));
+      
+      drawPoint(x, y);
+      redrawNeighbors(x, y);
+      // drawCanvas()
+      
     } else if (activeTool == 'eraser') {
       $(this).css({
         'background-color': '#fff'
@@ -141,6 +178,10 @@ function drawGrid() {
       $(this).removeClass();
       $(this).addClass('grid-col');
       $(this).html('');
+      var x = parseInt($(this).attr('id').split('-').slice(2, 3));
+      var y = parseInt($(this).attr('id').split('-').slice(4));
+      // drawPoint(x, y, activeTool);
+      drawCanvas();
     } else if (activeTool == 'station') {
 
       $('#station-name').val('');
@@ -298,6 +339,298 @@ function drawGrid() {
   });
 
 }
+
+function drawCanvas() {
+  var canvas = document.getElementById('metro-map-canvas');
+  var ctx = canvas.getContext('2d', {alpha: false});
+
+  // How much larger is the canvas than the grid has in squares?
+  // If the grid has 80x80 squares and the canvas is 1600x1600,
+  //    then the gridPixelMultiplier is 20 (1600 / 80)
+  gridPixelMultiplier = Math.floor(canvas.width / gridCols); // 20
+
+  // Clear the old canvas if it was drawn
+  // Make the background white instead of transparent
+  ctx.fillStyle = '#ffffff';
+  // ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // When y is the outermost for loop: vertical scanning
+  // When x is the outermost for loop: horizontal scanning
+
+  for (var x=0; x<gridRows; x++){
+    for (var y=0; y<gridCols; y++) {
+      drawPoint(x, y);
+    } // for y
+  } // for x
+
+  // Draw the stations last (and separately), or they will be painted over by the lines themselves.
+  ctx.font = '700 20px sans-serif';
+
+  for (var x=0; x<gridRows; x++){
+    for (var y=0; y<gridCols; y++) {
+      if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station') && $('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+        // Outer circle
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * 1.2, 0, Math.PI * 2, true); 
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner circle
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); 
+        ctx.closePath();
+        ctx.fill();
+
+        // Outer circle
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true); 
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner circle
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true); 
+        ctx.closePath();
+        ctx.fill();
+
+        
+      } else if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station')) {
+        // Outer circle
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true); 
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner circle
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true); 
+        ctx.closePath();
+        ctx.fill();
+      } // if .has-station
+
+      // Write the station name
+      if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station')) {
+        ctx.save();
+        ctx.fillStyle = '#000000';
+        var activeStation = document.getElementById('coord-x-' + x + '-y-' + y).children[0].id.replaceAll('_', ' ');
+
+        // Rotate the canvas if specified in the station name orientation
+        if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot-45')) {
+          ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);  
+          ctx.rotate(-45 * (Math.PI/ 180));
+          if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+            ctx.fillText(activeStation, 30, 5);
+          } else {
+            ctx.fillText(activeStation, 15, 5);
+          }
+        } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot45')) {
+          ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
+          ctx.rotate(45 * (Math.PI/ 180));
+          if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+            ctx.fillText(activeStation, 30, 5);
+          } else {
+            ctx.fillText(activeStation, 15, 5);
+          }
+        } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot135')) {
+          var textSize = ctx.measureText(activeStation).width;
+          ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
+          ctx.rotate(-45 * (Math.PI/ 180));
+          if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+            ctx.fillText(activeStation, -1 * textSize - 30, 5);
+          } else {
+            ctx.fillText(activeStation, -1 * textSize - 15, 5);
+          }
+        } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot180')) {
+          // When drawing on the left, this isn't very different from drawing on the right 
+          //      with no rotation, except that we measure the text first
+          var textSize = ctx.measureText(activeStation).width;
+          if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+            ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier * 1.5) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+          } else {
+            ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+          }
+        } else  {
+          if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+            ctx.fillText(activeStation, (x * gridPixelMultiplier) + (gridPixelMultiplier * 1.5), (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+          } else {
+            ctx.fillText(activeStation, (x * gridPixelMultiplier) + gridPixelMultiplier, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+          }  
+        } // else (of if station hasClass .rot-45)
+
+        ctx.restore();
+      } // if .has-station (to write the station name)
+    } // for y
+  } // for x
+
+  // Has a shareable link been created for this map? If so, add it to the corner
+  if ($('#shareable-map-link').length) {
+    ctx.font = '700 20px serif';
+    ctx.fillStyle = '#000000';
+    var shareableLink = $('#shareable-map-link').text();
+    if (shareableLink.length > 0 && shareableLink.slice(0, 26) == "https://metromapmaker.com/") {
+      var remixCredit = 'Remix this map! Go to ' + shareableLink;
+      var textWidth = ctx.measureText(remixCredit).width;
+      ctx.fillText(remixCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 25);
+    }
+  }
+
+  // Add a map credit to help promote the site
+  ctx.font = '700 20px sans-serif';
+  ctx.fillStyle = '#000000';
+  var mapCredit = 'Created with MetroMapMaker.com';
+  var textWidth = ctx.measureText(mapCredit).width;
+  ctx.fillText(mapCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 50);
+}
+
+function drawLines() {
+
+  var canvas = document.getElementById('metro-map-canvas');
+  var ctx = canvas.getContext('2d', {alpha: false});
+
+  gridPixelMultiplier = Math.floor(canvas.width / gridCols);
+
+  var allLines = $('.rail-line');
+  for (var line=0; line<allLines.length; line++) {
+    if (allLines[line].id != 'rail-line-new') {
+      var penDown = true;
+      for (var x=0; x<gridRows; x++){
+        for (var y=0; y<gridCols; y++) {
+          var activeLine = getActiveLine(x, y);
+          if (activeLine == allLines[line].id.split("-").slice(2)) {
+            
+
+
+          } // if activeLine is the same as the one we're painting now
+        } // for y
+      } // for x
+    }
+  } // for allLines
+
+
+}
+
+function drawPoint(x, y, activeTool) {
+
+  var canvas = document.getElementById('metro-map-canvas');
+  var ctx = canvas.getContext('2d', {alpha: false});
+
+  // How much larger is the canvas than the grid has in squares?
+  // If the grid has 80x80 squares and the canvas is 1600x1600,
+  //    then the gridPixelMultiplier is 20 (1600 / 80)
+  gridPixelMultiplier = canvas.width / gridCols; // 20
+
+  if ($('#coord-x-' + x + '-y-' + y).hasClass('has-line')) {
+    // Get color of the line
+    ctx.fillStyle = '#' + getActiveLine(x, y);
+
+    ctx.beginPath();
+    if (activeTool == 'eraser') {
+      ctx.strokeStyle = '#fff';
+    } else {
+      ctx.strokeStyle = '#' + getActiveLine(x, y);  
+    }
+    // ctx.lineWidth = gridPixelMultiplier * 1.175;
+    ctx.lineWidth = gridPixelMultiplier * 1;
+
+    ctx.lineCap = 'round';
+    singleton = true;
+
+    // Diagonals
+    if (getActiveLine(x, y) == getActiveLine(x + 1, y + 1)) {
+      // Direction: SE
+      moveLineStroke(ctx, x, y, x+1, y+1);
+    } if (getActiveLine(x, y) == getActiveLine(x + 1, y - 1)) {
+      // Direction: NE
+      moveLineStroke(ctx, x, y, x+1, y-1);
+    } if (getActiveLine(x, y) == getActiveLine(x - 1, y - 1)) {
+      // Direction: NW
+      moveLineStroke(ctx, x, y, x-1, y-1);
+    } if (getActiveLine(x, y) == getActiveLine(x - 1, y + 1)) {
+      // Direction: SW
+      moveLineStroke(ctx, x, y, x-1, y+1)
+    }
+
+    cardinals = {
+      "north": false,
+      "east": false,
+      "south": false,
+      "west": false
+    }
+
+    // Cardinals
+    if (getActiveLine(x, y) == getActiveLine(x + 1, y)) {
+        // Direction: E
+        if (getSameNeighbors(x, y) == 1) {
+          ctx.lineCap = 'round';
+        } else {
+          ctx.lineCap = 'butt';
+        }
+        moveLineStroke(ctx, x, y, x+1, y);
+        cardinals["east"] = true;
+    } if (getActiveLine(x, y) == getActiveLine(x, y + 1)) {
+        // Direction: S
+        if (getSameNeighbors(x, y) == 1) {
+          ctx.lineCap = 'round';
+        } else {
+          ctx.lineCap = 'butt';
+        }
+        moveLineStroke(ctx, x, y, x, y+1);
+        cardinals["south"] = true;
+    } if (getActiveLine(x, y) == getActiveLine(x, y - 1)) {
+        // Direction: N
+        if (getSameNeighbors(x, y) == 1) {
+          ctx.lineCap = 'round';
+        } else {
+          ctx.lineCap = 'butt';
+        }
+        moveLineStroke(ctx, x, y, x, y-1);
+        cardinals["north"] = true;
+    } if (getActiveLine(x, y) == getActiveLine(x - 1, y)) {
+        // Direction: W
+        if (getSameNeighbors(x, y) == 1) {
+          ctx.lineCap = 'round';
+        } else {
+          ctx.lineCap = 'butt';
+        }
+        moveLineStroke(ctx, x, y, x-1, y);
+        cardinals["west"] = true;
+    }
+
+    // Corners
+    ctx.lineCap = 'round';
+
+    if (cardinals["north"] && cardinals["west"]) {
+      moveLineStroke(ctx, x, y, x, y);
+    }
+    if (cardinals["north"] && cardinals["east"]) {
+      moveLineStroke(ctx, x, y, x, y);
+    }
+    if (cardinals["south"] && cardinals["west"]) {
+      moveLineStroke(ctx, x, y, x, y);
+    }
+    if (cardinals["south"] && cardinals["east"]) {
+      moveLineStroke(ctx, x, y, x, y);
+    }
+
+    if (singleton) {
+      // Without this, singletons with no neighbors won't be painted at all.
+      // So map legends, "under construction", or similar lines should be painted.
+      ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    ctx.closePath();
+
+  } // if .has-line
+} // drawPoint(x, y)
 
 function rgb2hex(rgb) {
     if (/^#[0-9A-F]{6}$/i.test(rgb)) return rgb;
@@ -520,6 +853,7 @@ $(document).ready(function() {
   drawGrid();
   autoLoad();
   bindRailLineEvents();
+  drawCanvas();
   
   $('.start-hidden').each(function() {
     $(this).hide();
@@ -590,7 +924,7 @@ $(document).ready(function() {
   });
   $('#tool-grid').click(function() {
     if ($('.grid-col').css('border-color') == 'rgb(128, 206, 255)' || $('.grid-col').css('border-top-color') == 'rgb(128, 206, 255)') {
-      $('.grid-col').css('border-color', '#fff');
+      $('.grid-col').css('border-color', 'transparent');
       $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> Show grid');
     } else {
       $('.grid-col').css('border-color', '#80CEFF');
@@ -603,6 +937,7 @@ $(document).ready(function() {
       $('.grid-col').width(gridSize + 2);
       $('.grid-col').height(gridSize + 2);
     }
+    redrawCanvasContainerSize();
   });
   $('#tool-zoom-out').click(function() {
     var gridSize = $('.grid-col').width();
@@ -610,6 +945,7 @@ $(document).ready(function() {
       $('.grid-col').width(gridSize - 2);
       $('.grid-col').height(gridSize - 2); 
     }
+    redrawCanvasContainerSize();
   });
   $('#tool-resize-all').click(function() {
     if ($('#tool-resize-options').is(':visible')) {
@@ -850,251 +1186,7 @@ $(document).ready(function() {
       $('.tooltip').hide();
     }, 1500);
     
-    var canvas = document.getElementById('metro-map-canvas');
-    var ctx = canvas.getContext('2d');
-
-    // How much larger is the canvas than the grid has in squares?
-    // If the grid has 80x80 squares and the canvas is 1600x1600,
-    //    then the gridPixelMultiplier is 20 (1600 / 80)
-    gridPixelMultiplier = canvas.width / gridCols; // 20
-
-    // Clear the old canvas if it was drawn
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Make the background white instead of transparent
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // When y is the outermost for loop: vertical scanning
-    // When x is the outermost for loop: horizontal scanning
-
-    for (var x=0; x<gridRows; x++){
-      for (var y=0; y<gridCols; y++) {
-
-        if ($('#coord-x-' + x + '-y-' + y).hasClass('has-line')) {
-
-          // Get color of the line
-          ctx.fillStyle = '#' + getActiveLine(x, y);
-
-          ctx.beginPath();
-          ctx.strokeStyle = '#' + getActiveLine(x, y);
-          ctx.lineWidth = gridPixelMultiplier * 1.175;
-
-          ctx.lineCap = 'round';
-          singleton = true;
-
-          // Diagonals
-          if (getActiveLine(x, y) == getActiveLine(x + 1, y + 1)) {
-            // Direction: SE
-            moveLineStroke(ctx, x, y, x+1, y+1);
-          } if (getActiveLine(x, y) == getActiveLine(x + 1, y - 1)) {
-            // Direction: NE
-            moveLineStroke(ctx, x, y, x+1, y-1);
-          } if (getActiveLine(x, y) == getActiveLine(x - 1, y - 1)) {
-            // Direction: NW
-            moveLineStroke(ctx, x, y, x-1, y-1);
-          } if (getActiveLine(x, y) == getActiveLine(x - 1, y + 1)) {
-            // Direction: SW
-            moveLineStroke(ctx, x, y, x-1, y+1)
-          }
-
-          cardinals = {
-            "north": false,
-            "east": false,
-            "south": false,
-            "west": false
-          }
-
-          // Cardinals
-          if (getActiveLine(x, y) == getActiveLine(x + 1, y)) {
-              // Direction: E
-              if (getSameNeighbors(x, y) == 1) {
-                ctx.lineCap = 'round';
-              } else {
-                ctx.lineCap = 'butt';
-              }
-              moveLineStroke(ctx, x, y, x+1, y);
-              cardinals["east"] = true;
-          } if (getActiveLine(x, y) == getActiveLine(x, y + 1)) {
-              // Direction: S
-              if (getSameNeighbors(x, y) == 1) {
-                ctx.lineCap = 'round';
-              } else {
-                ctx.lineCap = 'butt';
-              }
-              moveLineStroke(ctx, x, y, x, y+1);
-              cardinals["south"] = true;
-          } if (getActiveLine(x, y) == getActiveLine(x, y - 1)) {
-              // Direction: N
-              if (getSameNeighbors(x, y) == 1) {
-                ctx.lineCap = 'round';
-              } else {
-                ctx.lineCap = 'butt';
-              }
-              moveLineStroke(ctx, x, y, x, y-1);
-              cardinals["north"] = true;
-          } if (getActiveLine(x, y) == getActiveLine(x - 1, y)) {
-              // Direction: W
-              if (getSameNeighbors(x, y) == 1) {
-                ctx.lineCap = 'round';
-              } else {
-                ctx.lineCap = 'butt';
-              }
-              moveLineStroke(ctx, x, y, x-1, y);
-              cardinals["west"] = true;
-          }
-
-          // Corners
-          ctx.lineCap = 'round';
-
-          if (cardinals["north"] && cardinals["west"]) {
-            moveLineStroke(ctx, x, y, x, y);
-          }
-          if (cardinals["north"] && cardinals["east"]) {
-            moveLineStroke(ctx, x, y, x, y);
-          }
-          if (cardinals["south"] && cardinals["west"]) {
-            moveLineStroke(ctx, x, y, x, y);
-          }
-          if (cardinals["south"] && cardinals["east"]) {
-            moveLineStroke(ctx, x, y, x, y);
-          }
-
-          if (singleton) {
-            // Without this, singletons with no neighbors won't be painted at all.
-            // So map legends, "under construction", or similar lines should be painted.
-            ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
-            ctx.closePath();
-            ctx.fill();
-          }
-
-        } // if .has-line
-      } // for y
-    } // for x
-
-    // Draw the stations last (and separately), or they will be painted over by the lines themselves.
-    ctx.font = '700 20px sans-serif';
-
-    for (var x=0; x<gridRows; x++){
-      for (var y=0; y<gridCols; y++) {
-        if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station') && $('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
-          // Outer circle
-          ctx.fillStyle = '#000000';
-          ctx.beginPath();
-          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * 1.2, 0, Math.PI * 2, true); 
-          ctx.closePath();
-          ctx.fill();
-
-          // Inner circle
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); 
-          ctx.closePath();
-          ctx.fill();
-
-          // Outer circle
-          ctx.fillStyle = '#000000';
-          ctx.beginPath();
-          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true); 
-          ctx.closePath();
-          ctx.fill();
-
-          // Inner circle
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true); 
-          ctx.closePath();
-          ctx.fill();
-
-          
-        } else if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station')) {
-          // Outer circle
-          ctx.fillStyle = '#000000';
-          ctx.beginPath();
-          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true); 
-          ctx.closePath();
-          ctx.fill();
-
-          // Inner circle
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true); 
-          ctx.closePath();
-          ctx.fill();
-        } // if .has-station
-
-        // Write the station name
-        if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station')) {
-          ctx.save();
-          ctx.fillStyle = '#000000';
-          var activeStation = document.getElementById('coord-x-' + x + '-y-' + y).children[0].id.replaceAll('_', ' ');
-
-          // Rotate the canvas if specified in the station name orientation
-          if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot-45')) {
-            ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);  
-            ctx.rotate(-45 * (Math.PI/ 180));
-            if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
-              ctx.fillText(activeStation, 30, 5);
-            } else {
-              ctx.fillText(activeStation, 15, 5);
-            }
-          } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot45')) {
-            ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
-            ctx.rotate(45 * (Math.PI/ 180));
-            if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
-              ctx.fillText(activeStation, 30, 5);
-            } else {
-              ctx.fillText(activeStation, 15, 5);
-            }
-          } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot135')) {
-            var textSize = ctx.measureText(activeStation).width;
-            ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
-            ctx.rotate(-45 * (Math.PI/ 180));
-            if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
-              ctx.fillText(activeStation, -1 * textSize - 30, 5);
-            } else {
-              ctx.fillText(activeStation, -1 * textSize - 15, 5);
-            }
-          } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot180')) {
-            // When drawing on the left, this isn't very different from drawing on the right 
-            //      with no rotation, except that we measure the text first
-            var textSize = ctx.measureText(activeStation).width;
-            if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
-              ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier * 1.5) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
-            } else {
-              ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
-            }
-          } else  {
-            if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
-              ctx.fillText(activeStation, (x * gridPixelMultiplier) + (gridPixelMultiplier * 1.5), (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
-            } else {
-              ctx.fillText(activeStation, (x * gridPixelMultiplier) + gridPixelMultiplier, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
-            }  
-          } // else (of if station hasClass .rot-45)
-
-          ctx.restore();
-        } // if .has-station (to write the station name)
-      } // for y
-    } // for x
-
-    // Has a shareable link been created for this map? If so, add it to the corner
-    if ($('#shareable-map-link').length) {
-      ctx.font = '700 20px serif';
-      ctx.fillStyle = '#000000';
-      var shareableLink = $('#shareable-map-link').text();
-      if (shareableLink.length > 0 && shareableLink.slice(0, 26) == "https://metromapmaker.com/") {
-        var remixCredit = 'Remix this map! Go to ' + shareableLink;
-        var textWidth = ctx.measureText(remixCredit).width;
-        ctx.fillText(remixCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 25);
-      }
-    }
-
-    // Add a map credit to help promote the site
-    ctx.font = '700 20px sans-serif';
-    ctx.fillStyle = '#000000';
-    var mapCredit = 'Created with MetroMapMaker.com';
-    var textWidth = ctx.measureText(mapCredit).width;
-    ctx.fillText(mapCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 50);
+    drawCanvas();
 
   }); // #tool-export-canvas.click()
   $('#tool-clear-map').click(function() {
@@ -1155,6 +1247,7 @@ $(document).ready(function() {
     }
 
     saveMapAsObject();
+    drawCanvas();
   });
 
   $('#station-name-orientation').change(function() {

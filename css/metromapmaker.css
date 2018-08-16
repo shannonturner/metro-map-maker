@@ -30,8 +30,24 @@ div#toolbox {
 #grid {
   display: flex;
   cursor: crosshair;
+  z-index: 99;
+  opacity: .25;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#canvas-container {
+  padding-left: 6px;
+  padding-top: 6px;
+
   overflow: scroll;
-  padding-left: 0;
+}
+
+#metro-map-canvas {
+  z-index: -99;
+  width: 100%;
+  height: auto;
 }
 
 .grid-col {
@@ -98,7 +114,7 @@ button.rail-line {
   height: 16px;
 }
 
-.station {
+/*.station {
   outline: 1px solid black;
   border: 3px solid white;
   width: 150%;
@@ -117,7 +133,7 @@ button.rail-line {
   position: relative;
   left: -100%;
   top: -100%;
-}
+}*/
 
 #station-name {
   font-weight: bold;
