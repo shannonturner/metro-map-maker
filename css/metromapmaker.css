@@ -37,6 +37,14 @@ div#toolbox {
   left: 0;
 }
 
+.temp-no-flex-firefox {
+  /* Temporarily disable display: flex
+    so that Firefox doesn't crash,
+    then re-enable it
+  */
+  display: none !important;
+}
+
 #canvas-container {
   padding-left: 6px;
   padding-top: 6px;
@@ -55,6 +63,10 @@ div#toolbox {
   border-color: #80CEFF;
   width: 12px;
   height: 12px;
+}
+
+.grid-col:hover {
+  background-color: green;
 }
 
 button {
