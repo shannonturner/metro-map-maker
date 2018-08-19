@@ -6,27 +6,26 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
+    <meta name="description" content="Build the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
 
     <meta property="og:title" content="Metro Map Maker">
     <meta property="og:site_name" content="Metro Map Maker">
     <meta property="og:url" content="https://metromapmaker.com">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
-    <meta property="og:image" content="https://metromapmaker.com/metromapmaker.png">
+    <meta property="og:description" content="Build the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
+    <meta property="og:image" content="https://metromapmaker.com/metromapmaker.png?version=2">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="https://metromapmaker.com">
     <meta name="twitter:creator" content="@svthmc">
     <meta name="twitter:title" content="Metro Map Maker">
-    <meta name="twitter:description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
-    <meta name="twitter:image:src" content="https://metromapmaker.com/metromapmaker.png">
+    <meta name="twitter:description" content="Build the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
+    <meta name="twitter:image:src" content="https://metromapmaker.com/metromapmaker.png?version=2">
 
     <title>Metro Map Maker</title>
 
-    <link rel="icon" href="favicon.ico">
+    <link rel="icon" href="favicon.ico?version=2">
 
-    <link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel='stylesheet' href='css/spectrum.css' />
     <script src="https://use.fontawesome.com/9f1aeb80e7.js"></script>
@@ -49,7 +48,7 @@
 
     </script>
 
-    <link rel="stylesheet" href="css/metromapmaker.css?version=201807281632">
+    <link rel="stylesheet" href="css/metromapmaker.css?version=20180818">
 
   </head>
 
@@ -61,7 +60,7 @@
 
   <div class="visible-xs text-center row">
     <div class="col-lg-10 col-offset-1">
-      <h3>Metro Map Maker</h3>
+      <h3><span class="M">M</span>etro <span class="M">M</span>ap <span class="M">M</span>aker</h3>
       <h5>Create your own metro maps, save them, and share with friends!</h5>
       <a href="gallery/"><h4><b>Check out maps created by visitors like you!</b></h4></a>
       <h5>Or to get started creating maps of your own, all the tools you need are below the grid.</h5>
@@ -72,14 +71,15 @@
   <div id="canvas-container" class="col-md-9 col-lg-10">
     <canvas id='metro-map-canvas' width="1600" height="1600"></canvas>
     <div id="grid"></div>
+    <img id="metro-map-image" class="img-responsive start-hidden">
   </div>
 
   <div id="controls" class="col-md-3 col-lg-2 text-center">
-    <h3>Metro Map Maker</h3>
+    <h3 id="title"><span class="M">M</span>etro<span class="M">M</span>ap<span class="M">M</span>aker</h3>
 
     <div id="toolbox">
 
-      <button id="tool-line" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Paint a rail line on the grid"><i class="fa fa-subway" aria-hidden="true"></i> Rail Line</button>
+      <button id="tool-line" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Paint a rail line on the grid"><i class="fa fa-paint-brush" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> Rail Line</button>
       <div id="tool-line-options" class="start-hidden">
         <button id="rail-line-bd1038" class="rail-line original-rail-line">Red Line</button>
         <button id="rail-line-df8600" class="rail-line original-rail-line">Orange Line</button>
@@ -112,7 +112,6 @@
           <input id="station-transfer" type="checkbox"> <label for="station-transfer">Transfer Station</label>
         </div>
         <h4>Station Name Orientation</h4>
-        <h5>(Visible when you click Download as Image)</h5>
         <h5>In relation to the station marker, where should the name begin?</h5>
         <select id="station-name-orientation">
           <option value="0">On the right</option>
@@ -136,7 +135,7 @@
       </div>
       <button id="tool-save-map" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Create a unique, shareable URL for your map"><i class="fa fa-share" aria-hidden="true"></i> Save &amp; Share map</button>
       <div id="tool-save-options" class="start-hidden"></div>
-      <button id="tool-grid" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Just hides the grid; to download your map click Download as image"><i class="fa fa-table" aria-hidden="true"></i> Hide grid</button>
+      <button id="tool-grid" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Just hides the grid but you can still edit the map; to download your map click Download as image"><i class="fa fa-table" aria-hidden="true"></i> Hide grid</button>
       <div id="tool-zoom-controls" class="row">
         <div class="col-md-6" id="zoom-in-container">
         <button id="tool-zoom-in" class="btn btn-info"><i class="fa fa-search-plus" aria-hidden="true"></i> Zoom +</button>
@@ -153,12 +152,12 @@
         <button id="tool-move-right" class="btn btn-info"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Move everything right</button>
         <button id="tool-move-down" class="btn btn-info"><i class="fa fa-chevron-circle-down" aria-hidden="true"></i> Move everything down</button>
       </div>
-      <button id="tool-resize-all" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Resize the grid"><i class="fa fa-expand" aria-hidden="true"></i> Resize grid</button>
+      <button id="tool-resize-all" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Resize the grid, allowing you to make larger maps"><i class="fa fa-expand" aria-hidden="true"></i> Resize grid</button>
       <div id="tool-resize-options" class="start-hidden">
         <h5>Be careful! If your map is large and you resize it to be smaller, you'll lose your work.</h5>
-        <button id="tool-resize-80" class="btn btn-info resize-grid">Standard Grid (80x80)</button>
-        <button id="tool-resize-120" class="btn btn-info resize-grid">Large Grid (120x120)</button>
-        <button id="tool-resize-160" class="btn btn-info resize-grid">Very Large Grid (160x160)</button>
+        <button id="tool-resize-80" class="btn btn-info resize-grid">Standard (80x80)</button>
+        <button id="tool-resize-120" class="btn btn-info resize-grid">Large (120x120)</button>
+        <button id="tool-resize-160" class="btn btn-info resize-grid">Very Large (160x160)</button>
       </div>
 
       <hr>
@@ -195,7 +194,7 @@
   <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
   <script src='js/spectrum.js'></script>
-  <script src='js/metromapmaker.js?version=201808022345'></script>
+  <script src='js/metromapmaker.js?version=20180818'></script>
 
   </body>
 </html>

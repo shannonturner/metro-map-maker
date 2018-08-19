@@ -1,19 +1,18 @@
 // MetroMapMaker.js
 
 var gridRows = 80, gridCols = 80;
-
 var lastStrokeStyle = '';
+var activeTool = 'look';
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
     return target.replace(new RegExp(search, 'g'), replacement);
-};
+}; // String.replaceAll()
 
 function resizeGrid(size) {
   // Change the grid size to the specified size.
 
   metroMap = saveMapAsObject(); // Save map as we currently have it so we can load it
-  // autoSave(metroMap); // Now that autoSave() is decoupled from saveMapAsObject(), do I really want to save the resized map to localStorage if I don't have to?
 
   // Resize the grid and paint the map on it
   gridRows = size, gridCols = size;
@@ -25,7 +24,7 @@ function resizeGrid(size) {
   $('#tool-resize-' + size).removeClass('btn-info');
   $('#tool-resize-' + size).addClass('btn-primary');
   redrawCanvasContainerSize();
-}
+} // resizeGrid(size)
 
 function redrawCanvasContainerSize() {
   // Whenever the pixel width or height of the grid changes,
@@ -42,7 +41,7 @@ function redrawCanvasContainerSize() {
   $('#metro-map-canvas').width(computedSquareSize * gridCols);
   $('#metro-map-canvas').height(computedSquareSize * gridCols);
   drawCanvas();
-}
+} // redrawCanvasContainerSize()
 
 function getActiveLine(x, y) {
   // Given an x, y coordinate pair, return the hex code for the line you're on.
@@ -51,7 +50,7 @@ function getActiveLine(x, y) {
     // var classes = document.getElementById('coord-x-' + x + '-y-' + y).className.split(/\s+/);
     var classes = document.getElementById('coord-x-' + x + '-y-' + y).classList;
   } catch (e) {
-    // 'With the new straight lines replacing the old bubbles system of drawing the maps onto the canvas, you will land here on occasion when the maps reach the borders. (For example, y-80 which does not exist in the 80x80 grid.) Do not panic, instead just keep on keeping on.'
+    // With the new straight lines replacing the old bubbles system of drawing the maps onto the canvas, you will land here on occasion when the maps reach the borders. (For example, y-80 which does not exist in the 80x80 grid.) Do not panic, instead just keep on keeping on.
     return false; 
   }
   for (var z=0; z<classes.length; z++) {
@@ -60,32 +59,16 @@ function getActiveLine(x, y) {
     }
   }
   return activeLine;
-}
-
-function getNeighbors(x, y) {
-  // Given an x,y coordinate pair, return the number of neighboring coordinates with any rail line
-  var neighbors = 0;
-  for (var nx=-1; nx<=1; nx+=1) {
-    for (var ny=-1; ny<=1; ny+=1) {
-      if (nx == 0 && ny == 0) {
-        continue;
-      }
-      neighboringLine = getActiveLine(parseInt(x) + parseInt(nx), parseInt(y) + parseInt(ny));
-      if (neighboringLine) {
-        neighbors++;
-      } // if (neighboringLine)
-    } // for ny
-  } // for nx
-  return neighbors;
-} // getNeighbors()
+} // getActiveLine(x, y)
 
 function moveLineStroke(ctx, x, y, lineToX, lineToY) {
+  // Used by drawPoint() to draw lines at specific points
   // Not using Math.floor here because the gridPixelMultiplier is 
   //  a whole number for 80x80 and 160x160 but not for 120x120
   ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
   ctx.lineTo(lineToX * gridPixelMultiplier, lineToY * gridPixelMultiplier);
   singleton = false;
-}
+} // moveLineStroke(ctx, x, y, lineToX, lineToY)
 
 function getStationLines(x, y) {
   // Given an x, y coordinate pair, return the hex codes for the lines this station services.
@@ -97,9 +80,11 @@ function getStationLines(x, y) {
     }
   }
   return stationLines;
-}
+} // getStationLines(x, y)
 
 function bindRailLineEvents() {
+  // Bind the events to all of the .rail-lines
+  // Needs to be done whenever a new rail line is created and on page load
   $('.rail-line').click(function() {
     if ($(this).attr('id') == 'rail-line-new') {
       // New Rail Line
@@ -112,9 +97,11 @@ function bindRailLineEvents() {
     $('#tool-station-options').hide();
     $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
   });  
-}
+} // bindRailLineEvents()
 
 function drawGrid() {
+  // Creates the grid of DIVs that are used to hold the classes and styling
+  // Most of the complexity here is in binding events to the grid squares upon regeneration
   var grid = "";
 
   // Generate the grid
@@ -305,17 +292,19 @@ function drawGrid() {
 
       $('#station-name').focus(); // Set focus to the station name box to save you a click each time
     } // if activeTool == station
-  });
+  }); // Binding events to the grid squares
 
   $('.grid-col').mouseover(function() {
     if (mouseIsDown) {
       $(this).click();
     }
   });
-
-}
+} // drawGrid()
 
 function drawCanvas(metroMap) {
+  // Fully redraw the canvas based on the provided metroMap;
+  //    if no metroMap is provided, then save the existing grid as a metroMap object
+  //    then redraw the canvas
   var canvas = document.getElementById('metro-map-canvas');
   var ctx = canvas.getContext('2d', {alpha: false});
 
@@ -475,76 +464,68 @@ function drawCanvas(metroMap) {
   var mapCredit = 'Created with MetroMapMaker.com';
   var textWidth = ctx.measureText(mapCredit).width;
   ctx.fillText(mapCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 50);
-} // drawCanvas()
+} // drawCanvas(metroMap)
 
-function drawPoint(ctx, x, y, activeTool) {
+function drawPoint(ctx, x, y) {
+  // Draw a single point at position x, y
 
-    var activeLine = getActiveLine(x, y);
+  var activeLine = getActiveLine(x, y);
 
-    ctx.beginPath();
-    // Making state changes to the canvas is expensive,
-    //  so the fewer times I need to update the ctx.strokeStyle, the better
-    if (activeTool == 'eraser') {
-      ctx.strokeStyle = '#ffffff';
-    } else {
-      if (lastStrokeStyle != activeLine) {
-        ctx.strokeStyle = '#' + activeLine;
-        lastStrokeStyle = activeLine;
-      }   
-    }
-    
-    singleton = true;
+  ctx.beginPath();
+  // Making state changes to the canvas is expensive,
+  //  so the fewer times I need to update the ctx.strokeStyle, the better
+  if (lastStrokeStyle != activeLine) {
+    ctx.strokeStyle = '#' + activeLine;
+    lastStrokeStyle = activeLine;
+  }
+  
+  singleton = true;
 
-    // Diagonals
-    if (activeLine == getActiveLine(x + 1, y + 1)) {
-      // Direction: SE
-      moveLineStroke(ctx, x, y, x+1, y+1);
-    } if (activeLine == getActiveLine(x + 1, y - 1)) {
-      // Direction: NE
-      moveLineStroke(ctx, x, y, x+1, y-1);
-    } if (activeLine == getActiveLine(x - 1, y - 1)) {
-      // Direction: NW
-      moveLineStroke(ctx, x, y, x-1, y-1);
-    } if (activeLine == getActiveLine(x - 1, y + 1)) {
-      // Direction: SW
-      moveLineStroke(ctx, x, y, x-1, y+1)
-    }
+  // Diagonals
+  if (activeLine == getActiveLine(x + 1, y + 1)) {
+    // Direction: SE
+    moveLineStroke(ctx, x, y, x+1, y+1);
+  } if (activeLine == getActiveLine(x + 1, y - 1)) {
+    // Direction: NE
+    moveLineStroke(ctx, x, y, x+1, y-1);
+  } if (activeLine == getActiveLine(x - 1, y - 1)) {
+    // Direction: NW
+    moveLineStroke(ctx, x, y, x-1, y-1);
+  } if (activeLine == getActiveLine(x - 1, y + 1)) {
+    // Direction: SW
+    moveLineStroke(ctx, x, y, x-1, y+1)
+  }
 
-    // Cardinals
-    if (activeLine == getActiveLine(x + 1, y)) {
-        // Direction: E
-        moveLineStroke(ctx, x, y, x+1, y);
-    } if (activeLine == getActiveLine(x, y + 1)) {
-        // Direction: S
-        moveLineStroke(ctx, x, y, x, y+1);
-    } if (activeLine == getActiveLine(x, y - 1)) {
-        // Direction: N
-        moveLineStroke(ctx, x, y, x, y-1);
-    } if (activeLine == getActiveLine(x - 1, y)) {
-        // Direction: W
-        moveLineStroke(ctx, x, y, x-1, y);
-    }
+  // Cardinals
+  if (activeLine == getActiveLine(x + 1, y)) {
+      // Direction: E
+      moveLineStroke(ctx, x, y, x+1, y);
+  } if (activeLine == getActiveLine(x, y + 1)) {
+      // Direction: S
+      moveLineStroke(ctx, x, y, x, y+1);
+  } if (activeLine == getActiveLine(x, y - 1)) {
+      // Direction: N
+      moveLineStroke(ctx, x, y, x, y-1);
+  } if (activeLine == getActiveLine(x - 1, y)) {
+      // Direction: W
+      moveLineStroke(ctx, x, y, x-1, y);
+  }
 
-    // Doing one stroke at the end once all the lines are known
-    //  rather than several strokes will improve performance
-    ctx.stroke();
+  // Doing one stroke at the end once all the lines are known
+  //  rather than several strokes will improve performance
+  ctx.stroke();
 
-    if (singleton) {
-      // Without this, singletons with no neighbors won't be painted at all.
-      // So map legends, "under construction", or similar lines should be painted.
-      if (activeTool == 'eraser') {
-        ctx.fillStyle = '#ffffff';
-      } else {
-        ctx.fillStyle = '#' + activeLine;
-      }
-      ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
-      ctx.closePath();
-      ctx.fill();
-    }
-
+  if (singleton) {
+    // Without this, singletons with no neighbors won't be painted at all.
+    // So map legends, "under construction", or similar lines should be painted.
+    ctx.fillStyle = '#' + activeLine;
+    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
     ctx.closePath();
+    ctx.fill();
+  }
 
-} // drawPoint(x, y)
+  ctx.closePath();
+} // drawPoint(ctx, x, y)
 
 function rgb2hex(rgb) {
     if (/^#[0-9A-F]{6}$/i.test(rgb)) return rgb;
@@ -554,10 +535,10 @@ function rgb2hex(rgb) {
         return ("0" + parseInt(x).toString(16)).slice(-2);
     }
     return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
-}
+} // rgb2hex(rgb)
 
 function autoSave(metroMap) {
-  // Saves the metroMap to localstorage
+  // Saves the provided metroMap to localStorage
   console.log('Saving');
   if (typeof metroMap == 'object') {
     metroMap = JSON.stringify(metroMap);
@@ -568,13 +549,17 @@ function autoSave(metroMap) {
   setTimeout(function() {
     $('#autosave-indicator').html('');
   }, 1500)
-}
+} // autoSave(metroMap)
 
 function getURLParameter(name) {
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
 }
 
 function autoLoad() {
+  // Attempts to load a saved map, in the order:
+  // 1. from a URL parameter 'map' with a valid map hash
+  // 2. from a map object saved in localStorage
+  // 3. If neither 1 or 2, load a preset map (WMATA)
   var savedMapHash = getURLParameter('map');
   if (savedMapHash) {
     $.get('https://metromapmaker.com/save/' + savedMapHash).done(function (savedMapData) {
@@ -584,9 +569,9 @@ function autoLoad() {
     });
   } else if (window.localStorage.getItem('metroMap')) {
     // Load from local storage
-    metroMapObject = JSON.parse(window.localStorage.getItem('metroMap'));
-    getMapSize(metroMapObject);
-    loadMapFromObject(metroMapObject);
+    savedMapData = JSON.parse(window.localStorage.getItem('metroMap'));
+    getMapSize(savedMapData);
+    loadMapFromObject(savedMapData);
   } else {
     // If no map URLParameter and no locally stored map, default to the WMATA map
     // I think this would be more intuitive than the blank slate,
@@ -599,9 +584,12 @@ function autoLoad() {
     });
   }
   $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
-}
+} // autoLoad()
 
 function getMapSize(metroMapObject) {
+  // Sets gridRows and gridCols based on how far to the right map features have been placed
+  // A map with x,y values within 0-79 will shrink to an 80x80 grid even if
+  //    the grid has been extended beyond that
     highestValue = 0;
     if (typeof metroMapObject !== 'object') {
       metroMapObject = JSON.parse(metroMapObject);
@@ -628,9 +616,11 @@ function getMapSize(metroMapObject) {
     } else {
       gridRows = 80, gridCols = 80;
     }
-} // getMapSize()
+} // getMapSize(metroMapObject)
 
 function loadMapFromObject(metroMapObject) {
+  // Loads a map from the provided metroMapObject and 
+  //  applies the necessary styling to the grid
 
   if (typeof metroMapObject != 'object') {
     metroMapObject = JSON.parse(metroMapObject);
@@ -649,9 +639,6 @@ function loadMapFromObject(metroMapObject) {
           });
           if (metroMapObject[x][y]["station"]) {
             $('#coord-x-' + x + '-y-' + y).addClass('has-station');
-            // We don't need station name tooltips on the grid anymore
-            // $('#coord-x-' + x + '-y-' + y).attr('data-toggle', 'tooltip');
-            // $('#coord-x-' + x + '-y-' + y).attr('title', metroMapObject[x][y]["station"]["name"]);
             $('#coord-x-' + x + '-y-' + y).html('<div id="' + metroMapObject[x][y]["station"]["name"] +'" class="station"></div>');
             if (metroMapObject[x][y]["station"]["transfer"] == 1) {
               $('#' + metroMapObject[x][y]["station"]["name"]).addClass('transfer-station');
@@ -691,12 +678,14 @@ function loadMapFromObject(metroMapObject) {
   }
 
   $(function () {
-    $('[data-toggle="tooltip"]').tooltip();
+    $('[data-toggle="tooltip"]').tooltip({"container": "body"});
     bindRailLineEvents();
   }); // Do this here because it looks like the call to this below doesn't happen in time to load all the tooltips created by the map being loaded
-} // function loadMapFromObject
+} // loadMapFromObject(metroMapObject)
 
 function saveMapAsObject() {
+  // Based on the styling of grid squares, saves the map as an object
+  // ultimately so it can be reconstituted with loadMapFromObject()
 
   metroMap = new Object;
 
@@ -761,7 +750,7 @@ function saveMapAsObject() {
   });
 
   return metroMap;
-} // function saveMapAsObject()
+} // saveMapAsObject()
 
 $(document).ready(function() {
 
@@ -784,7 +773,7 @@ $(document).ready(function() {
 
   // Enable the tooltips
   $(function () {
-    $('[data-toggle="tooltip"]').tooltip();
+    $('[data-toggle="tooltip"]').tooltip({"container": "body"});
   })
 
   activeTool = 'look';
@@ -801,13 +790,13 @@ $(document).ready(function() {
     if ($('#tool-line-options').is(':visible')) {
       $('#tool-line-options').hide();
       $('#tool-new-line-options').hide();
-      $('#tool-line').html('<i class="fa fa-subway" aria-hidden="true"></i> Rail Line');
+      $('#tool-line').html('<i class="fa fa-paint-brush" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> Rail Line');
     } else {
       $('#tool-line-options').show();
       $('#tool-line').html('<i class="fa fa-subway" aria-hidden="true"></i> Hide Rail Line options');
     }
     $('.tooltip').hide();
-  });
+  }); // #tool-line.click() (Show rail lines you can paint)
   $('#rail-line-delete').click(function() {
     // Only delete lines that aren't in use
     var allLines = $('.rail-line');
@@ -827,7 +816,7 @@ $(document).ready(function() {
         linesToDelete[d].remove();
       }
     }
-  });
+  }); // #rail-line-delete.click() (Delete unused lines)
   $('#tool-station').click(function() {
     activeTool = 'station';
     if ($('#tool-station-options').is(':visible')) {
@@ -835,16 +824,16 @@ $(document).ready(function() {
       $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
     }
     $('.tooltip').hide();
-  });
+  }); // #tool-station.click()
   $('#tool-eraser').click(function() {
     activeTool = 'eraser';
     $('#tool-station-options').hide();
     $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
     $('.tooltip').hide();
-  })
+  }); // #tool-eraser.click()
   $('#tool-look').click(function() {
     activeTool = 'look';
-  });
+  }); // #tool-look.click() -- no longer available, OK to delete
   $('#tool-grid').click(function() {
     if ($('.grid-col').css('border-color') == 'rgb(128, 206, 255)' || $('.grid-col').css('border-top-color') == 'rgb(128, 206, 255)') {
       $('.grid-col').css('border-color', 'transparent');
@@ -853,9 +842,8 @@ $(document).ready(function() {
       $('.grid-col').css('border-color', '#80CEFF');
       $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> Hide grid');
     }
-  });
+  }); // #tool-grid.click() (Toggle grid visibility)
   $('#tool-zoom-in').click(function() {
-    // var gridSize = $('.grid-col').width();
     var gridSize = Math.floor(window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0]);
     if (gridSize < 50) {
       $('#grid').addClass('temp-no-flex-firefox');
@@ -871,7 +859,7 @@ $(document).ready(function() {
       });
       redrawCanvasContainerSize();
     }
-  });
+  }); // #tool-zoom-in.click()
   $('#tool-zoom-out').click(function() {
     var gridSize = Math.floor(window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0]);
     if (gridSize > 8) {
@@ -884,7 +872,7 @@ $(document).ready(function() {
       });
       redrawCanvasContainerSize();
     }
-  });
+  }); // #tool-zoom-out.click()
   $('#tool-resize-all').click(function() {
     if ($('#tool-resize-options').is(':visible')) {
       $('#tool-resize-options').hide();
@@ -894,11 +882,11 @@ $(document).ready(function() {
       $('#tool-resize-all').html('<i class="fa fa-expand" aria-hidden="true"></i> Hide Resize options');
     }
     $('.tooltip').hide();
-  });
+  }); // #tool-resize-all.click()
   $('.resize-grid').click(function() {
     size = $(this).attr('id').split('-').slice(2);
     resizeGrid(size);
-  })
+  }); // .resize-grid.click()
   $('#tool-move-all').click(function() {
     if ($('#tool-move-options').is(':visible')) {
       $('#tool-move-options').hide();
@@ -908,7 +896,7 @@ $(document).ready(function() {
       $('#tool-move-all').html('<i class="fa fa-arrows" aria-hidden="true"></i> Hide Move options')
     }
     $('.tooltip').hide();
-  });
+  }); // #tool-move-all.click()
   $('#tool-move-up').click(function() {
     // If the grid has been zoomed in or out, preserve that sizing
     var gridSize = $('.grid-col').width();
@@ -952,7 +940,7 @@ $(document).ready(function() {
     $('.grid-col').width(gridSize);
     $('.grid-col').height(gridSize);
     drawCanvas();
-  });
+  }); // #tool-move-up.click()
   $('#tool-move-down').click(function() {
     // If the grid has been zoomed in or out, preserve that sizing
     var gridSize = $('.grid-col').width();
@@ -996,7 +984,7 @@ $(document).ready(function() {
     $('.grid-col').width(gridSize);
     $('.grid-col').height(gridSize);
     drawCanvas();
-  });
+  }); // #tool-move-down.click()
   $('#tool-move-left').click(function() {
     // If the grid has been zoomed in or out, preserve that sizing
     var gridSize = $('.grid-col').width();
@@ -1040,7 +1028,7 @@ $(document).ready(function() {
     $('.grid-col').width(gridSize);
     $('.grid-col').height(gridSize);
     drawCanvas();
-  });
+  }); // #tool-move-left.click()
   $('#tool-move-right').click(function() {
     // If the grid has been zoomed in or out, preserve that sizing
     var gridSize = $('.grid-col').width();
@@ -1084,7 +1072,7 @@ $(document).ready(function() {
     $('.grid-col').width(gridSize);
     $('.grid-col').height(gridSize);
     drawCanvas();
-  });
+  }); // #tool-move-right.click()
   $('#tool-save-map').click(function() {
     activeTool = 'look';
     var savedMap = JSON.stringify(saveMapAsObject());
@@ -1110,6 +1098,10 @@ $(document).ready(function() {
     $('.tooltip').hide();
     if ($('#grid').is(':visible')) {
       $('#grid').hide();
+      $('#metro-map-canvas').hide();
+      var canvas = document.getElementById('metro-map-canvas');
+      $("#metro-map-image").attr("src", canvas.toDataURL());
+      $("#metro-map-image").show();
       $('#export-canvas-help').show();
       $('button').attr('disabled', true);
       $(this).attr('disabled', false);
@@ -1117,10 +1109,12 @@ $(document).ready(function() {
       $(this).attr('title', "Go back to editing your map").tooltip('fixTitle').tooltip('show');
     } else {
       $('#grid').show();
+      $('#metro-map-canvas').show();
+      $("#metro-map-image").hide();
       $('#export-canvas-help').hide();
       $('button').attr('disabled', false);
       $('#tool-export-canvas').html('<i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image');
-      $(this).attr('title', "See what your finished map looks like").tooltip('fixTitle').tooltip('show');
+      $(this).attr('title', "Download your map to share with friends").tooltip('fixTitle').tooltip('show');
     }
     // Hide the changed tooltip after a moment
     setTimeout(function() {
@@ -1128,12 +1122,11 @@ $(document).ready(function() {
     }, 1500);
     
     drawCanvas();
-
   }); // #tool-export-canvas.click()
   $('#tool-clear-map').click(function() {
     drawGrid();
     $('.tooltip').hide();
-  });
+  }); // #tool-clear-map.click()
 
   $('#create-new-rail-line').click(function() {
 
@@ -1226,4 +1219,4 @@ $(document).ready(function() {
     drawCanvas(metroMap);
   }); // $('#station-transfer').click()
 
-});
+}); // document.ready()

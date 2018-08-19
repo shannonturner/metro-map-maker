@@ -1,5 +1,18 @@
 body {
-  font-family: 'PT Sans', sans-serif;
+  font-family: Helvetica, Arial, sans-serif;
+}
+
+#title {
+  color: black;
+  font-size: 20px;
+  /*background-color: white;*/
+}
+
+.M {
+  background-color: black;
+  color: white;
+  padding: 1px;
+  margin: 1px;
 }
 
 #main-container {
@@ -8,8 +21,9 @@ body {
 }
 
 #controls {
-  border: 6px solid #666;
-  background-color: #eee;
+  /*border: 6px solid #666;*/
+  border: 6px solid black;
+  /*background-color: #eee;*/ /* Now that I'm using .M, the control panel looks much better with a white background */
 }
 
 #metro-map {
@@ -25,6 +39,10 @@ div#toolbox {
   margin: 3px;
   width: 100%;
   color: #fff;
+}
+
+.btn {
+  text-align: left;
 }
 
 #grid {
