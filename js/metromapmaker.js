@@ -680,6 +680,7 @@ function loadMapFromObject(metroMapObject) {
   $(function () {
     $('[data-toggle="tooltip"]').tooltip({"container": "body"});
     bindRailLineEvents();
+    drawCanvas();
   }); // Do this here because it looks like the call to this below doesn't happen in time to load all the tooltips created by the map being loaded
 } // loadMapFromObject(metroMapObject)
 
@@ -762,11 +763,8 @@ $(document).ready(function() {
       mouseIsDown = false;
   });
 
-  drawGrid();
   autoLoad();
-  bindRailLineEvents();
-  drawCanvas();
-  
+
   $('.start-hidden').each(function() {
     $(this).hide();
   })
