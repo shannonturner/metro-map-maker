@@ -24,9 +24,8 @@
 
     <title>Metro Map Maker</title>
 
-    <link rel="icon" href="favicon.ico">
+    <link rel="icon" href="https://metromapmaker.com/metromapmaker-gallery.ico">
 
-    <link href="https://fonts.googleapis.com/css?family=PT+Sans" rel="stylesheet">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -48,6 +47,10 @@
     </script>
 
     <style>
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+    }
 
     .map-link {
       display: inline;
@@ -318,155 +321,97 @@
 
   } // function galleryLoadMapFromSavedMapData(metroMapObject, mapId)
 
-  function galleryGetSameNeighbors(x, y, mapId) {
-    // Given an x,y coordinate pair, return the number of neighboring coordinates of the same rail line
-    var neighbors = 0;
-    for (var nx=-1; nx<=1; nx+=1) {
-      for (var ny=-1; ny<=1; ny+=1) {
-        if (nx == 0 && ny == 0) {
-          continue;
-        }
-        neighboringLine = galleryGetActiveLine(parseInt(x) + parseInt(nx), parseInt(y) + parseInt(ny), mapId);
-        if (neighboringLine && neighboringLine == galleryGetActiveLine(x, y, mapId)) {
-          neighbors++;
-        } // if (neighboringLine)
-      } // for ny
-    } // for nx
-    return neighbors;
-  } // getSameNeighbors()
-
   function moveLineStroke(ctx, x, y, lineToX, lineToY) {
     ctx.moveTo(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.lineTo(lineToX * gridPixelMultiplier, lineToY * gridPixelMultiplier);
-    ctx.stroke();
     singleton = false;
   }
 
-  function galleryExportToCanvas(mapId) {
+  function galleryExportToCanvas(metroMap, mapId) {
     var canvas = document.getElementById('metro-map-gallery-canvas-' + mapId);
-    var ctx = canvas.getContext('2d');
+    var ctx = canvas.getContext('2d', {alpha: false});
     var gridRows = gridSize, gridCols = gridSize;
     // How much larger is the canvas than the grid has in squares?
     // If the grid has 80x80 squares and the canvas is 1600x1600,
     //    then the gridPixelMultiplier is 20 (1600 / 80)
     gridPixelMultiplier = canvas.width / gridCols; // 20
 
-    // Clear the old canvas if it was drawn
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     // Make the background white instead of transparent
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    for (var x=0; x<gridRows; x++){
-      for (var y=0; y<gridCols; y++) {
+    ctx.lineCap = 'round';
+    ctx.lineWidth = gridPixelMultiplier * 1.175;
 
-        if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).hasClass('has-line')) {
+    for (var x in metroMap){
+      for (var y in metroMap[x]) {
 
-          // Get color of the line
-          ctx.fillStyle = '#' + galleryGetActiveLine(x, y, mapId);
+          x = parseInt(x);
+          y = parseInt(y);
+
+          var activeLine = galleryGetActiveLine(x, y, mapId);
 
           ctx.beginPath();
-          ctx.strokeStyle = '#' + galleryGetActiveLine(x, y, mapId);
-          ctx.lineWidth = gridPixelMultiplier * 1.175;
-
-          ctx.lineCap = 'round';
+          ctx.strokeStyle = '#' + activeLine;
           singleton = true;
 
           // Diagonals
-          if (galleryGetActiveLine(x, y, mapId) == galleryGetActiveLine(x + 1, y + 1, mapId)) {
+          if (activeLine == galleryGetActiveLine(x + 1, y + 1, mapId)) {
             // Direction: SE
             moveLineStroke(ctx, x, y, x+1, y+1);
-          } if (galleryGetActiveLine(x, y, mapId) == galleryGetActiveLine(x + 1, y - 1, mapId)) {
+          } 
+          if (activeLine == galleryGetActiveLine(x + 1, y - 1, mapId)) {
             // Direction: NE
             moveLineStroke(ctx, x, y, x+1, y-1);
-          } if (galleryGetActiveLine(x, y, mapId) == galleryGetActiveLine(x - 1, y - 1, mapId)) {
+          } 
+          if (activeLine == galleryGetActiveLine(x - 1, y - 1, mapId)) {
             // Direction: NW
             moveLineStroke(ctx, x, y, x-1, y-1);
-          } if (galleryGetActiveLine(x, y, mapId) == galleryGetActiveLine(x - 1, y + 1, mapId)) {
+          } 
+          if (activeLine == galleryGetActiveLine(x - 1, y + 1, mapId)) {
             // Direction: SW
             moveLineStroke(ctx, x, y, x-1, y+1)
           }
 
-          cardinals = {
-            "north": false,
-            "east": false,
-            "south": false,
-            "west": false
-          }
-
           // Cardinals
-          if (galleryGetActiveLine(x, y, mapId) == galleryGetActiveLine(x + 1, y, mapId)) {
+          if (activeLine == galleryGetActiveLine(x + 1, y, mapId)) {
               // Direction: E
-              if (galleryGetSameNeighbors(x, y, mapId) == 1) {
-                ctx.lineCap = 'round';
-              } else {
-                ctx.lineCap = 'butt';
-              }
               moveLineStroke(ctx, x, y, x+1, y);
-              cardinals["east"] = true;
-          } if (galleryGetActiveLine(x, y, mapId) == galleryGetActiveLine(x, y + 1, mapId)) {
+          } if (activeLine == galleryGetActiveLine(x, y + 1, mapId)) {
               // Direction: S
-              if (galleryGetSameNeighbors(x, y, mapId) == 1) {
-                ctx.lineCap = 'round';
-              } else {
-                ctx.lineCap = 'butt';
-              }
               moveLineStroke(ctx, x, y, x, y+1);
-              cardinals["south"] = true;
-          } if (galleryGetActiveLine(x, y, mapId) == galleryGetActiveLine(x, y - 1, mapId)) {
+          } if (activeLine == galleryGetActiveLine(x, y - 1, mapId)) {
               // Direction: N
-              if (galleryGetSameNeighbors(x, y, mapId) == 1) {
-                ctx.lineCap = 'round';
-              } else {
-                ctx.lineCap = 'butt';
-              }
               moveLineStroke(ctx, x, y, x, y-1);
-              cardinals["north"] = true;
-          } if (galleryGetActiveLine(x, y, mapId) == galleryGetActiveLine(x - 1, y, mapId)) {
+          } if (activeLine == galleryGetActiveLine(x - 1, y, mapId)) {
               // Direction: W
-              if (galleryGetSameNeighbors(x, y, mapId) == 1) {
-                ctx.lineCap = 'round';
-              } else {
-                ctx.lineCap = 'butt';
-              }
               moveLineStroke(ctx, x, y, x-1, y);
-              cardinals["west"] = true;
           }
 
-          // Corners
-          ctx.lineCap = 'round';
-
-          if (cardinals["north"] && cardinals["west"]) {
-            moveLineStroke(ctx, x, y, x, y);
-          }
-          if (cardinals["north"] && cardinals["east"]) {
-            moveLineStroke(ctx, x, y, x, y);
-          }
-          if (cardinals["south"] && cardinals["west"]) {
-            moveLineStroke(ctx, x, y, x, y);
-          }
-          if (cardinals["south"] && cardinals["east"]) {
-            moveLineStroke(ctx, x, y, x, y);
-          }
+          // Doing one stroke at the end once all the lines are known
+          //  rather than several strokes will improve performance
+          ctx.stroke();
 
           if (singleton) {
             // Without this, singletons with no neighbors won't be painted at all.
             // So map legends, "under construction", or similar lines should be painted.
+            // Get color of the line
+            ctx.fillStyle = '#' + activeLine;
             ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
             ctx.closePath();
             ctx.fill();
           }
 
-        } // if .has-line
+        ctx.closePath();
+
       } // for y
     } // for x
 
     // Draw the stations last (and separately), or they will be painted over by the lines themselves.
     ctx.font = '700 20px sans-serif';
 
-    for (var x=0; x<gridRows; x++){
-      for (var y=0; y<gridCols; y++) {
+    for (var x in metroMap){
+      for (var y in metroMap[x]) {
         if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).hasClass('has-station') && $('#m-' + mapId + 'coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
           // Outer circle
           ctx.fillStyle = '#000000';
@@ -600,7 +545,7 @@
         galleryGetMapSize(mapData);
         galleryDrawGrid({{ map.id }});
         galleryLoadMapFromSavedMapData(mapData, {{ map.id }});
-        galleryExportToCanvas({{ map.id }});
+        galleryExportToCanvas(mapData, {{ map.id }});
       } catch (e) {
         console.log("[WARN] Skipping #{{ map.id }} ({{ map.urlhash }}) - bad JSON")
       }
