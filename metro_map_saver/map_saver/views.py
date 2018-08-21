@@ -35,7 +35,7 @@ class MapGalleryView(TemplateView):
 
     def get(self, request, **kwargs):
 
-        MAPS_PER_PAGE = 10
+        MAPS_PER_PAGE = 25
 
         maps_total = SavedMap.objects.filter(gallery_visible=True).count()
 

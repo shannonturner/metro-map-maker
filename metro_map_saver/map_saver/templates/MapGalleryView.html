@@ -263,21 +263,16 @@
     $('#grid-m-' + mapId).html(grid);
   } // function galleryDrawGrid(mapId)
 
-  function galleryGetActiveLine(x, y, mapId) {
+  function galleryGetActiveLine(x, y, metroMap) {
     // Given an x, y coordinate pair, return the hex code for the line you're on.
     // Use this to retrieve the line for a given point on a map.
     try {
-      var classes = document.getElementById('m-' + mapId + 'coord-x-' + x + '-y-' + y).className.split(/\s+/);
+      // var classes = document.getElementById('m-' + mapId + 'coord-x-' + x + '-y-' + y).className.split(/\s+/);
+      return metroMap[x][y]["line"];
     } catch (e) {
       // 'With the new straight lines replacing the old bubbles system of drawing the maps onto the canvas, you will land here on occasion when the maps reach the borders. (For example, y-80 which does not exist in the 80x80 grid.) Do not panic, instead just keep on keeping on.'
       return false;
     }
-    for (var z=0; z<classes.length; z++) {
-      if (classes[z].indexOf('has-line-') >= 0) {
-        var activeLine = classes[z].slice(9, 15);
-      }
-    }
-    return activeLine;
   }
 
   function galleryLoadMapFromSavedMapData(metroMapObject, mapId) {
@@ -349,41 +344,41 @@
           x = parseInt(x);
           y = parseInt(y);
 
-          var activeLine = galleryGetActiveLine(x, y, mapId);
+          var activeLine = galleryGetActiveLine(x, y, metroMap);
 
           ctx.beginPath();
           ctx.strokeStyle = '#' + activeLine;
           singleton = true;
 
           // Diagonals
-          if (activeLine == galleryGetActiveLine(x + 1, y + 1, mapId)) {
+          if (activeLine == galleryGetActiveLine(x + 1, y + 1, metroMap)) {
             // Direction: SE
             moveLineStroke(ctx, x, y, x+1, y+1);
           } 
-          if (activeLine == galleryGetActiveLine(x + 1, y - 1, mapId)) {
+          if (activeLine == galleryGetActiveLine(x + 1, y - 1, metroMap)) {
             // Direction: NE
             moveLineStroke(ctx, x, y, x+1, y-1);
           } 
-          if (activeLine == galleryGetActiveLine(x - 1, y - 1, mapId)) {
+          if (activeLine == galleryGetActiveLine(x - 1, y - 1, metroMap)) {
             // Direction: NW
             moveLineStroke(ctx, x, y, x-1, y-1);
           } 
-          if (activeLine == galleryGetActiveLine(x - 1, y + 1, mapId)) {
+          if (activeLine == galleryGetActiveLine(x - 1, y + 1, metroMap)) {
             // Direction: SW
             moveLineStroke(ctx, x, y, x-1, y+1)
           }
 
           // Cardinals
-          if (activeLine == galleryGetActiveLine(x + 1, y, mapId)) {
+          if (activeLine == galleryGetActiveLine(x + 1, y, metroMap)) {
               // Direction: E
               moveLineStroke(ctx, x, y, x+1, y);
-          } if (activeLine == galleryGetActiveLine(x, y + 1, mapId)) {
+          } if (activeLine == galleryGetActiveLine(x, y + 1, metroMap)) {
               // Direction: S
               moveLineStroke(ctx, x, y, x, y+1);
-          } if (activeLine == galleryGetActiveLine(x, y - 1, mapId)) {
+          } if (activeLine == galleryGetActiveLine(x, y - 1, metroMap)) {
               // Direction: N
               moveLineStroke(ctx, x, y, x, y-1);
-          } if (activeLine == galleryGetActiveLine(x - 1, y, mapId)) {
+          } if (activeLine == galleryGetActiveLine(x - 1, y, metroMap)) {
               // Direction: W
               moveLineStroke(ctx, x, y, x-1, y);
           }
@@ -412,7 +407,14 @@
 
     for (var x in metroMap){
       for (var y in metroMap[x]) {
-        if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).hasClass('has-station') && $('#m-' + mapId + 'coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+        // "39": {"line": "662c90", "station": {"transfer": 1, "lines": ["662c90"], "name": "Alvarado", "orientation": "0"}}
+
+        var isStation = metroMap[x][y]["station"];
+        try {
+          var isTransferStation = metroMap[x][y]["station"]["transfer"];
+        } catch (e) { isTransferStation = false; }
+
+        if (isStation && isTransferStation) {
           // Outer circle
           ctx.fillStyle = '#000000';
           ctx.beginPath();
@@ -442,7 +444,7 @@
           ctx.fill();
 
           
-        } else if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).hasClass('has-station')) {
+        } else if (isStation) {
           // Outer circle
           ctx.fillStyle = '#000000';
           ctx.beginPath();
@@ -459,51 +461,48 @@
         } // if .has-station
 
         // Write the station name
-        if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).hasClass('has-station')) {
+        if (isStation) {
           ctx.save();
           ctx.fillStyle = '#000000';
-          var activeStation = document.getElementById('m-' + mapId + 'coord-x-' + x + '-y-' + y).children[0].id.replaceAll('_', ' ');
-
-          // For the Gallery View, I want to remove the mapId prefixing the document ID
-          activeStation = activeStation.slice(String("#m-" + mapId).length);
+          var activeStation = metroMap[x][y]["station"]["name"].replaceAll('_', ' ');
 
           // Rotate the canvas if specified in the station name orientation
-          if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y + ' .station').hasClass('rot-45')) {
+          if (metroMap[x][y]["station"]["orientation"] == '-45') {
             ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);  
             ctx.rotate(-45 * (Math.PI/ 180));
-            if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+            if (isTransferStation) {
               ctx.fillText(activeStation, 30, 5);
             } else {
               ctx.fillText(activeStation, 15, 5);
             }
-          } else if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y + ' .station').hasClass('rot45')) {
+          } else if (metroMap[x][y]["station"]["orientation"] == '45') {
             ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
             ctx.rotate(45 * (Math.PI/ 180));
-            if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+            if (isTransferStation) {
               ctx.fillText(activeStation, 30, 5);
             } else {
               ctx.fillText(activeStation, 15, 5);
             }
-          } else if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y + ' .station').hasClass('rot135')) {
+          } else if (metroMap[x][y]["station"]["orientation"] == '135') {
             var textSize = ctx.measureText(activeStation).width;
             ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
             ctx.rotate(-45 * (Math.PI/ 180));
-            if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+            if (isTransferStation) {
               ctx.fillText(activeStation, -1 * textSize - 30, 5);
             } else {
               ctx.fillText(activeStation, -1 * textSize - 15, 5);
             }
-          } else if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y + ' .station').hasClass('rot180')) {
+          } else if (metroMap[x][y]["station"]["orientation"] == '180') {
             // When drawing on the left, this isn't very different from drawing on the right 
             //      with no rotation, except that we measure the text first
             var textSize = ctx.measureText(activeStation).width;
-            if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+            if (isTransferStation) {
               ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier * 1.5) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
             } else {
               ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
             }
           } else  {
-            if ($('#m-' + mapId + 'coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+            if (isTransferStation) {
               ctx.fillText(activeStation, (x * gridPixelMultiplier) + (gridPixelMultiplier * 1.5), (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
             } else {
               ctx.fillText(activeStation, (x * gridPixelMultiplier) + gridPixelMultiplier, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
@@ -515,24 +514,6 @@
       } // for y
     } // for x
 
-    // Has a shareable link been created for this map? If so, add it to the corner
-    if ($('#shareable-map-link').length) {
-      ctx.font = '700 20px serif';
-      ctx.fillStyle = '#000000';
-      var shareableLink = $('#shareable-map-link').text();
-      if (shareableLink.length > 0 && shareableLink.slice(0, 26) == "https://metromapmaker.com/") {
-        var remixCredit = 'Remix this map! Go to ' + shareableLink;
-        var textWidth = ctx.measureText(remixCredit).width;
-        ctx.fillText(remixCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 25);
-      }
-    }
-
-    // Add a map credit to help promote the site
-    ctx.font = '700 20px sans-serif';
-    ctx.fillStyle = '#000000';
-    var mapCredit = 'Created with MetroMapMaker.com';
-    var textWidth = ctx.measureText(mapCredit).width;
-    ctx.fillText(mapCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 50);
   } // function galleryExportToCanvas(mapId)
 
   $(document).ready(function() {
@@ -541,10 +522,13 @@
       mapData = "{{ map.mapdata }}";
       mapData = mapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
       try {
+        // console.log(mapData);
         mapData = JSON.parse(mapData);
         galleryGetMapSize(mapData);
-        galleryDrawGrid({{ map.id }});
-        galleryLoadMapFromSavedMapData(mapData, {{ map.id }});
+        // I'll get big performance gains if I can cut out
+        //  both galleryDrawGrid() and galleryLoadMapFromSavedMapData()
+        // galleryDrawGrid({{ map.id }});
+        // galleryLoadMapFromSavedMapData(mapData, {{ map.id }});
         galleryExportToCanvas(mapData, {{ map.id }});
       } catch (e) {
         console.log("[WARN] Skipping #{{ map.id }} ({{ map.urlhash }}) - bad JSON")
