@@ -410,9 +410,11 @@
         // "39": {"line": "662c90", "station": {"transfer": 1, "lines": ["662c90"], "name": "Alvarado", "orientation": "0"}}
 
         var isStation = metroMap[x][y]["station"];
-        try {
+        if (isStation) {
           var isTransferStation = metroMap[x][y]["station"]["transfer"];
-        } catch (e) { isTransferStation = false; }
+        } else {
+          var isTransferStation = false;
+        }
 
         if (isStation && isTransferStation) {
           // Outer circle

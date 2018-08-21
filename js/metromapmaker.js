@@ -43,9 +43,12 @@ function redrawCanvasContainerSize() {
   drawCanvas();
 } // redrawCanvasContainerSize()
 
-function getActiveLine(x, y) {
+function getActiveLine(x, y, metroMap) {
   // Given an x, y coordinate pair, return the hex code for the line you're on.
   // Use this to retrieve the line for a given point on a map.
+  if (metroMap) {
+    return metroMap[x][y]["line"];
+  }
   try {
     // var classes = document.getElementById('coord-x-' + x + '-y-' + y).className.split(/\s+/);
     var classes = document.getElementById('coord-x-' + x + '-y-' + y).classList;
@@ -346,7 +349,15 @@ function drawCanvas(metroMap) {
       if (!Number.isInteger(x) || !Number.isInteger(x)) {
         continue;
       }
-      if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station') && $('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+
+      var isStation = metroMap[x][y]["station"];
+      if (isStation) {
+        var isTransferStation = metroMap[x][y]["station"]["transfer"];
+      } else {
+        var isTransferStation = false;
+      }
+
+      if (isStation && isTransferStation) {
         // Outer circle
         ctx.fillStyle = '#000000';
         ctx.beginPath();
@@ -374,9 +385,8 @@ function drawCanvas(metroMap) {
         ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true); 
         ctx.closePath();
         ctx.fill();
-
         
-      } else if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station')) {
+      } else if (isStation) {
         // Outer circle
         ctx.fillStyle = '#000000';
         ctx.beginPath();
@@ -393,48 +403,48 @@ function drawCanvas(metroMap) {
       } // if .has-station
 
       // Write the station name
-      if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station')) {
+      if (isStation) {
         ctx.save();
         ctx.fillStyle = '#000000';
-        var activeStation = document.getElementById('coord-x-' + x + '-y-' + y).children[0].id.replaceAll('_', ' ');
+        var activeStation = metroMap[x][y]["station"]["name"].replaceAll('_', ' ');
 
         // Rotate the canvas if specified in the station name orientation
-        if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot-45')) {
+        if (metroMap[x][y]["station"]["orientation"] == '-45') {
           ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);  
           ctx.rotate(-45 * (Math.PI/ 180));
-          if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+          if (isTransferStation) {
             ctx.fillText(activeStation, 30, 5);
           } else {
             ctx.fillText(activeStation, 15, 5);
           }
-        } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot45')) {
+        } else if (metroMap[x][y]["station"]["orientation"] == '45') {
           ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
           ctx.rotate(45 * (Math.PI/ 180));
-          if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+          if (isTransferStation) {
             ctx.fillText(activeStation, 30, 5);
           } else {
             ctx.fillText(activeStation, 15, 5);
           }
-        } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot135')) {
+        } else if (metroMap[x][y]["station"]["orientation"] == '135') {
           var textSize = ctx.measureText(activeStation).width;
           ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
           ctx.rotate(-45 * (Math.PI/ 180));
-          if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+          if (isTransferStation) {
             ctx.fillText(activeStation, -1 * textSize - 30, 5);
           } else {
             ctx.fillText(activeStation, -1 * textSize - 15, 5);
           }
-        } else if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('rot180')) {
+        } else if (metroMap[x][y]["station"]["orientation"] == '180') {
           // When drawing on the left, this isn't very different from drawing on the right 
           //      with no rotation, except that we measure the text first
           var textSize = ctx.measureText(activeStation).width;
-          if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+          if (isTransferStation) {
             ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier * 1.5) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
           } else {
             ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
           }
         } else  {
-          if ($('#coord-x-' + x + '-y-' + y).children().hasClass('transfer-station')) {
+          if (isTransferStation) {
             ctx.fillText(activeStation, (x * gridPixelMultiplier) + (gridPixelMultiplier * 1.5), (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
           } else {
             ctx.fillText(activeStation, (x * gridPixelMultiplier) + gridPixelMultiplier, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
@@ -442,7 +452,7 @@ function drawCanvas(metroMap) {
         } // else (of if station hasClass .rot-45)
 
         ctx.restore();
-      } // if .has-station (to write the station name)
+      } // if isStation (to write the station name)
     } // for y
   } // for x
 
@@ -466,10 +476,10 @@ function drawCanvas(metroMap) {
   ctx.fillText(mapCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 50);
 } // drawCanvas(metroMap)
 
-function drawPoint(ctx, x, y) {
+function drawPoint(ctx, x, y, metroMap) {
   // Draw a single point at position x, y
 
-  var activeLine = getActiveLine(x, y);
+  var activeLine = getActiveLine(x, y, metroMap);
 
   ctx.beginPath();
   // Making state changes to the canvas is expensive,
@@ -482,31 +492,31 @@ function drawPoint(ctx, x, y) {
   singleton = true;
 
   // Diagonals
-  if (activeLine == getActiveLine(x + 1, y + 1)) {
+  if (activeLine == getActiveLine(x + 1, y + 1, metroMap)) {
     // Direction: SE
     moveLineStroke(ctx, x, y, x+1, y+1);
-  } if (activeLine == getActiveLine(x + 1, y - 1)) {
+  } if (activeLine == getActiveLine(x + 1, y - 1, metroMap)) {
     // Direction: NE
     moveLineStroke(ctx, x, y, x+1, y-1);
-  } if (activeLine == getActiveLine(x - 1, y - 1)) {
+  } if (activeLine == getActiveLine(x - 1, y - 1, metroMap)) {
     // Direction: NW
     moveLineStroke(ctx, x, y, x-1, y-1);
-  } if (activeLine == getActiveLine(x - 1, y + 1)) {
+  } if (activeLine == getActiveLine(x - 1, y + 1, metroMap)) {
     // Direction: SW
     moveLineStroke(ctx, x, y, x-1, y+1)
   }
 
   // Cardinals
-  if (activeLine == getActiveLine(x + 1, y)) {
+  if (activeLine == getActiveLine(x + 1, y, metroMap)) {
       // Direction: E
       moveLineStroke(ctx, x, y, x+1, y);
-  } if (activeLine == getActiveLine(x, y + 1)) {
+  } if (activeLine == getActiveLine(x, y + 1, metroMap)) {
       // Direction: S
       moveLineStroke(ctx, x, y, x, y+1);
-  } if (activeLine == getActiveLine(x, y - 1)) {
+  } if (activeLine == getActiveLine(x, y - 1, metroMap)) {
       // Direction: N
       moveLineStroke(ctx, x, y, x, y-1);
-  } if (activeLine == getActiveLine(x - 1, y)) {
+  } if (activeLine == getActiveLine(x - 1, y, metroMap)) {
       // Direction: W
       moveLineStroke(ctx, x, y, x-1, y);
   }
