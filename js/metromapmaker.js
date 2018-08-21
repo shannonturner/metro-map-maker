@@ -46,16 +46,15 @@ function redrawCanvasContainerSize() {
 function getActiveLine(x, y, metroMap) {
   // Given an x, y coordinate pair, return the hex code for the line you're on.
   // Use this to retrieve the line for a given point on a map.
-  if (metroMap) {
+  if (metroMap && metroMap[x] && metroMap[x][y] && metroMap[x][y]["line"]) {
     return metroMap[x][y]["line"];
   }
-  try {
-    // var classes = document.getElementById('coord-x-' + x + '-y-' + y).className.split(/\s+/);
-    var classes = document.getElementById('coord-x-' + x + '-y-' + y).classList;
-  } catch (e) {
+  var square = document.getElementById('coord-x-' + x + '-y-' + y);
+  if (!square) {
     // With the new straight lines replacing the old bubbles system of drawing the maps onto the canvas, you will land here on occasion when the maps reach the borders. (For example, y-80 which does not exist in the 80x80 grid.) Do not panic, instead just keep on keeping on.
-    return false; 
+    return false;
   }
+  classes = square.classList;
   for (var z=0; z<classes.length; z++) {
     if (classes[z].indexOf('has-line-') >= 0) {
       var activeLine = classes[z].slice(9, 15);
@@ -333,9 +332,7 @@ function drawCanvas(metroMap) {
 
   for (x in metroMap) {
     for (y in metroMap[x]) {
-      if (Number.isInteger(parseInt(x)) && Number.isInteger(parseInt(y))) {
-        drawPoint(ctx, parseInt(x), parseInt(y));
-      }
+      drawPoint(ctx, parseInt(x), parseInt(y), metroMap);
     }
   }
 
@@ -549,7 +546,6 @@ function rgb2hex(rgb) {
 
 function autoSave(metroMap) {
   // Saves the provided metroMap to localStorage
-  console.log('Saving');
   if (typeof metroMap == 'object') {
     metroMap = JSON.stringify(metroMap);
   }
@@ -698,7 +694,7 @@ function saveMapAsObject() {
   // Based on the styling of grid squares, saves the map as an object
   // ultimately so it can be reconstituted with loadMapFromObject()
 
-  metroMap = new Object;
+  metroMap = new Object();
 
   var squaresWithLines = document.getElementsByClassName("has-line");
   for (var square=0; square<squaresWithLines.length; square++) {
@@ -711,10 +707,10 @@ function saveMapAsObject() {
     var classes = squaresWithLines[square].className.split(' ');
     
     if (metroMap[x] === undefined) {
-      metroMap[x] = new Object;
+      metroMap[x] = new Object();
     }
     if (metroMap[x][y] === undefined) {
-      metroMap[x][y] = new Object;
+      metroMap[x][y] = new Object();
     }
 
     activeLine = getActiveLine(x, y);
@@ -749,8 +745,8 @@ function saveMapAsObject() {
   } // for square in squaresWithLines
 
   // Save the names of the rail lines
-  metroMap['global'] = new Object;
-  metroMap['global']['lines'] = new Object;
+  metroMap['global'] = new Object();
+  metroMap['global']['lines'] = new Object();
   $('.rail-line').each(function() {
     if ($(this).attr('id') != 'rail-line-new') {
       // rail-line-

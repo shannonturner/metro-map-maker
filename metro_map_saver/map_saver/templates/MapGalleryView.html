@@ -266,10 +266,9 @@
   function galleryGetActiveLine(x, y, metroMap) {
     // Given an x, y coordinate pair, return the hex code for the line you're on.
     // Use this to retrieve the line for a given point on a map.
-    try {
-      // var classes = document.getElementById('m-' + mapId + 'coord-x-' + x + '-y-' + y).className.split(/\s+/);
+    if (metroMap && metroMap[x] && metroMap[x][y] && metroMap[x][y]["line"]) {
       return metroMap[x][y]["line"];
-    } catch (e) {
+    } else {
       // 'With the new straight lines replacing the old bubbles system of drawing the maps onto the canvas, you will land here on occasion when the maps reach the borders. (For example, y-80 which does not exist in the 80x80 grid.) Do not panic, instead just keep on keeping on.'
       return false;
     }
@@ -524,13 +523,8 @@
       mapData = "{{ map.mapdata }}";
       mapData = mapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
       try {
-        // console.log(mapData);
         mapData = JSON.parse(mapData);
         galleryGetMapSize(mapData);
-        // I'll get big performance gains if I can cut out
-        //  both galleryDrawGrid() and galleryLoadMapFromSavedMapData()
-        // galleryDrawGrid({{ map.id }});
-        // galleryLoadMapFromSavedMapData(mapData, {{ map.id }});
         galleryExportToCanvas(mapData, {{ map.id }});
       } catch (e) {
         console.log("[WARN] Skipping #{{ map.id }} ({{ map.urlhash }}) - bad JSON")
