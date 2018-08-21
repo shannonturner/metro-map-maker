@@ -368,39 +368,24 @@ function drawCanvas(metroMap) {
         ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); 
         ctx.closePath();
         ctx.fill();
+      }
 
-        // Outer circle
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true); 
-        ctx.closePath();
-        ctx.fill();
-
-        // Inner circle
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true); 
-        ctx.closePath();
-        ctx.fill();
-        
-      } else if (isStation) {
-        // Outer circle
-        ctx.fillStyle = '#000000';
-        ctx.beginPath();
-        ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true); 
-        ctx.closePath();
-        ctx.fill();
-
-        // Inner circle
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true); 
-        ctx.closePath();
-        ctx.fill();
-      } // if .has-station
-
-      // Write the station name
       if (isStation) {
+        // Outer circle
+        ctx.fillStyle = '#000000';
+        ctx.beginPath();
+        ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true); 
+        ctx.closePath();
+        ctx.fill();
+
+        // Inner circle
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true); 
+        ctx.closePath();
+        ctx.fill();
+
+        // Write the station name
         ctx.save();
         ctx.fillStyle = '#000000';
         var activeStation = metroMap[x][y]["station"]["name"].replaceAll('_', ' ');
