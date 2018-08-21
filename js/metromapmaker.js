@@ -690,12 +690,14 @@ function saveMapAsObject() {
 
     // Example: ["grid-col", "has-line", "has-line-f0ce15", "has-station"]
     var classes = squaresWithLines[square].className.split(' ');
-    
-    if (metroMap[x] === undefined) {
-      metroMap[x] = new Object();
-    }
-    if (metroMap[x][y] === undefined) {
-      metroMap[x][y] = new Object();
+
+    if (!metroMap.hasOwnProperty(x)) {
+      metroMap[x] = {};
+      metroMap[x][y] = {};
+    } else {
+      if (!metroMap[x].hasOwnProperty(y)) {
+        metroMap[x][y] = {};
+      }
     }
 
     activeLine = getActiveLine(x, y);
