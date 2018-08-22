@@ -3,6 +3,7 @@
 var gridRows = 80, gridCols = 80;
 var lastStrokeStyle = '';
 var activeTool = 'look';
+var activeMap = false;
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -57,10 +58,10 @@ function getActiveLine(x, y, metroMap) {
   classes = square.classList;
   for (var z=0; z<classes.length; z++) {
     if (classes[z].indexOf('has-line-') >= 0) {
-      var activeLine = classes[z].slice(9, 15);
+      return classes[z].slice(9, 15);
     }
   }
-  return activeLine;
+
 } // getActiveLine(x, y)
 
 function moveLineStroke(ctx, x, y, lineToX, lineToY) {
@@ -327,6 +328,7 @@ function drawCanvas(metroMap) {
   if (!metroMap) {
     metroMap = saveMapAsObject();
   }
+  activeMap = metroMap;
 
   ctx.lineWidth = gridPixelMultiplier * 1.175;
   ctx.lineCap = 'round';
@@ -338,7 +340,7 @@ function drawCanvas(metroMap) {
       if (!Number.isInteger(x) || !Number.isInteger(y)) {
         continue;
       }
-      drawPoint(ctx, parseInt(x), parseInt(y), metroMap);
+      drawPoint(ctx, x, y, metroMap);
     }
   }
 
@@ -444,11 +446,17 @@ function drawCanvas(metroMap) {
     } // for y
   } // for x
 
+  // Add a map credit to help promote the site
+  ctx.font = '700 20px sans-serif';
+  ctx.fillStyle = '#000000';
+  var mapCredit = 'Created with MetroMapMaker.com';
+  var textWidth = ctx.measureText(mapCredit).width;
+  ctx.fillText(mapCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 50);
+
   // Has a shareable link been created for this map? If so, add it to the corner
-  if ($('#shareable-map-link').length) {
-    ctx.font = '700 20px serif';
-    ctx.fillStyle = '#000000';
-    var shareableLink = $('#shareable-map-link').text();
+  var shareableLink = document.getElementById('shareable-map-link');
+  if (shareableLink) {
+    shareableLink = shareableLink.text;
     if (shareableLink.length > 0 && shareableLink.slice(0, 26) == "https://metromapmaker.com/") {
       var remixCredit = 'Remix this map! Go to ' + shareableLink;
       var textWidth = ctx.measureText(remixCredit).width;
@@ -456,12 +464,6 @@ function drawCanvas(metroMap) {
     }
   }
 
-  // Add a map credit to help promote the site
-  ctx.font = '700 20px sans-serif';
-  ctx.fillStyle = '#000000';
-  var mapCredit = 'Created with MetroMapMaker.com';
-  var textWidth = ctx.measureText(mapCredit).width;
-  ctx.fillText(mapCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 50);
 } // drawCanvas(metroMap)
 
 function drawPoint(ctx, x, y, metroMap) {
@@ -476,7 +478,7 @@ function drawPoint(ctx, x, y, metroMap) {
     ctx.strokeStyle = '#' + activeLine;
     lastStrokeStyle = activeLine;
   }
-  
+
   singleton = true;
 
   // Diagonals
@@ -498,15 +500,15 @@ function drawPoint(ctx, x, y, metroMap) {
   if (activeLine == getActiveLine(x + 1, y, metroMap)) {
       // Direction: E
       moveLineStroke(ctx, x, y, x+1, y);
+  } if (activeLine == getActiveLine(x - 1, y, metroMap)) {
+      // Direction: W
+      moveLineStroke(ctx, x, y, x-1, y);
   } if (activeLine == getActiveLine(x, y + 1, metroMap)) {
       // Direction: S
       moveLineStroke(ctx, x, y, x, y+1);
   } if (activeLine == getActiveLine(x, y - 1, metroMap)) {
       // Direction: N
       moveLineStroke(ctx, x, y, x, y-1);
-  } if (activeLine == getActiveLine(x - 1, y, metroMap)) {
-      // Direction: W
-      moveLineStroke(ctx, x, y, x-1, y);
   }
 
   // Doing one stroke at the end once all the lines are known
@@ -685,7 +687,13 @@ function updateMapObject(x, y, activeTool) {
   // Intended to be a faster version of saveMapAsObject()
   // Instead of reconsituting the whole map object,
   //  just update what's at x,y
-  var metroMap = JSON.parse(window.localStorage.getItem('metroMap'));
+
+  if (activeMap) {
+    var metroMap = activeMap;
+  } else {
+    // Don't request from localStorage unless we have to
+    var metroMap = JSON.parse(window.localStorage.getItem('metroMap'));
+  }
 
   if (activeTool == 'eraser') {
     if (!metroMap[x] || !metroMap[x][y]) {
