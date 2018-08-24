@@ -55,13 +55,19 @@ function getActiveLine(x, y, metroMap) {
     // With the new straight lines replacing the old bubbles system of drawing the maps onto the canvas, you will land here on occasion when the maps reach the borders. (For example, y-80 which does not exist in the 80x80 grid.) Do not panic, instead just keep on keeping on.
     return false;
   }
-  classes = square.classList;
+  var classes = square.classList;
   for (var z=0; z<classes.length; z++) {
-    if (classes[z].indexOf('has-line-') >= 0) {
-      return classes[z].slice(9, 15);
+    if (classes[z].indexOf('has-line-') !== -1) {
+      // Potential feature: by returning here at the first has-line- found,
+      //   you can't accidentally overwrite an existing rail line anymore
+      //   and will need to erase that line first if you want to change its color.
+      // return classes[z].slice(9, 15);
+      // If the preferred behavior is to overwrite a square's color by drawing over it,
+      //   then set the variable here and return after the loop ends.
+      var activeLine = classes[z].slice(9, 15);
     }
   }
-
+  return activeLine;
 } // getActiveLine(x, y)
 
 function moveLineStroke(ctx, x, y, lineToX, lineToY) {
@@ -320,8 +326,7 @@ function drawCanvas(metroMap) {
   //    then the gridPixelMultiplier is 20 (1600 / 80)
   gridPixelMultiplier = canvas.width / gridCols; // 20
 
-  // Clear the old canvas if it was drawn
-  // Make the background white instead of transparent
+  // Clear the canvas, make the background white instead of transparent
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -520,12 +525,11 @@ function drawPoint(ctx, x, y, metroMap) {
     // So map legends, "under construction", or similar lines should be painted.
     ctx.fillStyle = '#' + activeLine;
     ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
-    ctx.closePath();
     ctx.fill();
   }
 
   ctx.closePath();
-} // drawPoint(ctx, x, y)
+} // drawPoint(ctx, x, y, metroMap)
 
 function rgb2hex(rgb) {
     if (/^#[0-9A-F]{6}$/i.test(rgb)) return rgb;
@@ -589,24 +593,25 @@ function getMapSize(metroMapObject) {
   // Sets gridRows and gridCols based on how far to the right map features have been placed
   // A map with x,y values within 0-79 will shrink to an 80x80 grid even if
   //    the grid has been extended beyond that
-    highestValue = 0;
+    var highestValue = 0;
     if (typeof metroMapObject !== 'object') {
       metroMapObject = JSON.parse(metroMapObject);
     }
     for (var x in metroMapObject) {
-        if (metroMapObject.hasOwnProperty(x)) {
-          if (parseInt(x) > highestValue) {
-            highestValue = parseInt(x);
-          }
-          for (var y in metroMapObject[x]) {
-            if (metroMapObject[x].hasOwnProperty(y)) {
-              if (parseInt(y) > highestValue) {
-                highestValue = parseInt(y);
-              }
-            }
-          } // for var y
-        } // if has x
-      } // for var x
+      for (var y in metroMapObject[x]) {
+        x = parseInt(x);
+        y = parseInt(y);
+        if (!Number.isInteger(x) || !Number.isInteger(y) || !metroMapObject[x][y]) {
+          continue;
+        }
+        if (x > highestValue) {
+          highestValue = x;
+        }
+        if (y > highestValue) {
+          highestValue = y;
+        }
+      } // for var y
+    } // for var x
 
     if (highestValue >= 120) {
       gridRows = 160, gridCols = 160;
