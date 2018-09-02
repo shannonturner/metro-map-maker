@@ -111,6 +111,7 @@ class MapSimilarView(TemplateView):
     def get(self, request, **kwargs):
 
         visible_maps = SavedMap.objects.filter(gallery_visible=True).order_by('id')
+        tags = Tag.objects.all().order_by('id')
 
         try:
             this_map = SavedMap.objects.get(urlhash=kwargs.get('urlhash'))
@@ -163,6 +164,7 @@ class MapSimilarView(TemplateView):
             'headline': 'Maps similar to {0}'.format(kwargs.get('urlhash')),
             'saved_maps': similar_maps,
             'similarity_scores': similarity_scores,
+            'tags': tags,
             'is_staff': request.user.is_staff,
         }
 
