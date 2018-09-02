@@ -217,8 +217,6 @@
 
   <script type="text/javascript">
 
-  var lastStrokeStyle = '';
-
   String.prototype.replaceAll = function(search, replacement) {
     var target = this;
     return target.replace(new RegExp(search, 'g'), replacement);
@@ -340,10 +338,11 @@
     ctx.beginPath();
     // Making state changes to the canvas is expensive,
     //  so the fewer times I need to update the ctx.strokeStyle, the better
-    if (lastStrokeStyle !== activeLine) {
+    // but commenting this out fixes the intermittent black lines bug.
+    // if (lastStrokeStyle !== activeLine) {
       ctx.strokeStyle = '#' + activeLine;
-      lastStrokeStyle = activeLine;
-    }
+    //   lastStrokeStyle = activeLine;
+    // }
 
     singleton = true;
 

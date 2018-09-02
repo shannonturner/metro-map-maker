@@ -1,7 +1,7 @@
 // MetroMapMaker.js
 
 var gridRows = 80, gridCols = 80;
-var lastStrokeStyle = '';
+// var lastStrokeStyle = '';
 var activeTool = 'look';
 var activeMap = false;
 var preferredGridPixelMultiplier = 20;
@@ -504,10 +504,12 @@ function drawPoint(ctx, x, y, metroMap) {
   ctx.beginPath();
   // Making state changes to the canvas is expensive,
   //  so the fewer times I need to update the ctx.strokeStyle, the better
-  if (lastStrokeStyle != activeLine) {
+  // but if lastStrokeStyle isn't set yet, the default is black, so this is
+  // where an intermittent and strange bug would creep in
+  // if (lastStrokeStyle == '' || lastStrokeStyle != activeLine) {
     ctx.strokeStyle = '#' + activeLine;
-    lastStrokeStyle = activeLine;
-  }
+  //   lastStrokeStyle = activeLine;
+  // }
 
   singleton = true;
 
