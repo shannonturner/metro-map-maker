@@ -147,7 +147,7 @@
           {% if similarity_scores %}
             {% for urlhash, score in similarity_scores.items %}
               {% if urlhash == map.urlhash %}
-                {% widthratio score 1 100 %}% similar
+                {% widthratio score 1 100 %}% similar by station names
               {% endif %}
             {% endfor %}
           {% endif %}

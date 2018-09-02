@@ -67,6 +67,33 @@ class MapGalleryView(TemplateView):
 
         return render(request, 'MapGalleryView.html', context)
 
+def load_map_data(saved_map):
+
+    """ Returns a JSON object of a saved_map's mapdata
+    """
+
+    return json.loads(
+                str(
+                    json.loads(
+                        json.dumps(
+                            saved_map.mapdata.replace("u'", "'").replace("'", '"').strip('"').strip("'")
+                        )
+                    )
+                )
+            )
+
+def get_stations(mapdata):
+
+    """ Returns a set of station names from a given mapdata
+    """
+
+    stations = set()
+
+    for x in mapdata:
+        for y in mapdata[x]:
+            stations.add(mapdata[x][y].get('station', {}).get('name'))
+
+    return stations
 
 class MapSimilarView(TemplateView):
 
@@ -76,6 +103,8 @@ class MapSimilarView(TemplateView):
 
         Since this is so computationally taxing, it's important that this is available
             only to site admins.
+            ^ Since moving to only checking by station names, performance is improved
+                but I'm going to keep the staff_member_required designation
     """
 
     @method_decorator(staff_member_required)
@@ -87,11 +116,16 @@ class MapSimilarView(TemplateView):
             this_map = SavedMap.objects.get(urlhash=kwargs.get('urlhash'))
         except ObjectDoesNotExist:
             similar_maps = []
+            similarity_scores = {}
         else:
             similar_maps = [this_map]
-            possible_matches = []
 
-            sequence_matcher = difflib.SequenceMatcher(a=this_map.mapdata)
+            this_mapdata = load_map_data(this_map)
+            this_map_stations = get_stations(this_mapdata)
+
+            similar_maps = []
+            similarity_scores = {}
+            urlhash_to_map = {} # this is so I can access the map object once it has been sorted by similarity
 
             for one_map in visible_maps:
                 if one_map.id == this_map.id:
@@ -99,39 +133,31 @@ class MapSimilarView(TemplateView):
                     #   So don't do it.
                     continue
                 else:
-                    sequence_matcher.set_seq2(one_map.mapdata)
-                    similarity = sequence_matcher.quick_ratio()
-                    if similarity >= 0.75:
-                        # Similar enough to take a closer look
-                        possible_matches.append(one_map)
+                    try:
+                        one_mapdata = load_map_data(one_map)
+                        one_map_stations = get_stations(one_mapdata)
+                    except Exception:
+                        # If a map failed to load, it's not going to be similar
+                        continue
 
-            similarity_scores = {}
-            urlhash_to_map = {} # this is so I can access the map object once it has been sorted by similarity
+                    if len(this_map_stations) == 0 or len(one_map_stations) == 0:
+                        continue
 
-            # Re-check the maps that were approximated to be pretty close
-            for one_map in possible_matches:
-                sequence_matcher.set_seq2(one_map.mapdata)
-                similarity = sequence_matcher.ratio()
-                if similarity >= 0.75:
-                    similarity_scores[one_map.urlhash] = similarity
-                    urlhash_to_map[one_map.urlhash] = one_map
+                    overlap = len(this_map_stations.intersection(one_map_stations)) / float(len(this_map_stations))
+                    difference = 1.0 - (len(one_map_stations - this_map_stations) / float(len(this_map_stations)))
 
-            # Sort maps by similarity score in descending order
-            for map_hash in sorted(similarity_scores, key=similarity_scores.get, reverse=True):
-                # How do I sort it in similarity descending?
-                # https://docs.python.org/2/library/functions.html#sorted
-                # It looks a little something like:
-                # a = {
-                #     'abcdef01': 0.80,
-                #     '12345678': 0.92,
-                #     'beeeeeef': 0.76,
-                #     '0a0a0a0a': 0.93,
-                # }
-                # I would want the order to then be:
-                #   0a > 12 > ab > be
-                # >>> sorted(a, key=a.get, reverse=True)
-                # ['0a0a0a0a', '12345678', 'abcdef01', 'beeeeeef']
-                similar_maps.append(urlhash_to_map[map_hash])
+                    similarity = (overlap * difference)
+
+                    if similarity >= 0.8:
+                        # If there's an overlap of 80% of stations by name, they are probably pretty similar
+                        similar_maps.append(one_map)
+                        similarity_scores[one_map.urlhash] = similarity
+                        urlhash_to_map[one_map.urlhash] = one_map
+
+            similar_maps.sort(key=similarity_scores.get, reverse=True)
+
+            # It's easier to compare the maps if I can also see the base map on the similarity page
+            similar_maps.insert(0, this_map)
 
         context = {
             'headline': 'Maps similar to {0}'.format(kwargs.get('urlhash')),
