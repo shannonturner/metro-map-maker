@@ -4,6 +4,7 @@ var gridRows = 80, gridCols = 80;
 var lastStrokeStyle = '';
 var activeTool = 'look';
 var activeMap = false;
+var preferredGridPixelMultiplier = 20;
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -27,6 +28,18 @@ function resizeGrid(size) {
   resizeCanvasContainer();
 } // resizeGrid(size)
 
+function setSquareSize(size) {
+  // When the grid was only 80x80, I could get away with setting the width/height
+  //  individually using something like $('.grid-col').width()
+  //  but that's not feasible for 320x320, and it's slower than it needs to be.
+  // Instead, set a CSS class applied to .grid-col rather than changing the style individually
+
+  var style = document.createElement('style');
+  style.type = 'text/css';
+  style.innerHTML = '.grid-col { width: ' + size + 'px; height: ' + size + 'px; }';
+  document.getElementsByTagName('head')[0].appendChild(style);
+}
+
 function resizeCanvasContainer() {
   // Whenever the pixel width or height of the grid changes,
   // like on page load, map resize, or zoom in/out, 
@@ -37,6 +50,14 @@ function resizeCanvasContainer() {
   $('#grid').height($('#canvas-container').height()).promise().done(function() {
     $('#grid').removeClass('temp-no-flex-firefox');
   });
+
+  // Resize the canvas as needed
+  var canvas = document.getElementById('metro-map-canvas');
+  if (canvas.height / gridCols != preferredGridPixelMultiplier) {
+    // Maintain a nice, even gridPixelMultiplier so the map looks uniform at every size
+    canvas.height = gridCols * preferredGridPixelMultiplier;
+    canvas.width = gridRows * preferredGridPixelMultiplier;
+  }
 
   var computedSquareSize = window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0];
   $('#metro-map-canvas').width(computedSquareSize * gridCols);
@@ -123,195 +144,199 @@ function drawGrid() {
   }
 
   $('#grid').html(grid);
-  $('.grid-col').css({
-    "width": $('#grid').width() / gridCols,
-    "height": $('#grid').width() / gridCols
-  });
+
+  setSquareSize($('#grid').width() / gridCols);
   resizeCanvasContainer();
 
   // Then bind events to the grid
-  $('.grid-col').click(function() {
+  var squares = document.getElementsByClassName("grid-col");
 
-    $('#station-coordinates-x').val('');
-    $('#station-coordinates-y').val('');
+  var bindGridSquareEvents = function() {
+      $('#station-coordinates-x').val('');
+      $('#station-coordinates-y').val('');
 
-    if (activeTool == 'line') {
-      $(this).css({
-        'background-color': activeToolOption
-      });
-      $(this).addClass('has-line')
-      $(this).addClass('has-line-' + rgb2hex(activeToolOption).slice(1, 7));
-      var x = $(this).attr('id').split('-').slice(2, 3);
-      var y = $(this).attr('id').split('-').slice(4);
-      metroMap = updateMapObject(x, y, activeTool);
-      autoSave(metroMap);
-      drawCanvas(metroMap);
-    } else if (activeTool == 'eraser') {
-      $(this).css({
-        'background-color': '#fff'
-      });
-      $(this).removeClass();
-      $(this).addClass('grid-col');
-      $(this).html('');
-      var x = $(this).attr('id').split('-').slice(2, 3);
-      var y = $(this).attr('id').split('-').slice(4);
-      metroMap = updateMapObject(x, y, activeTool);
-      autoSave(metroMap);
-      drawCanvas(metroMap);
-    } else if (activeTool == 'station') {
+      if (activeTool == 'line') {
+        $(this).css({
+          'background-color': activeToolOption
+        });
+        $(this).addClass('has-line')
+        $(this).addClass('has-line-' + rgb2hex(activeToolOption).slice(1, 7));
+        var x = $(this).attr('id').split('-').slice(2, 3);
+        var y = $(this).attr('id').split('-').slice(4);
+        metroMap = updateMapObject(x, y, activeTool);
+        autoSave(metroMap);
+        drawCanvas(metroMap);
+      } else if (activeTool == 'eraser') {
+        $(this).css({
+          'background-color': '#fff'
+        });
+        $(this).removeClass();
+        $(this).addClass('grid-col');
+        $(this).html('');
+        var x = $(this).attr('id').split('-').slice(2, 3);
+        var y = $(this).attr('id').split('-').slice(4);
+        metroMap = updateMapObject(x, y, activeTool);
+        autoSave(metroMap);
+        drawCanvas(metroMap);
+      } else if (activeTool == 'station') {
 
-      $('#station-name').val('');
-      $('#station-on-lines').html('');
-      var x = $(this).attr('id').split('-').slice(2, 3);
-      var y = $(this).attr('id').split('-').slice(4);
-      $('#station-coordinates-x').val(x);
-      $('#station-coordinates-y').val(y);
-      var allLines = $('.rail-line');
+        $('#station-name').val('');
+        $('#station-on-lines').html('');
+        var x = $(this).attr('id').split('-').slice(2, 3);
+        var y = $(this).attr('id').split('-').slice(4);
+        $('#station-coordinates-x').val(x);
+        $('#station-coordinates-y').val(y);
+        var allLines = $('.rail-line');
 
-      if ($(this).hasClass('has-station')) {
-        // Already has a station, so clicking again shouldn't clear the existing station but should allow you to rename it and assign lines
-        $('#tool-station-options').show();
-        if ($(this).children().attr('id')) {
-          // This station already has a name, show it in the textfield
-          var stationName = $(this).children().attr('id').replaceAll('_', ' ');
-          $('#station-name').val(stationName);
+        if ($(this).hasClass('has-station')) {
+          // Already has a station, so clicking again shouldn't clear the existing station but should allow you to rename it and assign lines
+          $('#tool-station-options').show();
+          if ($(this).children().attr('id')) {
+            // This station already has a name, show it in the textfield
+            var stationName = $(this).children().attr('id').replaceAll('_', ' ');
+            $('#station-name').val(stationName);
 
-          // Pre-check the box if this is a transfer station
-          var existingStationClasses = document.getElementById('coord-x-' + x + '-y-' + y).children[0].className.split(/\s+/);
-          if (existingStationClasses.indexOf('transfer-station') >= 0) {
-            $('#station-transfer').prop('checked', true);
+            // Pre-check the box if this is a transfer station
+            var existingStationClasses = document.getElementById('coord-x-' + x + '-y-' + y).children[0].className.split(/\s+/);
+            if (existingStationClasses.indexOf('transfer-station') >= 0) {
+              $('#station-transfer').prop('checked', true);
+            } else {
+              $('#station-transfer').prop('checked', false);
+            }
+
+            // Select the correct orientation too.
+            if (existingStationClasses.indexOf('rot135') >= 0) {
+              document.getElementById('station-name-orientation').value = '135';
+            } else if (existingStationClasses.indexOf('rot-45') >= 0) {
+              document.getElementById('station-name-orientation').value = '-45';
+            } else if (existingStationClasses.indexOf('rot45') >= 0) {
+              document.getElementById('station-name-orientation').value = '45';
+            } else if (existingStationClasses.indexOf('rot180') >= 0) {
+              document.getElementById('station-name-orientation').value = '180';
+            } else {
+              document.getElementById('station-name-orientation').value = '0';
+            }
+
+            var stationOnLines = "";
+            // var stationLines = getStationLines($("#station-coordinates-x").val(), $("#station-coordinates-y").val());
+            var stationLines = getStationLines(x, y);
+            for (var z=0; z<stationLines.length; z++) {
+              if (stationLines[z]) {
+                stationOnLines += "<button style='background-color: #" + stationLines[z] + "' class='station-add-lines' id='add-line-" + stationLines[z] + "'>" + $('#rail-line-' + stationLines[z]).text() + "</button>";
+              }
+            }
           } else {
-            $('#station-transfer').prop('checked', false);
+            // This only happens when you create a new station and then click on it again (without having named it first)
+            // This fixes the bug where it would erroneously clear the station that it was sitting on and not allow you to add it back
+            activeLine = getActiveLine(x, y);
+            if (activeLine) {
+              $(this).children().addClass('has-line-' + activeLine);
+              stationOnLines = "<button style='background-color: #" + activeLine + "' class='station-add-lines' id='add-line-" + activeLine + "'>" + $('#rail-line-' + activeLine).text() + "</button>";
+              stationLines = activeLine;
+            }
           }
-
-          // Select the correct orientation too.
-          if (existingStationClasses.indexOf('rot135') >= 0) {
-            document.getElementById('station-name-orientation').value = '135';
-          } else if (existingStationClasses.indexOf('rot-45') >= 0) {
-            document.getElementById('station-name-orientation').value = '-45';
-          } else if (existingStationClasses.indexOf('rot45') >= 0) {
-            document.getElementById('station-name-orientation').value = '45';
-          } else if (existingStationClasses.indexOf('rot180') >= 0) {
-            document.getElementById('station-name-orientation').value = '180';
+        } else {
+          // Create a new station
+          $(this).addClass('has-station');
+          $(this).html('<div class="station"></div>');
+          $('#tool-station-options').show();
+          $('#station-transfer').prop('checked', false);
+          var lastStationOrientation = window.localStorage.getItem('metroMapStationOrientation');
+          if (lastStationOrientation) {
+            document.getElementById('station-name-orientation').value = lastStationOrientation;
+            $('#station-name-orientation').change(); // This way, it will be saved
           } else {
             document.getElementById('station-name-orientation').value = '0';
           }
 
-          var stationOnLines = "";
-          // var stationLines = getStationLines($("#station-coordinates-x").val(), $("#station-coordinates-y").val());
-          var stationLines = getStationLines(x, y);
-          for (var z=0; z<stationLines.length; z++) {
-            if (stationLines[z]) {
-              stationOnLines += "<button style='background-color: #" + stationLines[z] + "' class='station-add-lines' id='add-line-" + stationLines[z] + "'>" + $('#rail-line-' + stationLines[z]).text() + "</button>";  
-            }
-          }
-        } else {
-          // This only happens when you create a new station and then click on it again (without having named it first)
-          // This fixes the bug where it would erroneously clear the station that it was sitting on and not allow you to add it back
+          // Pre-populate the station with the line it sits on
+          // activeLine = getActiveLine($("#station-coordinates-x").val(), $("#station-coordinates-y").val());
           activeLine = getActiveLine(x, y);
           if (activeLine) {
+            // If the station is added to a space with no rail line, don't add any active lines
             $(this).children().addClass('has-line-' + activeLine);
             stationOnLines = "<button style='background-color: #" + activeLine + "' class='station-add-lines' id='add-line-" + activeLine + "'>" + $('#rail-line-' + activeLine).text() + "</button>";
             stationLines = activeLine;
-          }
+
+            // Pre-populate the station with its neighboring lines
+            for (var nx=-1; nx<=1; nx+=1) {
+              for (var ny=-1; ny<=1; ny+=1) {
+                neighboringLine = getActiveLine(parseInt(x) + parseInt(nx), parseInt(y) + parseInt(ny));
+                if (neighboringLine) {
+                  $(this).children().addClass('has-line-' + neighboringLine);
+                  if (typeof stationLines == "string") {
+                    stationLines = [stationLines]
+                  }
+                  if (stationOnLines && stationOnLines.indexOf(neighboringLine) >= 0) {
+                    // Don't add lines that are already added
+                  } else {
+                    stationOnLines += "<button style='background-color: #" + neighboringLine + "' class='station-add-lines' id='add-line-" + neighboringLine + "'>" + $('#rail-line-' + neighboringLine).text() + "</button>";
+                    stationLines.push(neighboringLine);
+                  }
+                } // if (neighboringLine)
+              } // for ny
+            } // for nx
+          } // if (activeLine)
+        } // else (new station)
+
+        // Make the station options button collapsible
+        if ($('#tool-station-options').is(':visible')) {
+          $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Hide Station Options');
         }
-      } else {
-        // Create a new station
-        $(this).addClass('has-station');
-        $(this).html('<div class="station"></div>');
-        $('#tool-station-options').show();
-        $('#station-transfer').prop('checked', false);
-        var lastStationOrientation = window.localStorage.getItem('metroMapStationOrientation');
-        if (lastStationOrientation) {
-          document.getElementById('station-name-orientation').value = lastStationOrientation;
-          $('#station-name-orientation').change(); // This way, it will be saved
-        } else {
-          document.getElementById('station-name-orientation').value = '0';
-        }
 
-        // Pre-populate the station with the line it sits on
-        // activeLine = getActiveLine($("#station-coordinates-x").val(), $("#station-coordinates-y").val());
-        activeLine = getActiveLine(x, y);
-        if (activeLine) {
-          // If the station is added to a space with no rail line, don't add any active lines
-          $(this).children().addClass('has-line-' + activeLine);
-          stationOnLines = "<button style='background-color: #" + activeLine + "' class='station-add-lines' id='add-line-" + activeLine + "'>" + $('#rail-line-' + activeLine).text() + "</button>";
-          stationLines = activeLine;
+        // Add lines to the "Other lines this station serves" option
+        if (stationOnLines) {
+          $('#station-on-lines').html(stationOnLines);
 
-          // Pre-populate the station with its neighboring lines
-          for (var nx=-1; nx<=1; nx+=1) {
-            for (var ny=-1; ny<=1; ny+=1) {
-              neighboringLine = getActiveLine(parseInt(x) + parseInt(nx), parseInt(y) + parseInt(ny));  
-              if (neighboringLine) {
-                $(this).children().addClass('has-line-' + neighboringLine);
-                if (typeof stationLines == "string") {
-                  stationLines = [stationLines]
-                }
-                if (stationOnLines && stationOnLines.indexOf(neighboringLine) >= 0) {
-                  // Don't add lines that are already added
-                } else {
-                  stationOnLines += "<button style='background-color: #" + neighboringLine + "' class='station-add-lines' id='add-line-" + neighboringLine + "'>" + $('#rail-line-' + neighboringLine).text() + "</button>";
-                  stationLines.push(neighboringLine);
-                }
-              } // if (neighboringLine)
-            } // for ny
-          } // for nx
-        } // if (activeLine)
-        
-      }
+          var linesToAdd = "";
 
-      // Make the station options button collapsible
-      if ($('#tool-station-options').is(':visible')) {
-        $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Hide Station Options');
-      }
-
-      // Add lines to the "Other lines this station serves" option
-      if (stationOnLines) {
-        $('#station-on-lines').html(stationOnLines);
-
-        var linesToAdd = "";
-        
-        for (var z=0; z<allLines.length; z++) {
-          if ((stationLines == allLines[z].id.slice(10, 16) || stationLines.indexOf(allLines[z].id.slice(10,16)) >= 0) || allLines[z].id.slice(10,16) == 'new') {
-            // Looping through all of the lines, if this line is already in the station's lines, don't add it
-            // Don't add the "Add new line" button either
-          } else {
-            linesToAdd += '<button style="background-color: #' + allLines[z].id.slice(10, 16) + '" class="station-add-lines" id="add-line-' + allLines[z].id.slice(10, 16) + '">' + $('#' + allLines[z].id).text() + '</button>';
-          }
-        } // for allLines
-        if (linesToAdd) {
-          $('#station-other-lines').html(linesToAdd);
-          // Bind the event to the .station-add-lines buttons here since they are newly created.
-          $('.station-add-lines').click(function() {
-            if ($(this).parent().attr('id') == 'station-other-lines') {
-              $('#station-on-lines').append($(this));
-              $('#coord-x-' + x + '-y-' + y).children().addClass('has-line-' + $(this).attr('id').slice(9, 15));
-
+          for (var z=0; z<allLines.length; z++) {
+            if ((stationLines == allLines[z].id.slice(10, 16) || stationLines.indexOf(allLines[z].id.slice(10,16)) >= 0) || allLines[z].id.slice(10,16) == 'new') {
+              // Looping through all of the lines, if this line is already in the station's lines, don't add it
+              // Don't add the "Add new line" button either
             } else {
-              // Remove it
-              $('#station-other-lines').append($(this));
-              $('#coord-x-' + x + '-y-' + y).children().removeClass('has-line-' + $(this).attr('id').slice(9, 15));
+              linesToAdd += '<button style="background-color: #' + allLines[z].id.slice(10, 16) + '" class="station-add-lines" id="add-line-' + allLines[z].id.slice(10, 16) + '">' + $('#' + allLines[z].id).text() + '</button>';
             }
-            
-          });
-        } // if linesToAdd
-      } // if stationOnLines
+          } // for allLines
+          if (linesToAdd) {
+            $('#station-other-lines').html(linesToAdd);
+            // Bind the event to the .station-add-lines buttons here since they are newly created.
+            $('.station-add-lines').click(function() {
+              if ($(this).parent().attr('id') == 'station-other-lines') {
+                $('#station-on-lines').append($(this));
+                $('#coord-x-' + x + '-y-' + y).children().addClass('has-line-' + $(this).attr('id').slice(9, 15));
 
-      // Indicate which station is currently selected
-      // First, remove all existing selections
-      $('.active').removeClass('active');
-      // Then add the active class
-      $(this).children().addClass('active');
+              } else {
+                // Remove it
+                $('#station-other-lines').append($(this));
+                $('#coord-x-' + x + '-y-' + y).children().removeClass('has-line-' + $(this).attr('id').slice(9, 15));
+              }
 
-      $('#station-name').focus(); // Set focus to the station name box to save you a click each time
-    } // if activeTool == station
-  }); // Binding events to the grid squares
+            });
+          } // if linesToAdd
+        } // if stationOnLines
 
-  $('.grid-col').mouseover(function() {
+        // Indicate which station is currently selected
+        // First, remove all existing selections
+        $('.active').removeClass('active');
+        // Then add the active class
+        $(this).children().addClass('active');
+
+        $('#station-name').focus(); // Set focus to the station name box to save you a click each time
+      } // if activeTool == station
+  };
+
+  var bindGridSquareMouseover = function() {
     if (mouseIsDown) {
       $(this).click();
     }
-  });
+  }
+
+  for (var s=0; s<squares.length; s++) {
+      squares[s].addEventListener('click', bindGridSquareEvents, false);
+      squares[s].addEventListener('mouseover', bindGridSquareMouseover, false);
+  }
+
 } // drawGrid()
 
 function drawCanvas(metroMap) {
@@ -613,7 +638,11 @@ function getMapSize(metroMapObject) {
       } // for var y
     } // for var x
 
-    if (highestValue >= 120) {
+    if (highestValue >= 200) {
+      gridRows = 240, gridCols = 240;
+    } else if (highestValue >= 160) {
+      gridRows = 200, gridCols = 200;
+    } else if (highestValue >= 120) {
       gridRows = 160, gridCols = 160;
     } else if (highestValue >= 80) {
       gridRows = 120, gridCols = 120;
@@ -904,42 +933,36 @@ $(document).ready(function() {
     activeTool = 'look';
   }); // #tool-look.click() -- no longer available, OK to delete
   $('#tool-grid').click(function() {
-    if ($('.grid-col').css('border-color') == 'rgb(128, 206, 255)' || $('.grid-col').css('border-top-color') == 'rgb(128, 206, 255)') {
-      $('.grid-col').css('border-color', 'transparent');
-      $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> Show grid');
-    } else {
-      $('.grid-col').css('border-color', '#80CEFF');
+    if ($('#grid').hasClass('hide-gridlines')) {
+      $('#grid').removeClass('hide-gridlines');
       $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> Hide grid');
+    } else {
+      $('#grid').addClass('hide-gridlines');
+      $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> Show grid');
     }
   }); // #tool-grid.click() (Toggle grid visibility)
   $('#tool-zoom-in').click(function() {
     var gridSize = Math.floor(window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0]);
     if (gridSize < 50) {
-      $('#grid').addClass('temp-no-flex-firefox');
-      // Significantly improve speed of zooming in/out 
-      //    by using the css attributes here instead of .width() / .height()
-      // Zooming in with a grid size of 160 took 97 ms, down from 3412 on Chrome
-      // Firefox is still about 6 times slower than Chrome but this is feasible now; before it would hang/become unresponsive
-      $('.grid-col').css({
-          "height": gridSize + 2,
-          "width": gridSize + 2
-        }).promise().done(function() {
-        $('#grid').removeClass('temp-no-flex-firefox');
-      });
+      setSquareSize(parseInt(gridSize + 2));
       resizeCanvasContainer();
+      if ($('#tool-zoom-out').attr('disabled')) {
+        $('#tool-zoom-out').attr('disabled', false);
+      }
+    } else {
+      $(this).attr('disabled', true);
     }
   }); // #tool-zoom-in.click()
   $('#tool-zoom-out').click(function() {
     var gridSize = Math.floor(window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0]);
     if (gridSize > 8) {
-      $('#grid').addClass('temp-no-flex-firefox');
-      $('.grid-col').css({
-        "width": gridSize - 2,
-        "height": gridSize -2
-      }).promise().done(function() {
-        $('#grid').removeClass('temp-no-flex-firefox');
-      });
+      setSquareSize(parseInt(gridSize - 2));
       resizeCanvasContainer();
+      if ($('#tool-zoom-in').attr('disabled')) {
+        $('#tool-zoom-in').attr('disabled', false);
+      }
+    } else {
+      $(this).attr('disabled', true);
     }
   }); // #tool-zoom-out.click()
   $('#tool-resize-all').click(function() {
@@ -954,6 +977,26 @@ $(document).ready(function() {
   }); // #tool-resize-all.click()
   $('.resize-grid').click(function() {
     size = $(this).attr('id').split('-').slice(2);
+    // Indicate which size the map is now sized to, and reset any other buttons
+    $('.resize-grid').each(function() {
+      if ($(this).html().split(' ')[0] == 'Current') {
+        var resizeButtonSize = $(this).attr('id').split('-').slice(2);
+        var resizeButtonLabel = '(' + resizeButtonSize + 'x' + resizeButtonSize + ')';
+        if (resizeButtonSize == 80) {
+          resizeButtonLabel = 'Standard ' + resizeButtonLabel;
+        } else if (resizeButtonSize == 120) {
+          resizeButtonLabel = 'Large ' + resizeButtonLabel;
+        } else if (resizeButtonSize == 160) {
+          resizeButtonLabel = 'Extra Large ' + resizeButtonLabel;
+        } else if (resizeButtonSize == 200) {
+          resizeButtonLabel = 'XXL ' + resizeButtonLabel;
+        } else if (resizeButtonSize == 240) {
+          resizeButtonLabel = 'XXXL ' + resizeButtonLabel;
+        }
+        $(this).html(resizeButtonLabel);
+      }
+    })
+    $(this).html('Current Size (' + size + 'x' + size + ')');
     resizeGrid(size);
   }); // .resize-grid.click()
   $('#tool-move-all').click(function() {
@@ -968,7 +1011,7 @@ $(document).ready(function() {
   }); // #tool-move-all.click()
   $('#tool-move-up').click(function() {
     // If the grid has been zoomed in or out, preserve that sizing
-    var gridSize = $('.grid-col').width();
+    var gridSize = window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0];
 
     for (var y=0; y<gridCols; y++) {
       for (var x=0; x<gridRows; x++) {
@@ -1006,13 +1049,12 @@ $(document).ready(function() {
         }
       } // for x
     } // for y
-    $('.grid-col').width(gridSize);
-    $('.grid-col').height(gridSize);
+    setSquareSize(gridSize);
     drawCanvas();
   }); // #tool-move-up.click()
   $('#tool-move-down').click(function() {
     // If the grid has been zoomed in or out, preserve that sizing
-    var gridSize = $('.grid-col').width();
+    var gridSize = window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0];
 
     for (var y=gridCols - 1; y>=0; y--) {
       for (var x=0; x<gridRows; x++) {
@@ -1050,13 +1092,12 @@ $(document).ready(function() {
         }
       } // for x
     } // for y
-    $('.grid-col').width(gridSize);
-    $('.grid-col').height(gridSize);
+    setSquareSize(gridSize);
     drawCanvas();
   }); // #tool-move-down.click()
   $('#tool-move-left').click(function() {
     // If the grid has been zoomed in or out, preserve that sizing
-    var gridSize = $('.grid-col').width();
+    var gridSize = window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0];
 
     for (var x=0; x<gridRows; x++) {
       for (var y=0; y<gridCols; y++) {
@@ -1094,13 +1135,12 @@ $(document).ready(function() {
         }
       } // for y
     } // for x
-    $('.grid-col').width(gridSize);
-    $('.grid-col').height(gridSize);
+    setSquareSize(gridSize);
     drawCanvas();
   }); // #tool-move-left.click()
   $('#tool-move-right').click(function() {
     // If the grid has been zoomed in or out, preserve that sizing
-    var gridSize = $('.grid-col').width();
+    var gridSize = window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0];
 
     for (var x=gridRows - 1; x>=0; x--) {
       for (var y=0; y<gridCols; y++) {
@@ -1138,8 +1178,7 @@ $(document).ready(function() {
         }
       } // for y
     } // for x
-    $('.grid-col').width(gridSize);
-    $('.grid-col').height(gridSize);
+    setSquareSize(gridSize);
     drawCanvas();
   }); // #tool-move-right.click()
   $('#tool-save-map').click(function() {
@@ -1150,8 +1189,9 @@ $(document).ready(function() {
     $.post( saveMapURL, {
       'metroMap': savedMap
     }).done(function(data) {
-      if (data.slice(0,7) == '[ERROR]') {
-
+      if (data.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
+        $('#tool-save-options').html('<h5 class="danger">Sorry, there was a problem saving your map.</h5>');
+        $('#tool-save-options').show();
       } else {
         $('#tool-save-options').html('<h5 style="overflow-x: hidden;">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="https://metromapmaker.com/?map=' + data.replace(/\s/g,'') + ' " target="_blank">https://metromapmaker.com/?map=' + data.replace(/\s/g,'') + '</a></h5> <h5>You can then share this URL with a friend - and they can remix your map without you losing your original! If you make changes to this map, click Save and Share again to get a new URL.</h5>');
         $('#tool-save-options').show();
