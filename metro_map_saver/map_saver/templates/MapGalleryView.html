@@ -241,13 +241,18 @@
         } // if has x
       } // for var x
 
-    if (highestValue >= 120) {
+    if (highestValue >= 200) {
+      gridSize = 240;
+    } else if (highestValue >= 160) {
+      gridSize = 200;
+    } else if (highestValue >= 120) {
       gridSize = 160;
     } else if (highestValue >= 80) {
       gridSize = 120;
     } else {
       gridSize = 80;
     }
+
   }
 
   function galleryDrawGrid(mapId) {
