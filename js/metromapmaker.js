@@ -277,6 +277,28 @@ function drawGrid() {
               } // for ny
             } // for nx
           } // if (activeLine)
+
+          // Place a temporary station marker on the canvas;
+          // this will be overwritten by the drawCanvas() call
+          // but at least there will be some visual indicator of the station's placement
+          // now that the grid squares aren't visible
+          var canvas = document.getElementById('metro-map-canvas');
+          var ctx = canvas.getContext('2d', {alpha: false});
+          var gridPixelMultiplier = canvas.width / gridCols;
+
+          // Outer circle
+          ctx.fillStyle = '#000000';
+          ctx.beginPath();
+          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true);
+          ctx.closePath();
+          ctx.fill();
+
+          // Inner circle
+          ctx.fillStyle = '#00ff00'; // Bright green
+          ctx.beginPath();
+          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true);
+          ctx.closePath();
+          ctx.fill();
         } // else (new station)
 
         // Make the station options button collapsible
