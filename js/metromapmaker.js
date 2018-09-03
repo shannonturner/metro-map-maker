@@ -188,9 +188,20 @@ function drawGrid() {
         $('#station-coordinates-y').val(y);
         var allLines = $('.rail-line');
 
+        if (getActiveLine(x, y)) {
+          drawCanvas();
+          drawIndicator(x, y);
+          // Only expand the #tool-station-options if it's actually on a line
+          // Now, there are two indicators for when a station has been placed on a line
+          // and zero visual indicators for when a station gets placed on a blank square
+          $('#tool-station-options').show();
+        } else {
+          $('#tool-station-options').hide();
+          $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
+        }
+
         if ($(this).hasClass('has-station')) {
           // Already has a station, so clicking again shouldn't clear the existing station but should allow you to rename it and assign lines
-          $('#tool-station-options').show();
           if ($(this).children().attr('id')) {
             // This station already has a name, show it in the textfield
             var stationName = $(this).children().attr('id').replaceAll('_', ' ');
@@ -239,7 +250,6 @@ function drawGrid() {
           // Create a new station
           $(this).addClass('has-station');
           $(this).html('<div class="station"></div>');
-          $('#tool-station-options').show();
           $('#station-transfer').prop('checked', false);
           var lastStationOrientation = window.localStorage.getItem('metroMapStationOrientation');
           if (lastStationOrientation) {
@@ -277,28 +287,6 @@ function drawGrid() {
               } // for ny
             } // for nx
           } // if (activeLine)
-
-          // Place a temporary station marker on the canvas;
-          // this will be overwritten by the drawCanvas() call
-          // but at least there will be some visual indicator of the station's placement
-          // now that the grid squares aren't visible
-          var canvas = document.getElementById('metro-map-canvas');
-          var ctx = canvas.getContext('2d', {alpha: false});
-          var gridPixelMultiplier = canvas.width / gridCols;
-
-          // Outer circle
-          ctx.fillStyle = '#000000';
-          ctx.beginPath();
-          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true);
-          ctx.closePath();
-          ctx.fill();
-
-          // Inner circle
-          ctx.fillStyle = '#00ff00'; // Bright green
-          ctx.beginPath();
-          ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true);
-          ctx.closePath();
-          ctx.fill();
         } // else (new station)
 
         // Make the station options button collapsible
@@ -337,12 +325,6 @@ function drawGrid() {
             });
           } // if linesToAdd
         } // if stationOnLines
-
-        // Indicate which station is currently selected
-        // First, remove all existing selections
-        $('.active').removeClass('active');
-        // Then add the active class
-        $(this).children().addClass('active');
 
         $('#station-name').focus(); // Set focus to the station name box to save you a click each time
       } // if activeTool == station
@@ -579,6 +561,52 @@ function drawPoint(ctx, x, y, metroMap) {
 
   ctx.closePath();
 } // drawPoint(ctx, x, y, metroMap)
+
+function drawIndicator(x, y) {
+  // Place a temporary station marker on the canvas;
+  // this will be overwritten by the drawCanvas() call
+  // but at least there will be some visual indicator of the station's placement
+  // now that the grid squares aren't visible
+  var canvas = document.getElementById('metro-map-canvas');
+  var ctx = canvas.getContext('2d', {alpha: false});
+  var gridPixelMultiplier = canvas.width / gridCols;
+
+  if (!getActiveLine(x, y)) {
+    // If there is no activeLine, don't draw any symbol.
+    // Stations must be placed on a line.
+    return
+  }
+
+  if ($('#coord-x-' + x + '-y-' + y + ' .station').hasClass('transfer-station')) {
+    // Outer circle
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * 1.2, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fill();
+
+    // Inner circle
+    ctx.fillStyle = '#00ff00';
+    ctx.beginPath();
+    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Outer circle
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true);
+  ctx.closePath();
+  ctx.fill();
+
+  // Inner circle
+  ctx.fillStyle = '#00ff00'; // Bright green
+  ctx.beginPath();
+  ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true);
+  ctx.closePath();
+  ctx.fill();
+} // drawIndicator(x, y)
 
 function rgb2hex(rgb) {
     if (/^#[0-9A-F]{6}$/i.test(rgb)) return rgb;
@@ -1332,6 +1360,7 @@ $(document).ready(function() {
     metroMap = saveMapAsObject();
     autoSave(metroMap);
     drawCanvas(metroMap);
+    drawIndicator(x, y);
   }); // $('#station-name-orientation').change()
 
   $('#station-transfer').click(function() {
@@ -1350,6 +1379,7 @@ $(document).ready(function() {
     metroMap = saveMapAsObject();
     autoSave(metroMap);
     drawCanvas(metroMap);
+    drawIndicator(x, y);
   }); // $('#station-transfer').click()
 
 }); // document.ready()
