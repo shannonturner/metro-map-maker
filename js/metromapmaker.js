@@ -644,8 +644,15 @@ function autoLoad() {
   if (savedMapHash) {
     $.get('https://metromapmaker.com/save/' + savedMapHash).done(function (savedMapData) {
       savedMapData = savedMapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
-      getMapSize(savedMapData);
-      loadMapFromObject(JSON.parse(savedMapData));
+      if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
+        // Fallback to an empty grid
+        drawGrid();
+        bindRailLineEvents();
+        drawCanvas();
+      } else {
+        getMapSize(savedMapData);
+        loadMapFromObject(JSON.parse(savedMapData));
+      }
     });
   } else if (window.localStorage.getItem('metroMap')) {
     // Load from local storage
@@ -659,8 +666,15 @@ function autoLoad() {
     // If the WMATA map ever changes, I'll need to update it here too.
     $.get('https://metromapmaker.com/save/1G_CzWEg').done(function (savedMapData) {
       savedMapData = savedMapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
-      getMapSize(savedMapData);
-      loadMapFromObject(JSON.parse(savedMapData));
+      if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
+        // Fallback to an empty grid
+        drawGrid();
+        bindRailLineEvents();
+        drawCanvas();
+      } else {
+        getMapSize(savedMapData);
+        loadMapFromObject(JSON.parse(savedMapData));
+      }
     });
   }
   $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
