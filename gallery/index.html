@@ -68,6 +68,20 @@
         margin: auto;
       }
 
+      .sticky {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        z-index: 1;
+      }
+
+      nav {
+        width: 20%;
+        background-color: white;
+        border: 4px solid black;
+        padding: 15px;
+      }
+
     </style>
 
   </head>
@@ -76,6 +90,14 @@
 
 <a name="top"></a>
 
+<nav class="visible-xs visible-sm sticky">
+
+  <a href="#real-maps"><h4>Real maps</h4></a>
+  <a href="#speculative-maps"><h4>Speculative maps</h4></a>
+  <a href="#imaginary-maps"><h4>Imaginary maps</h4></a>
+
+</nav>
+
 <div class="container-fluid">
   <div class="col-sm-10 col-sm-offset-1">
   <!-- Start editing! Your content goes below -->
@@ -83,9 +105,9 @@
     <h2><span class="M">M</span>etro <span class="M">M</span>ap <span class="M">M</span>aker Gallery</h2>
     <h4>Here are some of my favorite maps created by MetroMapMaker.com visitors like you! <b>Click any map to begin remixing it!</b></h4>
 
+    <a name="real-maps" class="anchor"></a>
     <hr>
     
-    <a name="real"></a>
     <h3>Real Cities' Metro Maps, A-Z</h3>
     <h4>Real metro maps as they exist now. A great starting point for your remix! To see how people have remixed these maps, see <a href="#speculative">speculative maps</a>.</h4>
     <div id="real" class="text-center">
@@ -402,9 +424,9 @@
       </div>
     </div> <!-- /#real -->
 
+    <a name="speculative-maps"></a>
     <hr>
-
-    <a name="speculative"></a>
+    
     <h3>Speculative Metro Maps, A-Z</h3>
     <h4>Real cities, not-yet-real maps. But why not?</h4>
     <div id="speculative" class="text-center">
@@ -715,9 +737,9 @@
 
     </div> <!-- /#speculative -->
 
+    <a name="imaginary-maps"></a>
     <hr>
 
-    <a name="imaginary"></a>
     <h3>Maps of places that don't exist</h3>
     <h4>Maps of imaginary places (or just maybe of real places I couldn't find any info about)</h4>
     <h4>If you know where these maps refer to, please <a href="https://twitter.com/svthmc" target="_blank">let me know!</a></h4>
