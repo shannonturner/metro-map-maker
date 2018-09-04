@@ -9,5 +9,5 @@
 for i in ${1%/*}/*.png;
 do
     echo "Optimizing image: $i";
-    convert $i -strip -resize 400x400 -colors 32 $i
+    convert $i -strip -resize 200x200 -colors 32 $i
 done
