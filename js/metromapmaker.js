@@ -677,8 +677,9 @@ function autoLoad() {
       }
     });
   }
-
-  return true;
+  setTimeout(function() {
+    $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
+  }, 1000);
 } // autoLoad()
 
 function getMapSize(metroMapObject) {
@@ -930,18 +931,16 @@ $(document).ready(function() {
       mouseIsDown = false;
   });
 
-  var finishedLoading = new Promise(function(resolve, reject) {
-    var autoLoadCompleted = autoLoad();
-    if (autoLoadCompleted) {
-      resolve();
-    } else {
-      reject();
-    }
-  });
+  autoLoad();
 
   $('.start-hidden').each(function() {
     $(this).hide();
-  });
+  })
+
+  // Enable the tooltips
+  $(function () {
+    $('[data-toggle="tooltip"]').tooltip({"container": "body"});
+  })
 
   activeTool = 'look';
 
@@ -1398,13 +1397,5 @@ $(document).ready(function() {
     drawCanvas(metroMap);
     drawIndicator(x, y);
   }); // $('#station-transfer').click()
-
-  finishedLoading.then(function() {
-    // Enable the tooltips
-    $('[data-toggle="tooltip"]').tooltip({"container": "body"});
-
-    // Find the button that matches the initial size of this map and mark it
-    $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
-  });
 
 }); // document.ready()
