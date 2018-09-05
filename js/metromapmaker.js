@@ -939,14 +939,6 @@ $(document).ready(function() {
     }
   });
 
-  finishedLoading.then(function() {
-    // Enable the tooltips
-    $('[data-toggle="tooltip"]').tooltip({"container": "body"});
-
-    // Find the button that matches the initial size of this map and mark it
-    $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
-  });
-
   $('.start-hidden').each(function() {
     $(this).hide();
   });
@@ -1406,5 +1398,13 @@ $(document).ready(function() {
     drawCanvas(metroMap);
     drawIndicator(x, y);
   }); // $('#station-transfer').click()
+
+  finishedLoading.then(function() {
+    // Enable the tooltips
+    $('[data-toggle="tooltip"]').tooltip({"container": "body"});
+
+    // Find the button that matches the initial size of this map and mark it
+    $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
+  });
 
 }); // document.ready()
