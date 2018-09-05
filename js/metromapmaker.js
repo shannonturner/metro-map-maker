@@ -677,7 +677,6 @@ function autoLoad() {
       }
     });
   }
-  $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
 } // autoLoad()
 
 function getMapSize(metroMapObject) {
@@ -933,11 +932,14 @@ $(document).ready(function() {
 
   $('.start-hidden').each(function() {
     $(this).hide();
-  })
+  });
 
-  // Enable the tooltips
   $(function () {
+    // Enable the tooltips
     $('[data-toggle="tooltip"]').tooltip({"container": "body"});
+
+    // Find the button that matches the initial size of this map and mark it
+    $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
   })
 
   activeTool = 'look';
