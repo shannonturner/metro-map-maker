@@ -677,6 +677,8 @@ function autoLoad() {
       }
     });
   }
+
+  return true;
 } // autoLoad()
 
 function getMapSize(metroMapObject) {
@@ -928,19 +930,26 @@ $(document).ready(function() {
       mouseIsDown = false;
   });
 
-  autoLoad();
-
-  $('.start-hidden').each(function() {
-    $(this).hide();
+  var finishedLoading = new Promise(function(resolve, reject) {
+    var autoLoadCompleted = autoLoad();
+    if (autoLoadCompleted) {
+      resolve();
+    } else {
+      reject();
+    }
   });
 
-  $(function () {
+  finishedLoading.then(function() {
     // Enable the tooltips
     $('[data-toggle="tooltip"]').tooltip({"container": "body"});
 
     // Find the button that matches the initial size of this map and mark it
     $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
-  })
+  });
+
+  $('.start-hidden').each(function() {
+    $(this).hide();
+  });
 
   activeTool = 'look';
 
