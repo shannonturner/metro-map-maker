@@ -53,6 +53,12 @@ div#toolbox {
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  /* Prevents intermittent drag-and-drop that would happen on squares */
+  -moz-user-select: -moz-none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .temp-no-flex-firefox {
