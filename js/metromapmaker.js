@@ -462,10 +462,10 @@ function drawStation(ctx, x, y, metroMap) {
   if (isStation) {
     var isTransferStation = metroMap[x][y]["station"]["transfer"];
   } else {
-    var isTransferStation = false;
+    return; // If it's not a station, I can end here.
   }
 
-  if (isStation && isTransferStation) {
+  if (isTransferStation) {
     // Outer circle
     ctx.fillStyle = '#000000';
     ctx.beginPath();
@@ -481,71 +481,69 @@ function drawStation(ctx, x, y, metroMap) {
     ctx.fill();
   }
 
-  if (isStation) {
-    // Outer circle
-    ctx.fillStyle = '#000000';
-    ctx.beginPath();
-    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.fill();
+  // Outer circle
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true);
+  ctx.closePath();
+  ctx.fill();
 
-    // Inner circle
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.fill();
+  // Inner circle
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true);
+  ctx.closePath();
+  ctx.fill();
 
-    // Write the station name
-    ctx.fillStyle = '#000000';
-    ctx.save();
-    var activeStation = metroMap[x][y]["station"]["name"].replaceAll('_', ' ');
+  // Write the station name
+  ctx.fillStyle = '#000000';
+  ctx.save();
+  var activeStation = metroMap[x][y]["station"]["name"].replaceAll('_', ' ');
 
-    // Rotate the canvas if specified in the station name orientation
-    if (metroMap[x][y]["station"]["orientation"] == '-45') {
-      ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
-      ctx.rotate(-45 * (Math.PI/ 180));
-      if (isTransferStation) {
-        ctx.fillText(activeStation, 30, 5);
-      } else {
-        ctx.fillText(activeStation, 15, 5);
-      }
-    } else if (metroMap[x][y]["station"]["orientation"] == '45') {
-      ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
-      ctx.rotate(45 * (Math.PI/ 180));
-      if (isTransferStation) {
-        ctx.fillText(activeStation, 30, 5);
-      } else {
-        ctx.fillText(activeStation, 15, 5);
-      }
-    } else if (metroMap[x][y]["station"]["orientation"] == '135') {
-      var textSize = ctx.measureText(activeStation).width;
-      ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
-      ctx.rotate(-45 * (Math.PI/ 180));
-      if (isTransferStation) {
-        ctx.fillText(activeStation, -1 * textSize - 30, 5);
-      } else {
-        ctx.fillText(activeStation, -1 * textSize - 15, 5);
-      }
-    } else if (metroMap[x][y]["station"]["orientation"] == '180') {
-      // When drawing on the left, this isn't very different from drawing on the right
-      //      with no rotation, except that we measure the text first
-      var textSize = ctx.measureText(activeStation).width;
-      if (isTransferStation) {
-        ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier * 1.5) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
-      } else {
-        ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
-      }
-    } else  {
-      if (isTransferStation) {
-        ctx.fillText(activeStation, (x * gridPixelMultiplier) + (gridPixelMultiplier * 1.5), (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
-      } else {
-        ctx.fillText(activeStation, (x * gridPixelMultiplier) + gridPixelMultiplier, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
-      }
-    } // else (of if station hasClass .rot-45)
+  // Rotate the canvas if specified in the station name orientation
+  if (metroMap[x][y]["station"]["orientation"] == '-45') {
+    ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
+    ctx.rotate(-45 * (Math.PI/ 180));
+    if (isTransferStation) {
+      ctx.fillText(activeStation, 30, 5);
+    } else {
+      ctx.fillText(activeStation, 15, 5);
+    }
+  } else if (metroMap[x][y]["station"]["orientation"] == '45') {
+    ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
+    ctx.rotate(45 * (Math.PI/ 180));
+    if (isTransferStation) {
+      ctx.fillText(activeStation, 30, 5);
+    } else {
+      ctx.fillText(activeStation, 15, 5);
+    }
+  } else if (metroMap[x][y]["station"]["orientation"] == '135') {
+    var textSize = ctx.measureText(activeStation).width;
+    ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
+    ctx.rotate(-45 * (Math.PI/ 180));
+    if (isTransferStation) {
+      ctx.fillText(activeStation, -1 * textSize - 30, 5);
+    } else {
+      ctx.fillText(activeStation, -1 * textSize - 15, 5);
+    }
+  } else if (metroMap[x][y]["station"]["orientation"] == '180') {
+    // When drawing on the left, this isn't very different from drawing on the right
+    //      with no rotation, except that we measure the text first
+    var textSize = ctx.measureText(activeStation).width;
+    if (isTransferStation) {
+      ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier * 1.5) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+    } else {
+      ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+    }
+  } else  {
+    if (isTransferStation) {
+      ctx.fillText(activeStation, (x * gridPixelMultiplier) + (gridPixelMultiplier * 1.5), (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+    } else {
+      ctx.fillText(activeStation, (x * gridPixelMultiplier) + gridPixelMultiplier, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+    }
+  } // else (of if station hasClass .rot-45)
 
-    ctx.restore();
-  } // if isStation (to write the station name)
+  ctx.restore();
 } // drawStation(ctx, x, y, metroMap)
 
 function drawIndicator(x, y) {
