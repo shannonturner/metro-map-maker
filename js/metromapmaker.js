@@ -4,6 +4,7 @@ var gridRows = 80, gridCols = 80;
 var activeTool = 'look';
 var activeMap = false;
 var preferredGridPixelMultiplier = 20;
+var lastStrokeStyle;
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -408,7 +409,14 @@ function drawPoint(ctx, x, y, metroMap) {
   var activeLine = getActiveLine(x, y, metroMap);
 
   ctx.beginPath();
-  ctx.strokeStyle = '#' + activeLine;
+
+  if (!lastStrokeStyle || lastStrokeStyle != activeLine) {
+    // Making state changes to the canvas is expensive
+    // So only change it if there is no lastStrokeStyle,
+    // or if the lastStrokeStyle doesn't match the activeLine
+    ctx.strokeStyle = '#' + activeLine;
+    lastStrokeStyle = activeLine;
+  }
 
   singleton = true;
 
@@ -416,35 +424,35 @@ function drawPoint(ctx, x, y, metroMap) {
   if (activeLine == getActiveLine(x + 1, y + 1, metroMap)) {
     // Direction: SE
     moveLineStroke(ctx, x, y, x+1, y+1);
+  } if (singleton && activeLine == getActiveLine(x - 1, y - 1, metroMap)) {
+    // Direction: NW
+    // Since the drawing goes left -> right, top -> bottom,
+    // I don't need to draw NW if I've drawn SE
+    // I can cut down on calls to getActiveLine() and moveLineStroke()
+    // by just directly setting/getting singleton.
+    singleton = false;
   } if (activeLine == getActiveLine(x + 1, y - 1, metroMap)) {
     // Direction: NE
     moveLineStroke(ctx, x, y, x+1, y-1);
-  } if (activeLine == getActiveLine(x - 1, y - 1, metroMap)) {
-    // Direction: NW
-    moveLineStroke(ctx, x, y, x-1, y-1);
-  } if (activeLine == getActiveLine(x - 1, y + 1, metroMap)) {
+  }  if (singleton && activeLine == getActiveLine(x - 1, y + 1, metroMap)) {
     // Direction: SW
-    moveLineStroke(ctx, x, y, x-1, y+1)
+    singleton = false;
   }
 
   // Cardinals
   if (activeLine == getActiveLine(x + 1, y, metroMap)) {
       // Direction: E
       moveLineStroke(ctx, x, y, x+1, y);
-  } if (activeLine == getActiveLine(x - 1, y, metroMap)) {
+  } if (singleton && activeLine == getActiveLine(x - 1, y, metroMap)) {
       // Direction: W
-      moveLineStroke(ctx, x, y, x-1, y);
+      singleton = false;
   } if (activeLine == getActiveLine(x, y + 1, metroMap)) {
       // Direction: S
       moveLineStroke(ctx, x, y, x, y+1);
-  } if (activeLine == getActiveLine(x, y - 1, metroMap)) {
+  } if (singleton && activeLine == getActiveLine(x, y - 1, metroMap)) {
       // Direction: N
-      moveLineStroke(ctx, x, y, x, y-1);
+      singleton = false;
   }
-
-  // Doing one stroke at the end once all the lines are known
-  //  rather than several strokes will improve performance
-  ctx.stroke();
 
   if (singleton) {
     // Without this, singletons with no neighbors won't be painted at all.
@@ -452,6 +460,10 @@ function drawPoint(ctx, x, y, metroMap) {
     ctx.fillStyle = '#' + activeLine;
     ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
     ctx.fill();
+  } else {
+    // Doing one stroke at the end once all the lines are known
+    //  rather than several strokes will improve performance
+    ctx.stroke();
   }
 
   ctx.closePath();
@@ -1197,10 +1209,8 @@ $(document).ready(function() {
     });
 
     if (allColors.indexOf($('#new-rail-line-color').val().slice(1, 7)) >= 0) {
-      // This color already exists!
       $('#tool-new-line-errors').text('This color already exists! Please choose a new color.');
     } else if (allNames.indexOf($('#new-rail-line-name').val()) >= 0) {
-      // This rail name already exists!
       $('#tool-new-line-errors').text('This rail line name already exists! Please choose a new name.');
     } else if ($('#new-rail-line-name').val().length == 0) {
       $('#tool-new-line-errors').text('This rail line name cannot be blank. Please enter a name.');
