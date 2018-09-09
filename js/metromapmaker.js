@@ -70,7 +70,7 @@ function getActiveLine(x, y, metroMap) {
     return metroMap[x][y]["line"];
   } else if (metroMap) {
     // metroMap was passed through but there was nothing at that x,y coordinate
-    return false;
+    return undefined;
   }
   var square = document.getElementById('coord-x-' + x + '-y-' + y);
   if (!square) {
