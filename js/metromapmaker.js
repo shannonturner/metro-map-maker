@@ -344,7 +344,6 @@ function drawGrid() {
 } // drawGrid()
 
 function drawCanvas(metroMap) {
-  var t0 = performance.now()
   // Fully redraw the canvas based on the provided metroMap;
   //    if no metroMap is provided, then save the existing grid as a metroMap object
   //    then redraw the canvas
@@ -414,8 +413,6 @@ function drawCanvas(metroMap) {
       ctx.fillText(remixCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 25);
     }
   }
-  var t1 = performance.now()
-  console.log("drawCanvas(2) took " + (t1-t0) + "ms")
 } // drawCanvas(metroMap)
 
 function drawPoint(ctx, x, y, metroMap) {
