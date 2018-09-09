@@ -68,6 +68,9 @@ function getActiveLine(x, y, metroMap) {
   // Use this to retrieve the line for a given point on a map.
   if (metroMap && metroMap[x] && metroMap[x][y] && metroMap[x][y]["line"]) {
     return metroMap[x][y]["line"];
+  } else if (metroMap) {
+    // metroMap was passed through but there was nothing at that x,y coordinate
+    return false;
   }
   var square = document.getElementById('coord-x-' + x + '-y-' + y);
   if (!square) {
