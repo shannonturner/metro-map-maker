@@ -82,6 +82,16 @@ div#toolbox {
   height: auto;
 }
 
+#metro-map-stations-canvas {
+  width: 100%;
+  height: auto;
+  position: absolute;
+
+  /* If you change the padding of #canvas-container, change these values to match */
+  top: 6px;
+  left: 6px;
+}
+
 .grid-col {
   border: 1px solid;
   border-color: #80CEFF;

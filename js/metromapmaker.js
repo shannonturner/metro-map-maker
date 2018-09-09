@@ -27,7 +27,7 @@ function resizeGrid(size) {
   $('.resize-grid').addClass('btn-info');
   $('#tool-resize-' + size).removeClass('btn-info');
   $('#tool-resize-' + size).addClass('btn-primary');
-  resizeCanvasContainer();
+  resizeCanvas();
 } // resizeGrid(size)
 
 function setSquareSize(size) {
@@ -43,25 +43,30 @@ function setSquareSize(size) {
   document.getElementsByTagName('head')[0].appendChild(style);
 }
 
-function resizeCanvasContainer() {
+function resizeCanvas() {
   // Whenever the pixel width or height of the grid changes,
   // like on page load, map resize, or zoom in/out, 
   // the #metro-map-canvas size needs to be updated as well so they overlap
 
   // Resize the canvas as needed
   var canvas = document.getElementById('metro-map-canvas');
+  var canvasStations = document.getElementById('metro-map-stations-canvas');
   if (canvas.height / gridCols != preferredGridPixelMultiplier) {
     // Maintain a nice, even gridPixelMultiplier so the map looks uniform at every size
     canvas.height = gridCols * preferredGridPixelMultiplier;
     canvas.width = gridRows * preferredGridPixelMultiplier;
+    canvasStations.height = gridCols * preferredGridPixelMultiplier;
+    canvasStations.width = gridRows * preferredGridPixelMultiplier;
   }
 
   var computedSquareSize = window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0];
   $('#metro-map-canvas').width(computedSquareSize * gridCols);
   $('#metro-map-canvas').height(computedSquareSize * gridCols);
+  $('#metro-map-stations-canvas').width(computedSquareSize * gridCols);
+  $('#metro-map-stations-canvas').height(computedSquareSize * gridCols);
 
   drawCanvas();
-} // resizeCanvasContainer()
+} // resizeCanvas()
 
 function getActiveLine(x, y, metroMap) {
   // Given an x, y coordinate pair, return the hex code for the line you're on.
@@ -328,7 +333,7 @@ function drawGrid() {
   $('#grid').html(grid);
 
   setSquareSize($('#grid').width() / gridCols);
-  resizeCanvasContainer();
+  resizeCanvas();
 
   // Then bind events to the grid
   var squares = document.getElementsByClassName("grid-col");
@@ -339,6 +344,7 @@ function drawGrid() {
 } // drawGrid()
 
 function drawCanvas(metroMap) {
+  var t0 = performance.now()
   // Fully redraw the canvas based on the provided metroMap;
   //    if no metroMap is provided, then save the existing grid as a metroMap object
   //    then redraw the canvas
@@ -373,8 +379,12 @@ function drawCanvas(metroMap) {
     }
   }
 
-  // Draw the stations last (and separately), or they will be painted over by the lines themselves.
+  // Draw the stations separately, or they will be painted over by the lines themselves.
+  var canvas = document.getElementById('metro-map-stations-canvas');
+  var ctx = canvas.getContext('2d', {alpha: true});
   ctx.font = '700 20px sans-serif';
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   for (var x in metroMap){
     for (var y in metroMap[x]) {
@@ -404,6 +414,8 @@ function drawCanvas(metroMap) {
       ctx.fillText(remixCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 25);
     }
   }
+  var t1 = performance.now()
+  console.log("drawCanvas(2) took " + (t1-t0) + "ms")
 } // drawCanvas(metroMap)
 
 function drawPoint(ctx, x, y, metroMap) {
@@ -1067,7 +1079,7 @@ $(document).ready(function() {
     var gridSize = Math.floor(window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0]);
     if (gridSize < 50) {
       setSquareSize(parseInt(gridSize + 2));
-      resizeCanvasContainer();
+      resizeCanvas();
       if ($('#tool-zoom-out').attr('disabled')) {
         $('#tool-zoom-out').attr('disabled', false);
       }
@@ -1079,7 +1091,7 @@ $(document).ready(function() {
     var gridSize = Math.floor(window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0]);
     if (gridSize > 8) {
       setSquareSize(parseInt(gridSize - 2));
-      resizeCanvasContainer();
+      resizeCanvas();
       if ($('#tool-zoom-in').attr('disabled')) {
         $('#tool-zoom-in').attr('disabled', false);
       }
@@ -1170,7 +1182,12 @@ $(document).ready(function() {
     if ($('#grid').is(':visible')) {
       $('#grid').hide();
       $('#metro-map-canvas').hide();
+      $('#metro-map-stations-canvas').hide();
       var canvas = document.getElementById('metro-map-canvas');
+      var canvasStations = document.getElementById('metro-map-stations-canvas');
+      // Layer the stations on top of the canvas
+      var ctx = canvas.getContext('2d', {alpha: false});
+      ctx.drawImage(canvasStations, 0, 0);
       $("#metro-map-image").attr("src", canvas.toDataURL());
       $("#metro-map-image").show();
       $('#export-canvas-help').show();
@@ -1181,6 +1198,7 @@ $(document).ready(function() {
     } else {
       $('#grid').show();
       $('#metro-map-canvas').show();
+      $('#metro-map-stations-canvas').show();
       $("#metro-map-image").hide();
       $('#export-canvas-help').hide();
       $('button').attr('disabled', false);
