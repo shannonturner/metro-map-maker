@@ -139,14 +139,19 @@ function bindGridSquareEvents() {
   $('#station-coordinates-y').val('');
 
   if (activeTool == 'line') {
-    $(this).addClass('has-line')
-    $(this).addClass('has-line-' + rgb2hex(activeToolOption).slice(1, 7));
+    // I need to clear the redrawArea first
+    // BEFORE actually placing the line
+    // The first call to drawArea() will erase the redrawSection
+    // The second call actually draws the points
     var x = $(this).attr('id').split('-').slice(2, 3);
     var y = $(this).attr('id').split('-').slice(4);
+    drawArea(x, y, metroMap, true);
+
+    $(this).addClass('has-line')
+    $(this).addClass('has-line-' + rgb2hex(activeToolOption).slice(1, 7));
     metroMap = updateMapObject(x, y, activeTool);
     autoSave(metroMap);
-    drawCanvas(metroMap);
-    // drawArea(x, y, metroMap);
+    drawArea(x, y, metroMap);
   } else if (activeTool == 'eraser') {
     // I need to check for the old line and station
     // BEFORE actually doing the erase operations
@@ -387,22 +392,27 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
 
   if (activeTool == 'eraser') {
     if (erasedLine) {
-      // If something was erased, check to see what was around it
       drawPoint(ctx, x, y, metroMap, erasedLine);
     } // if erasedLine
   } // if activeTool == 'eraser'
-
-  // TODO: determine clear area
-  // TODO: clear what needs to be cleared
 
   // Determine redraw area and redraw the points that need to be redrawn
   redrawSection = getRedrawSection(x, y, metroMap, redrawRadius);
   for (var x in redrawSection) {
     for (var y in redrawSection[x]) {
       lastStrokeStyle = undefined; // I need to set lastStrokeStyle here, otherwise drawPoint() has undefined behavior
-      drawPoint(ctx, parseInt(x), parseInt(y), metroMap);
-    }
-  }
+      x = parseInt(x);
+      y = parseInt(y);
+      if (activeTool == 'line' && erasedLine) {
+        // When drawing lines, we call drawArea() twice.
+        // First call: erase all the squares in the redrawSection
+        // Second call: re-draw all the squares
+        drawPoint(ctx, x, y, metroMap, getActiveLine(x,y));
+      } else {
+        drawPoint(ctx, x, y, metroMap);
+      } // else (of if activeTool is line and first pass)
+    } // for y
+  } // for x
 
   if (redrawStations) {
     // Did I erase a station? Re-draw them all here
