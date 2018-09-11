@@ -130,7 +130,7 @@ function bindRailLineEvents() {
       activeToolOption = $(this).css('background-color');
     }
     $('#tool-station-options').hide();
-    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
+    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station');
   });  
 } // bindRailLineEvents()
 
@@ -190,7 +190,7 @@ function bindGridSquareEvents() {
       $('#tool-station-options').show();
     } else {
       $('#tool-station-options').hide();
-      $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
+      $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station');
     }
 
     if ($(this).hasClass('has-station')) {
@@ -1125,7 +1125,7 @@ $(document).ready(function() {
     if ($('#tool-line-options').is(':visible')) {
       $('#tool-line-options').hide();
       $('#tool-new-line-options').hide();
-      $('#tool-line').html('<i class="fa fa-paint-brush" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> Rail Line');
+      $('#tool-line').html('<i class="fa fa-pencil" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> Draw Rail Line');
     } else {
       $('#tool-line-options').show();
       $('#tool-line').html('<i class="fa fa-subway" aria-hidden="true"></i> Hide Rail Line options');
@@ -1156,14 +1156,14 @@ $(document).ready(function() {
     activeTool = 'station';
     if ($('#tool-station-options').is(':visible')) {
       $('#tool-station-options').hide();
-      $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
+      $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station');
     }
     $('.tooltip').hide();
   }); // #tool-station.click()
   $('#tool-eraser').click(function() {
     activeTool = 'eraser';
     $('#tool-station-options').hide();
-    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
+    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station');
     $('.tooltip').hide();
   }); // #tool-eraser.click()
   $('#tool-grid').click(function() {
@@ -1277,7 +1277,7 @@ $(document).ready(function() {
     activeTool = 'look';
     drawCanvas();
     $('#tool-station-options').hide();
-    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
+    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station');
 
     $('.tooltip').hide();
     if ($('#grid').is(':visible')) {

@@ -114,7 +114,7 @@ button {
 }
 
 button.rail-line {
-  height: 48px;
+  /*height: 48px;*/
   text-align: center;
 }
 
@@ -152,7 +152,7 @@ button.rail-line {
 
 #rail-line-delete {
   background-color: #fc3700;
-  height: 48px;
+  /*height: 48px;*/
 }
 
 #create-new-rail-line {
