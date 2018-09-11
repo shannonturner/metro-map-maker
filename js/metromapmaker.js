@@ -5,6 +5,7 @@ var activeTool = 'look';
 var activeMap = false;
 var preferredGridPixelMultiplier = 20;
 var lastStrokeStyle;
+var lineWidth = 1.175;
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -138,9 +139,6 @@ function bindGridSquareEvents() {
   $('#station-coordinates-y').val('');
 
   if (activeTool == 'line') {
-    $(this).css({
-      'background-color': activeToolOption
-    });
     $(this).addClass('has-line')
     $(this).addClass('has-line-' + rgb2hex(activeToolOption).slice(1, 7));
     var x = $(this).attr('id').split('-').slice(2, 3);
@@ -148,18 +146,26 @@ function bindGridSquareEvents() {
     metroMap = updateMapObject(x, y, activeTool);
     autoSave(metroMap);
     drawCanvas(metroMap);
+    // drawArea(x, y, metroMap);
   } else if (activeTool == 'eraser') {
-    $(this).css({
-      'background-color': '#fff'
-    });
+    // I need to check for the old line and station
+    // BEFORE actually doing the erase operations
+    var x = $(this).attr('id').split('-').slice(2, 3);
+    var y = $(this).attr('id').split('-').slice(4);
+    erasedLine = getActiveLine(x, y);
+    if ($('#coord-x-' + x + '-y-' + y).hasClass('has-station')) {
+      var redrawStations = true;
+    } else {
+      var redrawStations = false;
+    }
+
     $(this).removeClass();
     $(this).addClass('grid-col');
     $(this).html('');
-    var x = $(this).attr('id').split('-').slice(2, 3);
-    var y = $(this).attr('id').split('-').slice(4);
+
     metroMap = updateMapObject(x, y, activeTool);
     autoSave(metroMap);
-    drawCanvas(metroMap);
+    drawArea(x, y, metroMap, erasedLine, redrawStations);
   } else if (activeTool == 'station') {
 
     $('#station-name').val('');
@@ -343,6 +349,81 @@ function drawGrid() {
   }
 } // drawGrid()
 
+function getRedrawSection(x, y, metroMap, redrawRadius) {
+  // Returns an object that's a subset of metroMap
+  // containing only the squares within redrawRadius of x,y
+  redrawSection = {}
+  redrawRadius = parseInt(redrawRadius)
+  for (var nx=redrawRadius * -1; nx<=redrawRadius; nx+=1) {
+    for (var ny=redrawRadius * -1; ny<=redrawRadius; ny+=1) {
+      if (getActiveLine(x + nx, y + ny, metroMap)) {
+        if (!redrawSection.hasOwnProperty(x + nx)) {
+          redrawSection[x + nx] = {}
+          redrawSection[x + nx][y + ny] = true;
+        } else {
+          redrawSection[x + nx][y + ny] = true;
+        }
+      }
+    } // for ny
+  } // for nx
+  return redrawSection;
+} // getRedrawSection(x, y, metroMap, redrawRadius)
+
+function drawArea(x, y, metroMap, erasedLine, redrawStations) {
+  // Partially draw an area centered on x,y
+  // because it's faster than drawing the full canvas
+
+  var canvas = document.getElementById('metro-map-canvas');
+  var ctx = canvas.getContext('2d', {alpha: false});
+  gridPixelMultiplier = canvas.width / gridCols;
+
+  var redrawRadius = 1;
+
+  x = parseInt(x);
+  y = parseInt(y);
+
+  ctx.lineWidth = gridPixelMultiplier * lineWidth;
+  ctx.lineCap = 'round';
+
+  if (activeTool == 'eraser') {
+    if (erasedLine) {
+      // If something was erased, check to see what was around it
+      drawPoint(ctx, x, y, metroMap, erasedLine);
+    } // if erasedLine
+  } // if activeTool == 'eraser'
+
+  // TODO: determine clear area
+  // TODO: clear what needs to be cleared
+
+  // Determine redraw area and redraw the points that need to be redrawn
+  redrawSection = getRedrawSection(x, y, metroMap, redrawRadius);
+  for (var x in redrawSection) {
+    for (var y in redrawSection[x]) {
+      lastStrokeStyle = undefined; // I need to set lastStrokeStyle here, otherwise drawPoint() has undefined behavior
+      drawPoint(ctx, parseInt(x), parseInt(y), metroMap);
+    }
+  }
+
+  if (redrawStations) {
+    // Did I erase a station? Re-draw them all here
+    var canvasStations = document.getElementById('metro-map-stations-canvas');
+    var ctxStations = canvasStations.getContext('2d', {alpha: true});
+    ctxStations.clearRect(0, 0, canvasStations.width, canvasStations.height);
+    ctxStations.font = '700 20px sans-serif';
+
+    for (var x in metroMap){
+      for (var y in metroMap[x]) {
+        x = parseInt(x);
+        y = parseInt(y);
+        if (!Number.isInteger(x) || !Number.isInteger(y)) {
+          continue;
+        }
+        drawStation(ctxStations, x, y, metroMap);
+      } // for y
+    } // for x
+  } // if redrawStations
+} // drawArea(x, y, metroMap, redrawStations)
+
 function drawCanvas(metroMap) {
   // Fully redraw the canvas based on the provided metroMap;
   //    if no metroMap is provided, then save the existing grid as a metroMap object
@@ -364,7 +445,7 @@ function drawCanvas(metroMap) {
   }
   activeMap = metroMap;
 
-  ctx.lineWidth = gridPixelMultiplier * 1.175;
+  ctx.lineWidth = gridPixelMultiplier * lineWidth;
   ctx.lineCap = 'round';
 
   for (var x in metroMap) {
@@ -415,7 +496,7 @@ function drawCanvas(metroMap) {
   }
 } // drawCanvas(metroMap)
 
-function drawPoint(ctx, x, y, metroMap) {
+function drawPoint(ctx, x, y, metroMap, erasedLine) {
   // Draw a single point at position x, y
 
   var activeLine = getActiveLine(x, y, metroMap);
@@ -430,46 +511,58 @@ function drawPoint(ctx, x, y, metroMap) {
     lastStrokeStyle = activeLine;
   }
 
+  if (erasedLine) {
+    // Repurpose drawPoint() for erasing; use in drawArea()
+    ctx.strokeStyle = '#ffffff';
+    activeLine = erasedLine;
+  }
+
   singleton = true;
 
   // Diagonals
   if (activeLine == getActiveLine(x + 1, y + 1, metroMap)) {
     // Direction: SE
     moveLineStroke(ctx, x, y, x+1, y+1);
-  } if (singleton && activeLine == getActiveLine(x - 1, y - 1, metroMap)) {
+  } if (activeLine == getActiveLine(x - 1, y - 1, metroMap)) {
     // Direction: NW
     // Since the drawing goes left -> right, top -> bottom,
-    // I don't need to draw NW if I've drawn SE
-    // I can cut down on calls to getActiveLine() and moveLineStroke()
-    // by just directly setting/getting singleton.
-    singleton = false;
+    //  I don't need to draw NW if I've drawn SE
+    //  I used to cut down on calls to getActiveLine() and moveLineStroke()
+    //  by just directly setting/getting singleton.
+    // But now that I'm using drawPoint() inside of redrawArea(),
+    // I can't rely on this shortcut anymore.
+    moveLineStroke(ctx, x, y, x-1, y-1);
   } if (activeLine == getActiveLine(x + 1, y - 1, metroMap)) {
     // Direction: NE
     moveLineStroke(ctx, x, y, x+1, y-1);
-  }  if (singleton && activeLine == getActiveLine(x - 1, y + 1, metroMap)) {
+  }  if (activeLine == getActiveLine(x - 1, y + 1, metroMap)) {
     // Direction: SW
-    singleton = false;
+    moveLineStroke(ctx, x, y, x-1, y+1);
   }
 
   // Cardinals
   if (activeLine == getActiveLine(x + 1, y, metroMap)) {
-      // Direction: E
-      moveLineStroke(ctx, x, y, x+1, y);
-  } if (singleton && activeLine == getActiveLine(x - 1, y, metroMap)) {
-      // Direction: W
-      singleton = false;
+    // Direction: E
+    moveLineStroke(ctx, x, y, x+1, y);
+  } if (activeLine == getActiveLine(x - 1, y, metroMap)) {
+    // Direction: W
+    moveLineStroke(ctx, x, y, x-1, y);
   } if (activeLine == getActiveLine(x, y + 1, metroMap)) {
-      // Direction: S
-      moveLineStroke(ctx, x, y, x, y+1);
-  } if (singleton && activeLine == getActiveLine(x, y - 1, metroMap)) {
-      // Direction: N
-      singleton = false;
+    // Direction: S
+    moveLineStroke(ctx, x, y, x, y+1);
+  } if (activeLine == getActiveLine(x, y - 1, metroMap)) {
+    // Direction: N
+    moveLineStroke(ctx, x, y, x, y-1);
   }
 
   if (singleton) {
     // Without this, singletons with no neighbors won't be painted at all.
     // So map legends, "under construction", or similar lines should be painted.
-    ctx.fillStyle = '#' + activeLine;
+    if (erasedLine) {
+      ctx.fillStyle = '#ffffff';
+    } else {
+      ctx.fillStyle = '#' + activeLine;
+    }
     ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
     ctx.fill();
   } else {
@@ -1172,6 +1265,7 @@ $(document).ready(function() {
   }); // $('#tool-save-map').click()
   $('#tool-export-canvas').click(function() {
     activeTool = 'look';
+    drawCanvas();
     $('#tool-station-options').hide();
     $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Station');
 
@@ -1206,8 +1300,6 @@ $(document).ready(function() {
     setTimeout(function() {
       $('.tooltip').hide();
     }, 1500);
-    
-    drawCanvas();
   }); // #tool-export-canvas.click()
   $('#tool-clear-map').click(function() {
     // This will go faster if I set the grid size to 80x80 before clearing
