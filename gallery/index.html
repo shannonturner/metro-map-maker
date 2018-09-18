@@ -76,21 +76,29 @@
 
       .sticky {
         position: fixed;
-        bottom: 30px;
-        left: 30px;
         z-index: 1;
+        bottom: 0;
       }
 
       nav {
-        width: 20%;
+        width: 100%;
         background-color: white;
-        border: 4px solid black;
-        padding: 15px;
+        border: 2px solid black;
       }
 
-      @media (max-width: 600px) {
+      @media (max-width: 400px) {
         nav {
-          width: 40%;
+          font-size: 11px;
+        }
+      }
+
+      @media (max-width: 767px) {
+        .nav-justified>li {
+          display: table-cell;
+          width: 1%;
+        }
+        .nav-justified>li>a {
+          margin-bottom: 0;
         }
       }
 
@@ -104,9 +112,11 @@
 
 <nav class="visible-xs visible-sm sticky">
 
-  <a href="#real-maps"><h4>Real maps</h4></a>
-  <a href="#speculative-maps"><h4>Speculative maps</h4></a>
-  <a href="#imaginary-maps"><h4>Imaginary maps</h4></a>
+  <ul class="nav nav-pills nav-justified">
+    <li role="presentation"><a href="#real-maps"><b>Real maps</b></a></li>
+    <li role="presentation"><a href="#speculative-maps"><b>Speculative maps</b></a></li>
+    <li role="presentation"><a href="#imaginary-maps"><b>Imaginary maps</b></a></li>
+  </ul>
 
 </nav>
 
