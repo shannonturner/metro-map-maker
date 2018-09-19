@@ -1404,3 +1404,75 @@ $(document).ready(function() {
   }); // $('#station-transfer').click()
 
 }); // document.ready()
+
+// Cheat codes / Advanced map manipulations
+function getSurroundingLine(x, y, metroMap) {
+  // Returns a line color only if x,y has two neighbors
+  //  with the same color going in the same direction
+  x = parseInt(x)
+  y = parseInt(y)
+  if (getActiveLine(x-1, y, metroMap) && (getActiveLine(x-1, y, metroMap) == getActiveLine(x+1, y, metroMap))) {
+    // Left and right match
+    return getActiveLine(x-1, y, metroMap);
+  } else if (getActiveLine(x, y-1, metroMap) && (getActiveLine(x, y-1, metroMap) == getActiveLine(x, y+1, metroMap))) {
+    // Top and bottom match
+    return getActiveLine(x, y-1, metroMap);
+  } else if (getActiveLine(x-1, y-1, metroMap) && (getActiveLine(x-1, y-1, metroMap) == getActiveLine(x+1, y+1, metroMap))) {
+    // Diagonal: \
+    return getActiveLine(x-1, y-1, metroMap);
+  } else if (getActiveLine(x-1, y+1, metroMap) && (getActiveLine(x-1, y+1, metroMap) == getActiveLine(x+1, y-1, metroMap))) {
+    // Diagonal: /
+    return getActiveLine(x-1, y+1, metroMap);
+  }
+  return false;
+} // getSurroundingLine(x, y, metroMap)
+
+function stretchMap(metroMapObject) {
+  // Stretch out a map
+  // First, loop through all the keys and multiply them by 2
+  // Next, loop through all the spaces and check:
+  //   is that space surrounded by similar neighbors?
+  //   if so, set that space equal to the color of its neighbors
+
+  if (!metroMapObject) {
+    metroMapObject = saveMapAsObject();
+  }
+
+  var newMapObject = {};
+  for (var x in metroMapObject) {
+    for (var y in metroMapObject[x]) {
+      x = parseInt(x);
+      y = parseInt(y);
+      if (!Number.isInteger(x) || !Number.isInteger(y)) {
+        continue;
+      }
+      if (!newMapObject.hasOwnProperty(x * 2)) {
+        newMapObject[x * 2] = {}
+      }
+      newMapObject[x * 2][y * 2] = metroMapObject[x][y];
+    } // for y
+  } // for x
+
+  // Set the gridRows and gridCols
+  getMapSize(newMapObject)
+
+  // Fill in the newly created in-between spaces
+  for (var x=1;x<gridRows;x++) {
+    for (var y=1;y<gridCols;y++) {
+      var surroundingLine = getSurroundingLine(x, y, newMapObject);
+      if (surroundingLine) {
+        if (!newMapObject.hasOwnProperty(x)) {
+          newMapObject[x] = {}
+        }
+        newMapObject[x][y] = {
+          "line": surroundingLine
+        }
+      } // if neighboringLine
+    } // for y
+  } // for x
+
+  newMapObject["global"] = metroMapObject["global"];
+  activeMap = newMapObject;
+  loadMapFromObject(newMapObject);
+  return newMapObject;
+} // stretchMap(metroMapObject)
