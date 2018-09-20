@@ -1079,6 +1079,9 @@ function moveMap(direction) {
               $('#coord-x-' + x + '-y-' + y).removeClass(classes[c]);
             } // if not .grid-col
           } // for classes
+
+          // Delete old children (stations), otherwise there will be multiple items with this station ID, and that causes major problems.
+          $('#coord-x-' + x + '-y-' + y).html('');
         } // within boundaries
       } // for y
     } // for x
