@@ -1093,6 +1093,11 @@ function moveMap(direction) {
     drawCanvas();
 } // moveMap(direction)
 
+function disableRightClick(event) {
+  // Sometimes when creating a map it's too easy to accidentally right click and it's annoying
+  event.preventDefault();
+}
+
 $(document).ready(function() {
 
   // Bind to the mousedown and mouseup events so we can implement dragging easily
@@ -1108,6 +1113,9 @@ $(document).ready(function() {
   $('.start-hidden').each(function() {
     $(this).hide();
   })
+
+  // Disable right-click on the grid (but not on the canvas/image)
+  document.getElementById('grid').addEventListener('contextmenu', disableRightClick);
 
   // Enable the tooltips
   $(function () {
@@ -1479,3 +1487,7 @@ function stretchMap(metroMapObject) {
   loadMapFromObject(newMapObject);
   return newMapObject;
 } // stretchMap(metroMapObject)
+
+function enableRightClick() {
+  document.getElementById('grid').removeEventListener('contextmenu', disableRightClick);
+} // enableRightClick()
