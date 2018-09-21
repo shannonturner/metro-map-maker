@@ -129,6 +129,7 @@ function bindRailLineEvents() {
       activeTool = 'line';
       activeToolOption = $(this).css('background-color');
     }
+    $('#toolbox button').removeClass('btn-primary').addClass('btn-info');
     $('#tool-station-options').hide();
     $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station');
   });  
