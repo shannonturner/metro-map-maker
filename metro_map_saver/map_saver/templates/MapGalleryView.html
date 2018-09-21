@@ -117,7 +117,7 @@
 
               {% if saved_maps.paginator %}
               <span class="current" style="margin: 10px;">
-                  <b>Page {{ saved_maps.number }} of {{ saved_maps.paginator.num_pages }}</b>
+                  <b>Page {{ saved_maps.number }} of {{ saved_maps.paginator.num_pages }} ({{ saved_maps|length }} of {{ maps_total }} maps)</b>
               </span>
               {% endif %}
 
@@ -164,7 +164,7 @@
 
         {% endif %}
 
-        <canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive"></canvas>
+        <a id="download-link-{{ map.id }}" onClick="galleryDownloadFromCanvas({{ map.id }});" href="#" download="{{ map.urlhash }}.png"><canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive"></canvas></a>
         
         <hr>
 
@@ -224,6 +224,12 @@
 
   var gridSize = 80;
   var preferredGridPixelMultiplier = 20;
+
+  function galleryDownloadFromCanvas(mapId) {
+    var downloadLink = document.getElementById("download-link-" + mapId);
+    var image = document.getElementById("metro-map-gallery-canvas-" + mapId).toDataURL("image/png").replace("image/png", "image/octet-stream");
+    downloadLink.setAttribute("href", image);
+  }
 
   function galleryGetMapSize(metroMapObject) {
     highestValue = 0;
