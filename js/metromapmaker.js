@@ -678,7 +678,7 @@ function drawIndicator(x, y) {
   // this will be overwritten by the drawCanvas() call
   // but at least there will be some visual indicator of the station's placement
   // now that the grid squares aren't visible
-  var canvas = document.getElementById('metro-map-canvas');
+  var canvas = document.getElementById('metro-map-stations-canvas');
   var ctx = canvas.getContext('2d', {alpha: false});
   var gridPixelMultiplier = canvas.width / gridCols;
 
