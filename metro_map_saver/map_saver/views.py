@@ -37,8 +37,6 @@ class MapGalleryView(TemplateView):
 
         MAPS_PER_PAGE = 25
 
-        maps_total = SavedMap.objects.filter(gallery_visible=True).count()
-
         tags = Tag.objects.all().order_by('id')
 
         if kwargs.get('tag') == 'notags':
@@ -60,7 +58,7 @@ class MapGalleryView(TemplateView):
 
         context = {
             'saved_maps': saved_maps,
-            'maps_total': maps_total,
+            'maps_total': visible_maps.count(),
             'tags': tags,
             'is_staff': request.user.is_staff,
         }
