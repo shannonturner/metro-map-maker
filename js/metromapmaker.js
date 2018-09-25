@@ -351,6 +351,7 @@ function drawGrid() {
   var squares = document.getElementsByClassName("grid-col");
   for (var s=0; s<squares.length; s++) {
       squares[s].addEventListener('click', bindGridSquareEvents, false);
+      squares[s].addEventListener('mousedown', bindGridSquareEvents, false);
       squares[s].addEventListener('mouseover', bindGridSquareMouseover, false);
   }
 } // drawGrid()
