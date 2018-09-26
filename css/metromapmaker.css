@@ -224,6 +224,9 @@ hr {
   #toolbox button {
     margin-bottom: 8px;
   }
+  #remix ul li {
+    margin-bottom: 8px;
+  }
 }
 
 @media (min-width: 768px) {
