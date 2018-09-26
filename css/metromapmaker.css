@@ -36,7 +36,8 @@ div#toolbox {
 
 #toolbox button {
   display: block;
-  margin: 3px;
+  margin-top: 3px;
+  margin-bottom: 3px;
   width: 100%;
   color: #fff;
 }
@@ -169,8 +170,12 @@ button.rail-line {
 }
 
 #autosave-indicator {
-  margin-top: 10px;
   height: 16px;
+}
+
+#toolbox hr {
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 
 /*.station {
