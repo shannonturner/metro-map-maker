@@ -221,6 +221,9 @@ hr {
   #controls {
     margin-top: 10px;
   }
+  #toolbox button {
+    margin-bottom: 8px;
+  }
 }
 
 @media (min-width: 768px) {
