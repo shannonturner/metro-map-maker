@@ -1493,3 +1493,13 @@ function stretchMap(metroMapObject) {
 function enableRightClick() {
   document.getElementById('grid').removeEventListener('contextmenu', disableRightClick);
 } // enableRightClick()
+
+// Steer mobile users toward the gallery, for a better experience
+$('#try-on-mobile').click(function() {
+  $('#try-on-mobile').hide();
+  setSquareSize(12);
+  resizeCanvas();
+  $('#toolbox-mobile-hint').removeClass('hidden-xs');
+  $('#controls').removeClass('hidden-xs');
+  $('#canvas-container').removeClass('hidden-xs');
+});
