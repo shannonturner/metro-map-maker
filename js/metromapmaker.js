@@ -1497,6 +1497,7 @@ function enableRightClick() {
 // Steer mobile users toward the gallery, for a better experience
 $('#try-on-mobile').click(function() {
   $('#try-on-mobile').hide();
+  $('#favorite-maps').hide();
   setSquareSize(12);
   resizeCanvas();
   $('#toolbox-mobile-hint').removeClass('hidden-xs');
