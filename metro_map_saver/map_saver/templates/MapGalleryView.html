@@ -76,6 +76,12 @@
       overflow-y: auto;
     }
 
+    @media (max-width: 767px) {
+      #diff-sidebar {
+        display: none;
+      }
+    }
+
     </style>
 
   </head>
@@ -85,15 +91,6 @@
 <a name="top"></a>
 
 <div id="main-container" class="container-fluid">
-
-  <div class="visible-xs text-center row">
-    <div class="col-lg-10 col-offset-1">
-      <h3>Metro Map Maker</h3>
-      <h5>Create your own metro maps, save them, and share with friends!</h5>
-      <h5>To get started, all the tools you need are below the grid.</h5>
-      <h5>(This works best on desktop; some features may not work correctly on your mobile device.)</h5>
-    </div>
-  </div>
 
   <div id="gallery-grids" class="col-lg-10 hidden">
     {% for map in saved_maps %}
