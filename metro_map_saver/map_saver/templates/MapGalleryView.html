@@ -128,9 +128,7 @@
     <div class="col-lg-3"></div>
   </div> <!-- div.row -->
 
-  <div class="col-lg-1"></div>
-
-  <div id="gallery" class="col-lg-7">
+  <div id="gallery" class="col-lg-12">
 
     {% for map in saved_maps %}
 
@@ -161,7 +159,9 @@
 
         {% endif %}
 
-        <a id="download-link-{{ map.id }}" onClick="galleryDownloadFromCanvas({{ map.id }});" href="#" download="{{ map.urlhash }}.png"><canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive"></canvas></a>
+        <div class="map-container">
+          <a id="download-link-{{ map.id }}" onClick="galleryDownloadFromCanvas({{ map.id }});" href="#" download="{{ map.urlhash }}.png"><canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive map-image"></canvas></a>
+        </div>
         
         <hr>
 
@@ -170,20 +170,20 @@
   </div> <!-- div#gallery -->
 
   <div id="diff-sidebar" class="col-lg-3">
-    <h4 class="text-center">Calculate Map Difference</h4>
-    <h4>Map A: <input id="diff-map-a" type="text" placeholder="Click 'Diff A' to fill"><input id="diff-map-id-a" type="hidden"></h4>
-    <h4>Map B: <input id="diff-map-b" type="text" placeholder="Click 'Diff B' to fill"><input id="diff-map-id-b" type="hidden"></h4>
-    <div id="diff-pane"> </div>
-    <div class="text-center">
-      <button id="keep-a" class="diff-keep btn-info">Keep A</button>
-      <button id="keep-b" class="diff-keep btn-primary">Keep B</button>
-    </div>
-    <div id="diff-discard" class="start-hidden">
-      <h4 class="text-center">Maps to Hide from Gallery View</h4>
+    <h4 class="text-center" id="diff-sidebar-expand-contract">Calculate Map Difference</h4>
+    <div class="diff-sidebar-tools start-hidden">
+      <h4>Map A: <input id="diff-map-a" type="text" placeholder="Click 'Diff A' to fill"><input id="diff-map-id-a" type="hidden"></h4>
+      <h4>Map B: <input id="diff-map-b" type="text" placeholder="Click 'Diff B' to fill"><input id="diff-map-id-b" type="hidden"></h4>
+      <div id="diff-pane"> </div>
+      <div class="text-center">
+        <button id="keep-a" class="diff-keep btn-info">Keep A</button>
+        <button id="keep-b" class="diff-keep btn-primary">Keep B</button>
+      </div>
+      <div id="diff-discard" class="start-hidden">
+        <h4 class="text-center">Maps to Hide from Gallery View</h4>
+      </div>
     </div>
   </div> <!-- div#diff-sidebar -->
-
-  <div class="col-lg-1"></div>
 
   <div id="gallery-controls" class="col-lg-6 col-lg-offset-3 text-center">
     <div class="pagination">
@@ -561,6 +561,15 @@
     {% endfor %}
 
     $('.start-hidden').hide();
+
+    // Expand/contract the diff sidebar
+    $('#diff-sidebar-expand-contract').click(function() {
+      if ($(".diff-sidebar-tools").is(':visible')) {
+        $('.diff-sidebar-tools').hide();
+      } else {
+        $('.diff-sidebar-tools').show();
+      }
+    });
 
     // Calculate diffs!
     $('.diff').click(function() {
