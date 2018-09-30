@@ -110,6 +110,14 @@
       padding-left: 5px;
     }
 
+    .map-container {
+      opacity: .1;
+    }
+
+    .active-map {
+      opacity: 1;
+    }
+
     @media (max-width: 767px) {
       #diff-sidebar {
         display: none;
@@ -193,7 +201,7 @@
 
     {% for map in saved_maps %}
 
-        <div id="map-container-{{ map.id }}">
+        <div id="map-container-{{ map.id }}" class="map-container">
           <a id="download-link-{{ map.id }}" onClick="galleryDownloadFromCanvas({{ map.id }});" href="#" download="{{ map.urlhash }}.png"><canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive map-image"></canvas></a>
         </div>
         
@@ -677,6 +685,8 @@
       console.log("at {{ map.id }}")
       $('.map-control').hide();
       $('#map-control-{{ map.id }}').show();
+      $('.map-container').removeClass('active-map');
+      $('#map-container-{{ map.id }}').addClass('active-map');
     });
     
     {% endfor %}
