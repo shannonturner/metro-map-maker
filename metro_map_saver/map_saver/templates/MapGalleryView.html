@@ -50,6 +50,7 @@
 
     body {
       font-family: Helvetica, Arial, sans-serif;
+      position: relative;
     }
 
     .map-link {
@@ -66,14 +67,47 @@
       left: 75%;
       top: 0%;
       background: #eee;
-      padding-top: 20px;
-      padding-bottom: 20px;
+      padding-top: 5px;
+      padding-bottom: 5px;
       max-height: 100%;
       overflow-y: auto;
     }
 
     #diff-pane {
       overflow-y: auto;
+    }
+
+    #map-controls {
+      position: fixed;
+      top: 0%;
+      z-index: 999;
+      width: 75%;
+    }
+
+    #pagination-controls {
+      width: 100%;
+      padding-left: 5px;
+    }
+
+    .pagination {
+      background: #fff;
+      margin: 0;
+      padding: 5px;
+    }
+
+    .map-control {
+      background: #fff;
+      max-height: 100%;
+      padding: 10px;
+    }
+
+    .nav-tabs {
+      border: 0;
+    }
+
+    .vertical-divider {
+      border-left: 1px solid #666;
+      padding-left: 5px;
     }
 
     @media (max-width: 767px) {
@@ -86,80 +120,80 @@
 
   </head>
 
-<body>
+<body data-spy="scroll" data-target="map-controls">
 
 <a name="top"></a>
 
 <div id="main-container" class="container-fluid">
 
-  <div id="gallery-grids" class="col-lg-10 hidden">
-    {% for map in saved_maps %}
-        <div id="grid-m-{{ map.id }}" class="col-lg-10"></div>
-    {% endfor %}
-  </div>
-
-  <!-- Gallery Controls (Top) -->
-  <div class="row">
-    <div class="col-lg-3"></div>
-    <div id="gallery-controls" class="col-lg-6 text-center">
+  <div id="map-controls">
+    <!-- Pagination -->
+    <div id="pagination-controls" class="text-left">
       <div class="pagination">
-          {% if headline %}
-          <h3>{{ saved_maps|length }} {{ headline }}</h3>
+        {% if headline %}
+        <h3>{{ saved_maps|length }} {{ headline }}</h3>
+        {% endif %}
+        <span class="step-links">
+          {% if saved_maps.has_previous %}
+              <a href="./1"><button class="btn-primary">First Page</button></a>
+              <a href="./{{ saved_maps.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
           {% endif %}
-          <span class="step-links">
-              {% if saved_maps.has_previous %}
-                  <a href="./1"><button class="btn-primary">First Page</button></a>
-                  <a href="./{{ saved_maps.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
-              {% endif %}
 
-              {% if saved_maps.paginator %}
-              <span class="current" style="margin: 10px;">
-                  <b>Page {{ saved_maps.number }} of {{ saved_maps.paginator.num_pages }} ({{ saved_maps|length }} of {{ maps_total }} maps)</b>
-              </span>
-              {% endif %}
-
-              {% if saved_maps.has_next %}
-                  <a href="./{{ saved_maps.next_page_number }}"><button class="btn-info">Next Page</button></a>
-                  <a href="./{{ saved_maps.paginator.num_pages }}"><button class="btn-primary">Last Page</button></a>
-              {% endif %}
+          {% if saved_maps.paginator %}
+          <span class="current" style="margin: 10px;">
+              <b>Page {{ saved_maps.number }} of {{ saved_maps.paginator.num_pages }} ({{ saved_maps|length }} of {{ maps_total }} maps)</b>
           </span>
-      </div>
-    </div> <!-- div#gallery-controls -->
-    <div class="col-lg-3"></div>
-  </div> <!-- div.row -->
+          {% endif %}
+
+          {% if saved_maps.has_next %}
+              <a href="./{{ saved_maps.next_page_number }}"><button class="btn-info">Next Page</button></a>
+              <a href="./{{ saved_maps.paginator.num_pages }}"><button class="btn-primary">Last Page</button></a>
+          {% endif %}
+        </span>
+      </div> <!-- div.pagination -->
+    </div> <!-- div#pagination-controls -->
+    <ul class="nav nav-tabs" role="tablist">
+      {% for map in saved_maps %}
+        <li id="map-control-{{ map.id }}" class="nav-item map-control {% if not forloop.first %}start-hidden{% endif %}"><a class="nav-link hidden" href="#map-container-{{ map.id }}"><!-- a link is needed but I don't need it to be visible {{ map.id }}--></a>
+        
+          <h3 class="map-link">Saved Map <a href="https://metromapmaker.com/save/admin/map_saver/savedmap/{{ map.id }}/change/" target="_blank">#{{ map.id }}</a> (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>)</h3>
+          <div class="map-control-buttons">
+            <button id="diff-a-{{ map.urlhash }}-{{ map.id }}" class="diff diff-a btn-info">Diff A</button>
+            <button id="diff-b-{{ map.urlhash }}-{{ map.id }}" class="diff diff-b btn-primary">Diff B</button>
+
+            {% if is_staff %}
+              <button id="hide-{{ map.id }}" class="hide-map btn-warning">Hide</button>
+              <a href="{% url 'similar' urlhash=map.urlhash %}"><button class="btn-default">View Similar</button></a>
+              {% if similarity_scores %}
+                {% for urlhash, score in similarity_scores.items %}
+                  {% if urlhash == map.urlhash %}
+                    {% widthratio score 1 100 %}% similar by station names
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+
+              <span class="vertical-divider"></span>
+              <!-- <p style="margin-top: 10px;"> -->
+                {% for tag in tags %}
+                  {% if tag in map.tags.all %}
+                    <button id="removetag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map removetag-map btn-primary">{{ tag.name }}</button>
+                  {% else %}
+                    <button id="addtag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map addtag-map btn-default">{{ tag.name }}</button>
+                  {% endif %}
+                {% endfor %}
+              <!-- </p> -->
+            {% endif %}
+          </div> <!-- /.map-control-buttons -->
+        </li>
+      {% endfor %}
+    </ul>
+  </div> <!-- /#map-controls -->
 
   <div id="gallery" class="col-lg-12">
 
     {% for map in saved_maps %}
 
-        <h3 class="map-link">Saved Map <a href="https://metromapmaker.com/save/admin/map_saver/savedmap/{{ map.id }}/change/" target="_blank">#{{ map.id }}</a> (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>)</h3>
-        <button id="diff-a-{{ map.urlhash }}-{{ map.id }}" class="diff diff-a btn-info">Diff A</button>
-        <button id="diff-b-{{ map.urlhash }}-{{ map.id }}" class="diff diff-b btn-primary">Diff B</button>
-
-        {% if is_staff %}
-          <button id="hide-{{ map.id }}" class="hide-map btn-warning">Hide</button>
-          <a href="{% url 'similar' urlhash=map.urlhash %}"><button class="btn-default">View Similar</button></a>
-          {% if similarity_scores %}
-            {% for urlhash, score in similarity_scores.items %}
-              {% if urlhash == map.urlhash %}
-                {% widthratio score 1 100 %}% similar by station names
-              {% endif %}
-            {% endfor %}
-          {% endif %}
-
-          <p style="margin-top: 10px;">
-            {% for tag in tags %}
-              {% if tag in map.tags.all %}
-                <button id="removetag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map removetag-map btn-primary">{{ tag.name }}</button>
-              {% else %}
-                <button id="addtag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map addtag-map btn-default">{{ tag.name }}</button>
-              {% endif %}
-            {% endfor %}
-          </p>
-
-        {% endif %}
-
-        <div class="map-container">
+        <div id="map-container-{{ map.id }}">
           <a id="download-link-{{ map.id }}" onClick="galleryDownloadFromCanvas({{ map.id }});" href="#" download="{{ map.urlhash }}.png"><canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive map-image"></canvas></a>
         </div>
         
@@ -184,28 +218,6 @@
       </div>
     </div>
   </div> <!-- div#diff-sidebar -->
-
-  <div id="gallery-controls" class="col-lg-6 col-lg-offset-3 text-center">
-    <div class="pagination">
-        <span class="step-links">
-            {% if saved_maps.has_previous %}
-                <a href="./1"><button class="btn-primary">First Page</button></a>
-                <a href="./{{ saved_maps.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
-            {% endif %}
-
-            {% if saved_maps.paginator %}
-            <span class="current" style="margin: 10px;">
-                <b>Page {{ saved_maps.number }} of {{ saved_maps.paginator.num_pages }} ({{ saved_maps|length }} of {{ maps_total }} maps)</b>
-            </span>
-            {% endif %}
-
-            {% if saved_maps.has_next %}
-                <a href="./{{ saved_maps.next_page_number }}"><button class="btn-info">Next Page</button></a>
-                <a href="./{{ saved_maps.paginator.num_pages }}"><button class="btn-primary">Last Page</button></a>
-            {% endif %}
-        </span>
-    </div>
-  </div>
 
 </div> <!-- #main-container -->
 
@@ -258,19 +270,6 @@
     }
 
   }
-
-  function galleryDrawGrid(mapId) {
-    var gridRows = gridSize, gridCols = gridSize, grid = "";
-    for (var x=0; x<gridRows; x++) {
-      grid += '<div class="grid-row">';
-      for (var y=0; y<gridCols; y++) {
-        grid += '<div id="m-' + mapId + 'coord-x-' + x + '-y-' + y + '" class="grid-col"></div>';
-      }
-      grid += '</div> <!-- div.grid-row -->';
-    }
-
-    $('#grid-m-' + mapId).html(grid);
-  } // function galleryDrawGrid(mapId)
 
   function galleryGetActiveLine(x, y, metroMap) {
     // Given an x, y coordinate pair, return the hex code for the line you're on.
@@ -669,6 +668,18 @@
     {% endif %}
 
   });
+
+    $('body').scrollspy({ target: '#map-controls' });
+
+    {% for map in saved_maps %}
+    $('#map-control-{{ map.id }}').on('activate.bs.scrollspy', function () {
+      // do something…
+      console.log("at {{ map.id }}")
+      $('.map-control').hide();
+      $('#map-control-{{ map.id }}').show();
+    });
+    
+    {% endfor %}
 
   </script>
 
