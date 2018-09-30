@@ -685,7 +685,6 @@
 
     {% for map in saved_maps %}
     $('#map-control-{{ map.id }}').on('activate.bs.scrollspy', function () {
-      console.log("at {{ map.id }}")
       $('.map-control').hide();
       $('#map-control-{{ map.id }}').show();
       $('.map-container').removeClass('active-map');
