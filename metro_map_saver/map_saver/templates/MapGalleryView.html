@@ -118,6 +118,11 @@
       opacity: 1;
     }
 
+    hr.map-divider {
+      margin-top: 50px;
+      margin-bottom: 50px;
+    }
+
     @media (max-width: 767px) {
       #diff-sidebar {
         display: none;
@@ -201,11 +206,10 @@
 
     {% for map in saved_maps %}
 
-        <div id="map-container-{{ map.id }}" class="map-container">
+        <div id="map-container-{{ map.id }}" class="map-container{% if forloop.first %} active-map{% endif %}">
           <a id="download-link-{{ map.id }}" onClick="galleryDownloadFromCanvas({{ map.id }});" href="#" download="{{ map.urlhash }}.png"><canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive map-image"></canvas></a>
+          <hr class="map-divider">
         </div>
-        
-        <hr>
 
     {% endfor %}
 
@@ -681,7 +685,6 @@
 
     {% for map in saved_maps %}
     $('#map-control-{{ map.id }}').on('activate.bs.scrollspy', function () {
-      // do something…
       console.log("at {{ map.id }}")
       $('.map-control').hide();
       $('#map-control-{{ map.id }}').show();
