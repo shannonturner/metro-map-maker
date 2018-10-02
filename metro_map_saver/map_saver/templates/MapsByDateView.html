@@ -102,6 +102,7 @@
     var timePeriod = 'day';
     var startDate;
     var endDate;
+    var chart;
 
     function getMapsByDate(startDate, endDate) {
       $.post("", {
@@ -112,7 +113,7 @@
         for (datum in data["mapsByDate"]) {
           data["mapsByDate"][datum]['x'] = new Date(data["mapsByDate"][datum]['x']).toISOString();
         }
-        drawChart(data["mapsByDate"])
+        chart = drawChart(data["mapsByDate"])
         setLegend(data["startDate"], data["endDate"], data["numberOfDays"])
       });
     } // getMapsByDate()
@@ -148,11 +149,16 @@
         }
       };
 
+      if (chart) {
+        chart.destroy();
+      }
+
       var mapsCreatedByDate = new Chart(ctx, {
         "type": 'line',
         "data": data,
         "options": options
       });
+      return mapsCreatedByDate;
     } // drawChart(data)
 
     $(document).ready(function() {
@@ -170,6 +176,7 @@
       var end = $('#between-dates-end').val();
       if (start && end) {
         getMapsByDate(start, end)
+        $('#preset-date-options').val("--------------------")
       }
     });
 
@@ -178,6 +185,8 @@
         startDate = moment().subtract(parseInt($(this).val()), 'days').format('YYYY-MM-DD');
         endDate = moment().format('YYYY-MM-DD');
         getMapsByDate(startDate, endDate);
+        $('#between-dates-start').val("");
+        $('#between-dates-end').val("");
       }
     });
 
