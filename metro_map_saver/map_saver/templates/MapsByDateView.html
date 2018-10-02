@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
+
+    <meta property="og:title" content="Metro Map Maker">
+    <meta property="og:site_name" content="Metro Map Maker">
+    <meta property="og:url" content="https://metromapmaker.com">
+    <meta property="og:type" content="website">
+    <meta property="og:description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
+    <meta property="og:image" content="https://metromapmaker.com/metromapmaker.png">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="https://metromapmaker.com">
+    <meta name="twitter:creator" content="@svthmc">
+    <meta name="twitter:title" content="Metro Map Maker">
+    <meta name="twitter:description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
+    <meta name="twitter:image:src" content="https://metromapmaker.com/metromapmaker.png">
+
+    <title>Metro Map Maker</title>
+
+    <link rel="icon" href="https://metromapmaker.com/metromapmaker-gallery.ico">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <style>
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+    }
+
+    </style>
+
+  </head>
+
+<body>
+
+<div id="main-container" class="container-fluid">
+
+  <h2>
+    Maps created
+    <span id="time-period">by day</span>,
+    <span id="start-date"></span> &mdash;
+    <span id="end-date"></span>
+    (<span id="number-of-days"></span> days)
+  </h2>
+  
+  <div class="col-lg-8">
+    <canvas id="chart" width="900" height="600"></canvas>
+  </div>
+
+  <div id="controls">
+    
+    <div>
+      <button id="by-day" class="btn btn-info by-timeperiod">Day</button>
+      <button id="by-week" class="btn btn-info by-timeperiod">Week</button>
+      <button id="by-month" class="btn btn-info by-timeperiod">Month</button>
+    </div>
+
+    <div>
+      <h4>Between dates</h4>
+      <p>
+        <label for="between-dates-start">Start date</label>
+        <input id="between-dates-start" type="date" class="between-dates">
+      </p>
+      <p>
+        <label for="between-dates-end">End date</label>
+        <input id="between-dates-end" type="date" class="between-dates">
+      </p>
+
+      <select id="preset-date-options" name="preset-date-options">
+        <option>--------------------</option>
+        <option value="30">Last 30 days</option>
+        <option value="90">Last 90 days</option>
+      </select>
+    </div>
+
+  </div>
+
+  
+</div> <!-- #main-container -->
+
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js" integrity="sha256-XF29CBwU1MWLaGEnsELogU6Y6rcc5nCkhhx89nFMIDQ=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js" integrity="sha256-CutOzxCRucUsn6C6TcEYsauvvYilEniTXldPa6/wu0k=" crossorigin="anonymous"></script>
+
+  <script type="text/javascript">
+
+    var timePeriod = 'day';
+    var startDate;
+    var endDate;
+
+    function getMapsByDate(startDate, endDate) {
+      $.post("", {
+        "start_date": startDate,
+        "end_date": endDate
+      }).done(function(data) {
+        data = JSON.parse(data)
+        for (datum in data["mapsByDate"]) {
+          data["mapsByDate"][datum]['x'] = new Date(data["mapsByDate"][datum]['x']).toISOString();
+        }
+        drawChart(data["mapsByDate"])
+        setLegend(data["startDate"], data["endDate"], data["numberOfDays"])
+      });
+    } // getMapsByDate()
+
+    function setLegend(startDate, endDate, numberOfDays) {
+      document.getElementById('start-date').innerText = moment.utc(startDate, "MMMM D YYYY, h:mm a").format("MMM YYYY");
+      document.getElementById('end-date').innerText = moment.utc(endDate, "MMMM D YYYY, h:mm a").format("MMM YYYY");
+      document.getElementById('number-of-days').innerText = numberOfDays;
+    } // setLegend(startDate, endDate, numberOfDays)
+
+    function drawChart(data) {
+      var canvas = document.getElementById('chart');
+      var ctx = canvas.getContext('2d', {alpha: false});
+
+      data = {
+        "labels": [],
+        "datasets": [{
+          "label": "Maps created",
+          "data": data,
+          "borderColor": "#bd1038",
+          "backgroundColor": "transparent"
+        }],
+      }
+
+      options = {
+        scales: {
+          xAxes: [{
+            type: 'time',
+            time: {
+              unit: timePeriod
+            }
+          }]
+        }
+      };
+
+      var mapsCreatedByDate = new Chart(ctx, {
+        "type": 'line',
+        "data": data,
+        "options": options
+      });
+    } // drawChart(data)
+
+    $(document).ready(function() {
+      getMapsByDate();
+    });
+
+    $(".by-timeperiod").click(function() {
+      timePeriod = $(this).attr('id').split('-').slice(1);
+      document.getElementById('time-period').innerText = 'by ' + timePeriod;
+      getMapsByDate();
+    });
+
+    $(".between-dates").change(function() {
+      var start = $('#between-dates-start').val();
+      var end = $('#between-dates-end').val();
+      if (start && end) {
+        getMapsByDate(start, end)
+      }
+    });
+
+    $('#preset-date-options').change(function() {
+      if (typeof parseInt($(this).val()) === "number") {
+        startDate = moment().subtract(parseInt($(this).val()), 'days').format('YYYY-MM-DD');
+        endDate = moment().format('YYYY-MM-DD');
+        getMapsByDate(startDate, endDate);
+      }
+    });
+
+  </script>
+
+  </body>
+</html>

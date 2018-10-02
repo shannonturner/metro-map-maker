@@ -2,12 +2,14 @@
 from __future__ import unicode_literals
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.db.models import Count
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
 
+import datetime
 import difflib
 import hashlib
 import json
@@ -298,3 +300,53 @@ class MapDataView(TemplateView):
             context['saved_map'] = saved_map.urlhash
 
         return render(request, 'MapDataView.html', context)
+
+class MapsByDateView(TemplateView):
+
+    @method_decorator(staff_member_required)
+    def get(self, request, **kwargs):
+        context = {}
+        return render(request, 'MapsByDateView.html', context)
+
+    @method_decorator(staff_member_required)
+    def post(self, request, **kwargs):
+
+        """ Creates a Javascript object of the number of maps created by date.
+            Example: { "2018-09-18": 34, "2018-04-11": 471 }
+        """
+
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+
+        # I can't just use the optional second parameter of .get()
+        #   because otherwise .strptime() will fail
+        if start_date:
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
+        else:
+            start_date = datetime.datetime.today() - \
+            datetime.timedelta(days=30)
+
+        if end_date:
+            end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
+        else:
+            end_date = datetime.datetime.today()
+
+        number_of_days = abs((end_date - start_date).days)
+
+        saved_maps_by_date = SavedMap.objects.filter(
+            created_at__lte=end_date,
+            created_at__gt=start_date
+        ).values('created_at').annotate(count=Count('id'))
+
+        maps_by_date = {}
+        for date in saved_maps_by_date:
+            maps_by_date[date['created_at'].strftime('%Y-%m-%d')] = date['count']
+
+        context = {
+            "maps_by_date": maps_by_date,
+            "number_of_days": number_of_days,
+            "start_date": start_date,
+            "end_date": end_date,
+        }
+
+        return render(request, 'MapsByDateView.json', context)

@@ -16,7 +16,7 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminActionView, MapSimilarView
+from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminActionView, MapSimilarView, MapsByDateView
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -27,4 +27,5 @@ urlpatterns = [
     url(r'^(?:save/)?admin/action/', MapAdminActionView.as_view(), name='admin_action'),
     url(r'^(?:save/)?$', MapDataView.as_view(), name='save_map'),
     url(r'^(?:save/)?(?P<urlhash>[0-9a-zA-Z\-\_]+)$', MapDataView.as_view(), name='load_map'),
+    url(r'^(?:save/)?admin/bydate/', MapsByDateView.as_view(), name='by_date'),
 ]
