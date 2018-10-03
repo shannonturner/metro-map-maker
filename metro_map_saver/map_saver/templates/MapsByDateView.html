@@ -113,7 +113,10 @@
         for (datum in data["mapsByDate"]) {
           data["mapsByDate"][datum]['x'] = new Date(data["mapsByDate"][datum]['x']).toISOString();
         }
-        chart = drawChart(data["mapsByDate"])
+        for (datum in data["visibleMapsByDate"]) {
+          data["visibleMapsByDate"][datum]['x'] = new Date(data["visibleMapsByDate"][datum]['x']).toISOString();
+        }
+        chart = drawChart(data["mapsByDate"], data["visibleMapsByDate"])
         setLegend(data["startDate"], data["endDate"], data["numberOfDays"])
       });
     } // getMapsByDate()
@@ -124,7 +127,7 @@
       document.getElementById('number-of-days').innerText = numberOfDays;
     } // setLegend(startDate, endDate, numberOfDays)
 
-    function drawChart(data) {
+    function drawChart(allMaps, visibleMaps) {
       var canvas = document.getElementById('chart');
       var ctx = canvas.getContext('2d', {alpha: false});
 
@@ -132,10 +135,15 @@
         "labels": [],
         "datasets": [{
           "label": "Maps created",
-          "data": data,
+          "data": allMaps,
           "borderColor": "#bd1038",
           "backgroundColor": "transparent"
-        }],
+        }, {
+          "label": "Visible maps",
+          "data": visibleMaps,
+          "borderColor": "#0896d7",
+          "backgroundColor": "transparent"
+        }]
       }
 
       options = {
@@ -146,8 +154,29 @@
               unit: timePeriod
             }
           }]
-        }
-      };
+        },
+        tooltips: {
+          callbacks: {
+            label: function(tooltipItem, data) {
+
+              var label = data.datasets[tooltipItem.datasetIndex].label || '';
+              if (label) {
+                label += ': ';
+              }
+
+              if (tooltipItem.datasetIndex == 1) {
+                // What percentage of maps are visible vs the whole?
+                var totalMaps = allMaps[tooltipItem.index]["y"];
+                label += tooltipItem.yLabel;
+                label += " (" + Math.round(tooltipItem.yLabel / totalMaps * 100) + "%)";
+              } else {
+                label += tooltipItem.yLabel;
+              }
+              return label;
+            } // label:
+          } // callbacks:
+        } // tooltips:
+      }; // options
 
       if (chart) {
         chart.destroy();
@@ -159,7 +188,7 @@
         "options": options
       });
       return mapsCreatedByDate;
-    } // drawChart(data)
+    } // drawChart(allMaps, visibleMaps)
 
     $(document).ready(function() {
       getMapsByDate();

@@ -9,5 +9,13 @@
       "y": {{ maps }}
     }{% if not forloop.last %},{% endif %}
   {% endfor %}
+  ],
+  "visibleMapsByDate": [
+  {% for date, maps in visible_maps_by_date.items|dictsort:0 %}
+    {
+      "x": "{{ date }}",
+      "y": {{ maps }}
+    }{% if not forloop.last %},{% endif %}
+  {% endfor %}
   ]
 }
