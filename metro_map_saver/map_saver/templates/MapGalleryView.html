@@ -84,7 +84,10 @@
         de-activate a map I'm trying to work on to see the upper portion.
         Scrolling to see the bottom doesn't have this issue.
       */
-      bottom: 0%;
+      /* appear just above the status bar
+         otherwise link previews appear overlaid on the pagination
+      */
+      bottom: 15px;
       z-index: 999;
       width: 100%;
     }
