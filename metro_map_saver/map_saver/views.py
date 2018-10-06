@@ -42,11 +42,11 @@ class MapGalleryView(TemplateView):
         tags = Tag.objects.all().order_by('id')
 
         if kwargs.get('tag') == 'notags':
-            visible_maps = SavedMap.objects.filter(gallery_visible=True).filter(tags__exact=None).order_by('id')
+            visible_maps = SavedMap.objects.filter(gallery_visible=True).filter(tags__exact=None).order_by('-id')
         elif kwargs.get('tag') in [t.name for t in tags]:
-            visible_maps = SavedMap.objects.filter(gallery_visible=True).filter(tags__name=kwargs.get('tag')).order_by('id')
+            visible_maps = SavedMap.objects.filter(gallery_visible=True).filter(tags__name=kwargs.get('tag')).order_by('-id')
         else:
-            visible_maps = SavedMap.objects.filter(gallery_visible=True).order_by('id')
+            visible_maps = SavedMap.objects.filter(gallery_visible=True).order_by('-id')
 
         paginator = Paginator(visible_maps, MAPS_PER_PAGE)
 
