@@ -756,7 +756,7 @@ function autoLoad() {
   var savedMapHash = getURLParameter('map');
   if (savedMapHash) {
     $.get('https://metromapmaker.com/save/' + savedMapHash).done(function (savedMapData) {
-      savedMapData = savedMapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
+      savedMapData = savedMapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"').replaceAll('\\\\x', '&#x');
       if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
         // Fallback to an empty grid
         drawGrid();
@@ -1347,6 +1347,8 @@ $(document).ready(function() {
       $('#tool-new-line-errors').text('This rail line name already exists! Please choose a new name.');
     } else if ($('#new-rail-line-name').val().length == 0) {
       $('#tool-new-line-errors').text('This rail line name cannot be blank. Please enter a name.');
+    } else if ($('.rail-line').length > 99) {
+      $('#tool-new-line-errors').text('Too many rail lines! Delete your unused ones before creating new ones.');
     } else {
       $('#tool-new-line-errors').text('');
       $('#rail-line-new').before('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line btn-info" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');

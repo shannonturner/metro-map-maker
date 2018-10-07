@@ -80,6 +80,7 @@ def validate_metro_map(metro_map):
     assert metro_map.get('global'), "[VALIDATIONFAILED] 02: metro_map DOES NOT HAVE GLOBAL"
     assert metro_map['global'].get('lines'), "[VALIDATIONFAILED] 03: metro_map DOES NOT HAVE LINES"
     assert type(metro_map['global']['lines']) == dict, "[VALIDATIONFAILED] 04: metro_map LINES IS NOT DICT"
+    assert len(metro_map['global']['lines']) <= 100, "[VALIDATIONFAILED] 04B: metro_map HAS TOO MANY LINES"
 
     validated_metro_map = {
         'global': {
