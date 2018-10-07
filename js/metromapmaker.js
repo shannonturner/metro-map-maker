@@ -1341,6 +1341,12 @@ $(document).ready(function() {
       allNames.push($(this).text());
     });
 
+    if ($('#new-rail-line-color').val() == '') {
+      // If a color has not been selected, the line can be created but is undefined.
+      // Set it to black instead since that's the default
+      $('#new-rail-line-color').val('#000000');
+    }
+
     if (allColors.indexOf($('#new-rail-line-color').val().slice(1, 7)) >= 0) {
       $('#tool-new-line-errors').text('This color already exists! Please choose a new color.');
     } else if (allNames.indexOf($('#new-rail-line-name').val()) >= 0) {
