@@ -8,6 +8,7 @@ from django.views.generic.base import TemplateView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
+from django.views.decorators.gzip import gzip_page
 
 import datetime
 import difflib
@@ -35,6 +36,7 @@ class MapGalleryView(TemplateView):
              This is helpful for quickly browsing maps that have been created.
     """
 
+    @method_decorator(gzip_page)
     def get(self, request, **kwargs):
 
         MAPS_PER_PAGE = 25
@@ -259,6 +261,7 @@ class MapDataView(TemplateView):
         Post: Save your map and generate a hash URL to facilitate sharing
     """
 
+    @method_decorator(gzip_page)
     def get(self, request, **kwargs):
         urlhash = kwargs.get('urlhash')
 
