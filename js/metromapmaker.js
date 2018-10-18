@@ -892,6 +892,18 @@ function loadMapFromObject(metroMapObject, update) {
       $('[data-toggle="tooltip"]').tooltip({"container": "body"});
       bindRailLineEvents();
       drawCanvas(metroMapObject);
+      var savedMapHash = getURLParameter('map');
+      if ($('.visible-xs').is(':visible') && savedMapHash) {
+        // If visiting a specific map on mobile,
+        // it's a poor experience to display the generic
+        // #favorite-maps rather than the specific map you came to see
+
+        $('#favorite-maps').hide();
+        $('#canvas-container').removeClass('hidden-xs');
+        $('#tool-export-canvas').click();
+        $('#try-on-mobile').attr('disabled', false);
+
+      } // if visible-xs && savedMapHash
     }); // Do this here because it looks like the call to this below doesn't happen in time to load all the tooltips created by the map being loaded
   } // if !update
 } // loadMapFromObject(metroMapObject)
@@ -1423,19 +1435,6 @@ $(document).ready(function() {
     drawCanvas(metroMap);
     drawIndicator(x, y);
   }); // $('#station-transfer').click()
-
-  var savedMapHash = getURLParameter('map');
-  if ($('.visible-xs').is(':visible') && savedMapHash) {
-    // If visiting a specific map on mobile,
-    // it's a poor experience to display the generic
-    // #favorite-maps rather than the specific map you came to see
-
-    $('#favorite-maps').hide();
-    $('#canvas-container').removeClass('hidden-xs');
-    $('#tool-export-canvas').click();
-    $('#try-on-mobile').attr('disabled', false);
-
-  } // if visible-xs && savedMapHash
 
 }); // document.ready()
 
