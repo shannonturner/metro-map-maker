@@ -1424,6 +1424,19 @@ $(document).ready(function() {
     drawIndicator(x, y);
   }); // $('#station-transfer').click()
 
+  var savedMapHash = getURLParameter('map');
+  if ($('.visible-xs').is(':visible') && savedMapHash) {
+    // If visiting a specific map on mobile,
+    // it's a poor experience to display the generic
+    // #favorite-maps rather than the specific map you came to see
+
+    $('#favorite-maps').hide();
+    $('#canvas-container').removeClass('hidden-xs');
+    $('#tool-export-canvas').click();
+    $('#try-on-mobile').attr('disabled', false);
+
+  } // if visible-xs && savedMapHash
+
 }); // document.ready()
 
 // Cheat codes / Advanced map manipulations
