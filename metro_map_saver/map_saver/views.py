@@ -78,7 +78,7 @@ def load_map_data(saved_map):
                 str(
                     json.loads(
                         json.dumps(
-                            saved_map.mapdata.replace("u'", "'").replace("'", '"').strip('"').strip("'")
+                            saved_map.mapdata.replace("u'", "'").replace("'", '"').replace("\\", "").strip('"').strip("'")
                         )
                     )
                 )
@@ -237,7 +237,7 @@ class MapDiffView(TemplateView):
                         str(
                             json.loads(
                                 json.dumps(
-                                    metro_map.mapdata.replace("u'", "'").replace("'", '"').strip('"').strip("'")
+                                    metro_map.mapdata.replace("u'", "'").replace("'", '"').replace("\\", "").strip('"').strip("'")
                                 )
                             )
                         )
