@@ -229,6 +229,14 @@ hr {
   }
 }
 
+@media (min-width: 768px) and (max-width: 991px) {
+  #controls {
+    z-index: 100;
+    background-color: #fff;
+    width: 250px;
+  }
+}
+
 @media (min-width: 768px) {
   #controls {
     position: fixed;
