@@ -299,6 +299,10 @@ class MapDataView(TemplateView):
                     'mapdata': mapdata,
                     })
                 saved_map.save()
+            except MultipleObjectsReturned:
+                # This should never happen, but it happened once
+                # Perhaps this was due to a race condition?
+                saved_map = SavedMap.objects.filter(urlhash=urlhash)[0]
 
             context['saved_map'] = saved_map.urlhash
 

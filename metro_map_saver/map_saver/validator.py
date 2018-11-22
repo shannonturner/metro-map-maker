@@ -131,8 +131,13 @@ def validate_metro_map(metro_map):
                         for station_line in metro_map[x][y]["station"]["lines"]:
                             assert is_hex(station_line), "[VALIDATIONFAILED] 15: station_line {0} FAILED is_hex()".format(station_line)
                             assert len(station_line) == 6, "[VALIDATIONFAILED] 16: station_line {0} IS NOT 6 CHARACTERS".format(station_line)
-                            assert station_line in valid_lines, "[VALIDATIONFAILED] 17: station_line {0} NOT IN valid_lines".format(station_line)
-                            validated_metro_map[x][y]["station"]["lines"].append(station_line)
+                            try:
+                                assert station_line in valid_lines, "[VALIDATIONFAILED] 17: station_line {0} NOT IN valid_lines".format(station_line)
+                            except AssertionError:
+                                # We can gracefully fail here by simply not adding that line to the station
+                                continue
+                            else:
+                                validated_metro_map[x][y]["station"]["lines"].append(station_line)
                         if metro_map[x][y]["station"].get('transfer'):
                            validated_metro_map[x][y]["station"]["transfer"] = 1
                         if metro_map[x][y]["station"].get('orientation') and metro_map[x][y]["station"].get('orientation') in ('0', '-45', '45', '135', '180'):

@@ -9,10 +9,10 @@ from django.test import TestCase
 
 class ValidateMapTestCase(TestCase):
 
-    fixtures = ['untracked/backup-20180913-dates-backported.json']
+    fixtures = ['backups/mmm-backup-20181110.json']
 
     def test_fixtures_loaded(self):
-        self.assertEqual(SavedMap.objects.count(), 2065)
+        self.assertEqual(SavedMap.objects.count(), 3983)
 
     def test_validator(self):
 
