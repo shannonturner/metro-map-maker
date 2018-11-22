@@ -306,6 +306,20 @@ class MapDataView(TemplateView):
 
 class MapsByDateView(TemplateView):
 
+    def grouping(self, date, group_by):
+
+        """ Helper function to return a set of maps grouped by their date type
+        """
+
+        if group_by == 'day':
+            return date['created_at'].strftime('%Y-%m-%d')
+        elif group_by == 'month':
+            return date['created_at'].strftime('%Y-%m')
+        elif group_by == 'week':
+            return date['created_at'].strftime('%YW%W')
+        elif group_by == 'weekday':
+            return date['created_at'].strftime('%w')
+
     @method_decorator(staff_member_required)
     def get(self, request, **kwargs):
         context = {}
@@ -320,6 +334,7 @@ class MapsByDateView(TemplateView):
 
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
+        group_by = request.POST.get('group_by[]', 'day')
 
         # I can't just use the optional second parameter of .get()
         #   because otherwise .strptime() will fail
@@ -349,11 +364,19 @@ class MapsByDateView(TemplateView):
 
         maps_by_date = {}
         for date in saved_maps_by_date:
-            maps_by_date[date['created_at'].strftime('%Y-%m-%d')] = date['count']
+            grouping = self.grouping(date, group_by)
+            if maps_by_date.get(grouping):
+                maps_by_date[grouping] += date['count']
+            else:
+                maps_by_date[grouping] = date['count']
 
         visible_maps_by_date = {}
         for date in gallery_visible_maps_by_date:
-            visible_maps_by_date[date['created_at'].strftime('%Y-%m-%d')] = date['count']
+            grouping = self.grouping(date, group_by)
+            if visible_maps_by_date.get(grouping):
+                visible_maps_by_date[grouping] += date['count']
+            else:
+                visible_maps_by_date[grouping] = date['count']
 
         context = {
             "maps_by_date": maps_by_date,

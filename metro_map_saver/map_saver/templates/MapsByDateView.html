@@ -67,6 +67,7 @@
       <button id="by-day" class="btn btn-info by-timeperiod">Day</button>
       <button id="by-week" class="btn btn-info by-timeperiod">Week</button>
       <button id="by-month" class="btn btn-info by-timeperiod">Month</button>
+      <button id="by-weekday" class="btn btn-info by-timeperiod">Weekday</button>
     </div>
 
     <div>
@@ -107,14 +108,20 @@
     function getMapsByDate(startDate, endDate) {
       $.post("", {
         "start_date": startDate,
-        "end_date": endDate
+        "end_date": endDate,
+        "group_by": timePeriod
       }).done(function(data) {
+        // console.log("data is: " + data);
         data = JSON.parse(data)
         for (datum in data["mapsByDate"]) {
-          data["mapsByDate"][datum]['x'] = new Date(data["mapsByDate"][datum]['x']).toISOString();
+          if (timePeriod != 'weekday') {
+            data["mapsByDate"][datum]['x'] = moment(data["mapsByDate"][datum]['x']).toISOString();
+          }
         }
         for (datum in data["visibleMapsByDate"]) {
-          data["visibleMapsByDate"][datum]['x'] = new Date(data["visibleMapsByDate"][datum]['x']).toISOString();
+          if (timePeriod != 'weekday') {
+            data["visibleMapsByDate"][datum]['x'] = moment(data["visibleMapsByDate"][datum]['x']).toISOString();
+          }
         }
         chart = drawChart(data["mapsByDate"], data["visibleMapsByDate"])
         setLegend(data["startDate"], data["endDate"], data["numberOfDays"])
@@ -146,14 +153,23 @@
         }]
       }
 
+      if (timePeriod == 'weekday') {
+        xAxis = {
+          type: 'category',
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        }
+      } else {
+        xAxis = {
+          type: 'time',
+          time: {
+            unit: timePeriod
+          }
+        }
+      } // else (of if timePeriod == weekday)
+
       options = {
         scales: {
-          xAxes: [{
-            type: 'time',
-            time: {
-              unit: timePeriod
-            }
-          }]
+          xAxes: [xAxis]
         },
         tooltips: {
           callbacks: {
@@ -191,20 +207,26 @@
     } // drawChart(allMaps, visibleMaps)
 
     $(document).ready(function() {
-      getMapsByDate();
+      var endDate = moment().toISOString().split('T')[0];
+      var startDate = moment().subtract(30, 'days').toISOString().split('T')[0];
+      $('#between-dates-start').val(startDate);
+      $('#between-dates-end').val(endDate)
+      getMapsByDate(startDate, endDate);
     });
 
     $(".by-timeperiod").click(function() {
+      var startDate = $('#between-dates-start').val();
+      var endDate = $('#between-dates-end').val();
       timePeriod = $(this).attr('id').split('-').slice(1);
       document.getElementById('time-period').innerText = 'by ' + timePeriod;
-      getMapsByDate();
+      getMapsByDate(startDate, endDate);
     });
 
     $(".between-dates").change(function() {
-      var start = $('#between-dates-start').val();
-      var end = $('#between-dates-end').val();
-      if (start && end) {
-        getMapsByDate(start, end)
+      var startDate = $('#between-dates-start').val();
+      var endDate = $('#between-dates-end').val();
+      if (startDate && endDate) {
+        getMapsByDate(startDate, endDate)
         $('#preset-date-options').val("--------------------")
       }
     });
@@ -213,9 +235,9 @@
       if (typeof parseInt($(this).val()) === "number") {
         startDate = moment().subtract(parseInt($(this).val()), 'days').format('YYYY-MM-DD');
         endDate = moment().format('YYYY-MM-DD');
+        $('#between-dates-start').val(startDate);
+        $('#between-dates-end').val(endDate);
         getMapsByDate(startDate, endDate);
-        $('#between-dates-start').val("");
-        $('#between-dates-end').val("");
       }
     });
 
