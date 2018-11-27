@@ -54,11 +54,23 @@ function resizeCanvas() {
   var canvasStations = document.getElementById('metro-map-stations-canvas');
   if (canvas.height / gridCols != preferredGridPixelMultiplier) {
     // Maintain a nice, even gridPixelMultiplier so the map looks uniform at every size
-    canvas.height = gridCols * preferredGridPixelMultiplier;
-    canvas.width = gridRows * preferredGridPixelMultiplier;
-    canvasStations.height = gridCols * preferredGridPixelMultiplier;
-    canvasStations.width = gridRows * preferredGridPixelMultiplier;
-  }
+    // On iPhone for Safari, canvases larger than 4096x4096 would crash, so cap it
+    //  (this really only affects maps at 240x240)
+    if (gridCols * preferredGridPixelMultiplier <= 4096) {
+      canvas.height = gridCols * preferredGridPixelMultiplier;
+      canvasStations.height = gridCols * preferredGridPixelMultiplier;
+    } else {
+      canvas.height = 4096;
+      canvasStations.height = 4096;
+    }
+    if (gridRows * preferredGridPixelMultiplier <= 4096) {
+      canvas.width = gridRows * preferredGridPixelMultiplier;
+      canvasStations.width = gridRows * preferredGridPixelMultiplier;
+    } else {
+      canvas.width = 4096;
+      canvasStations.width = 4096;
+    }
+  } // if canvas.height / gridCols != preferredGridPixelMultiplier
 
   var computedSquareSize = window.getComputedStyle(document.getElementById('coord-x-0-y-0')).width.split("px")[0];
   $('#metro-map-canvas').width(computedSquareSize * gridCols);
