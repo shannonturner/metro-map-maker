@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import json
+
 from map_saver.models import SavedMap
 from map_saver.validator import validate_metro_map
 
@@ -24,8 +26,49 @@ class ValidateMapTestCase(TestCase):
 
         saved_maps = SavedMap.objects.all()
         for saved_map in saved_maps:
-            saved_map = saved_map.mapdata.replace("u'", "'").replace("'", '"').strip('"').strip("'").replace('\\', '\\\\')
-            validate_metro_map(saved_map)
+            # Ensure that the maps already saved will not be malformed by the validation
+            saved_map_data = dict(
+                json.loads(
+                    str(
+                        json.loads(
+                            json.dumps(
+                                saved_map.mapdata.replace("u'", "'").replace("'", '"').replace("\\", "").strip('"').strip("'")
+                            )
+                        )
+                    )
+                )
+            )
+
+            validated_map = validate_metro_map(
+                str(
+                    json.loads(
+                        json.dumps(
+                            saved_map.mapdata.replace("u'", "'").replace("'", '"').replace("\\", "").strip('"').strip("'")
+                        )
+                    )
+                )
+            )
+
+            if saved_map_data != validated_map:
+                # Characters like & get converted to &amp; as part of the validation process,
+                #   so some maps will not be exactly equal off the bat.
+
+                validated_map = dict(
+                    json.loads(
+                        json.dumps(
+                            validated_map
+                        ).replace("&amp;", '&')
+                    )
+                )
+
+                self.assertEqual(saved_map_data, validated_map,
+                    "saved_map.mapdata != validated version for ID: {0}:\n\n{1}\n\n{2}".format(
+                        saved_map.id,
+                        saved_map_data,
+                        validated_map
+                    )
+                )
+
 
     def test_invalid_toomanylines(self):
 
