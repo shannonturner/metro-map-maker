@@ -116,8 +116,12 @@ def validate_metro_map(metro_map):
                         validated_metro_map[x][y] = {}
                     assert is_hex(metro_map[x][y]["line"]), "[VALIDATIONFAILED] 08: {0} at ({1}, {2}) FAILED is_hex()".format(metro_map[x][y]["line"], x, y)
                     assert len(metro_map[x][y]["line"]) == 6, "[VALIDATIONFAILED] 09: {0} at ({1}, {2}) IS NOT 6 CHARACTERS".format(metro_map[x][y]["line"], x, y)
-                    assert metro_map[x][y]["line"] in valid_lines, "[VALIDATIONFAILED] 10: {0} at ({1}, {2}) NOT IN valid_lines".format(metro_map[x][y]["line"], x, y)
-                    validated_metro_map[x][y]["line"] = metro_map[x][y]["line"]
+                    try:
+                        assert metro_map[x][y]["line"] in valid_lines, "[VALIDATIONFAILED] 10: {0} at ({1}, {2}) NOT IN valid_lines".format(metro_map[x][y]["line"], x, y)
+                    except AssertionError:
+                        continue # If the line isn't in valid_lines, we could just not add it
+                    else:
+                        validated_metro_map[x][y]["line"] = metro_map[x][y]["line"]
                     if metro_map[x][y].get('station'):
                         assert type(metro_map[x][y]["station"]) == dict, "[VALIDATIONFAILED] 11: metro_map[x][y]['station'] at ({0}, {1}) IS NOT DICT".format(x, y)
                         assert 1 <= len(metro_map[x][y]["station"]["name"]) < 256, "[VALIDATIONFAILED] 12: station name at ({0}, {1}) BAD SIZE".format(x, y)
