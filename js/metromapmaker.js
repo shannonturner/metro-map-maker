@@ -789,7 +789,7 @@ function autoLoad() {
     // I think this would be more intuitive than the blank slate,
     //    and might limit the number of blank / red-squiggle maps created.
     // If the WMATA map ever changes, I'll need to update it here too.
-    $.get('https://metromapmaker.com/save/ccakbvy1').done(function (savedMapData) {
+    $.get('https://metromapmaker.com/save/s8JC8_z0').done(function (savedMapData) {
       savedMapData = savedMapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
       if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
         // Fallback to an empty grid
