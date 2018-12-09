@@ -13,6 +13,7 @@ class SavedMap(models.Model):
     urlhash = models.CharField(max_length=64)
     mapdata = models.TextField()
     gallery_visible = models.BooleanField(default=True)
+    name = models.CharField(max_length=255, blank=True, default='')
     created_at = models.DateField(auto_now_add=True)
 
     tags = TaggableManager(blank=True)
