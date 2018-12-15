@@ -252,6 +252,7 @@
 
   var gridSize = 80;
   var preferredGridPixelMultiplier = 20;
+  var redrawOverlappingPoints = {};
 
   function galleryDownloadFromCanvas(mapId) {
     var downloadLink = document.getElementById("download-link-" + mapId);
@@ -377,6 +378,14 @@
     if (activeLine === galleryGetActiveLine(x + 1, y + 1, metroMap)) {
       // Direction: SE
       moveLineStroke(ctx, x, y, x+1, y+1);
+      if (activeLine != galleryGetActiveLine(x + 1, y, metroMap) && galleryGetActiveLine(x + 1, y, metroMap)) {
+        // If this southeast line is adjacent to a different color on its east,
+        //  redraw these overlapping points later
+        if (!redrawOverlappingPoints[x]) {
+          redrawOverlappingPoints[x] = {}
+        }
+        redrawOverlappingPoints[x][y] = true;
+      }
     } if (activeLine === galleryGetActiveLine(x + 1, y - 1, metroMap)) {
       // Direction: NE
       moveLineStroke(ctx, x, y, x+1, y-1);
@@ -444,6 +453,21 @@
           galleryDrawPoint(ctx, x, y, metroMap);
       } // for y
     } // for x
+
+    // Redraw select overlapping points
+    // This solves the "Southeast" problem
+    //  where if two adjacent lines were heading southeast, they would overlap
+    //  in ways that didn't happen for two adjacent lines heading northeast
+    var reversed = Object.keys(redrawOverlappingPoints).reverse();
+    for (var i=0; i<reversed.length; i++) {
+      var x = reversed[i];
+      for (var y in redrawOverlappingPoints[x]) {
+        x = parseInt(x);
+        y = parseInt(y);
+        galleryDrawPoint(ctx, x, y, metroMap);
+      }
+    }
+    redrawOverlappingPoints = {};
 
     // Draw the stations last (and separately), or they will be painted over by the lines themselves.
     ctx.font = '700 20px sans-serif';

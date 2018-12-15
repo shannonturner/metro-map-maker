@@ -6,6 +6,7 @@ var activeMap = false;
 var preferredGridPixelMultiplier = 20;
 var lastStrokeStyle;
 var lineWidth = 1.175;
+var redrawOverlappingPoints = {};
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -483,6 +484,21 @@ function drawCanvas(metroMap) {
     }
   }
 
+  // Redraw select overlapping points
+  // This solves the "Southeast" problem
+  //  where if two adjacent lines were heading southeast, they would overlap
+  //  in ways that didn't happen for two adjacent lines heading northeast
+  var reversed = Object.keys(redrawOverlappingPoints).reverse();
+  for (var i=0; i<reversed.length; i++) {
+    var x = reversed[i];
+    for (var y in redrawOverlappingPoints[x]) {
+      x = parseInt(x);
+      y = parseInt(y);
+      drawPoint(ctx, x, y, metroMap);
+    }
+  }
+  redrawOverlappingPoints = {};
+
   // Draw the stations separately, or they will be painted over by the lines themselves.
   var canvas = document.getElementById('metro-map-stations-canvas');
   var ctx = canvas.getContext('2d', {alpha: true});
@@ -547,6 +563,14 @@ function drawPoint(ctx, x, y, metroMap, erasedLine) {
   if (activeLine == getActiveLine(x + 1, y + 1, metroMap)) {
     // Direction: SE
     moveLineStroke(ctx, x, y, x+1, y+1);
+    if (activeLine != getActiveLine(x + 1, y, metroMap) && getActiveLine(x + 1, y, metroMap)) {
+      // If this southeast line is adjacent to a different color on its east,
+      //  redraw these overlapping points later
+      if (!redrawOverlappingPoints[x]) {
+        redrawOverlappingPoints[x] = {}
+      }
+      redrawOverlappingPoints[x][y] = true;
+    }
   } if (activeLine == getActiveLine(x - 1, y - 1, metroMap)) {
     // Direction: NW
     // Since the drawing goes left -> right, top -> bottom,
