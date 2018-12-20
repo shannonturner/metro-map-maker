@@ -151,7 +151,7 @@
       {% for map in saved_maps %}
         <li id="map-control-{{ map.id }}" class="nav-item map-control {% if not forloop.first %}start-hidden{% endif %}"><a class="nav-link hidden" href="#map-container-{{ map.id }}"><!-- a link with anchor is needed but I don't need it to be visible {{ map.id }}--></a>
         
-          <h4 class="map-link">Map <a href="https://metromapmaker.com/save/admin/map_saver/savedmap/{{ map.id }}/change/" target="_blank">#{{ map.id }}</a> (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>)</h4>
+          <h4 class="map-link"><a href="https://metromapmaker.com/save/admin/map_saver/savedmap/{{ map.id }}/change/" target="_blank">#{{ map.id }}</a> (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>) <input type="text" name="map_name" class="map-name" id="map-name-{{ map.id }}" value="{{ map.name }}" placeholder="(unnamed)"></h4>
           <div class="map-control-buttons">
             <button id="diff-a-{{ map.urlhash }}-{{ map.id }}" class="diff diff-a btn-info">Diff A</button>
             <button id="diff-b-{{ map.urlhash }}-{{ map.id }}" class="diff diff-b btn-primary">Diff B</button>
@@ -166,6 +166,7 @@
                   {% endif %}
                 {% endfor %}
               {% endif %}
+              <button id="thumbnail-{{ map.id }}" class="get-thumbnail {% if map.thumbnail %}btn-success{% else %}btn-info{% endif %}">{% if map.thumbnail %}Thumbnail: {% widthratio map.thumbnail|length 1024 1 %}kb{% else %}Generate Thumbnail{% endif %}</button>
 
               <span class="vertical-divider"></span>
               <!-- <p style="margin-top: 10px;"> -->
@@ -215,6 +216,7 @@
 
         <div id="map-container-{{ map.id }}" class="map-container{% if forloop.first %} active-map{% endif %}">
           <a id="download-link-{{ map.id }}" onClick="galleryDownloadFromCanvas({{ map.id }});" href="#" download="{{ map.urlhash }}.png"><canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive map-image"></canvas></a>
+          <canvas id="metro-map-thumbnail-canvas-{{ map.id }}" width="120" height="120" class="hidden"></canvas>
           <hr class="map-divider">
         </div>
 
@@ -585,6 +587,50 @@
 
   } // function galleryExportToCanvas(mapId)
 
+  function galleryDrawThumbnail(metroMap, mapId) {
+    var canvas = document.getElementById('metro-map-thumbnail-canvas-' + mapId);
+    var ctx = canvas.getContext('2d', {alpha: false});
+    var gridRows = gridSize, gridCols = gridSize;
+
+    gridPixelMultiplier = canvas.width / gridCols;
+
+    // Make the background white instead of transparent
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.lineCap = 'round';
+    ctx.lineWidth = gridPixelMultiplier;
+
+    for (var x in metroMap){
+      for (var y in metroMap[x]) {
+          x = parseInt(x);
+          y = parseInt(y);
+          if (!Number.isInteger(x) || !Number.isInteger(y)) {
+            continue;
+          }
+          galleryDrawPoint(ctx, x, y, metroMap);
+      } // for y
+    } // for x
+
+    // Redraw select overlapping points
+    // This solves the "Southeast" problem
+    //  where if two adjacent lines were heading southeast, they would overlap
+    //  in ways that didn't happen for two adjacent lines heading northeast
+    var reversed = Object.keys(redrawOverlappingPoints).reverse();
+    for (var i=0; i<reversed.length; i++) {
+      var x = reversed[i];
+      for (var y in redrawOverlappingPoints[x]) {
+        x = parseInt(x);
+        y = parseInt(y);
+        galleryDrawPoint(ctx, x, y, metroMap);
+      }
+    }
+    redrawOverlappingPoints = {};
+
+    return;
+
+  } // function galleryDrawThumbnail(metroMap, mapId)
+
   $(document).ready(function() {
 
     {% for map in saved_maps %}
@@ -597,6 +643,7 @@
         canvas.height = gridSize * preferredGridPixelMultiplier;
         canvas.width = gridSize * preferredGridPixelMultiplier;
         galleryExportToCanvas(mapData, {{ map.id }});
+        galleryDrawThumbnail(mapData, {{ map.id }});
       } catch (e) {
         console.log("[WARN] Skipping #{{ map.id }} ({{ map.urlhash }}) - bad JSON: " + e)
       }
@@ -672,6 +719,65 @@
       });
     });
 
+    function reduceColorDepth(canvas) {
+      function nearest(x, a) {
+          // will round down to nearest of a possibilities
+          // in the range 0 <= x <= 255
+          return Math.floor(x / (255 / a)) * (255 / a);
+      }
+      canvas = document.getElementById(canvas);
+      var ctx = canvas.getContext('2d', {alpha: false});
+      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+      var data = imageData.data;
+      // 8-bit: rrr ggg bb
+      for(var i = 0; i < data.length; i += 4) {
+          data[i]     = nearest(data[i],     8); // set value to nearest of 8 possibilities
+          data[i + 1] = nearest(data[i + 1], 8);
+          data[i + 2] = nearest(data[i + 2], 4);
+      }
+      ctx.putImageData(imageData, 0, 0);
+    }
+
+    $('.get-thumbnail').click(function() {
+      var getThumbnailButton = $(this);
+      var thisMapId = $(this).attr('id').split('-').slice(1, 2);
+
+      reduceColorDepth('metro-map-thumbnail-canvas-' + thisMapId);
+      var base64thumbnailData = document.getElementById('metro-map-thumbnail-canvas-' + thisMapId).toDataURL();
+
+      $.post('/save/admin/action/', {
+        "action": "thumbnail",
+        "map": parseInt(thisMapId),
+        "data": base64thumbnailData,
+      }).done(function(data) {
+        if (data == 'Success') {
+          getThumbnailButton.addClass('btn-success');
+          getThumbnailButton.removeClass('btn-info');
+          getThumbnailButton.text('Thumbnail: ' + Math.round(base64thumbnailData.length / 1024) + 'kb');
+        }
+      })
+    }); // .get-thumbnail.click()
+
+    $('input.map-name').change(function() {
+      var mapNameInput = $(this);
+      var thisMapId = $(this).attr('id').split('-').slice(2, 3);
+
+      $.post('/save/admin/action/', {
+        "action": "name",
+        "map": parseInt(thisMapId),
+        "name": mapNameInput.val()
+      }).done(function(data) {
+        if (data == 'Success') {
+          if (mapNameInput.val().length > 0) {
+            mapNameInput.addClass('btn-success');
+          } else {
+            mapNameInput.removeClass('btn-success');
+          }
+        }
+      });
+
+    }); // input.map-name.click()
+
     $('.changetag-map').click(function() {
       var tagMapButton = $(this);
       var thisMapId = $(this).attr('id').split('-').slice(2, 3);
@@ -708,7 +814,7 @@
       })
 
     });
-    {% endif %}
+    {% endif %} {# is_staff #}
 
   });
 

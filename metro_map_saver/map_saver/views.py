@@ -30,6 +30,25 @@ logging.basicConfig(
     format='%(asctime)s %(message)s',
 )
 
+class ThumbnailGalleryView(TemplateView):
+
+    @method_decorator(gzip_page)
+    def get(self, request, **kwargs):
+
+        thumbnails = SavedMap.objects \
+            .filter(gallery_visible=True) \
+            .exclude(thumbnail__exact='') \
+            .exclude(name__exact='')
+            # Probably: exclude maps with tags__name='reviewed'
+
+        if kwargs.get('tag'):
+            thumbnails = thumbnails.filter(tags__name=kwargs.get('tag'))
+
+        context = {
+            'thumbnails': thumbnails.order_by('name')
+        }
+        return render(request, 'thumbnails.html', context)
+
 class MapGalleryView(TemplateView):
 
     """ Get: Display a gallery of maps that have been saved in the system.
@@ -181,9 +200,16 @@ class MapAdminActionView(TemplateView):
         """ Perform an administrator action on a map
         """
 
+        ALLOWED_ACTIONS = (
+            'hide',
+            'addtag',
+            'removetag',
+            'thumbnail',
+            'name',
+        )
         context = {}
 
-        if request.POST.get('action') in ('hide', 'addtag', 'removetag',) and request.POST.get('map'):
+        if request.POST.get('action') in ALLOWED_ACTIONS and request.POST.get('map'):
             try:
                 this_map = SavedMap.objects.get(id=request.POST.get('map'))
             except ObjectDoesNotExist:
@@ -200,6 +226,20 @@ class MapAdminActionView(TemplateView):
                         elif request.POST.get('action') == 'removetag':
                             this_map.tags.remove(tag)
                         this_map.save()
+                elif request.POST.get('action') == 'thumbnail':
+                    data = request.POST.get('data')
+                    if data:
+                        if data.startswith('data:image/png;base64,'):
+                            # Storing the whole .toDataURL()
+                            pass
+                        else:
+                            pass
+                        this_map.thumbnail = data
+                        this_map.save()
+                elif request.POST.get('action') == 'name':
+                    name = request.POST.get('name')
+                    this_map.name = name
+                    this_map.save()
                 context['status'] = 'Success'
             return render(request, 'MapAdminActionView.html', context)
 
@@ -307,6 +347,9 @@ class MapDataView(TemplateView):
             context['saved_map'] = saved_map.urlhash
 
         return render(request, 'MapDataView.html', context)
+
+
+
 
 class MapsByDateView(TemplateView):
 
