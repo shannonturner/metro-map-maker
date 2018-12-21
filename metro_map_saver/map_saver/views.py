@@ -38,8 +38,8 @@ class ThumbnailGalleryView(TemplateView):
         thumbnails = SavedMap.objects \
             .filter(gallery_visible=True) \
             .exclude(thumbnail__exact='') \
-            .exclude(name__exact='')
-            # Probably: exclude maps with tags__name='reviewed'
+            .exclude(name__exact='') \
+            .exclude(tags__name='reviewed')
 
         if kwargs.get('tag'):
             thumbnails = thumbnails.filter(tags__name=kwargs.get('tag'))
@@ -62,12 +62,16 @@ class MapGalleryView(TemplateView):
 
         tags = Tag.objects.all().order_by('id')
 
+        visible_maps = SavedMap.objects.filter(gallery_visible=True)
+
         if kwargs.get('tag') == 'notags':
-            visible_maps = SavedMap.objects.filter(gallery_visible=True).filter(tags__exact=None).order_by('-id')
+            visible_maps = visible_maps.filter(tags__exact=None)
+        elif kwargs.get('tag') == 'named':
+            visible_maps = visible_maps.exclude(name__exact='')
         elif kwargs.get('tag') in [t.name for t in tags]:
-            visible_maps = SavedMap.objects.filter(gallery_visible=True).filter(tags__name=kwargs.get('tag')).order_by('-id')
-        else:
-            visible_maps = SavedMap.objects.filter(gallery_visible=True).order_by('-id')
+            visible_maps = visible_maps.filter(tags__name=kwargs.get('tag'))
+
+        visible_maps = visible_maps.order_by('-id')
 
         paginator = Paginator(visible_maps, MAPS_PER_PAGE)
 
