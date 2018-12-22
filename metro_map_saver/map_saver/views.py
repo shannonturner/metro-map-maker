@@ -44,8 +44,13 @@ class ThumbnailGalleryView(TemplateView):
         if kwargs.get('tag'):
             thumbnails = thumbnails.filter(tags__name=kwargs.get('tag'))
 
+        if kwargs.get('tag') == 'favorite':
+            thumbnails = thumbnails.order_by('?')[:8]
+        else:
+            thumbnails = thumbnails.order_by('name')
+
         context = {
-            'thumbnails': thumbnails.order_by('name')
+            'thumbnails': thumbnails
         }
         return render(request, 'thumbnails.html', context)
 
