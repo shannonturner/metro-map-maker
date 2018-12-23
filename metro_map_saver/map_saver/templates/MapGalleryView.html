@@ -742,8 +742,14 @@
       var getThumbnailButton = $(this);
       var thisMapId = $(this).attr('id').split('-').slice(1, 2);
 
-      reduceColorDepth('metro-map-thumbnail-canvas-' + thisMapId);
-      var base64thumbnailData = document.getElementById('metro-map-thumbnail-canvas-' + thisMapId).toDataURL();
+      if (getThumbnailButton.text() == 'Generate Thumbnail') {
+        // No thumbnail exists -> generate one
+        reduceColorDepth('metro-map-thumbnail-canvas-' + thisMapId);
+        var base64thumbnailData = document.getElementById('metro-map-thumbnail-canvas-' + thisMapId).toDataURL();
+      } else {
+        // Thumbnail exists -> delete it
+        base64thumbnailData = '';
+      }
 
       $.post('/save/admin/action/', {
         "action": "thumbnail",
@@ -751,9 +757,15 @@
         "data": base64thumbnailData,
       }).done(function(data) {
         if (data == 'Success') {
-          getThumbnailButton.addClass('btn-success');
-          getThumbnailButton.removeClass('btn-info');
-          getThumbnailButton.text('Thumbnail: ' + Math.round(base64thumbnailData.length / 1024) + 'kb');
+          if (getThumbnailButton.text() == 'Generate Thumbnail') {
+            getThumbnailButton.addClass('btn-success');
+            getThumbnailButton.removeClass('btn-info');
+            getThumbnailButton.text('Thumbnail: ' + Math.round(base64thumbnailData.length / 1024) + 'kb');
+          } else {
+            getThumbnailButton.removeClass('btn-success');
+            getThumbnailButton.addClass('btn-info');
+            getThumbnailButton.text('Generate Thumbnail');
+          }
         }
       })
     }); // .get-thumbnail.click()
