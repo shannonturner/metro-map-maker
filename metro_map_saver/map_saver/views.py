@@ -67,7 +67,14 @@ class MapGalleryView(TemplateView):
 
         tags = Tag.objects.all().order_by('id')
 
-        visible_maps = SavedMap.objects.filter(gallery_visible=True)
+        if request.GET.get('map') or kwargs.get('direct'):
+            # Accessible either by
+            #           /save/admin/direct/https://metromapmaker.com/?map=8RkQTRav
+            #   or by   /save/admin/direct/8RkQTRav
+            direct = request.GET.get('map', kwargs.get('direct', '')[-8:])
+            visible_maps = SavedMap.objects.filter(urlhash=direct)
+        else:
+            visible_maps = SavedMap.objects.filter(gallery_visible=True)
 
         if kwargs.get('tag') == 'notags':
             visible_maps = visible_maps.filter(tags__exact=None)

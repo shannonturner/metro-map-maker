@@ -22,6 +22,7 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^(?:save/)?admin/gallery/(?P<page>[0-9]+)?$', MapGalleryView.as_view(), name='gallery'),
     url(r'^(?:save/)?admin/gallery/(?P<tag>[\w^\d]+)?/?(?P<page>[0-9]+)?$', MapGalleryView.as_view(), name='gallery'),
+    url(r'^(?:save/)?admin/direct/(?P<direct>.+)$', MapGalleryView.as_view(), name='direct'),
     url(r'^(?:save/)?admin/thumbnail/(?P<tag>[\w^\d]+)?/?(?P<page>[0-9]+)?$', ThumbnailGalleryView.as_view(), name='thumbnail'),
     url(r'^(?:save/)?admin/similar/(?P<urlhash>[0-9a-zA-Z\-\_]+)$', MapSimilarView.as_view(), name='similar'),
     url(r'^(?:save/)?admin/diff/(?P<urlhash_first>[0-9a-zA-Z\-\_]+)/(?P<urlhash_second>[0-9a-zA-Z\-\_]+)', MapDiffView.as_view(), name='diff'),
