@@ -80,6 +80,10 @@ class MapGalleryView(TemplateView):
             visible_maps = visible_maps.filter(tags__exact=None)
         elif kwargs.get('tag') == 'named':
             visible_maps = visible_maps.exclude(name__exact='')
+        elif kwargs.get('tag') == 'thumbnail':
+            # Return all the ones with thumbnails, which will allow me to quickly
+            #   regenerate any thumbnails if I make changes to the rendering
+            visible_maps = visible_maps.exclude(thumbnail__exact='')
         elif kwargs.get('tag') in [t.name for t in tags]:
             visible_maps = visible_maps.filter(tags__name=kwargs.get('tag'))
 
@@ -232,7 +236,10 @@ class MapAdminActionView(TemplateView):
                 context['status'] = '[ERROR] Map does not exist.'
             else:
                 if request.POST.get('action') == 'hide':
-                    this_map.gallery_visible = False
+                    if this_map.gallery_visible:
+                        this_map.gallery_visible = False
+                    else:
+                        this_map.gallery_visible = True
                     this_map.save()
                 elif request.POST.get('action') in ('addtag', 'removetag'):
                     tag = request.POST.get('tag')

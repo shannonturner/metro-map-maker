@@ -707,10 +707,15 @@
         "map": thisMapId
       }).done(function(data) {
         if (data == 'Success') {
-          hideMapButton.removeClass('hide-map');
-          hideMapButton.removeClass('btn-warning');
-          hideMapButton.addClass('btn-success');
-          hideMapButton.html('&#10004; Hidden');
+          if (hideMapButton.text() == 'Hide') {
+            hideMapButton.removeClass('btn-warning');
+            hideMapButton.addClass('btn-success');
+            hideMapButton.html('&#10004; Hidden');
+          } else {
+            hideMapButton.addClass('btn-warning');
+            hideMapButton.removeClass('btn-success');
+            hideMapButton.text('Hide');
+          }
         } else {
           hideMapButton.removeClass('btn-warning');
           hideMapButton.addClass('btn-danger');
