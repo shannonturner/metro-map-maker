@@ -250,15 +250,8 @@ class MapAdminActionView(TemplateView):
                             this_map.tags.remove(tag)
                         this_map.save()
                 elif request.POST.get('action') == 'thumbnail':
-                    data = request.POST.get('data')
-                    if data:
-                        if data.startswith('data:image/png;base64,'):
-                            # Storing the whole .toDataURL()
-                            pass
-                        else:
-                            pass
-                        this_map.thumbnail = data
-                        this_map.save()
+                    this_map.thumbnail = request.POST.get('data', '')
+                    this_map.save()
                 elif request.POST.get('action') == 'name':
                     name = request.POST.get('name')
                     this_map.name = name
