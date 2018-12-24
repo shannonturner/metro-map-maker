@@ -735,10 +735,12 @@
       var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
       var data = imageData.data;
       // 8-bit: rrr ggg bb
+      // Strictly speaking, I don't *need* to have it be 8-bit; 9-bit is fine.
+      //  and this way, the blues won't be washed out
       for(var i = 0; i < data.length; i += 4) {
           data[i]     = nearest(data[i],     8); // set value to nearest of 8 possibilities
           data[i + 1] = nearest(data[i + 1], 8);
-          data[i + 2] = nearest(data[i + 2], 4);
+          data[i + 2] = nearest(data[i + 2], 8);
       }
       ctx.putImageData(imageData, 0, 0);
     }
