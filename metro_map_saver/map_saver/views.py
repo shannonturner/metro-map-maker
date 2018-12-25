@@ -146,12 +146,23 @@ class MapSimilarView(TemplateView):
             only to site admins.
             ^ Since moving to only checking by station names, performance is improved
                 but I'm going to keep the staff_member_required designation
+
+        2018-12: Performance is deteriorating as the number of maps it needs to scan grows.
+            Reduce the search space so that it only compares against maps
+            1. that are actually in the public gallery
+            2. or have not been reviewed yet
     """
 
     @method_decorator(staff_member_required)
     def get(self, request, **kwargs):
 
-        visible_maps = SavedMap.objects.filter(gallery_visible=True).order_by('id')
+        visible_maps = SavedMap.objects.filter(gallery_visible=True).filter(tags__exact=None)
+        gallery_maps = SavedMap.objects.filter(gallery_visible=True) \
+            .exclude(thumbnail__exact='') \
+            .exclude(name__exact='') \
+            .exclude(tags__name='reviewed')
+        visible_maps = visible_maps | gallery_maps # merge these querysets
+        visible_maps.order_by('id')
         tags = Tag.objects.all().order_by('id')
 
         try:
