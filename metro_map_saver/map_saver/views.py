@@ -87,7 +87,7 @@ class MapGalleryView(TemplateView):
         elif kwargs.get('tag') in [t.name for t in tags]:
             visible_maps = visible_maps.filter(tags__name=kwargs.get('tag'))
 
-        visible_maps = visible_maps.order_by('-id')
+        visible_maps = visible_maps.prefetch_related('tags').order_by('-id')
 
         paginator = Paginator(visible_maps, MAPS_PER_PAGE)
 
