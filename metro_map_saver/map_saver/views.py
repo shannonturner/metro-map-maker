@@ -50,7 +50,7 @@ class ThumbnailGalleryView(TemplateView):
             thumbnails = thumbnails.order_by('name')
 
         context = {
-            'thumbnails': thumbnails
+            'thumbnails': thumbnails.values('thumbnail', 'name', 'urlhash')
         }
         return render(request, 'thumbnails.html', context)
 
