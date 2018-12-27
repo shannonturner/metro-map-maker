@@ -12,7 +12,7 @@ class SavedMap(models.Model):
 
     urlhash = models.CharField(max_length=64)
     mapdata = models.TextField()
-    gallery_visible = models.BooleanField(default=True)
+    gallery_visible = models.BooleanField(default=True, db_index=True)
     name = models.CharField(max_length=255, blank=True, default='')
     thumbnail = models.TextField(blank=True, default='')
     created_at = models.DateField(auto_now_add=True)
