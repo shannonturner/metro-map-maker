@@ -409,6 +409,7 @@ class MapsByDateView(TemplateView):
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
         group_by = request.POST.get('group_by[]', 'day')
+        include_visible = request.POST.get('visible')
 
         # I can't just use the optional second parameter of .get()
         #   because otherwise .strptime() will fail
@@ -430,11 +431,20 @@ class MapsByDateView(TemplateView):
             created_at__gt=start_date
         ).values('created_at').annotate(count=Count('id'))
 
-        gallery_visible_maps_by_date = SavedMap.objects.filter(
-            created_at__lte=end_date,
-            created_at__gt=start_date,
-            gallery_visible=True,
-        ).values('created_at').annotate(count=Count('id'))
+        if include_visible:
+            gallery_visible_maps_by_date = SavedMap.objects.filter(
+                created_at__lte=end_date,
+                created_at__gt=start_date,
+                gallery_visible=True,
+            ).values('created_at').annotate(count=Count('id'))
+
+            visible_maps_by_date = {}
+            for date in gallery_visible_maps_by_date:
+                grouping = self.grouping(date, group_by)
+                if visible_maps_by_date.get(grouping):
+                    visible_maps_by_date[grouping] += date['count']
+                else:
+                    visible_maps_by_date[grouping] = date['count']
 
         maps_by_date = {}
         for date in saved_maps_by_date:
@@ -444,17 +454,9 @@ class MapsByDateView(TemplateView):
             else:
                 maps_by_date[grouping] = date['count']
 
-        visible_maps_by_date = {}
-        for date in gallery_visible_maps_by_date:
-            grouping = self.grouping(date, group_by)
-            if visible_maps_by_date.get(grouping):
-                visible_maps_by_date[grouping] += date['count']
-            else:
-                visible_maps_by_date[grouping] = date['count']
-
         context = {
             "maps_by_date": maps_by_date,
-            "visible_maps_by_date": visible_maps_by_date,
+            "visible_maps_by_date": visible_maps_by_date if include_visible else [],
             "number_of_days": number_of_days,
             "start_date": start_date,
             "end_date": end_date,

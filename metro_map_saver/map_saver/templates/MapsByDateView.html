@@ -41,6 +41,10 @@
       font-family: Helvetica, Arial, sans-serif;
     }
 
+    #additional-options {
+      margin-top: 10px;
+    }
+
     </style>
 
   </head>
@@ -88,6 +92,13 @@
       </select>
     </div>
 
+    <div id="additional-options">
+      <p>
+        <input type="checkbox" id="include-visible" name="include-visible">
+        <label for="include-visible">Include visible maps</label>
+      </p>
+    </div>
+
   </div>
 
   
@@ -103,13 +114,15 @@
     var timePeriod = 'day';
     var startDate;
     var endDate;
+    var includeVisible;
     var chart;
 
     function getMapsByDate(startDate, endDate) {
       $.post("", {
         "start_date": startDate,
         "end_date": endDate,
-        "group_by": timePeriod
+        "group_by": timePeriod,
+        "visible": includeVisible
       }).done(function(data) {
         // console.log("data is: " + data);
         data = JSON.parse(data)
@@ -145,12 +158,16 @@
           "data": allMaps,
           "borderColor": "#bd1038",
           "backgroundColor": "transparent"
-        }, {
+        }]
+      }
+
+      if (includeVisible) {
+        data["datasets"].push({
           "label": "Visible maps",
           "data": visibleMaps,
           "borderColor": "#0896d7",
           "backgroundColor": "transparent"
-        }]
+        })
       }
 
       if (timePeriod == 'weekday') {
@@ -213,6 +230,10 @@
       $('#between-dates-end').val(endDate)
       getMapsByDate(startDate, endDate);
     });
+
+    $('#include-visible').change(function() {
+      includeVisible = $(this).is(':checked');
+    })
 
     $(".by-timeperiod").click(function() {
       var startDate = $('#between-dates-start').val();
