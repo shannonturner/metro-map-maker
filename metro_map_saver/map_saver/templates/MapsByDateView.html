@@ -58,7 +58,7 @@
     <span id="time-period">by day</span>,
     <span id="start-date"></span> &mdash;
     <span id="end-date"></span>
-    (<span id="number-of-days"></span> days)
+    (<span id="number-of-maps"></span> maps in <span id="number-of-days"></span> days)
   </h2>
   
   <div class="col-lg-8">
@@ -137,13 +137,14 @@
           }
         }
         chart = drawChart(data["mapsByDate"], data["visibleMapsByDate"])
-        setLegend(data["startDate"], data["endDate"], data["numberOfDays"])
+        setLegend(data["startDate"], data["endDate"], data["numberOfMaps"], data["numberOfDays"])
       });
     } // getMapsByDate()
 
-    function setLegend(startDate, endDate, numberOfDays) {
+    function setLegend(startDate, endDate, numberOfMaps, numberOfDays) {
       document.getElementById('start-date').innerText = moment.utc(startDate, "MMMM D YYYY, h:mm a").format("MMM YYYY");
       document.getElementById('end-date').innerText = moment.utc(endDate, "MMMM D YYYY, h:mm a").format("MMM YYYY");
+      document.getElementById('number-of-maps').innerText = numberOfMaps;
       document.getElementById('number-of-days').innerText = numberOfDays;
     } // setLegend(startDate, endDate, numberOfDays)
 

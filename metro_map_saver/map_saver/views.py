@@ -429,7 +429,11 @@ class MapsByDateView(TemplateView):
         saved_maps_by_date = SavedMap.objects.filter(
             created_at__lte=end_date,
             created_at__gt=start_date
-        ).values('created_at').annotate(count=Count('id'))
+        )
+
+        maps_count = saved_maps_by_date.count()
+
+        saved_maps_by_date = saved_maps_by_date.values('created_at').annotate(count=Count('id'))
 
         if include_visible:
             gallery_visible_maps_by_date = SavedMap.objects.filter(
@@ -456,6 +460,7 @@ class MapsByDateView(TemplateView):
 
         context = {
             "maps_by_date": maps_by_date,
+            "maps_count": maps_count,
             "visible_maps_by_date": visible_maps_by_date if include_visible else [],
             "number_of_days": number_of_days,
             "start_date": start_date,

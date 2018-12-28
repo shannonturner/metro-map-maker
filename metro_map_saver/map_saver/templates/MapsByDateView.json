@@ -1,6 +1,7 @@
 {
   "startDate": "{{ start_date }}",
   "endDate": "{{ end_date }}",
+  "numberOfMaps": {{ maps_count }},
   "numberOfDays": {{ number_of_days }},
   "mapsByDate" : [
   {% for date, maps in maps_by_date.items|dictsort:0 %}
