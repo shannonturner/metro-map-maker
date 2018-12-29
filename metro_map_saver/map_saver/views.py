@@ -84,7 +84,7 @@ class MapGalleryView(TemplateView):
             # Return all the ones with thumbnails, which will allow me to quickly
             #   regenerate any thumbnails if I make changes to the rendering
             visible_maps = visible_maps.exclude(thumbnail__exact='')
-        elif kwargs.get('tag') in [t.name for t in tags]:
+        elif kwargs.get('tag') in [t['name'] for t in tags]:
             visible_maps = visible_maps.filter(tags__name=kwargs.get('tag'))
 
         visible_maps = visible_maps.prefetch_related('tags').values().order_by('-id')
