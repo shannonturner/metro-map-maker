@@ -65,7 +65,7 @@ class MapGalleryView(TemplateView):
 
         MAPS_PER_PAGE = 25
 
-        tags = Tag.objects.all().values().order_by('id')
+        tags = Tag.objects.all().order_by('id')
 
         if request.GET.get('map') or kwargs.get('direct'):
             # Accessible either by
@@ -84,10 +84,10 @@ class MapGalleryView(TemplateView):
             # Return all the ones with thumbnails, which will allow me to quickly
             #   regenerate any thumbnails if I make changes to the rendering
             visible_maps = visible_maps.exclude(thumbnail__exact='')
-        elif kwargs.get('tag') in [t['name'] for t in tags]:
+        elif kwargs.get('tag') in [t.name for t in tags]:
             visible_maps = visible_maps.filter(tags__name=kwargs.get('tag'))
 
-        visible_maps = visible_maps.prefetch_related('tags').values().order_by('-id')
+        visible_maps = visible_maps.prefetch_related('tags').order_by('-id')
 
         paginator = Paginator(visible_maps, MAPS_PER_PAGE)
 
