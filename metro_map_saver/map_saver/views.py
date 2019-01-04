@@ -132,7 +132,7 @@ def get_stations(mapdata):
 
     for x in mapdata:
         for y in mapdata[x]:
-            stations.add(mapdata[x][y].get('station', {}).get('name'))
+            stations.add(mapdata[x][y].get('station', {}).get('name', ''))
 
     return stations
 
@@ -162,19 +162,18 @@ class MapSimilarView(TemplateView):
             .exclude(name__exact='') \
             .exclude(tags__name='reviewed')
         visible_maps = visible_maps | gallery_maps # merge these querysets
-        visible_maps.order_by('id')
+        visible_maps = visible_maps.prefetch_related('tags').order_by('id')
         tags = Tag.objects.all().order_by('id')
 
         try:
-            this_map = SavedMap.objects.get(urlhash=kwargs.get('urlhash'))
+            this_map = SavedMap.objects.prefetch_related('tags').get(urlhash=kwargs.get('urlhash'))
         except ObjectDoesNotExist:
             similar_maps = []
             similarity_scores = {}
         else:
             similar_maps = [this_map]
 
-            this_mapdata = load_map_data(this_map)
-            this_map_stations = get_stations(this_mapdata)
+            this_map_stations = set(this_map.stations.split(','))
 
             similar_maps = []
             similarity_scores = {}
@@ -187,8 +186,7 @@ class MapSimilarView(TemplateView):
                     continue
                 else:
                     try:
-                        one_mapdata = load_map_data(one_map)
-                        one_map_stations = get_stations(one_mapdata)
+                        one_map_stations = set(one_map.stations.split(','))
                     except Exception:
                         # If a map failed to load, it's not going to be similar
                         continue
@@ -365,6 +363,10 @@ class MapDataView(TemplateView):
                     'urlhash': urlhash,
                     'mapdata': mapdata,
                     })
+                try:
+                    saved_map.stations = ','.join(get_stations(load_map_data(saved_map)))
+                except Exception:
+                    pass
                 saved_map.save()
             except MultipleObjectsReturned:
                 # This should never happen, but it happened once
