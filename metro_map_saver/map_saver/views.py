@@ -365,8 +365,8 @@ class MapDataView(TemplateView):
                     })
                 try:
                     saved_map.stations = ','.join(get_stations(load_map_data(saved_map)))
-                except Exception:
-                    pass
+                except Exception, e:
+                    logging.warn('[WARN] Failed to save stations for {0} - {1}'.format(saved_map.id, e))
                 saved_map.save()
             except MultipleObjectsReturned:
                 # This should never happen, but it happened once
