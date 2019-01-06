@@ -34,7 +34,7 @@ class TravelSystem(models.Model):
         stations = self.stations.split('\n')
         for index, station in enumerate(stations):
             stations[index] = html_dom_id_safe(
-                stations[index].replace('/', '').replace("'", '').replace('&', '').replace('`', '').replace('–', ' - ').replace(' ', '_')
+                stations[index].replace('/', '').replace("'", '').replace('&', '').replace('`', '').replace('–', ' - ').replace(' ', '_').lower()
             )
         self.stations = '\n'.join(stations)
         super(TravelSystem, self).save()

@@ -21,7 +21,7 @@ class SavedMap(models.Model):
     tags = TaggableManager(blank=True)
 
     def suggest_city(self):
-        return suggest_city(set(self.stations.split(',')))
+        return suggest_city(set(self.stations.lower().split(',')))
 
     def __unicode__(self):
         return self.urlhash
