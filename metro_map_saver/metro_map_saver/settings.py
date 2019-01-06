@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'map_saver',
     'taggit',
+    'citysuggester',
 ]
 
 MIDDLEWARE = [

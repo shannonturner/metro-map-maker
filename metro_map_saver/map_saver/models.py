@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
-
+from citysuggester.utils import suggest_city
 from taggit.managers import TaggableManager
 
 class SavedMap(models.Model):
@@ -19,6 +19,9 @@ class SavedMap(models.Model):
     created_at = models.DateField(auto_now_add=True)
 
     tags = TaggableManager(blank=True)
+
+    def suggest_city(self):
+        return suggest_city(set(self.stations.split(',')))
 
     def __unicode__(self):
         return self.urlhash
