@@ -364,7 +364,7 @@ class MapDataView(TemplateView):
                     'mapdata': mapdata,
                     })
                 try:
-                    saved_map.stations = ','.join(get_stations(mapdata))
+                    saved_map.stations = ','.join(get_stations(mapdata)).lower()
                 except Exception, e:
                     logging.error('[WARN] Failed to save stations for {0}: {1}'.format(urlhash, e))
                 saved_map.save()
