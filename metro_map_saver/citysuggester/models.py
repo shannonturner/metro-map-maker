@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import models
-from map_saver.validator import html_dom_id_safe
+from map_saver.validator import html_dom_id_safe, convert_nonascii_to_ascii
 
 class TravelSystem(models.Model):
 
@@ -23,10 +23,10 @@ class TravelSystem(models.Model):
             Fort Totten, Union Station, and Archives, it's probably DC's Metro
     """
 
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     stations = models.TextField() # all stations stored together, one per line
 
-    def save(self):
+    def save(self, *args, **kwargs):
 
         """ Formats stations in the same manner as they are saved through the validator 
         """
@@ -34,10 +34,12 @@ class TravelSystem(models.Model):
         stations = self.stations.split('\n')
         for index, station in enumerate(stations):
             stations[index] = html_dom_id_safe(
-                stations[index].replace('/', '').replace("'", '').replace('&', '').replace('`', '').replace('–', ' - ').replace(' ', '_').lower()
+                convert_nonascii_to_ascii(
+                    stations[index].replace('/', '').replace("'", '').replace('&', '').replace('`', '').replace('–', ' - ').replace(' ', '_').lower()
+                )
             )
         self.stations = '\n'.join(stations)
-        super(TravelSystem, self).save()
+        super(TravelSystem, self).save(*args, **kwargs)
 
     def __unicode__(self):
         return '{0} ({1} stations)'.format(
