@@ -5,6 +5,10 @@ import csv
 
 from .models import TravelSystem
 
+# How many stations in common before a map is considered to be a "match"?
+# Only 1 station in common is probably not very useful
+MINIMUM_STATION_OVERLAP = 3
+
 def load_systems():
 
     """ Loads all known systems into a dictionary for processing
@@ -32,7 +36,7 @@ def suggest_city(map_stations):
 
     for name, system_stations in systems.items():
         common_stations = system_stations.intersection(map_stations)
-        if len(common_stations) > 0:
+        if len(common_stations) > MINIMUM_STATION_OVERLAP:
             possible_cities[name] = len(common_stations) # Or maybe: the set itself, rather than the length
     return sorted(possible_cities.items(), key=lambda kv: kv[1], reverse=True)
 
@@ -66,6 +70,8 @@ def create_systems_from_csv(csv_file):
         reader = csv.DictReader(csv_file)
         for row in reader:
             for header, value in row.items():
+                if not value.strip():
+                    continue # Skip blank lines
                 systems.setdefault(header, list()).append(unicode(value, 'utf-8'))
 
     for system_name, system_stations in systems.items():
@@ -73,9 +79,10 @@ def create_systems_from_csv(csv_file):
         # including replacing any non-ASCII characters and formatting
         # it the same way it does in MetroMapMaker's validator,
         # but it expects a string of stations separated by newlines.
-        TravelSystem.objects.update_or_create(
-            name=system_name,
-            defaults={
-                'stations': '\n'.join(system_stations),
-            }
-        )
+        if system_stations:
+            TravelSystem.objects.update_or_create(
+                name=system_name,
+                defaults={
+                    'stations': '\n'.join(system_stations).strip(),
+                }
+            )
