@@ -7,7 +7,7 @@ from .models import TravelSystem
 
 # How many stations in common before a map is considered to be a "match"?
 # Only 1 station in common is probably not very useful
-MINIMUM_STATION_OVERLAP = 3
+MINIMUM_STATION_OVERLAP = 5
 
 def load_systems():
 

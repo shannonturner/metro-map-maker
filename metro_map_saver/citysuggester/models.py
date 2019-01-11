@@ -35,10 +35,10 @@ class TravelSystem(models.Model):
         for index, station in enumerate(stations):
             stations[index] = html_dom_id_safe(
                 convert_nonascii_to_ascii(
-                    stations[index].replace('/', ' - ').replace("'", '').replace('&', '').replace('`', '').replace('–', ' - ').replace(' ', '_')
+                    stations[index].replace('/', ' - ').replace("'", '').replace('&', '').replace('`', '').replace('–', ' - ').replace('  ', ' ').replace(' ', '_')
                 ).lower()
             ).strip()
-        self.stations = '\n'.join(stations).strip()
+        self.stations = '\n'.join(sorted(set(stations))).strip()
         super(TravelSystem, self).save(*args, **kwargs)
 
     def __unicode__(self):
