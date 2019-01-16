@@ -1586,6 +1586,38 @@ function combineMap(urlhash) {
   });
 } // combineMap(urlhash)
 
+function replaceColors(color1, color2) {
+    // Replaces all instances of color1 with color2.
+    // If arguments are hex values, replaces the values only.
+    // If arguments are objects with keys name and color, will replace the name as well.
+    var savedMapData = JSON.stringify(activeMap);
+    if (typeof color1 == 'string' && color1.match('[a-fA-F0-9]{6}') && color2.match('[a-fA-F0-9]{6}')) {
+      savedMapData = savedMapData.replaceAll(color1, color2);
+    } else if (typeof color1 == 'object') {
+      if (color1.color && color2.color && color1.color.match('[a-fA-F0-9]{6}') && color2.color.match('[a-fA-F0-9]{6}')) {
+        var color = color1.color;
+        savedMapData = savedMapData.replaceAll(color1.color, color2.color);
+      }
+      if (color1.name && color2.name) {
+        if (color) {
+          $('#rail-line-' + color).text(color2.name)
+        } else {
+          console.log("Colors renamed; will be seen on reload.")
+        }
+        savedMapData = savedMapData.replaceAll(color1.name, color2.name);
+      }
+    } else {
+      return
+    }
+
+    savedMapData = JSON.parse(savedMapData);
+    activeMap = savedMapData;
+    loadMapFromObject(savedMapData);
+    drawCanvas();
+    autoSave(savedMapData);
+    $('#rail-line-delete').click();
+} // replaceColors(color1, color2)
+
 // Steer mobile users toward the gallery, for a better experience
 $('#try-on-mobile').click(function() {
   $('#try-on-mobile').hide();
