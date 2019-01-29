@@ -154,7 +154,7 @@
           <h4 class="map-link"><a href="https://metromapmaker.com/save/admin/map_saver/savedmap/{{ map.id }}/change/" target="_blank">#{{ map.id }}</a> (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>) <input type="text" name="map_name" class="map-name" id="map-name-{{ map.id }}" value="{{ map.name }}" placeholder="(unnamed)">
             {% with map.suggest_city as suggested_city %}
               {% if suggested_city %}
-                Suggested: {{ suggested_city.0.0 }} ({{ suggested_city.0.1 }} stations)
+                Suggested: {{ suggested_city.0.0 }} (overlap: {{ suggested_city.0.1 }} / this: {{ map.station_count }})
               {% endif %}
             {% endwith %}
           </h4>

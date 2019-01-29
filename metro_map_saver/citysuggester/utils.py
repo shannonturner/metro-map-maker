@@ -37,7 +37,7 @@ def suggest_city(map_stations):
     for name, system_stations in systems.items():
         common_stations = system_stations.intersection(map_stations)
         if len(common_stations) > MINIMUM_STATION_OVERLAP:
-            possible_cities[name] = len(common_stations) # Or maybe: the set itself, rather than the length
+            possible_cities['{0} ({1})'.format(name, len(system_stations))] = len(common_stations) # Or maybe: the set itself, rather than the length
     return sorted(possible_cities.items(), key=lambda kv: kv[1], reverse=True)
 
 
