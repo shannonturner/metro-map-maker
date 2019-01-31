@@ -11,7 +11,7 @@ from django.test import TestCase
 
 class ValidateMapTestCase(TestCase):
 
-    fixtures = ['backups/mmm-backup-20181110.json']
+    fixtures = ['backups/2018/mmm-backup-20181110.json']
 
     def test_fixtures_loaded(self):
         self.assertEqual(SavedMap.objects.count(), 3983)
@@ -32,22 +32,26 @@ class ValidateMapTestCase(TestCase):
                     str(
                         json.loads(
                             json.dumps(
-                                saved_map.mapdata.replace("u'", "'").replace("'", '"').replace("\\", "").strip('"').strip("'")
+                                saved_map.mapdata.replace(" u'", "'").replace("{u'", "{'").replace("[u'", "['").replace("'", '"').replace("\\", "").strip('"').strip("'")
                             )
                         )
                     )
                 )
             )
 
-            validated_map = validate_metro_map(
-                str(
-                    json.loads(
-                        json.dumps(
-                            saved_map.mapdata.replace("u'", "'").replace("'", '"').replace("\\", "").strip('"').strip("'")
+            try:
+                validated_map = validate_metro_map(
+                    str(
+                        json.loads(
+                            json.dumps(
+                                saved_map.mapdata.replace(" u'", "'").replace("{u'", "{'").replace("[u'", "['").replace("'", '"').replace("\\", "").strip('"').strip("'")
+                            )
                         )
                     )
                 )
-            )
+            except AssertionError:
+                print "Failed validate_metro_map for map #{0}".format(saved_map.id)
+                raise
 
             if saved_map_data != validated_map:
                 # Characters like & get converted to &amp; as part of the validation process,
