@@ -792,7 +792,8 @@ function autoLoad() {
   var savedMapHash = getURLParameter('map');
   if (savedMapHash) {
     $.get('https://metromapmaker.com/save/' + savedMapHash).done(function (savedMapData) {
-      savedMapData = savedMapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"').replaceAll('\\\\x', '&#x');
+
+      savedMapData = savedMapData.replaceAll(" u&#39;", "'").replaceAll("{u&#39;", '{"').replaceAll("\\[u&#39;", '["').replaceAll('&#39;', '"').replaceAll("'", '"').replaceAll('\\\\x', '&#x');
       if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
         // Fallback to an empty grid
         drawGrid();
@@ -814,7 +815,7 @@ function autoLoad() {
     //    and might limit the number of blank / red-squiggle maps created.
     // If the WMATA map ever changes, I'll need to update it here too.
     $.get('https://metromapmaker.com/save/s8JC8_z0').done(function (savedMapData) {
-      savedMapData = savedMapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"');
+      savedMapData = savedMapData.replaceAll(" u&#39;", "'").replaceAll("{u&#39;", '{"').replaceAll("\\[u&#39;", '["').replaceAll('&#39;', '"').replaceAll("'", '"').replaceAll('\\\\x', '&#x');
       if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
         // Fallback to an empty grid
         drawGrid();
@@ -1556,7 +1557,7 @@ function combineMap(urlhash) {
   // I expect this will mostly be used to bring terrain into an existing map
   // but this will only work for maps that are exactly aligned, or they will look a bit silly
   $.get('https://metromapmaker.com/save/' + urlhash).done(function (savedMapData) {
-    savedMapData = savedMapData.replaceAll('u&#39;', '"').replaceAll('&#39;', '"').replaceAll('\\\\x', '&#x');
+    savedMapData = savedMapData.replaceAll(" u&#39;", "'").replaceAll("{u&#39;", '{"').replaceAll("\\[u&#39;", '["').replaceAll('&#39;', '"').replaceAll("'", '"').replaceAll('\\\\x', '&#x');
     if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
       console.log("[WARN] Can't combine that map!");
     } else {
