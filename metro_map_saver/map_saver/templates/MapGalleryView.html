@@ -616,8 +616,7 @@
   $(document).ready(function() {
 
     {% for map in saved_maps %}
-      mapData = "{{ map.mapdata }}";
-      mapData = mapData.replaceAll(" u&#39;", "'").replaceAll("{u&#39;", '{"').replaceAll("\\[u&#39;", '["').replaceAll('&#39;', '"').replaceAll("'", '"').replaceAll('\\\\x', '&#x');
+      mapData = {% autoescape off %}'{{ map.mapdata }}';{% endautoescape %}
       try {
         mapData = JSON.parse(mapData);
         galleryGetMapSize(mapData);
