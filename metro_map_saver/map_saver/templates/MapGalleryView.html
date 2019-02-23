@@ -131,6 +131,8 @@
             {% with map.suggest_city as suggested_city %}
               {% if suggested_city %}
                 Suggested: {{ suggested_city.0.0 }} (overlap: {{ suggested_city.0.1 }} / this: {{ map.station_count }})
+              {% else %}
+                {{ map.station_count }} stations
               {% endif %}
             {% endwith %}
           </h4>
