@@ -261,7 +261,7 @@ class MapSimilarView(TemplateView):
             similar_maps.insert(0, this_map)
 
         context = {
-            'headline': 'Maps similar to {0}'.format(kwargs.get('urlhash')),
+            'headline': '{0} Maps similar to {1}'.format(len(similar_maps) - 1, kwargs.get('urlhash')),
             'saved_maps': similar_maps,
             'similarity_scores': similarity_scores,
             'tags': tags,
