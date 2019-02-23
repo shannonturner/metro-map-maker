@@ -203,6 +203,7 @@ class MapSimilarView(TemplateView):
             2. or have not been reviewed yet
     """
 
+    @method_decorator(gzip_page)
     @method_decorator(staff_member_required)
     def get(self, request, **kwargs):
 
