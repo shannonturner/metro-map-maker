@@ -1,6 +1,6 @@
 {% for thumbnail in thumbnails %}
 <div class="col-sm-2 col-md-1pt5">
-  <a href="https://metromapmaker.com/?map={{ thumbnail.urlhash }}">
+  <a href="/?map={{ thumbnail.urlhash }}">
     <img src="{{ thumbnail.thumbnail }}" class="img-responsive" alt="{{ thumbnail.name }}" title="{{ thumbnail.name }}">
     <h4>{{ thumbnail.name }}</h4>
   </a>

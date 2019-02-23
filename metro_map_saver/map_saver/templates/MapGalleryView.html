@@ -1,30 +1,17 @@
 <!DOCTYPE html>
 
+{% load static %}
+
 <html lang="en">
   <head>
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
-
-    <meta property="og:title" content="Metro Map Maker">
-    <meta property="og:site_name" content="Metro Map Maker">
-    <meta property="og:url" content="https://metromapmaker.com">
-    <meta property="og:type" content="website">
-    <meta property="og:description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
-    <meta property="og:image" content="https://metromapmaker.com/metromapmaker.png">
-
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="https://metromapmaker.com">
-    <meta name="twitter:creator" content="@svthmc">
-    <meta name="twitter:title" content="Metro Map Maker">
-    <meta name="twitter:description" content="Build the Metro system of your dreams: create your own metro maps, save them, and share with friends!">
-    <meta name="twitter:image:src" content="https://metromapmaker.com/metromapmaker.png">
 
     <title>Metro Map Maker</title>
 
-    <link rel="icon" href="https://metromapmaker.com/metromapmaker-gallery.ico">
+    <link rel="icon" href="{% static 'metromapmaker-gallery.ico' %}">
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
@@ -34,17 +21,6 @@
       <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
-
-    <script>
-      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-      })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
-
-      ga('create', 'UA-49936574-4', 'auto');
-      ga('send', 'pageview');
-
-    </script>
 
     <style>
 
@@ -151,7 +127,7 @@
       {% for map in saved_maps %}
         <li id="map-control-{{ map.id }}" class="nav-item map-control {% if not forloop.first %}start-hidden{% endif %}"><a class="nav-link hidden" href="#map-container-{{ map.id }}"><!-- a link with anchor is needed but I don't need it to be visible {{ map.id }}--></a>
         
-          <h4 class="map-link"><a href="https://metromapmaker.com/save/admin/map_saver/savedmap/{{ map.id }}/change/" target="_blank">#{{ map.id }}</a> (<a href="https://metromapmaker.com/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>) <input type="text" name="map_name" class="map-name" id="map-name-{{ map.id }}" value="{{ map.name }}" placeholder="(unnamed)">
+          <h4 class="map-link"><a href="/admin/map_saver/savedmap/{{ map.id }}/change/" target="_blank">#{{ map.id }}</a> (<a href="/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>) <input type="text" name="map_name" class="map-name" id="map-name-{{ map.id }}" value="{{ map.name }}" placeholder="(unnamed)">
             {% with map.suggest_city as suggested_city %}
               {% if suggested_city %}
                 Suggested: {{ suggested_city.0.0 }} (overlap: {{ suggested_city.0.1 }} / this: {{ map.station_count }})
@@ -688,7 +664,7 @@
       }
 
       if ($('#diff-map-a').val().length > 0 && $('#diff-map-b').val().length > 0) {
-        $.get('/save/admin/diff/' + $('#diff-map-a').val() + '/' + $('#diff-map-b').val()).done(function(data) {
+        $.get('/admin/diff/' + $('#diff-map-a').val() + '/' + $('#diff-map-b').val()).done(function(data) {
           $('#diff-pane').html(data);
         });
       }
@@ -708,7 +684,7 @@
     $('.hide-map').click(function() {
       var hideMapButton = $(this);
       var thisMapId = $(this).attr('id').slice(5);
-      $.post('/save/admin/action/', {
+      $.post('/admin/action/', {
         "action": "hide",
         "map": thisMapId
       }).done(function(data) {
@@ -764,7 +740,7 @@
         base64thumbnailData = '';
       }
 
-      $.post('/save/admin/action/', {
+      $.post('/admin/action/', {
         "action": "thumbnail",
         "map": parseInt(thisMapId),
         "data": base64thumbnailData,
@@ -787,7 +763,7 @@
       var mapNameInput = $(this);
       var thisMapId = $(this).attr('id').split('-').slice(2, 3);
 
-      $.post('/save/admin/action/', {
+      $.post('/admin/action/', {
         "action": "name",
         "map": parseInt(thisMapId),
         "name": mapNameInput.val()
@@ -814,7 +790,7 @@
         var action = "addtag";
       }
 
-      $.post('/save/admin/action/', {
+      $.post('/admin/action/', {
         "action": action,
         "map": parseInt(thisMapId),
         "tag": tag
