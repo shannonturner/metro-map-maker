@@ -41,7 +41,7 @@ class TravelSystem(models.Model):
         self.stations = '\n'.join(sorted(set(stations))).strip()
         super(TravelSystem, self).save(*args, **kwargs)
 
-    def __unicode__(self):
+    def __str__(self):
         return '{0} ({1} stations)'.format(
             self.name, len(self.stations.split('\n'))
         )

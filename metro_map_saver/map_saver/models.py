@@ -26,5 +26,5 @@ class SavedMap(models.Model):
     def station_count(self):
         return len(self.stations.strip(',').split(','))
 
-    def __unicode__(self):
+    def __str__(self):
         return self.urlhash
