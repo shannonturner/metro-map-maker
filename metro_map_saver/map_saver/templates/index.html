@@ -67,6 +67,16 @@
       <a href="gallery/"><h4><b>Check out maps created by visitors like you!</b></h4></a>
       <div id="favorite-maps">
         <h5>Some of my favorites include:</h5>
+        <div class="text-center">
+        {% for thumbnail in favorites %}
+          <div>
+            <a href="/?map={{ thumbnail.urlhash }}">
+              <img src="{{ thumbnail.thumbnail }}" class="img-responsive center-block" alt="{{ thumbnail.name }}" title="{{ thumbnail.name }}">
+              <h4>{{ thumbnail.name }}</h4>
+            </a>
+          </div>
+        {% endfor %}
+        </div>
       </div> <!-- #favorite-maps -->
 
       <h5>This works best on desktop; some features may not work correctly on your mobile device. <button id="try-on-mobile" class="btn btn-info">Try on mobile anyway</button></h5>

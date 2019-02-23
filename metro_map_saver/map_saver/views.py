@@ -32,6 +32,24 @@ class HomeView(TemplateView):
 
     template_name = 'index.html'
 
+    @method_decorator(gzip_page)
+    def get(self, request, **kwargs):
+
+        thumbnails = SavedMap.objects \
+            .filter(gallery_visible=True) \
+            .exclude(thumbnail__exact='') \
+            .exclude(name__exact='') \
+            .exclude(tags__name='reviewed') \
+            .filter(tags__name='favorite') \
+            .order_by('?')
+
+        context = {
+            'favorites': thumbnails[:3]
+        }
+
+        return render(request, self.template_name, context)
+
+
 class PublicGalleryView(TemplateView):
 
     template_name = 'PublicGallery.html'
