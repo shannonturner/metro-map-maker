@@ -21,22 +21,44 @@ from django.conf import settings
 from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminActionView, MapSimilarView, MapsByDateView, ThumbnailGalleryView, HomeView, PublicGalleryView, CreatorNameMapView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Main page
     path('', HomeView.as_view(), name='home'),
+
+    # Public Gallery
     path('gallery/', PublicGalleryView.as_view(), name='public_gallery'),
-    path('admin/gallery/<int:page>', MapGalleryView.as_view(), name='gallery'),
-    path('admin/gallery/<slug:tag>/<int:page>', MapGalleryView.as_view(), name='gallery'),
-    path('admin/gallery/<slug:tag>', MapGalleryView.as_view(), name='gallery'),
-    path('admin/direct/<path:direct>', MapGalleryView.as_view(), name='direct'),
-    path('admin/thumbnail/<slug:tag>/<int:page>', ThumbnailGalleryView.as_view(), name='thumbnail'),
-    path('admin/thumbnail/<slug:tag>', ThumbnailGalleryView.as_view(), name='thumbnail'),
-    path('admin/similar/<slug:urlhash>', MapSimilarView.as_view(), name='similar'),
-    path('admin/diff/<slug:urlhash_first>/<slug:urlhash_second>', MapDiffView.as_view(), name='diff'),
-    path('admin/action/', MapAdminActionView.as_view(), name='admin_action'),
+
+    # End-user actions (saving, loading, naming maps)
     path('save/', MapDataView.as_view(), name='save_map'),
-    path('name/', CreatorNameMapView.as_view(), name='name_map'),
     path('load/<slug:urlhash>', MapDataView.as_view(), name='load_map'),
+    path('name/', CreatorNameMapView.as_view(), name='name_map'),
+
+    # Admin and Moderation
+    path('admin/', admin.site.urls),
+
+    # Admin Gallery
+    path('admin/gallery/', MapGalleryView.as_view(), name='gallery'),
+    path('admin/gallery/<int:page>/', MapGalleryView.as_view(), name='gallery'),
+    path('admin/gallery/<slug:tag>/', MapGalleryView.as_view(), name='gallery'),
+    path('admin/gallery/<slug:tag>/<int:page>/', MapGalleryView.as_view(), name='gallery'),
+
+    # Admin Gallery: Admin actions
+    path('admin/action/', MapAdminActionView.as_view(), name='admin_action'),
+
+    # Admin Gallery: Similar
+    path('admin/similar/<slug:urlhash>', MapSimilarView.as_view(), name='similar'),
+
+    # Admin Gallery: Direct View
+    path('admin/direct/<path:direct>', MapGalleryView.as_view(), name='direct'),
+
+    # Admin Gallery: Diff
+    path('admin/diff/<slug:urlhash_first>/<slug:urlhash_second>/', MapDiffView.as_view(), name='diff'),
+
+    # Admin: Maps created by date
     path('admin/bydate/', MapsByDateView.as_view(), name='by_date'),
+
+    # Thumbnails
+    path('admin/thumbnail/<slug:tag>/', ThumbnailGalleryView.as_view(), name='thumbnail'),
+    path('admin/thumbnail/<slug:tag>/<int:page>/', ThumbnailGalleryView.as_view(), name='thumbnail'),
 ]
 
 if settings.DEBUG:
