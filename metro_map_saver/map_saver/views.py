@@ -34,18 +34,23 @@ class HomeView(TemplateView):
 
     @method_decorator(gzip_page)
     def get(self, request, **kwargs):
+        if not request.GET.get('map'):
+            # Only show favorite thumbnails if we're NOT loading a specific map,
+            #   otherwise that wastes a bit of bandwidth and pagespeed
+            #   which is especially important since this only shows on mobile
+            thumbnails = SavedMap.objects \
+                .filter(gallery_visible=True) \
+                .exclude(thumbnail__exact='') \
+                .exclude(name__exact='') \
+                .exclude(tags__name='reviewed') \
+                .filter(tags__name='favorite') \
+                .order_by('?')
 
-        thumbnails = SavedMap.objects \
-            .filter(gallery_visible=True) \
-            .exclude(thumbnail__exact='') \
-            .exclude(name__exact='') \
-            .exclude(tags__name='reviewed') \
-            .filter(tags__name='favorite') \
-            .order_by('?')
-
-        context = {
-            'favorites': thumbnails[:3]
-        }
+            context = {
+                'favorites': thumbnails[:3]
+            }
+        else:
+            context = {}
 
         return render(request, self.template_name, context)
 
