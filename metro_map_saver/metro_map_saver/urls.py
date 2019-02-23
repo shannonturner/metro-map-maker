@@ -18,7 +18,7 @@ from django.urls import include, path
 from django.contrib import admin
 from django.conf import settings
 
-from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminActionView, MapSimilarView, MapsByDateView, ThumbnailGalleryView, HomeView, PublicGalleryView
+from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminActionView, MapSimilarView, MapsByDateView, ThumbnailGalleryView, HomeView, PublicGalleryView, CreatorNameMapView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -34,6 +34,7 @@ urlpatterns = [
     path('admin/diff/<slug:urlhash_first>/<slug:urlhash_second>', MapDiffView.as_view(), name='diff'),
     path('admin/action/', MapAdminActionView.as_view(), name='admin_action'),
     path('save/', MapDataView.as_view(), name='save_map'),
+    path('name/', CreatorNameMapView.as_view(), name='name_map'),
     path('load/<slug:urlhash>', MapDataView.as_view(), name='load_map'),
     path('admin/bydate/', MapsByDateView.as_view(), name='by_date'),
 ]

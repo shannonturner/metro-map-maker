@@ -1332,7 +1332,34 @@ $(document).ready(function() {
         $('#tool-save-options').html('<h5 class="danger">Sorry, there was a problem saving your map.</h5>');
         $('#tool-save-options').show();
       } else {
-        $('#tool-save-options').html('<h5 style="overflow-x: hidden;">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="/?map=' + data.replace(/\s/g,'') + ' " target="_blank">https://metromapmaker.com/?map=' + data.replace(/\s/g,'') + '</a></h5> <h5>You can then share this URL with a friend - and they can remix your map without you losing your original! If you make changes to this map, click Save and Share again to get a new URL.</h5>');
+        data = data.split(',');
+        var urlhash = data[0].replace(/\s/g,'');
+        var namingToken = data[1].replace(/\s/g,'');
+        var toolSaveOptions = '<h5 style="overflow-x: hidden;">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="/?map=' + urlhash + '" target="_blank">https://metromapmaker.com/?map=' + urlhash + '</a></h5> <h5>You can then share this URL with a friend - and they can remix your map without you losing your original! If you make changes to this map, click Save and Share again to get a new URL.</h5>';
+        if (namingToken) {
+          // Only show the naming form if the map could actually be renamed.
+          toolSaveOptions += '<form id="name-map"><input type="hidden" name="urlhash" value="' + urlhash + '"><input type="hidden" name="naming_token" value="' + namingToken + '"><label for="name">Where is this a map of?</label><input type="text" name="name"><select name="tags"><option value="">What kind of map is this?</option><option value="real">This is a real metro system</option><option value="speculative">This is a real place, but a fantasy map</option><option value="unknown">This is an imaginary place</option></select></form><button id="name-this-map" class="btn btn-warning">Name this map</button>'
+        }
+        $('#tool-save-options').html(toolSaveOptions);
+        $('#name-map').submit(function(e) {
+          e.preventDefault();
+        });
+        $('#name-this-map').click(function(e) {
+          var formData = $('#name-map').serializeArray().reduce(function(obj, item) {
+              obj[item.name] = item.value;
+              return obj;
+          }, {});
+
+          $.post('/name/', formData, function() {
+            $('#name-map').hide();
+            $('#name-this-map').removeClass('btn-warning');
+            $('#name-this-map').addClass('btn-success');
+            $('#name-this-map').text('Thanks!')
+            setTimeout(function() {
+              $('#name-this-map').hide();
+            }, 500);
+          });
+        }) // #name-this-map.click()
         $('#tool-save-options').show();
       }
     });
@@ -1475,7 +1502,6 @@ $(document).ready(function() {
     drawCanvas(metroMap, true);
     drawIndicator(x, y);
   }); // $('#station-transfer').click()
-
 }); // document.ready()
 
 // Cheat codes / Advanced map manipulations

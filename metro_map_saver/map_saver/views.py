@@ -14,6 +14,7 @@ import hashlib
 import json
 import logging
 import pprint
+import random
 
 from taggit.models import Tag
 
@@ -271,6 +272,39 @@ class MapSimilarView(TemplateView):
 
         return render(request, 'MapGalleryView.html', context)
 
+class CreatorNameMapView(TemplateView):
+
+    def post(self, request, **kwargs):
+
+        """ Allow creators to name / "tag" their maps
+            (but not after I've named them)
+            Also prevent subsequent visitors from naming the maps
+        """
+
+        name = request.POST.get('name')
+        tags = request.POST.get('tags')
+        naming_token = request.POST.get('naming_token')
+        context = {'saved_map': ''}
+
+        if name or tags:
+            try:
+                this_map = SavedMap.objects.get(urlhash=request.POST.get('urlhash'))
+            except (ObjectDoesNotExist, MultipleObjectsReturned):
+                pass
+            else:
+                if this_map.naming_token and this_map.naming_token == naming_token:
+                    # This is the original creator of the map; allow them to name the map.
+                    this_map.name = f'{name} ({tags})' if tags else f'{name}'
+                    this_map.save()
+                    context['saved_map'] = 'Success'
+                else:
+                    # Either I have renamed this map,
+                    #   or someone is trying to be sneaky
+                    # Naming this map is no longer an option for the end user.
+                    pass
+
+        return render(request, 'MapDataView.html', context)
+
 
 class MapAdminActionView(TemplateView):
 
@@ -315,6 +349,7 @@ class MapAdminActionView(TemplateView):
                 elif request.POST.get('action') == 'name':
                     name = request.POST.get('name')
                     this_map.name = name
+                    this_map.naming_token = '' # This map can no longer be named by the end user
                     this_map.save()
                 context['status'] = 'Success'
             return render(request, 'MapAdminActionView.html', context)
@@ -414,6 +449,7 @@ class MapDataView(TemplateView):
                     'urlhash': urlhash,
                     'mapdata': json.dumps(mapdata),
                     })
+                saved_map.naming_token = hashlib.sha256('{0}'.format(random.randint(1, 100000)).encode('utf-8')).hexdigest()
                 try:
                     saved_map.stations = ','.join(get_stations(mapdata)).lower()
                 except Exception as e:
@@ -424,7 +460,7 @@ class MapDataView(TemplateView):
                 # Perhaps this was due to a race condition?
                 saved_map = SavedMap.objects.filter(urlhash=urlhash)[0]
 
-            context['saved_map'] = saved_map.urlhash
+            context['saved_map'] = f'{saved_map.urlhash},{saved_map.naming_token}'
 
         return render(request, 'MapDataView.html', context)
 

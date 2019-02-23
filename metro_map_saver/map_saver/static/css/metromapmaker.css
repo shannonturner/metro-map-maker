@@ -217,6 +217,10 @@ hr {
   border-color: #ffff00;
 }
 
+select {
+  width: 100%;
+}
+
 @media (max-width: 767px) {
   #controls {
     margin-top: 10px;
