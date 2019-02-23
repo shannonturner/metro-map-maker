@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 import json
 
 from map_saver.models import SavedMap
 from map_saver.validator import validate_metro_map
 
-from django.core.management import call_command
 from django.test import TestCase
 
 class ValidateMapTestCase(TestCase):
