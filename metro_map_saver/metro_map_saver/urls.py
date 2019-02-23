@@ -18,12 +18,13 @@ from django.urls import include, path
 from django.contrib import admin
 from django.conf import settings
 
-from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminActionView, MapSimilarView, MapsByDateView, ThumbnailGalleryView, HomeView
+from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminActionView, MapSimilarView, MapsByDateView, ThumbnailGalleryView, HomeView, PublicGalleryView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', HomeView.as_view(), name='home'),
-    path('admin/gallery/<int:page>$', MapGalleryView.as_view(), name='gallery'),
+    path('gallery/', PublicGalleryView.as_view(), name='public_gallery'),
+    path('admin/gallery/<int:page>', MapGalleryView.as_view(), name='gallery'),
     path('admin/gallery/<slug:tag>/<int:page>', MapGalleryView.as_view(), name='gallery'),
     path('admin/gallery/<slug:tag>', MapGalleryView.as_view(), name='gallery'),
     path('admin/direct/<path:direct>', MapGalleryView.as_view(), name='direct'),
