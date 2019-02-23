@@ -196,7 +196,8 @@ function bindGridSquareEvents() {
     var allLines = $('.rail-line');
 
     if (getActiveLine(x, y)) {
-      drawCanvas();
+      var metroMap = saveMapAsObject();
+      drawCanvas(metroMap, true);
       drawIndicator(x, y);
       // Only expand the #tool-station-options if it's actually on a line
       // Now, there are two indicators for when a station has been placed on a line
@@ -449,10 +450,13 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
   } // if redrawStations
 } // drawArea(x, y, metroMap, redrawStations)
 
-function drawCanvas(metroMap) {
+function drawCanvas(metroMap, stationsOnly) {
   // Fully redraw the canvas based on the provided metroMap;
   //    if no metroMap is provided, then save the existing grid as a metroMap object
   //    then redraw the canvas
+  if (stationsOnly) {
+    // If I'm only changing the stations, I only need to update the stations canvas
+  } else {
   var canvas = document.getElementById('metro-map-canvas');
   var ctx = canvas.getContext('2d', {alpha: false});
 
@@ -498,7 +502,7 @@ function drawCanvas(metroMap) {
     }
   }
   redrawOverlappingPoints = {};
-
+  } // else (of if stationsOnly)
   // Draw the stations separately, or they will be painted over by the lines themselves.
   var canvas = document.getElementById('metro-map-stations-canvas');
   var ctx = canvas.getContext('2d', {alpha: true});
@@ -791,8 +795,7 @@ function autoLoad() {
   // 3. If neither 1 or 2, load a preset map (WMATA)
   var savedMapHash = getURLParameter('map');
   if (savedMapHash) {
-    $.get('https://metromapmaker.com/save/' + savedMapHash).done(function (savedMapData) {
-
+    $.get('/load/' + savedMapHash).done(function (savedMapData) {
       savedMapData = savedMapData.replaceAll(" u&#39;", "'").replaceAll("{u&#39;", '{"').replaceAll("\\[u&#39;", '["').replaceAll('&#39;', '"').replaceAll("'", '"').replaceAll('\\\\x', '&#x');
       if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
         // Fallback to an empty grid
@@ -814,7 +817,7 @@ function autoLoad() {
     // I think this would be more intuitive than the blank slate,
     //    and might limit the number of blank / red-squiggle maps created.
     // If the WMATA map ever changes, I'll need to update it here too.
-    $.get('https://metromapmaker.com/save/s8JC8_z0').done(function (savedMapData) {
+    $.get('/load/s8JC8_z0').done(function (savedMapData) {
       savedMapData = savedMapData.replaceAll(" u&#39;", "'").replaceAll("{u&#39;", '{"').replaceAll("\\[u&#39;", '["').replaceAll('&#39;', '"').replaceAll("'", '"').replaceAll('\\\\x', '&#x');
       if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
         // Fallback to an empty grid
@@ -1321,7 +1324,7 @@ $(document).ready(function() {
     activeTool = 'look';
     var savedMap = JSON.stringify(saveMapAsObject());
     autoSave(savedMap);
-    var saveMapURL = 'https://metromapmaker.com/save/';
+    var saveMapURL = '/save/';
     $.post( saveMapURL, {
       'metroMap': savedMap
     }).done(function(data) {
@@ -1329,7 +1332,7 @@ $(document).ready(function() {
         $('#tool-save-options').html('<h5 class="danger">Sorry, there was a problem saving your map.</h5>');
         $('#tool-save-options').show();
       } else {
-        $('#tool-save-options').html('<h5 style="overflow-x: hidden;">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="https://metromapmaker.com/?map=' + data.replace(/\s/g,'') + ' " target="_blank">https://metromapmaker.com/?map=' + data.replace(/\s/g,'') + '</a></h5> <h5>You can then share this URL with a friend - and they can remix your map without you losing your original! If you make changes to this map, click Save and Share again to get a new URL.</h5>');
+        $('#tool-save-options').html('<h5 style="overflow-x: hidden;">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="/?map=' + data.replace(/\s/g,'') + ' " target="_blank">https://metromapmaker.com/?map=' + data.replace(/\s/g,'') + '</a></h5> <h5>You can then share this URL with a friend - and they can remix your map without you losing your original! If you make changes to this map, click Save and Share again to get a new URL.</h5>');
         $('#tool-save-options').show();
       }
     });
@@ -1427,7 +1430,7 @@ $(document).ready(function() {
 
     metroMap = saveMapAsObject();
     autoSave(metroMap);
-    drawCanvas(metroMap);
+    drawCanvas(metroMap, true);
   }); // $('#station-name').change()
 
   $('#station-name-orientation').change(function() {
@@ -1453,7 +1456,7 @@ $(document).ready(function() {
     window.localStorage.setItem('metroMapStationOrientation', $(this).val());
     metroMap = saveMapAsObject();
     autoSave(metroMap);
-    drawCanvas(metroMap);
+    drawCanvas(metroMap, true);
     drawIndicator(x, y);
   }); // $('#station-name-orientation').change()
 
@@ -1469,7 +1472,7 @@ $(document).ready(function() {
     }
     metroMap = saveMapAsObject();
     autoSave(metroMap);
-    drawCanvas(metroMap);
+    drawCanvas(metroMap, true);
     drawIndicator(x, y);
   }); // $('#station-transfer').click()
 
@@ -1556,7 +1559,7 @@ function combineMap(urlhash) {
   // Existing map must not be overwritten by the new map.
   // I expect this will mostly be used to bring terrain into an existing map
   // but this will only work for maps that are exactly aligned, or they will look a bit silly
-  $.get('https://metromapmaker.com/save/' + urlhash).done(function (savedMapData) {
+  $.get('/load/' + urlhash).done(function (savedMapData) {
     savedMapData = savedMapData.replaceAll(" u&#39;", "'").replaceAll("{u&#39;", '{"').replaceAll("\\[u&#39;", '["').replaceAll('&#39;', '"').replaceAll("'", '"').replaceAll('\\\\x', '&#x');
     if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
       console.log("[WARN] Can't combine that map!");
