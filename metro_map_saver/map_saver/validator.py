@@ -166,4 +166,10 @@ def validate_metro_map(metro_map):
                         if metro_map[x][y]["station"].get('orientation') and metro_map[x][y]["station"].get('orientation') in ('0', '-45', '45', '135', '180'):
                             validated_metro_map[x][y]["station"]["orientation"] = metro_map[x][y]["station"].get('orientation')
 
+                # Resolves problem found in map nRnbFuwW where somehow
+                # (probably due to validator permissiveness) a line could end up with no color
+                # and therefore be undefined
+                if len(validated_metro_map[x][y]) == 0:
+                    del validated_metro_map[x][y]
+
     return validated_metro_map
