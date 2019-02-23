@@ -1,5 +1,5 @@
 {% if error %}
 {{ error }}
 {% else %}
-{{ saved_map }}
+{% autoescape off %}{{ saved_map }}{% endautoescape %}
 {% endif %}

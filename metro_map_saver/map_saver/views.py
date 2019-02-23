@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
 from django.db.models import Count
@@ -29,6 +27,10 @@ logging.basicConfig(
     level=logging.ERROR,
     format='%(asctime)s %(message)s',
 )
+
+class HomeView(TemplateView):
+
+    template_name = 'index.html'
 
 class ThumbnailGalleryView(TemplateView):
 
@@ -350,22 +352,22 @@ class MapDataView(TemplateView):
 
         try:
             mapdata = validate_metro_map(mapdata)
-        except AssertionError, e:
+        except AssertionError as e:
             context['error'] = '[ERROR] Map failed validation! ({0}) -- map was {1}'.format(e, mapdata)
             logging.error('[ERROR] [FAILEDVALIDATION] ({0}); mapdata: {1}'.format(e, mapdata))
         else:
-            urlhash = hex64(hashlib.sha256(str(mapdata)).hexdigest()[:12])
+            urlhash = hex64(hashlib.sha256(str(mapdata).encode('utf-8')).hexdigest()[:12])
             try:
                 # Doesn't override the saved map if it already exists.
                 saved_map = SavedMap.objects.get(urlhash=urlhash)
             except ObjectDoesNotExist:
                 saved_map = SavedMap(**{
                     'urlhash': urlhash,
-                    'mapdata': mapdata,
+                    'mapdata': json.dumps(mapdata),
                     })
                 try:
                     saved_map.stations = ','.join(get_stations(mapdata)).lower()
-                except Exception, e:
+                except Exception as e:
                     logging.error('[WARN] Failed to save stations for {0}: {1}'.format(urlhash, e))
                 saved_map.save()
             except MultipleObjectsReturned:
