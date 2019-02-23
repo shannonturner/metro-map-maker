@@ -42,9 +42,11 @@ INSTALLED_APPS = [
     'map_saver',
     'taggit',
     'citysuggester',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -80,11 +82,14 @@ WSGI_APPLICATION = 'metro_map_saver.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'metromapmaker',
+        'USER': 'metromapmaker',
+        'PASSWORD': 'metromapmaker',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -122,13 +127,22 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-STATIC_URL = '/static/'
-
-# When a static site is on the root level and Django is not, use
-# FORCE_SCRIPT_NAME in order to resolve the URL paths properly
-# This was my problem with not being able to reach the admin
-# See https://docs.djangoproject.com/en/1.11/ref/settings/#force-script-name for more details
-FORCE_SCRIPT_NAME = '/save'
-
-if not DEBUG:
+if DEBUG:
+    STATIC_ROOT = '/Users/shannon/Dropbox/github/metro-map-maker/static/'
+    STATICFILES_DIRS = [
+        "/Users/shannon/Dropbox/github/metro-map-maker/css/",
+        "/Users/shannon/Dropbox/github/metro-map-maker/js/",
+        "/Users/shannon/Dropbox/github/metro-map-maker/images/",
+        "/Users/shannon/Dropbox/github/metro-map-maker/assets/",
+    ]
+elif not DEBUG:
     STATIC_ROOT = '/home/sturner/webapps/metro_map_maker_static/static/'
+    STATICFILES_DIRS = [
+        "/home/sturner/webapps/metromapmaker/metro-map-maker/css/",
+        "/home/sturner/webapps/metromapmaker/metro-map-maker/js/",
+        "/home/sturner/webapps/metromapmaker/metro-map-maker/images/",
+        "/home/sturner/webapps/metromapmaker/metro-map-maker/assets/",
+    ]
+
+# URL to use when referring to static files located in STATIC_ROOT.
+STATIC_URL = '/static/'

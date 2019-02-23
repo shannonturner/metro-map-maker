@@ -50,7 +50,7 @@ class ValidateMapTestCase(TestCase):
                     )
                 )
             except AssertionError:
-                print "Failed validate_metro_map for map #{0}".format(saved_map.id)
+                print("Failed validate_metro_map for map #{0}".format(saved_map.id))
                 raise
 
             if saved_map_data != validated_map:

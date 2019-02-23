@@ -13,21 +13,32 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url
-from django.contrib import admin
 
-from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminActionView, MapSimilarView, MapsByDateView, ThumbnailGalleryView
+from django.urls import include, path
+from django.contrib import admin
+from django.conf import settings
+
+from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminActionView, MapSimilarView, MapsByDateView, ThumbnailGalleryView, HomeView
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^(?:save/)?admin/gallery/(?P<page>[0-9]+)?$', MapGalleryView.as_view(), name='gallery'),
-    url(r'^(?:save/)?admin/gallery/(?P<tag>[\w^\d]+)?/?(?P<page>[0-9]+)?$', MapGalleryView.as_view(), name='gallery'),
-    url(r'^(?:save/)?admin/direct/(?P<direct>.+)$', MapGalleryView.as_view(), name='direct'),
-    url(r'^(?:save/)?admin/thumbnail/(?P<tag>[\w^\d]+)?/?(?P<page>[0-9]+)?$', ThumbnailGalleryView.as_view(), name='thumbnail'),
-    url(r'^(?:save/)?admin/similar/(?P<urlhash>[0-9a-zA-Z\-\_]+)$', MapSimilarView.as_view(), name='similar'),
-    url(r'^(?:save/)?admin/diff/(?P<urlhash_first>[0-9a-zA-Z\-\_]+)/(?P<urlhash_second>[0-9a-zA-Z\-\_]+)', MapDiffView.as_view(), name='diff'),
-    url(r'^(?:save/)?admin/action/', MapAdminActionView.as_view(), name='admin_action'),
-    url(r'^(?:save/)?$', MapDataView.as_view(), name='save_map'),
-    url(r'^(?:save/)?(?P<urlhash>[0-9a-zA-Z\-\_]+)$', MapDataView.as_view(), name='load_map'),
-    url(r'^(?:save/)?admin/bydate/', MapsByDateView.as_view(), name='by_date'),
+    path('admin/', admin.site.urls),
+    path('', HomeView.as_view(), name='home'),
+    path('admin/gallery/<int:page>$', MapGalleryView.as_view(), name='gallery'),
+    path('admin/gallery/<slug:tag>/<int:page>', MapGalleryView.as_view(), name='gallery'),
+    path('admin/gallery/<slug:tag>', MapGalleryView.as_view(), name='gallery'),
+    path('admin/direct/<path:direct>', MapGalleryView.as_view(), name='direct'),
+    path('admin/thumbnail/<slug:tag>/<int:page>', ThumbnailGalleryView.as_view(), name='thumbnail'),
+    path('admin/thumbnail/<slug:tag>', ThumbnailGalleryView.as_view(), name='thumbnail'),
+    path('admin/similar/<slug:urlhash>', MapSimilarView.as_view(), name='similar'),
+    path('admin/diff/<slug:urlhash_first>/<slug:urlhash_second>', MapDiffView.as_view(), name='diff'),
+    path('admin/action/', MapAdminActionView.as_view(), name='admin_action'),
+    path('save/', MapDataView.as_view(), name='save_map'),
+    path('load/<slug:urlhash>', MapDataView.as_view(), name='load_map'),
+    path('admin/bydate/', MapsByDateView.as_view(), name='by_date'),
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+        path('__debug__/', include(debug_toolbar.urls)),
+    ] + urlpatterns

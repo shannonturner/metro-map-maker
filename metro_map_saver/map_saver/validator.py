@@ -31,7 +31,7 @@ def hex2b64(hexthree):
         # Add "a" (the base64 equivalent of zero) -padding to the result
         return 'a{0}'.format(base64_chars[hexthree])
     else:
-        return '{0}{1}'.format(base64_chars[hexthree / 64], base64_chars[hexthree % 64])
+        return '{0}{1}'.format(base64_chars[hexthree // 64], base64_chars[hexthree % 64])
 
 def hex64(hexdigest):
 
@@ -143,7 +143,7 @@ def validate_metro_map(metro_map):
                         validated_metro_map[x][y]["line"] = metro_map[x][y]["line"]
                     if metro_map[x][y].get('station'):
                         assert type(metro_map[x][y]["station"]) == dict, "[VALIDATIONFAILED] 11: metro_map[x][y]['station'] at ({0}, {1}) IS NOT DICT".format(x, y)
-                        assert 1 <= len(metro_map[x][y]["station"]["name"]) < 256, "[VALIDATIONFAILED] 12: station name at ({0}, {1}) BAD SIZE".format(x, y)
+                        assert 1 <= len(metro_map[x][y]["station"]["name"]) < 256, "[VALIDATIONFAILED] 12: station name at ({0}, {1}) BAD SIZE: {2} is {3}".format(x, y, metro_map[x][y]["station"]["name"], len(metro_map[x][y]["station"]["name"]))
                         assert type(metro_map[x][y]["station"]["lines"]) == list, "[VALIDATIONFAILED] 13: station lines at ({0}, {1}) NOT A LIST".format(x, y)
                         # Okay, this probably *should* pass - but I think I have some bug in the javascript somewhere because https://metromapmaker.com/?map=zCq7R223 obviously passed validation but once reconstituted, fails. But this isn't a big enough deal that I can't wave this validation through while I figure out what's going on.
                         # assert len(metro_map[x][y]["station"]["lines"]) > 0, "[VALIDATIONFAILED] 14: station lines at ({0}, {1}) HAS ZERO LENGTH".format(x, y)
