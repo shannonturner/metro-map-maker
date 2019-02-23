@@ -129,20 +129,8 @@ USE_TZ = True
 
 if DEBUG:
     STATIC_ROOT = '/Users/shannon/Dropbox/github/metro-map-maker/static/'
-    STATICFILES_DIRS = [
-        "/Users/shannon/Dropbox/github/metro-map-maker/css/",
-        "/Users/shannon/Dropbox/github/metro-map-maker/js/",
-        "/Users/shannon/Dropbox/github/metro-map-maker/images/",
-        "/Users/shannon/Dropbox/github/metro-map-maker/assets/",
-    ]
 elif not DEBUG:
     STATIC_ROOT = '/home/sturner/webapps/metro_map_maker_static/static/'
-    STATICFILES_DIRS = [
-        "/home/sturner/webapps/metromapmaker/metro-map-maker/css/",
-        "/home/sturner/webapps/metromapmaker/metro-map-maker/js/",
-        "/home/sturner/webapps/metromapmaker/metro-map-maker/images/",
-        "/home/sturner/webapps/metromapmaker/metro-map-maker/assets/",
-    ]
 
 # URL to use when referring to static files located in STATIC_ROOT.
 STATIC_URL = '/static/'
