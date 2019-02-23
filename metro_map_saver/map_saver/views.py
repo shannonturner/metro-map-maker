@@ -111,6 +111,7 @@ class MapGalleryView(TemplateView):
     """
 
     @method_decorator(gzip_page)
+    @method_decorator(staff_member_required)
     def get(self, request, **kwargs):
 
         MAPS_PER_PAGE = 25
