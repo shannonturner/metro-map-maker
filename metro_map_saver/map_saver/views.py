@@ -221,7 +221,6 @@ class MapSimilarView(TemplateView):
             similar_maps = []
             similarity_scores = {}
         else:
-            similar_maps = [this_map]
 
             this_map_stations = set(this_map.stations.split(','))
 
@@ -255,7 +254,7 @@ class MapSimilarView(TemplateView):
                         similarity_scores[one_map.urlhash] = similarity
                         urlhash_to_map[one_map.urlhash] = one_map
 
-            similar_maps.sort(key=similarity_scores.get, reverse=True)
+            similar_maps.sort(key=lambda similarity_scores: similarity_scores.urlhash, reverse=True)
 
             # It's easier to compare the maps if I can also see the base map on the similarity page
             similar_maps.insert(0, this_map)
