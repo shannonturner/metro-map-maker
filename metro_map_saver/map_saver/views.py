@@ -1,11 +1,12 @@
 
-from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
+from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, PermissionDenied
 from django.db.models import Count
 from django.shortcuts import render
 from django.views.generic.base import TemplateView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.gzip import gzip_page
 
 import datetime
@@ -112,7 +113,7 @@ class MapGalleryView(TemplateView):
     """
 
     @method_decorator(gzip_page)
-    @method_decorator(staff_member_required)
+    @method_decorator(login_required)
     def get(self, request, **kwargs):
 
         MAPS_PER_PAGE = 25
@@ -156,6 +157,12 @@ class MapGalleryView(TemplateView):
             'maps_total': visible_maps.count(),
             'tags': tags,
             'is_staff': request.user.is_staff,
+            'permissions': {
+                'hide_map': request.user.has_perm('map_saver.hide_map'),
+                'name_map': request.user.has_perm('map_saver.name_map'),
+                'tag_map': request.user.has_perm('map_saver.tag_map'),
+                'generate_thumbnail': request.user.has_perm('map_saver.generate_thumbnail'),
+            }
         }
 
         return render(request, 'MapGalleryView.html', context)
@@ -197,7 +204,7 @@ class MapSimilarView(TemplateView):
         Since this is so computationally taxing, it's important that this is available
             only to site admins.
             ^ Since moving to only checking by station names, performance is improved
-                but I'm going to keep the staff_member_required designation
+                but I'm going to keep the login_required designation
 
         2018-12: Performance is deteriorating as the number of maps it needs to scan grows.
             Reduce the search space so that it only compares against maps
@@ -206,7 +213,7 @@ class MapSimilarView(TemplateView):
     """
 
     @method_decorator(gzip_page)
-    @method_decorator(staff_member_required)
+    @method_decorator(login_required)
     def get(self, request, **kwargs):
 
         visible_maps = SavedMap.objects.filter(gallery_visible=True).filter(tags__exact=None)
@@ -268,6 +275,12 @@ class MapSimilarView(TemplateView):
             'similarity_scores': similarity_scores,
             'tags': tags,
             'is_staff': request.user.is_staff,
+            'permissions': {
+                'hide_map': request.user.has_perm('map_saver.hide_map'),
+                'name_map': request.user.has_perm('map_saver.name_map'),
+                'tag_map': request.user.has_perm('map_saver.tag_map'),
+                'generate_thumbnail': request.user.has_perm('map_saver.generate_thumbnail'),
+            }
         }
 
         return render(request, 'MapGalleryView.html', context)
@@ -308,7 +321,7 @@ class CreatorNameMapView(TemplateView):
 
 class MapAdminActionView(TemplateView):
 
-    @method_decorator(staff_member_required)
+    @method_decorator(login_required)
     def post(self, request, **kwargs):
 
         """ Perform an administrator action on a map
@@ -329,13 +342,13 @@ class MapAdminActionView(TemplateView):
             except ObjectDoesNotExist:
                 context['status'] = '[ERROR] Map does not exist.'
             else:
-                if request.POST.get('action') == 'hide':
+                if request.POST.get('action') == 'hide' and request.user.has_perm('map_saver.hide_map'):
                     if this_map.gallery_visible:
                         this_map.gallery_visible = False
                     else:
                         this_map.gallery_visible = True
                     this_map.save()
-                elif request.POST.get('action') in ('addtag', 'removetag'):
+                elif request.POST.get('action') in ('addtag', 'removetag') and request.user.has_perm('map_saver.tag_map'):
                     tag = request.POST.get('tag')
                     if tag:
                         if request.POST.get('action') == 'addtag':
@@ -343,14 +356,16 @@ class MapAdminActionView(TemplateView):
                         elif request.POST.get('action') == 'removetag':
                             this_map.tags.remove(tag)
                         this_map.save()
-                elif request.POST.get('action') == 'thumbnail':
+                elif request.POST.get('action') == 'thumbnail' and request.user.has_perm('map_saver.generate_thumbnail'):
                     this_map.thumbnail = request.POST.get('data', '')
                     this_map.save()
-                elif request.POST.get('action') == 'name':
+                elif request.POST.get('action') == 'name' and request.user.has_perm('map_saver.name_map'):
                     name = request.POST.get('name')
                     this_map.name = name
                     this_map.naming_token = '' # This map can no longer be named by the end user
                     this_map.save()
+                else:
+                    raise PermissionDenied
                 context['status'] = 'Success'
             return render(request, 'MapAdminActionView.html', context)
 

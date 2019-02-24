@@ -127,7 +127,7 @@
       {% for map in saved_maps %}
         <li id="map-control-{{ map.id }}" class="nav-item map-control {% if not forloop.first %}start-hidden{% endif %}"><a class="nav-link hidden" href="#map-container-{{ map.id }}"><!-- a link with anchor is needed but I don't need it to be visible {{ map.id }}--></a>
         
-          <h4 class="map-link"><a href="/admin/map_saver/savedmap/{{ map.id }}/change/" target="_blank">#{{ map.id }}</a> (<a href="/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>) <input type="text" name="map_name" class="map-name" id="map-name-{{ map.id }}" value="{{ map.name }}" placeholder="(unnamed)">
+          <h4 class="map-link">{% if is_staff %}<a href="/admin/map_saver/savedmap/{{ map.id }}/change/" target="_blank">#{{ map.id }}</a>{% else %}#{{ map.id }}{% endif %} (<a href="/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>) <input type="text" name="map_name" class="map-name" id="map-name-{{ map.id }}" value="{{ map.name }}" placeholder="(unnamed)">
             {% with map.suggest_city as suggested_city %}
               {% if suggested_city %}
                 Suggested: {{ suggested_city.0.0 }} (overlap: {{ suggested_city.0.1 }} / this: {{ map.station_count }})
@@ -140,8 +140,9 @@
             <button id="diff-a-{{ map.urlhash }}-{{ map.id }}" class="diff diff-a btn-info">Diff A</button>
             <button id="diff-b-{{ map.urlhash }}-{{ map.id }}" class="diff diff-b btn-primary">Diff B</button>
 
-            {% if is_staff %}
+              {% if permissions.hide_map %}
               <button id="hide-{{ map.id }}" class="hide-map btn-warning">Hide</button>
+              {% endif %}
               <a href="{% url 'similar' urlhash=map.urlhash %}"><button class="btn-default">View Similar</button></a>
               {% if similarity_scores %}
                 {% for urlhash, score in similarity_scores.items %}
@@ -150,10 +151,13 @@
                   {% endif %}
                 {% endfor %}
               {% endif %}
+              {% if permissions.generate_thumbnail %}
               <button id="thumbnail-{{ map.id }}" class="get-thumbnail {% if map.thumbnail %}btn-success{% else %}btn-info{% endif %}">{% if map.thumbnail %}Thumbnail: {% widthratio map.thumbnail|length 1024 1 %}kb{% else %}Generate Thumbnail{% endif %}</button>
+              {% endif %}
 
               <span class="vertical-divider"></span>
               <!-- <p style="margin-top: 10px;"> -->
+              {% if permissions.tag_map %}
                 {% for tag in tags %}
                   {% if tag in map.tags.all %}
                     <button id="removetag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map removetag-map btn-primary">{{ tag.name }}</button>
@@ -162,7 +166,7 @@
                   {% endif %}
                 {% endfor %}
               <!-- </p> -->
-            {% endif %}
+              {% endif %}
           </div> <!-- /.map-control-buttons -->
         </li>
       {% endfor %}
@@ -214,10 +218,6 @@
       <h4>Map A: <input id="diff-map-a" type="text" placeholder="Click 'Diff A' to fill"><input id="diff-map-id-a" type="hidden"></h4>
       <h4>Map B: <input id="diff-map-b" type="text" placeholder="Click 'Diff B' to fill"><input id="diff-map-id-b" type="hidden"></h4>
       <div id="diff-pane"> </div>
-      <div class="text-center">
-        <button id="keep-a" class="diff-keep btn-info">Keep A</button>
-        <button id="keep-b" class="diff-keep btn-primary">Keep B</button>
-      </div>
       <div id="diff-discard" class="start-hidden">
         <h4 class="text-center">Maps to Hide from Gallery View</h4>
       </div>
@@ -645,8 +645,6 @@
 
     // Calculate diffs!
     $('.diff').click(function() {
-
-
       // This version will fail when the URLhash contains a hyphen:
       // var thisMapUrlhash = $(this).attr('id').split('-').slice(2, 3);
       // Since the id of the button is as follows:
@@ -669,19 +667,9 @@
           $('#diff-pane').html(data);
         });
       }
-    });
+    }); // $('.diff').click()
 
-    $('.diff-keep').click(function() {
-      if ($(this).attr('id') == 'keep-a') {
-        var thisMapId = $('#diff-map-id-b').val();
-      } else if ($(this).attr('id') == 'keep-b') {
-        var thisMapId = $('#diff-map-id-a').val();
-      }
-      $('#diff-discard').show();
-      $('#diff-discard').append('<h5>' + thisMapId + '</h5>');
-    });
-
-    {% if is_staff %}
+    {% if permissions.hide_map %}
     $('.hide-map').click(function() {
       var hideMapButton = $(this);
       var thisMapId = $(this).attr('id').slice(5);
@@ -706,6 +694,7 @@
         }
       });
     });
+    {% endif %}
 
     function reduceColorDepth(canvas) {
       function nearest(x, a) {
@@ -726,8 +715,9 @@
           data[i + 2] = nearest(data[i + 2], 8);
       }
       ctx.putImageData(imageData, 0, 0);
-    }
+    } // reduceColorDepth(canvas)
 
+    {% if permissions.generate_thumbnail %}
     $('.get-thumbnail').click(function() {
       var getThumbnailButton = $(this);
       var thisMapId = $(this).attr('id').split('-').slice(1, 2);
@@ -759,7 +749,9 @@
         }
       })
     }); // .get-thumbnail.click()
+    {% endif %}
 
+    {% if permissions.name_map %}
     $('input.map-name').change(function() {
       var mapNameInput = $(this);
       var thisMapId = $(this).attr('id').split('-').slice(2, 3);
@@ -779,7 +771,9 @@
       });
 
     }); // input.map-name.click()
+    {% endif %}
 
+    {% if permissions.tag_map %}
     $('.changetag-map').click(function() {
       var tagMapButton = $(this);
       var thisMapId = $(this).attr('id').split('-').slice(2, 3);
@@ -816,7 +810,7 @@
       })
 
     });
-    {% endif %} {# is_staff #}
+    {% endif %}
 
   });
 

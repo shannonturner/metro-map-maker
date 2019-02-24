@@ -17,6 +17,7 @@ Including another URLconf
 from django.urls import include, path
 from django.contrib import admin
 from django.conf import settings
+from django.contrib.auth import views as auth_views
 
 from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminActionView, MapSimilarView, MapsByDateView, ThumbnailGalleryView, HomeView, PublicGalleryView, CreatorNameMapView
 
@@ -34,12 +35,13 @@ urlpatterns = [
 
     # Admin and Moderation
     path('admin/', admin.site.urls),
+    path('accounts/login/', auth_views.LoginView.as_view()),
 
     # Admin Gallery
-    path('admin/gallery/', MapGalleryView.as_view(), name='gallery'),
-    path('admin/gallery/<int:page>/', MapGalleryView.as_view(), name='gallery'),
-    path('admin/gallery/<slug:tag>/', MapGalleryView.as_view(), name='gallery'),
-    path('admin/gallery/<slug:tag>/<int:page>/', MapGalleryView.as_view(), name='gallery'),
+    path('admin/gallery/', MapGalleryView.as_view(), name='admin_gallery_all'),
+    path('admin/gallery/<int:page>/', MapGalleryView.as_view(), name='admin_gallery_all_paginated'),
+    path('admin/gallery/<slug:tag>/', MapGalleryView.as_view(), name='admin_gallery_tag'),
+    path('admin/gallery/<slug:tag>/<int:page>/', MapGalleryView.as_view(), name='admin_gallery_tag_paginated'),
 
     # Admin Gallery: Admin actions
     path('admin/action/', MapAdminActionView.as_view(), name='admin_action'),
@@ -57,8 +59,8 @@ urlpatterns = [
     path('admin/bydate/', MapsByDateView.as_view(), name='by_date'),
 
     # Thumbnails
-    path('admin/thumbnail/<slug:tag>/', ThumbnailGalleryView.as_view(), name='thumbnail'),
-    path('admin/thumbnail/<slug:tag>/<int:page>/', ThumbnailGalleryView.as_view(), name='thumbnail'),
+    path('admin/thumbnail/<slug:tag>/', ThumbnailGalleryView.as_view(), name='thumbnail_tag'),
+    path('admin/thumbnail/<slug:tag>/<int:page>/', ThumbnailGalleryView.as_view(), name='thumbnail_tag_paginated'),
 ]
 
 if settings.DEBUG:

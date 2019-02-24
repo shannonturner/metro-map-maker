@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+
+{% load static %}
+
+<html lang="en">
+<head>
+    <title>Metro Map Maker Login</title>
+
+    <link rel="icon" href="{% static 'assets/favicon.ico' %}?version=2">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <style>
+
+      body {
+        font-family: Helvetica, Arial, sans-serif;
+      }
+
+      .M {
+        background-color: black;
+        color: white;
+        padding: 1px;
+        margin: 1px;
+      }
+
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+      }
+
+      .row div, img {
+        margin: auto;
+      }
+
+      @media (min-width: 992px) {
+        .col-md-1pt5 {
+            width: 12.5%;
+        }
+      }
+
+      .sticky {
+        position: fixed;
+        z-index: 1;
+        bottom: 0;
+      }
+
+      nav {
+        width: 100%;
+        background-color: white;
+        border: 2px solid black;
+      }
+
+      @media (max-width: 400px) {
+        nav {
+          font-size: 11px;
+        }
+      }
+
+      @media (max-width: 767px) {
+        .nav-justified>li {
+          display: table-cell;
+          width: 1%;
+        }
+        .nav-justified>li>a {
+          margin-bottom: 0;
+        }
+      }
+
+    </style>
+
+  </head>
+<body>
+
+<div class="col-sm-6 col-sm-offset-4">
+  <h2 style="margin-bottom: 30px;"><span class="M">M</span>etro <span class="M">M</span>ap <span class="M">M</span>aker Login</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-primary" type="submit">Login</button>
+  </form>
+</div>
+
+</body>
+</html>

@@ -32,3 +32,11 @@ class SavedMap(models.Model):
 
     def __str__(self):
         return self.urlhash
+
+    class Meta:
+        permissions = (
+            ('hide_map', "Can set a map's gallery_visible to hidden"),
+            ('name_map', "Can set a map's name"),
+            ('tag_map', "Can change the tags associated with a map"),
+            ('generate_thumbnail', "Can generate thumbnails for a map"),
+        )
