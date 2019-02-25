@@ -161,6 +161,20 @@ function bindGridSquareEvents() {
     var y = $(this).attr('id').split('-').slice(4);
     drawArea(x, y, metroMap, true);
 
+    // Remove any existing colors here before adding them
+    // This fixes the bug where making a line with one color
+    // and a second line that intersects it would cause the intersection point to
+    // have the has-line- class for both colors, and the intersection point would no longer
+    // be writeable unless it were erased first
+    var classes = document.getElementById('coord-x-' + x + '-y-' + y).className.split(/\s+/);
+    var currentLines = [];
+    for (var z=0; z<classes.length; z++) {
+      if (classes[z].indexOf('has-line-') >= 0) {
+        // currentLines.push(classes[z].slice(9, 15));
+        $(this).removeClass(classes[z]);
+      }
+    }
+
     $(this).addClass('has-line')
     $(this).addClass('has-line-' + rgb2hex(activeToolOption).slice(1, 7));
     metroMap = updateMapObject(x, y, activeTool);
