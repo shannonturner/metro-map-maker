@@ -130,7 +130,7 @@ USE_TZ = True
 if DEBUG:
     STATIC_ROOT = '/Users/shannon/Dropbox/github/metro-map-maker/static/'
 elif not DEBUG:
-    STATIC_ROOT = '/home/sturner/webapps/metro_map_maker_static/static/'
+    STATIC_ROOT = '/home/sturner/webapps/metromapmaker_static/static/'
 
 # URL to use when referring to static files located in STATIC_ROOT.
 STATIC_URL = '/static/'
