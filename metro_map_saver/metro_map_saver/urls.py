@@ -58,7 +58,6 @@ urlpatterns = [
 
     # Thumbnails
     path('admin/thumbnail/<slug:tag>/', ThumbnailGalleryView.as_view(), name='thumbnail_tag'),
-    path('admin/thumbnail/<slug:tag>/<int:page>/', ThumbnailGalleryView.as_view(), name='thumbnail_tag_paginated'),
 ]
 
 if settings.DEBUG:

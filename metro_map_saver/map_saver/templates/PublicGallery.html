@@ -170,14 +170,20 @@
     <div id="speculative" class="text-center">
       <div class="row">
 
-        {% for thumbnail in speculative %}
+        {% comment %}
+
+        This is now deferred until page fully loads & added in with jquery, see below.
+
+        <!-- {% for thumbnail in speculative %}
         <div class="col-sm-2 col-md-1pt5">
           <a href="/?map={{ thumbnail.urlhash }}">
             <img src="{{ thumbnail.thumbnail }}" class="img-responsive" alt="{{ thumbnail.name }}" title="{{ thumbnail.name }}">
             <h4>{{ thumbnail.name }}</h4>
           </a>
         </div>
-        {% endfor %} 
+        {% endfor %}  -->
+
+        {% endcomment %}
 
       </div>
     </div> <!-- /#speculative -->
@@ -191,14 +197,20 @@
     <div id="unknown" class="text-center">
       <div class="row">
 
-        {% for thumbnail in unknown %}
+        {% comment %}
+
+        This is now deferred until page fully loads & added in with jquery, see below.
+
+        <!-- {% for thumbnail in unknown %}
         <div class="col-sm-2 col-md-1pt5">
           <a href="/?map={{ thumbnail.urlhash }}">
             <img src="{{ thumbnail.thumbnail }}" class="img-responsive" alt="{{ thumbnail.name }}" title="{{ thumbnail.name }}">
             <h4>{{ thumbnail.name }}</h4>
           </a>
         </div>
-        {% endfor %} 
+        {% endfor %} -->
+
+        {% endcomment %}
 
       </div>
     </div> <!-- /#unknown -->
@@ -210,6 +222,27 @@
   <!-- End editing! Your content goes above -->
   </div> <!-- /.col-sm-10.col-sm-offset-1 -->
 </div>
+
+<script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+
+    // Improve initial page load speed
+    // by loading the favorite / real at the template level (immediately)
+    // and deferring the speculative/unknown until later
+    function fetchMaps(tag) {
+      $.get('/admin/thumbnail/' + tag + '/', function(data) {
+        $('#' + tag + ' .row').append(data);
+      });
+    }
+
+    tags = ['speculative', 'unknown']
+
+    for (var i=0; i<tags.length; i++) {
+      fetchMaps(tags[i])
+    }
+
+</script>
 
   </body>
 </html>
