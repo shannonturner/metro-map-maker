@@ -28,7 +28,10 @@ class SavedMap(models.Model):
         return suggest_city(set(self.stations.lower().split(',')))
 
     def station_count(self):
-        return len(self.stations.strip(',').split(','))
+        if self.stations:
+            return self.stations.count(',')
+        else:
+            return 0
 
     def __str__(self):
         return self.urlhash
