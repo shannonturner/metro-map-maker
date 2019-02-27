@@ -14,7 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
 
-from django.urls import include, path
+from django.urls import include, path, re_path
 from django.contrib import admin
 from django.conf import settings
 from django.contrib.auth import views as auth_views
@@ -38,10 +38,8 @@ urlpatterns = [
     path('accounts/login/', auth_views.LoginView.as_view()),
 
     # Admin Gallery
-    path('admin/gallery/', MapGalleryView.as_view(), name='admin_gallery_all'),
-    path('admin/gallery/<int:page>/', MapGalleryView.as_view(), name='admin_gallery_all_paginated'),
-    path('admin/gallery/<slug:tag>/', MapGalleryView.as_view(), name='admin_gallery_tag'),
-    path('admin/gallery/<slug:tag>/<int:page>/', MapGalleryView.as_view(), name='admin_gallery_tag_paginated'),
+    re_path(r'admin/gallery/(?P<page>[0-9]+)?$', MapGalleryView.as_view(), name='admin_gallery'),
+    re_path(r'admin/gallery/(?P<tag>[\w^\d]+)?/?(?P<page>[0-9]+)?$', MapGalleryView.as_view(), name='admin_gallery_tag'),
 
     # Admin Gallery: Admin actions
     path('admin/action/', MapAdminActionView.as_view(), name='admin_action'),
