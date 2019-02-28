@@ -38,8 +38,7 @@ urlpatterns = [
     path('accounts/login/', auth_views.LoginView.as_view()),
 
     # Admin Gallery
-    re_path(r'admin/gallery/(?P<page>[0-9]+)?$', MapGalleryView.as_view(), name='admin_gallery'),
-    re_path(r'admin/gallery/(?P<tag>[\w^\d]+)?/?(?P<page>[0-9]+)?$', MapGalleryView.as_view(), name='admin_gallery_tag'),
+    re_path(r'admin/gallery/(?P<tag>[\w^\d]+)?/?$', MapGalleryView.as_view(), name='admin_gallery'),
 
     # Admin Gallery: Admin actions
     path('admin/action/', MapAdminActionView.as_view(), name='admin_action'),

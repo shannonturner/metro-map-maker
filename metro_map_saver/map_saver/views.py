@@ -122,8 +122,8 @@ class MapGalleryView(TemplateView):
 
         if request.GET.get('map') or kwargs.get('direct'):
             # Accessible either by
-            #           /save/admin/direct/https://metromapmaker.com/?map=8RkQTRav
-            #   or by   /save/admin/direct/8RkQTRav
+            #           /admin/direct/https://metromapmaker.com/?map=8RkQTRav
+            #   or by   /admin/direct/8RkQTRav
             direct = request.GET.get('map', kwargs.get('direct', '')[-8:])
             visible_maps = SavedMap.objects.filter(urlhash=direct)
         else:
@@ -144,13 +144,13 @@ class MapGalleryView(TemplateView):
 
         paginator = Paginator(visible_maps, MAPS_PER_PAGE)
 
-        page = kwargs.get('page')
+        page = request.GET.get('page')
         try:
-            saved_maps = paginator.page(page)
+            saved_maps = paginator.get_page(page)
         except PageNotAnInteger:
-            saved_maps = paginator.page(1)
+            saved_maps = paginator.get_page(1)
         except EmptyPage:
-            saved_maps = paginator.page(paginator.num_pages)
+            saved_maps = paginator.get_page(paginator.num_pages)
 
         context = {
             'saved_maps': saved_maps,

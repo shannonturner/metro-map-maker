@@ -179,8 +179,8 @@
         {% endif %}
         <span class="step-links">
           {% if saved_maps.has_previous %}
-              <a href="./1"><button class="btn-primary">First Page</button></a>
-              <a href="./{{ saved_maps.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
+              <a href="?page=1"><button class="btn-primary">First Page</button></a>
+              <a href="?page={{ saved_maps.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
           {% endif %}
 
           {% if saved_maps.paginator %}
@@ -190,8 +190,8 @@
           {% endif %}
 
           {% if saved_maps.has_next %}
-              <a href="./{{ saved_maps.next_page_number }}"><button class="btn-info">Next Page</button></a>
-              <a href="./{{ saved_maps.paginator.num_pages }}"><button class="btn-primary">Last Page</button></a>
+              <a href="?page={{ saved_maps.next_page_number }}"><button class="btn-info">Next Page</button></a>
+              <a href="?page={{ saved_maps.paginator.num_pages }}"><button class="btn-primary">Last Page</button></a>
           {% endif %}
         </span>
       </div> <!-- div.pagination -->
