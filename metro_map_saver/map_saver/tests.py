@@ -106,9 +106,9 @@ class AdminPermissionsTestCase(TestCase):
 
         admin_only_pages = (
             '/admin/gallery/',
-            '/admin/gallery/2',
+            '/admin/gallery/?page=2',
             '/admin/gallery/real/',
-            '/admin/gallery/real/2',
+            '/admin/gallery/real/?page=2',
             '/admin/similar/abc123',
             '/admin/direct/https://metromapmaker.com/?map=abc123',
         )
