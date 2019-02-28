@@ -138,6 +138,7 @@ def validate_metro_map(metro_map):
                     try:
                         assert metro_map[x][y]["line"] in valid_lines, "[VALIDATIONFAILED] 10: {0} at ({1}, {2}) NOT IN valid_lines".format(metro_map[x][y]["line"], x, y)
                     except AssertionError:
+                        del validated_metro_map[x][y] # delete this coordinate or it'll be undefined
                         continue # If the line isn't in valid_lines, we could just not add it
                     else:
                         validated_metro_map[x][y]["line"] = metro_map[x][y]["line"]
@@ -165,11 +166,5 @@ def validate_metro_map(metro_map):
                            validated_metro_map[x][y]["station"]["transfer"] = 1
                         if metro_map[x][y]["station"].get('orientation') and metro_map[x][y]["station"].get('orientation') in ('0', '-45', '45', '135', '180'):
                             validated_metro_map[x][y]["station"]["orientation"] = metro_map[x][y]["station"].get('orientation')
-
-                # Resolves problem found in map nRnbFuwW where somehow
-                # (probably due to validator permissiveness) a line could end up with no color
-                # and therefore be undefined
-                if len(validated_metro_map[x][y]) == 0:
-                    del validated_metro_map[x][y]
 
     return validated_metro_map
