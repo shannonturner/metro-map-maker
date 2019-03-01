@@ -857,21 +857,17 @@ function getMapSize(metroMapObject) {
     if (typeof metroMapObject !== 'object') {
       metroMapObject = JSON.parse(metroMapObject);
     }
+
+    highestValue = Math.max(...Object.keys(metroMapObject).map(parseInt).filter(isFinite))
     for (var x in metroMapObject) {
-      for (var y in metroMapObject[x]) {
-        x = parseInt(x);
-        y = parseInt(y);
-        if (!Number.isInteger(x) || !Number.isInteger(y) || !metroMapObject[x][y]) {
-          continue;
-        }
-        if (x > highestValue) {
-          highestValue = x;
-        }
-        if (y > highestValue) {
-          highestValue = y;
-        }
-      } // for var y
-    } // for var x
+      y = Math.max(...Object.keys(metroMapObject[x]).map(parseInt).filter(isFinite))
+      if (y > highestValue) {
+        highestValue = y;
+      }
+      if (highestValue >= 200) { // If adding new map sizes, edit this!
+        break
+      }
+    }
 
     // If adding new map sizes, edit this!
     if (highestValue >= 200) {
