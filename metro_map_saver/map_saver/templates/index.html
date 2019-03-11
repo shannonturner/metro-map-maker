@@ -37,7 +37,7 @@
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' %}?version=20190223">
+    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' %}?version=20190310">
     <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css" integrity="sha256-f83N12sqX/GO43Y7vXNt9MjrHkPc4yi9Uq9cLy1wGIU=" crossorigin="anonymous" />
 
@@ -84,19 +84,20 @@
     </div>
   </div>
 
-  <div id="canvas-container" class="col-md-9 col-lg-10 hidden-xs">
+  <div id="canvas-container" class="col-md-9 col-lg-10 {% if favorites %}hidden-xs{% endif%}">
     <canvas id='metro-map-canvas' width="1600" height="1600"></canvas>
     <canvas id='metro-map-stations-canvas' width="1600" height="1600"></canvas>
-    <div id="grid"></div>
+    <canvas id='grid-canvas' width="1600" height="1600"></canvas>
+    <canvas id="hover-canvas" width="1600" height="1600"></canvas>
     <img id="metro-map-image" class="img-responsive start-hidden">
   </div>
 
-  <div id="controls" class="col-md-3 col-lg-2 text-center hidden-xs">
+  <div id="controls" class="col-md-3 col-lg-2 text-left hidden-xs">
     <h3 id="title"><span class="M">M</span>etro<span class="M">M</span>ap<span class="M">M</span>aker</h3>
 
     <div id="toolbox">
 
-      <button id="tool-line" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Draw a rail line on the grid"><i class="fa fa-pencil" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> Draw Rail Line</button>
+      <button id="tool-line" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Draw a rail line on the grid"><i class="fa fa-pencil" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> Draw Rail Line</button>
       <div id="tool-line-options" class="start-hidden">
         <button id="rail-line-bd1038" class="rail-line original-rail-line">Red Line</button>
         <button id="rail-line-df8600" class="rail-line original-rail-line">Orange Line</button>
@@ -105,22 +106,34 @@
         <button id="rail-line-0896d7" class="rail-line original-rail-line">Blue Line</button>
         <button id="rail-line-662c90" class="rail-line original-rail-line">Purple Line</button>
         <button id="rail-line-a2a2a2" class="rail-line original-rail-line">Silver Line</button>
-        <button id="rail-line-new" class="rail-line">+ Add New Line</button>
-        <div id="tool-new-line-options" class="start-hidden">
+        <button id="rail-line-new" class="btn">+ Add New Line</button>
+        <div id="tool-new-line-options" class="text-left start-hidden">
           <h4 id="tool-new-line-errors" class="bg-danger"></h4>
           <h4>Color of this line</h4>
           <input id="new-rail-line-color" type="color">
 
           <h4>Name of this line</h4>
           <input id="new-rail-line-name" type="text" placeholder="Blue Line">
-          <button id="create-new-rail-line" class="btn btn-success">Create new line</button>
+          <button id="create-new-rail-line" class="btn btn-success">Save this new line</button>
         </div>
         <hr>
-        <button id="rail-line-delete">- Delete Unused Lines</button>
+        <button id="rail-line-change" class="btn"><i class="fa fa-pencil" aria-hidden="true"></i> Edit colors &amp; names</button>
+        <div id="tool-change-line-options" class="text-left start-hidden">
+          <select id="tool-lines-to-change">
+              <option>Edit which rail line?</option>
+          </select>
+          <h4>Color of this line</h4>
+          <input id="change-line-color" type="color">
+          <h4>Name of this line</h4>
+          <input id="change-line-name" type="text">
+          <h5 id="cant-save-rail-line-edits" class="bg-warning"></h5>
+          <button id="save-rail-line-edits" class="btn btn-success">Save edits to this line</button>
+        </div>
+        <button id="rail-line-delete" class="btn">- Delete Unused Lines</button>
       </div>
       
-      <button id="tool-station" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Place a station on an existing rail line, or select an existing station"><i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station</button>
-      <div id="tool-station-options" class="start-hidden">
+      <button id="tool-station" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Place a station on an existing rail line, or select an existing station"><i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station</button>
+      <div id="tool-station-options" class="text-left start-hidden">
         <h4>Station Name</h4>
         <input id="station-coordinates-x" type="hidden">
         <input id="station-coordinates-y" type="hidden">
@@ -142,17 +155,16 @@
         <h4>Add other lines this station serves:</h4>
         <div id="station-other-lines"></div>
       </div>
-      <button id="tool-eraser" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station"><i class="fa fa-eraser" aria-hidden="true"></i> Eraser</button>
-      <!-- <button id="tool-look" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Click without making any changes"><i class="fa fa-eye" aria-hidden="true"></i> Just look</button> -->
-      <button id="tool-export-canvas" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
-      <div id="export-canvas-help" class="start-hidden">
+      <button id="tool-eraser" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station"><i class="fa fa-eraser" aria-hidden="true"></i> Eraser</button>
+      <button id="tool-export-canvas" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
+      <div id="export-canvas-help" class="text-left start-hidden">
         <h5><b>Right click the map and click "Save Image As" to save your finished map.</b></h5>
         <h5>Or click "Edit map" to continue editing your map.</h5>
         <h5>Happy with your map? Be sure to click Save &amp; Share map and it might be <a href="https://metromapmaker.com/gallery" target="_blank">featured in the gallery</a>!</h5>
       </div>
-      <button id="tool-save-map" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Create a unique, shareable URL for your map"><i class="fa fa-share" aria-hidden="true"></i> Save &amp; Share map</button>
-      <div id="tool-save-options" class="start-hidden"></div>
-      <button id="tool-grid" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Just hides the grid but you can still edit the map; to download your map click Download as image"><i class="fa fa-table" aria-hidden="true"></i> Hide grid</button>
+      <button id="tool-save-map" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Create a unique, shareable URL for your map"><i class="fa fa-share" aria-hidden="true"></i> Save &amp; Share map</button>
+      <div id="tool-save-options" class="text-left start-hidden"></div>
+      <button id="tool-grid" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Just hides the grid but you can still edit the map; to download your map click Download as image"><i class="fa fa-table" aria-hidden="true"></i> Hide grid</button>
       <div id="tool-zoom-controls" class="row">
         <div class="col-xs-6" id="zoom-in-container">
         <button id="tool-zoom-in" class="btn btn-info"><i class="fa fa-search-plus" aria-hidden="true"></i> Zoom +</button>
@@ -161,16 +173,18 @@
         <button id="tool-zoom-out" class="btn btn-info"><i class="fa fa-search-minus" aria-hidden="true"></i> Zoom -</button>
         </div>
       </div>
-      <button id="tool-move-all" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Recenter your Metro map"><i class="fa fa-arrows" aria-hidden="true"></i> Move map</button>
-      <div id="tool-move-options" class="start-hidden">
+      <button id="snap-controls-left" class="btn btn-info has-tooltip start-hidden" data-toggle="tooltip" data-placement="left" title="Move all controls to the left side of the screen"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Snap controls to left</button>
+      <button id="snap-controls-right" class="btn btn-info has-tooltip start-hidden" data-toggle="tooltip" data-placement="left" title="Move all controls to the right side of the screen"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Snap controls to right</button>
+      <button id="tool-move-all" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Recenter your Metro map"><i class="fa fa-arrows" aria-hidden="true"></i> Move map</button>
+      <div id="tool-move-options" class="text-left start-hidden">
         <h5>Be careful! If you move your map out of bounds, you'll lose your work.</h5>
         <button id="tool-move-up" class="btn btn-info"><i class="fa fa-chevron-circle-up" aria-hidden="true"></i> Move everything up</button>
         <button id="tool-move-left" class="btn btn-info"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Move everything left</button>
         <button id="tool-move-right" class="btn btn-info"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Move everything right</button>
         <button id="tool-move-down" class="btn btn-info"><i class="fa fa-chevron-circle-down" aria-hidden="true"></i> Move everything down</button>
       </div>
-      <button id="tool-resize-all" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Resize the grid, allowing you to make larger maps"><i class="fa fa-expand" aria-hidden="true"></i> Resize grid</button>
-      <div id="tool-resize-options" class="start-hidden">
+      <button id="tool-resize-all" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Resize the grid, allowing you to make larger maps"><i class="fa fa-expand" aria-hidden="true"></i> Resize grid</button>
+      <div id="tool-resize-options" class="text-left start-hidden">
         <h5>Be careful! If your map is large and you resize it to be smaller, you'll lose your work.</h5>
         <button id="tool-resize-80" class="btn btn-info resize-grid">Standard (80x80)</button>
         <button id="tool-resize-120" class="btn btn-info resize-grid">Large (120x120)</button>
@@ -181,7 +195,7 @@
       </div>
 
       <hr>
-      <button id="tool-clear-map" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Be careful: this will delete your map"><i class="fa fa-trash-o" aria-hidden="true"></i> Clear map</button>
+      <button id="tool-clear-map" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Be careful: this will delete your map"><i class="fa fa-trash-o" aria-hidden="true"></i> Clear map</button>
       <hr>
       <div id="autosave-indicator"></div>
 
@@ -205,7 +219,13 @@
 
   <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-  <script src='{% static "js/metromapmaker.js" %}?version=20190223'></script>
+  {% if saved_map %}
+  <script>
+    var savedMapData = {% autoescape off %}'{{ saved_map.mapdata }}'{% endautoescape %}
+    {% if saved_map_name %}window.sessionStorage.setItem('userGivenMapName', "{{ saved_map_name }}"){% endif %}
+  </script>
+  {% endif %}
+  <script src='{% static "js/metromapmaker.js" %}?version=20190310'></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js" integrity="sha256-ZdnRjhC/+YiBbXTHIuJdpf7u6Jh5D2wD5y0SNRWDREQ=" crossorigin="anonymous"></script>
 
   </body>

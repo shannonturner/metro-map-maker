@@ -52,7 +52,23 @@ class HomeView(TemplateView):
                 'favorites': thumbnails[:3]
             }
         else:
-            context = {}
+            try:
+                saved_map = SavedMap.objects.get(urlhash=request.GET.get('map'))
+            except Exception:
+                pass
+            else:
+                context = {
+                    'saved_map': saved_map,
+                }
+                if saved_map.name:
+                    if saved_map.name.endswith(' (real)'):
+                        context["saved_map_name"] = saved_map.name.rsplit(" (real)")[0]
+                    elif saved_map.name.endswith(' (speculative)'):
+                        context["saved_map_name"] = saved_map.name.rsplit(" (speculative)")[0]
+                    elif saved_map.name.endswith(' (unknown)'):
+                        context["saved_map_name"] = saved_map.name.rsplit(" (unknown)")[0]
+                    else:
+                        context["saved_map_name"] = saved_map.name
 
         return render(request, self.template_name, context)
 

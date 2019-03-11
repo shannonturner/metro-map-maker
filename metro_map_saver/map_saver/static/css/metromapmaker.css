@@ -5,7 +5,6 @@ body {
 #title {
   color: black;
   font-size: 20px;
-  /*background-color: white;*/
 }
 
 .M {
@@ -21,13 +20,9 @@ body {
 }
 
 #controls {
-  /*border: 6px solid #666;*/
+  z-index: 101;
   border: 6px solid black;
-  /*background-color: #eee;*/ /* Now that I'm using .M, the control panel looks much better with a white background */
-}
-
-#metro-map {
-  border: 2px solid black;
+  background-color: white;
 }
 
 div#toolbox {
@@ -42,79 +37,52 @@ div#toolbox {
   color: #fff;
 }
 
-.btn {
+#zoom-in-container button, #zoom-out-container button {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.btn, #rail-line-change, #rail-line-delete, #rail-line-new {
   text-align: left;
 }
 
-#grid {
-  display: flex;
-  cursor: crosshair;
-  z-index: 99;
-  opacity: .25;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  /* Prevents intermittent drag-and-drop that would happen on squares */
-  -moz-user-select: -moz-none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-.temp-no-flex-firefox {
-  /* Temporarily disable display: flex
-    so that Firefox doesn't crash,
-    then re-enable it
-  */
-  display: none !important;
-}
-
 #canvas-container {
-  padding-left: 6px;
-  padding-top: 6px;
-
   overflow: scroll;
+  padding: 0;
+  height: 100%;
+  cursor: crosshair;
 }
 
 #metro-map-canvas {
   z-index: -99;
   width: 100%;
   height: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: scroll;
 }
 
 #metro-map-stations-canvas {
+  z-index: 99;
   width: 100%;
   height: auto;
   position: absolute;
-
-  /* If you change the padding of #canvas-container, change these values to match */
-  top: 6px;
-  left: 6px;
+  top: 0;
+  left: 0;
 }
 
-.grid-col {
-  border: 1px solid;
-  border-color: #80CEFF;
-  width: 12px;
-  height: 12px;
-  background-color: transparent !important;
-}
-
-.grid-col:hover {
-  background-color: green !important;
-}
-
-#grid.hide-gridlines .grid-col {
-  border-color: transparent;
+canvas#grid-canvas, canvas#hover-canvas {
+  z-index: 100;
+  width: 100%;
+  height: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 #remix, #credits {
   text-align: left;
-}
-
-#remix ul {
-  padding-left: 20px;
 }
 
 button {
@@ -156,7 +124,7 @@ button.rail-line {
 }
 
 #rail-line-new {
-  background-color: #ff8e88;
+  /*background-color: #ff8e88;*/
 }
 
 #rail-line-delete {
@@ -167,6 +135,8 @@ button.rail-line {
 #create-new-rail-line {
   background-color: #5cb85c;
   border-color: #4cae4c;
+  margin-top: 6px;
+  margin-bottom: -3px;
 }
 
 #autosave-indicator {
@@ -178,30 +148,23 @@ button.rail-line {
   margin-bottom: 10px;
 }
 
-/*.station {
-  outline: 1px solid black;
-  border: 3px solid white;
-  width: 150%;
-  height: 150%;
-  position: relative;
-  left: -25%;
-  top: -25%;
-  background-color: transparent !important;
-}
-
-.transfer-station {
-  outline: 3px solid black;
-  border: 9px solid white;
-  width: 300%;
-  height: 300%;
-  position: relative;
-  left: -100%;
-  top: -100%;
-}*/
-
 #station-name {
   font-weight: bold;
   padding-left: 5px;
+}
+
+/*input#new-rail-line-color, input#new-rail-line-name, input#change-line-color {*/
+input[type="text"], input[type="color"] {
+  width: 100%;
+}
+
+#tool-lines-to-change {
+  margin-top: 3px;
+}
+
+form#name-map input {
+  margin-top: -5px;
+  margin-bottom: 5px;
 }
 
 #station-name-orientation {
@@ -211,10 +174,6 @@ button.rail-line {
 
 hr {
   border-top: 1px solid #666;
-}
-
-.active {
-  border-color: #ffff00;
 }
 
 select {
@@ -242,6 +201,9 @@ select {
 }
 
 @media (min-width: 768px) {
+  /*body {
+    background-color: aliceblue;
+  }*/
   #controls {
     position: fixed;
     overflow-y: auto;
