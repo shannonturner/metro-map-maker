@@ -283,8 +283,9 @@ function makeStation(x, y) {
         linesToAdd += '<button style="background-color: #' + allLines[z].id.slice(10, 16) + '" class="station-add-lines" id="add-line-' + allLines[z].id.slice(10, 16) + '">' + $('#' + allLines[z].id).text() + '</button>';
       }
     } // for allLines
-    if (linesToAdd) {
+    if (linesToAdd.length > 0) {
       $('#station-other-lines').html(linesToAdd);
+      $('#add-other-lines').show()
       // Bind the event to the .station-add-lines buttons here since they are newly created.
       $('.station-add-lines').click(function() {
         if ($(this).parent().attr('id') == 'station-other-lines') {
@@ -311,6 +312,9 @@ function makeStation(x, y) {
         autoSave(activeMap)
       }); // .station-add-lines.click()
     } // if linesToAdd
+    else {
+      $('#add-other-lines').hide()
+    } // not linesToAdd
   } // if stationOnLines
 
   // Now, there are two indicators for when a station has been placed on a line
@@ -370,7 +374,8 @@ function bindGridSquareMouseover(event) {
 
 function bindGridSquareMouseup() {
   // Workaround to give focus to #station-name after mousedown
-  if (activeTool == 'station') {
+  // Just don't steal focus away from another text box
+  if (activeTool == 'station' && document.activeElement.type != 'text') {
     $('#station-name').focus()
   }
 }
@@ -1189,6 +1194,7 @@ $(document).ready(function() {
       $('canvas#grid-canvas').css("opacity", 0);
       $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> Show grid');
     }
+    $('.tooltip').hide()
   }); // #tool-grid.click() (Toggle grid visibility)
   $('#tool-zoom-in').click(function() {
       resizeCanvas('in')
