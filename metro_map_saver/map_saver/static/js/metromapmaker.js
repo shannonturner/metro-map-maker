@@ -53,13 +53,8 @@ function resizeCanvas(zoomDirection) {
 
   // Get current size of the container
   var size = $('#canvas-container').width()
-  size = Math.round(size / 50) * 50 // Round to the nearest 50
 
-  if (gridCols <= 160) {
-    step = 50
-  } else {
-    step = 150 // zoom faster at the larger grid sizes
-  }
+  step = gridCols
 
   // Check to see if there is overlap between the controls and the grid,
   //  if so, offer the option to move the toolbox
@@ -939,6 +934,10 @@ function getMapSize(metroMapObject) {
     gridRows = 80, gridCols = 80;
   }
   resizeGrid(gridRows)
+
+  // Size the canvas container to the nearest multiple of gridCols
+  $('#canvas-container').width(Math.round($('#canvas-container').width() / gridCols) * gridCols)
+  $('#canvas-container').height(Math.round($('#canvas-container').height() / gridRows) * gridRows)
 } // getMapSize(metroMapObject)
 
 function loadMapFromObject(metroMapObject, update) {
@@ -1076,8 +1075,20 @@ function getCanvasXY(pageX, pageY) {
   var width = container.width();
   var height = container.height();
 
-  var x = Math.floor((parseInt(pageX) / width) * gridCols) - 1 
-  var y = Math.floor((parseInt(pageY) / height) * gridRows) - 1
+  var xOffset = parseInt($('#main-container').css('padding-left'))
+  var yOffset = parseInt($('#main-container').css('margin-top'))
+
+  pageX = parseInt(pageX) - xOffset
+  pageY = parseInt(pageY) - yOffset
+
+  // Example: with width = 960 and gridCols = 160, round to the nearest 6 pixels
+  var roundToNearest = width / gridCols
+
+  pageX = Math.round(pageX / roundToNearest) * roundToNearest
+  pageY = Math.round(pageY / roundToNearest) * roundToNearest
+
+  var x = Math.floor(pageX / width * gridCols)
+  var y = Math.floor(pageY / height * gridRows)
 
   if (x < 0) {
     x = 0
@@ -1382,7 +1393,8 @@ $(document).ready(function() {
       // Layer the stations on top of the canvas
       var ctx = canvas.getContext('2d', {alpha: false});
       ctx.drawImage(canvasStations, 0, 0);
-      $("#metro-map-image").attr("src", canvas.toDataURL());
+      var imageData = canvas.toDataURL()
+      $("#metro-map-image").attr("src", imageData);
       $("#metro-map-image").show();
       $('#export-canvas-help').show();
       $('button').attr('disabled', true);
