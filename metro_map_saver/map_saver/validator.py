@@ -95,11 +95,15 @@ def validate_metro_map(metro_map):
     # The map is passed through as a string, which needs to be converted to a dictionary first
     metro_map = json.loads(metro_map)
 
-    assert type(metro_map) == dict, "[VALIDATIONFAILED] 01: metro_map IS NOT DICT"
-    assert metro_map.get('global'), "[VALIDATIONFAILED] 02: metro_map DOES NOT HAVE GLOBAL"
-    assert metro_map['global'].get('lines'), "[VALIDATIONFAILED] 03: metro_map DOES NOT HAVE LINES"
-    assert type(metro_map['global']['lines']) == dict, "[VALIDATIONFAILED] 04: metro_map LINES IS NOT DICT"
-    assert len(metro_map['global']['lines']) <= 100, "[VALIDATIONFAILED] 04B: metro_map HAS TOO MANY LINES"
+    # Formatting the assertion strings:
+    # Anything that appears before the first colon will be internal-only;
+    #   everything else is user-facing.
+
+    assert type(metro_map) == dict, "[VALIDATIONFAILED] 01 metro_map IS NOT DICT: Bad map object, needs to be an object."
+    assert metro_map.get('global'), "[VALIDATIONFAILED] 02 metro_map DOES NOT HAVE GLOBAL: Bad map object, missing global."
+    assert metro_map['global'].get('lines'), "[VALIDATIONFAILED] 03 metro_map DOES NOT HAVE LINES: Map does not have any rail lines defined."
+    assert type(metro_map['global']['lines']) == dict, "[VALIDATIONFAILED] 04 metro_map LINES IS NOT DICT: Map lines must be stored as an object."
+    assert len(metro_map['global']['lines']) <= 100, "[VALIDATIONFAILED] 04B metro_map HAS TOO MANY LINES: Map has too many lines (limit is 100); remove unused lines."
 
     validated_metro_map = {
         'global': {
@@ -113,9 +117,9 @@ def validate_metro_map(metro_map):
     valid_lines = []
 
     for global_line in metro_map['global']['lines'].keys():
-        assert is_hex(global_line), "[VALIDATIONFAILED] 05: global_line {0} FAILED is_hex()".format(global_line)
-        assert len(global_line) == 6, "[VALIDATIONFAILED] 06: global_line {0} IS NOT 6 CHARACTERS".format(global_line)
-        assert 1 <= len(metro_map['global']['lines'][global_line].get('displayName')) < 256, "[VALIDATIONFAILED] 07: displayName BAD SIZE"
+        assert is_hex(global_line), "[VALIDATIONFAILED] 05 global_line {0} FAILED is_hex() {0} is not a valid color: {0} is not a valid rail line color.".format(global_line)
+        assert len(global_line) == 6, "[VALIDATIONFAILED] 06 global_line {0} IS NOT 6 CHARACTERS: The color {0} must be 6 characters long.".format(global_line)
+        assert 1 <= len(metro_map['global']['lines'][global_line].get('displayName', '')) < 256, "[VALIDATIONFAILED] 07 displayName BAD SIZE: Rail line names must be between 1 and 255 characters long (spaces are okay)."
         valid_lines.append(global_line)
         validated_metro_map['global']['lines'][global_line] = {
             'displayName': sanitize_string(metro_map['global']['lines'][global_line]['displayName'])
@@ -133,19 +137,19 @@ def validate_metro_map(metro_map):
                 if metro_map[x].get(y):
                     if not validated_metro_map[x].get(y):
                         validated_metro_map[x][y] = {}
-                    assert is_hex(metro_map[x][y]["line"]), "[VALIDATIONFAILED] 08: {0} at ({1}, {2}) FAILED is_hex()".format(metro_map[x][y]["line"], x, y)
-                    assert len(metro_map[x][y]["line"]) == 6, "[VALIDATIONFAILED] 09: {0} at ({1}, {2}) IS NOT 6 CHARACTERS".format(metro_map[x][y]["line"], x, y)
+                    assert is_hex(metro_map[x][y]["line"]), "[VALIDATIONFAILED] 08 {0} at ({1}, {2}) FAILED is_hex(): Point at ({3}, {4}) is not a valid color: {0}.".format(metro_map[x][y]["line"], x, y, int(x) + 1, int(y) + 1)
+                    assert len(metro_map[x][y]["line"]) == 6, "[VALIDATIONFAILED] 09 {0} at ({1}, {2}) IS NOT 6 CHARACTERS: Point at ({3}, {4}) has a color that needs to be 6 characters long: {0}".format(metro_map[x][y]["line"], x, y, int(x) + 1, int(y) + 1)
                     try:
-                        assert metro_map[x][y]["line"] in valid_lines, "[VALIDATIONFAILED] 10: {0} at ({1}, {2}) NOT IN valid_lines".format(metro_map[x][y]["line"], x, y)
+                        assert metro_map[x][y]["line"] in valid_lines, "[VALIDATIONFAILED] 10 {0} at ({1}, {2}) NOT IN valid_lines: Point at ({3}, {4}) has a color that is not defined in the rail lines; please create a line matching the color {0}.".format(metro_map[x][y]["line"], x, y, int(x) + 1, int(y) + 1)
                     except AssertionError:
                         del validated_metro_map[x][y] # delete this coordinate or it'll be undefined
                         continue # If the line isn't in valid_lines, we could just not add it
                     else:
                         validated_metro_map[x][y]["line"] = metro_map[x][y]["line"]
                     if metro_map[x][y].get('station'):
-                        assert type(metro_map[x][y]["station"]) == dict, "[VALIDATIONFAILED] 11: metro_map[x][y]['station'] at ({0}, {1}) IS NOT DICT".format(x, y)
-                        assert 1 <= len(metro_map[x][y]["station"]["name"]) < 256, "[VALIDATIONFAILED] 12: station name at ({0}, {1}) BAD SIZE: {2} is {3}".format(x, y, metro_map[x][y]["station"]["name"], len(metro_map[x][y]["station"]["name"]))
-                        assert type(metro_map[x][y]["station"]["lines"]) == list, "[VALIDATIONFAILED] 13: station lines at ({0}, {1}) NOT A LIST".format(x, y)
+                        assert type(metro_map[x][y]["station"]) == dict, "[VALIDATIONFAILED] 11 metro_map[x][y]['station'] at ({0}, {1}) IS NOT DICT: Point at ({2}, {3}) has a malformed station, must be an object.".format(x, y, int(x) + 1, int(y) + 1)
+                        assert 1 <= len(metro_map[x][y]["station"]["name"]) < 256, "[VALIDATIONFAILED] 12 station name at ({0}, {1}) BAD SIZE {2} is {3}: Point at ({4}, {5}) has a station whose name is not between 1 and 255 characters long. Please rename it.".format(x, y, metro_map[x][y]["station"]["name"], len(metro_map[x][y]["station"]["name"]), int(x) + 1, int(y) + 1)
+                        assert type(metro_map[x][y]["station"]["lines"]) == list, "[VALIDATIONFAILED] 13 station lines at ({0}, {1}) NOT A LIST: Point at ({2}, {3}) has its station lines in the incorrect format; must be a list.".format(x, y, int(x) + 1, int(y) + 1)
                         # Okay, this probably *should* pass - but I think I have some bug in the javascript somewhere because https://metromapmaker.com/?map=zCq7R223 obviously passed validation but once reconstituted, fails. But this isn't a big enough deal that I can't wave this validation through while I figure out what's going on.
                         # assert len(metro_map[x][y]["station"]["lines"]) > 0, "[VALIDATIONFAILED] 14: station lines at ({0}, {1}) HAS ZERO LENGTH".format(x, y)
                         validated_metro_map[x][y]["station"] = {
@@ -153,10 +157,10 @@ def validate_metro_map(metro_map):
                             "lines": []
                         }
                         for station_line in metro_map[x][y]["station"]["lines"]:
-                            assert is_hex(station_line), "[VALIDATIONFAILED] 15: station_line {0} FAILED is_hex()".format(station_line)
-                            assert len(station_line) == 6, "[VALIDATIONFAILED] 16: station_line {0} IS NOT 6 CHARACTERS".format(station_line)
+                            assert is_hex(station_line), "[VALIDATIONFAILED] 15 station_line {0} FAILED is_hex(): Station Rail line {0} is not a valid color.".format(station_line)
+                            assert len(station_line) == 6, "[VALIDATIONFAILED] 16 station_line {0} IS NOT 6 CHARACTERS: Station Rail line color {0} needs to be 6 characters long.".format(station_line)
                             try:
-                                assert station_line in valid_lines, "[VALIDATIONFAILED] 17: station_line {0} NOT IN valid_lines".format(station_line)
+                                assert station_line in valid_lines, "[VALIDATIONFAILED] 17 station_line {0} NOT IN valid_lines: Station rail line color {0} is not defined; please create a rail line matching this color or remove it from all stations.".format(station_line)
                             except AssertionError:
                                 # We can gracefully fail here by simply not adding that line to the station
                                 continue
