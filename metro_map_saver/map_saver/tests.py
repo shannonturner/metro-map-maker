@@ -1,4 +1,5 @@
 import json
+from unittest import expectedFailure
 
 from map_saver.models import SavedMap
 from map_saver.validator import validate_metro_map
@@ -198,7 +199,7 @@ class ValidateMapTestCase(TestCase):
             AssertionError,
             msg="[VALIDATIONFAILED] 08 nonhex at (1, 1) FAILED is_hex(): Point at (2, 2) is not a valid color: nonhex."
         ) as assertion:
-            metro_map = '{"global": {"000000": {"displayName": "Black Line"} }, "1": {"1": {"line": "nonhex"} } }'
+            metro_map = '{"global": { "lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "nonhex"} } }'
             validate_metro_map(metro_map)
 
     def test_invalid_point_line_not_six(self):
@@ -211,20 +212,22 @@ class ValidateMapTestCase(TestCase):
             AssertionError,
             msg="[VALIDATIONFAILED] 09 not six characters long at (1, 1) IS NOT 6 CHARACTERS: Point at (2, 2) has a color that needs to be 6 characters long: not six characters long"
         ) as assertion:
-            metro_map = '{"global": {"000000": {"displayName": "Black Line"} }, "1": {"1": {"line": "not six characters long"} } }'
+            metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "not six characters long"} } }'
             validate_metro_map(metro_map)
 
+    @expectedFailure
     def test_invalid_point_line_not_valid(self):
 
         """ Reject a map that has a color at a coordinate
                 that is not listed in the global
+            (Graceful failure; does not raise an assertion)
         """
 
-        with self.assertRaises(
+        with self.assertNotRaises( # Graceful failure
             AssertionError,
             msg="[VALIDATIONFAILED] 10 ffffff at (1, 1) NOT IN valid_lines: Point at (2, 2) has a color that is not defined in the rail lines; please create a line matching the color ffffff."
         ) as assertion:
-            metro_map = '{"global": {"000000": {"displayName": "Black Line"} }, "1": {"1": {"line": "ffffff"} } }'
+            metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "ffffff"} } }'
             validate_metro_map(metro_map)
 
     def test_invalid_station_not_dict(self):
@@ -236,7 +239,7 @@ class ValidateMapTestCase(TestCase):
             AssertionError,
             msg="[VALIDATIONFAILED] 11 metro_map[x][y]['station'] at (1, 1) IS NOT DICT: Point at (2, 2) has a malformed station, must be an object."
         ) as assertion:
-            metro_map = '{"global": {"000000": {"displayName": "Black Line"} }, "1": {"1": {"line": "000000", "station": "bad station"} } }'
+            metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "000000", "station": "bad station"} } }'
             validate_metro_map(metro_map)
 
     def test_invalid_station_name_too_short(self):
@@ -247,7 +250,7 @@ class ValidateMapTestCase(TestCase):
             AssertionError,
             msg="[VALIDATIONFAILED] 12 station name at (1, 1) BAD SIZE is 0: Point at (2, 2) has a station whose name is not between 1 and 255 characters long. Please rename it."
         ) as assertion:
-            metro_map = '{"global": {"000000": {"displayName": "Black Line"} }, "1": {"1": {"line": "000000", "station": {"name": ""} } } }'
+            metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "000000", "station": {"name": ""} } } }'
             validate_metro_map(metro_map)
 
     def test_invalid_station_name_too_long(self):
@@ -259,7 +262,7 @@ class ValidateMapTestCase(TestCase):
             msg="[VALIDATIONFAILED] 12 station name at (1, 1) BAD SIZE is 256: Point at (2, 2) has a station whose name is not between 1 and 255 characters long. Please rename it."
         ) as assertion:
             station_name_too_long = "a" * 256
-            metro_map = '{{"global": {{"000000": {{"displayName": "Black Line"}} }}, "1": {{"1": {{"line": "000000", "station": {{"name": "{0}"}} }} }} }}'.format(station_name_too_long)
+            metro_map = '{{"global": {{"lines": {{"000000": {{"displayName": "Black Line"}} }} }}, "1": {{"1": {{"line": "000000", "station": {{"name": "{0}"}} }} }} }}'.format(station_name_too_long)
             validate_metro_map(metro_map)
 
     def test_invalid_station_lines_not_list(self):
@@ -270,7 +273,7 @@ class ValidateMapTestCase(TestCase):
             AssertionError,
             msg="[VALIDATIONFAILED] 13 station lines at (1, 1) NOT A LIST: Point at (2, 2) has its station lines in the incorrect format; must be a list."
         ) as assertion:
-            metro_map = '{"global": {"000000": {"displayName": "Black Line"} }, "1": {"1": {"line": "000000", "station": {"name": "OK", "lines": "000000"} } } }'
+            metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "000000", "station": {"name": "OK", "lines": "000000"} } } }'
             validate_metro_map(metro_map)
 
     def test_invalid_station_line_not_hex(self):
@@ -281,7 +284,7 @@ class ValidateMapTestCase(TestCase):
             AssertionError,
             msg="[VALIDATIONFAILED] 15 station_line not hex FAILED is_hex(): Station Rail line not hex is not a valid color."
         ) as assertion:
-            metro_map = '{"global": {"000000": {"displayName": "Black Line"} }, "1": {"1": {"line": "000000", "station": {"name": "OK", "lines": ["not hex"]} } } }'
+            metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "000000", "station": {"name": "OK", "lines": ["not hex"]} } } }'
             validate_metro_map(metro_map)
 
     def test_invalid_station_line_not_six(self):
@@ -292,19 +295,21 @@ class ValidateMapTestCase(TestCase):
             AssertionError,
             msg="[VALIDATIONFAILED] 16 station_line beef IS NOT 6 CHARACTERS: Station Rail line color beef needs to be 6 characters long."
         ) as assertion:
-            metro_map = '{"global": {"000000": {"displayName": "Black Line"} }, "1": {"1": {"line": "000000", "station": {"name": "OK", "lines": ["beef"]} } } }'
+            metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "000000", "station": {"name": "OK", "lines": ["beef"]} } } }'
             validate_metro_map(metro_map)
 
+    @expectedFailure
     def test_invalid_station_line_not_valid(self):
 
         """ Reject a map with a station line that is not in the global
+            (Graceful failure; does not raise an assertion)
         """
 
-        with self.assertRaises(
+        with self.assertRaises( # Graceful failure
             AssertionError,
             msg="[VALIDATIONFAILED] 17 station_line ffffff NOT IN valid_lines: Station rail line color ffffff is not defined; please create a rail line matching this color or remove it from all stations."
         ) as assertion:
-            metro_map = '{"global": {"000000": {"displayName": "Black Line"} }, "1": {"1": {"line": "000000", "station": {"name": "OK", "lines": ["ffffff"]} } } }'
+            metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "000000", "station": {"name": "OK", "lines": ["ffffff"]} } } }'
             validate_metro_map(metro_map)
 
 

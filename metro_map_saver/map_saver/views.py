@@ -468,7 +468,9 @@ class MapDataView(TemplateView):
         try:
             mapdata = validate_metro_map(mapdata)
         except AssertionError as e:
-            context['error'] = '[ERROR] Map failed validation! ({0}) -- map was {1}'.format(e, mapdata)
+            # Anything that appears before the first colon will be internal-only;
+            #   everything else is user-facing.
+            context['error'] = '[ERROR] {0}'.format(' '.join(str(e).split(':')[1:]))
             logging.error('[ERROR] [FAILEDVALIDATION] ({0}); mapdata: {1}'.format(e, mapdata))
         else:
             urlhash = hex64(hashlib.sha256(str(mapdata).encode('utf-8')).hexdigest()[:12])

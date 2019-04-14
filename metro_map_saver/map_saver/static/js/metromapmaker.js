@@ -1296,7 +1296,7 @@ $(document).ready(function() {
       'metroMap': savedMap
     }).done(function(data) {
       if (data.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
-        $('#tool-save-options').html('<h5 class="bg-danger">Sorry, there was a problem saving your map.</h5>');
+        $('#tool-save-options').html('<h5 class="bg-danger">Sorry, there was a problem saving your map: ' + data.slice(9) + '</h5>');
         console.log("[WARN] Problem was: " + data)
         $('#tool-save-options').show();
       } else {
