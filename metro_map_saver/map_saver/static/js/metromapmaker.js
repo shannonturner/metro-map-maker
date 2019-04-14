@@ -1423,6 +1423,8 @@ $(document).ready(function() {
       "global": activeMap["global"]
     }
     drawGrid()
+    snapCanvasToGrid()
+    lastStrokeStyle = undefined;
     drawCanvas(activeMap)
 
     window.sessionStorage.removeItem('userGivenMapName');
