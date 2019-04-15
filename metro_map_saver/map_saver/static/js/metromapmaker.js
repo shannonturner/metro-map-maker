@@ -952,7 +952,21 @@ function loadMapFromObject(metroMapObject, update) {
     if (Object.keys(metroMapObject['global']['lines']).length > 0) {
       // Remove original rail lines if the map has its own preset rail lines
       $('#tool-line-options button.original-rail-line').remove();
-    }
+    } else {
+      // If there are no rail lines, load up the defaults, since that's what will show
+      metroMapObject['global']['lines'] = {
+        "0896d7": {"displayName":"Blue Line"},
+        "df8600": {"displayName":"Orange Line"},
+        "000000": {"displayName":"Logo"},
+        "00b251": {"displayName":"Green Line"},
+        "662c90": {"displayName":"Purple Line"},
+        "a2a2a2": {"displayName":"Silver Line"},
+        "f0ce15": {"displayName":"Yellow Line"},
+        "bd1038": {"displayName":"Red Line"},
+        "79bde9": {"displayName":"Rivers"},
+        "cfe4a7": {"displayName":"Parks"}
+      }
+    } // else (if there are no lines in the global)
 
     for (var line in metroMapObject['global']['lines']) {
       if (metroMapObject['global']['lines'].hasOwnProperty(line) && document.getElementById('rail-line-' + line) === null) {
@@ -1419,9 +1433,11 @@ $(document).ready(function() {
   }); // #tool-export-canvas.click()
   $('#tool-clear-map').click(function() {
     gridRows = 80, gridCols = 80;
+
     activeMap = {
       "global": activeMap["global"]
     }
+
     drawGrid()
     snapCanvasToGrid()
     lastStrokeStyle = undefined;
