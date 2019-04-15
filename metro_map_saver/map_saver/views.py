@@ -29,6 +29,7 @@ logging.basicConfig(
     level=logging.ERROR,
     format='%(asctime)s %(message)s',
 )
+logger = logging.getLogger(__name__)
 
 class HomeView(TemplateView):
 
@@ -471,7 +472,7 @@ class MapDataView(TemplateView):
             # Anything that appears before the first colon will be internal-only;
             #   everything else is user-facing.
             context['error'] = '[ERROR] {0}'.format(' '.join(str(e).split(':')[1:]))
-            logging.error('[ERROR] [FAILEDVALIDATION] ({0}); mapdata: {1}'.format(e, mapdata))
+            logger.error('[ERROR] [FAILEDVALIDATION] ({0}); mapdata: {1}'.format(e, mapdata))
         else:
             urlhash = hex64(hashlib.sha256(str(mapdata).encode('utf-8')).hexdigest()[:12])
             try:
@@ -486,7 +487,7 @@ class MapDataView(TemplateView):
                 try:
                     saved_map.stations = ','.join(get_stations(mapdata)).lower()
                 except Exception as e:
-                    logging.error('[WARN] Failed to save stations for {0}: {1}'.format(urlhash, e))
+                    logger.error('[WARN] Failed to save stations for {0}: {1}'.format(urlhash, e))
                 saved_map.save()
             except MultipleObjectsReturned:
                 # This should never happen, but it happened once
