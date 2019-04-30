@@ -4,14 +4,15 @@ from unittest import expectedFailure
 from map_saver.models import SavedMap
 from map_saver.validator import validate_metro_map
 
-from django.test import TestCase
+from django.test import TestCase, Client
+from django.core.exceptions import ObjectDoesNotExist
 
 class ValidateMapTestCase(TestCase):
 
-    fixtures = ['backups/2018/mmm-backup-20181110.json']
+    # fixtures = ['backups/2018/mmm-backup-20181110.json']
 
-    def test_fixtures_loaded(self):
-        self.assertEqual(SavedMap.objects.count(), 3983)
+    # def test_fixtures_loaded(self):
+    #     self.assertEqual(SavedMap.objects.count(), 3983)
 
     def test_validator(self):
 
@@ -309,3 +310,71 @@ class ValidateMapTestCase(TestCase):
         ) as assertion:
             metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "000000", "station": {"name": "OK", "lines": ["ffffff"]} } } }'
             validate_metro_map(metro_map)
+
+    def test_valid_map_saves(self):
+
+        """ Confirm that a posting a valid map will save it
+        """
+
+        # First, confirm that we do not have this map yet
+        with self.assertRaises(ObjectDoesNotExist):
+            SavedMap.objects.get(urlhash='QP2psEKF')
+
+        map_data = json.dumps({"8":{"8":{"line":"bd1038"}},"global":{"lines":{"0896d7":{"displayName":"Blue Line"},"df8600":{"displayName":"Orange Line"},"000000":{"displayName":"Logo"},"00b251":{"displayName":"Green Line"},"662c90":{"displayName":"Purple Line"},"a2a2a2":{"displayName":"Silver Line"},"f0ce15":{"displayName":"Yellow Line"},"bd1038":{"displayName":"Red Line"},"79bde9":{"displayName":"Rivers"},"cfe4a7":{"displayName":"Parks"}}}})
+
+        client = Client()
+        client.post('/save/', {
+            'metroMap': map_data
+        })
+
+        saved_map = SavedMap.objects.get(urlhash='QP2psEKF')
+        self.assertTrue(saved_map)
+
+        # Confirm that multiple posts with the same data return the same urlhash
+        response = client.post('/save/', {
+            'metroMap': map_data
+        })
+
+        self.assertEqual(
+            b'QP2psEKF',
+            response.content.strip().split(b',')[0]
+        )
+
+        # Confirm that the mapdata and urlhash are both identical to the original
+        saved_map.refresh_from_db()
+        self.assertDictEqual(
+            json.loads(saved_map.mapdata),
+            json.loads(map_data)
+        )
+        self.assertEqual(
+            saved_map.urlhash,
+            'QP2psEKF'
+        )
+
+    def test_valid_map_name(self):
+
+        """ Confirm that a post containing the proper naming token will allow you to name a map
+        """
+
+        saved_map = SavedMap.objects.create(**{
+            'urlhash': 'can_name_map',
+            'naming_token': 'abcdef123',
+            'name': '',
+            'mapdata': ''
+        })
+
+        self.assertEqual('', saved_map.name)
+
+        client = Client()
+        client.post('/name/', {
+            'urlhash': 'can_name_map',
+            'naming_token': 'abcdef123',
+            'name': 'hooray',
+            'tags': 'coolmap'
+        })
+
+        saved_map.refresh_from_db()
+
+        # Tags from users are not directly applied; 
+        #   they are appended to the name
+        self.assertEqual('hooray (coolmap)', saved_map.name)
