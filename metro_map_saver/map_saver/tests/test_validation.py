@@ -9,10 +9,10 @@ from django.core.exceptions import ObjectDoesNotExist
 
 class ValidateMapTestCase(TestCase):
 
-    # fixtures = ['backups/2018/mmm-backup-20181110.json']
+    fixtures = ['backups/2018/mmm-backup-20181110.json']
 
-    # def test_fixtures_loaded(self):
-    #     self.assertEqual(SavedMap.objects.count(), 3983)
+    def test_fixtures_loaded(self):
+        self.assertEqual(SavedMap.objects.count(), 3983)
 
     def test_validator(self):
 
@@ -357,7 +357,7 @@ class ValidateMapTestCase(TestCase):
         """
 
         saved_map = SavedMap.objects.create(**{
-            'urlhash': 'can_name_map',
+            'urlhash': 'test_valid_map_name',
             'naming_token': 'abcdef123',
             'name': '',
             'mapdata': ''
@@ -367,7 +367,7 @@ class ValidateMapTestCase(TestCase):
 
         client = Client()
         client.post('/name/', {
-            'urlhash': 'can_name_map',
+            'urlhash': 'test_valid_map_name',
             'naming_token': 'abcdef123',
             'name': 'hooray',
             'tags': 'coolmap'
@@ -378,3 +378,51 @@ class ValidateMapTestCase(TestCase):
         # Tags from users are not directly applied; 
         #   they are appended to the name
         self.assertEqual('hooray (coolmap)', saved_map.name)
+
+    def test_invalid_naming_token(self):
+
+        """ Confirm that a post containing a blank or invalid naming token will not overwrite a map's name
+        """
+
+        saved_map = SavedMap.objects.create(**{
+            'urlhash': 'test_invalid_naming_token',
+            'naming_token': '',
+            'name': 'set in stone',
+            'mapdata': ''
+        })
+        self.assertEqual('set in stone', saved_map.name)
+
+        # Confirm a blank naming token doesn't match a blank naming token
+        client = Client()
+        client.post('/name/', {
+            'urlhash': 'test_invalid_naming_token',
+            'naming_token': '',
+            'name': 'hooray',
+            'tags': 'coolmap'
+        })
+        saved_map.refresh_from_db()
+        self.assertEqual('set in stone', saved_map.name)
+
+        # Confirm that a naming token doesn't work with a blank naming token
+        client.post('/name/', {
+            'urlhash': 'test_invalid_naming_token',
+            'naming_token': 'wrong naming token',
+            'name': 'hooray',
+            'tags': 'coolmap'
+        })
+        saved_map.refresh_from_db()
+        self.assertEqual('set in stone', saved_map.name)
+
+        # Set the map's naming token
+        saved_map.naming_token = 'token'
+        saved_map.save()
+
+        # Confirm the incorrect naming token doesn't work either
+        client.post('/name/', {
+            'urlhash': 'test_invalid_naming_token',
+            'naming_token': 'wrong naming token',
+            'name': 'hooray',
+            'tags': 'coolmap'
+        })
+        saved_map.refresh_from_db()
+        self.assertEqual('set in stone', saved_map.name)
