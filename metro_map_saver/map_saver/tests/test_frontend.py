@@ -6,6 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import StaleElementReferenceException
 
 from map_saver.models import SavedMap
 
@@ -53,7 +54,7 @@ class FrontendFunctionalityTestCase(TestCase):
 
         # Click on the canvas at 100,100
         action = webdriver.common.action_chains.ActionChains(driver)
-        action.move_to_element_with_offset(canvas, 100, 100) # 17, 17
+        action.move_to_element_with_offset(canvas, 100, 100) # 8, 8 since the map was cleared and is now on a smaller grid size
         action.click()
         action.perform()
 
@@ -87,9 +88,39 @@ class FrontendFunctionalityTestCase(TestCase):
             {"lines":["a2a2a2"],"name":"Silver_Line_-_Wiehle-Reston_East_to_Largo","orientation":"0"}
         )
 
-    # def test_subsequent_loads_saved_map(self):
-    #     """ Confirms that subsequent page loads will load the map saved in localstorage rather than the default WMATA map
-    #     """
+    @unittest.skip(reason='GOOD')
+    def test_subsequent_loads_saved_map(self):
+
+        """ Confirms that subsequent page loads will load the map saved in localstorage rather than the default WMATA map
+        """
+
+        driver = self.driver
+        driver.get(self.website)
+
+        # First, confirm that we've loaded the default WMATA map by checking for Fort Totten
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+        metro_map = driver.execute_script("return activeMap;")
+        self.assertEqual(
+            metro_map['94']['40'],
+            {"line":"bd1038","station":{"transfer":1,"lines":["bd1038","f0ce15","00b251"],"name":"Fort_Totten","orientation":"0"}}
+        )
+
+        # Next, clear the map and reload the page
+        self.helper_clear_draw_single_point(driver)
+        driver.get(self.website)
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+        metro_map = driver.execute_script("return activeMap;")
+
+        self.assertFalse(metro_map.get('94'))
+        self.assertEqual(
+            metro_map['8']['8'],
+            {"line": "bd1038"},
+        )
 
     @unittest.skip(reason="GOOD")
     def test_expand_collapse_rail_line_menu(self):
@@ -224,10 +255,37 @@ class FrontendFunctionalityTestCase(TestCase):
     #     """ Confirm that adding a new rail line makes it available in the rail line options and in the global
     #     """
 
-    # def test_delete_unused_lines(self):
+    @unittest.skip(reason='GOOD')
+    def test_delete_unused_lines(self):
 
-    #     """ Confirm that deleting unused lines only deletes the correct lines, and deletes them from the rail line options and the global
-    #     """
+        """ Confirm that deleting unused lines only deletes the correct lines, and deletes them from the rail line options and the global
+        """
+
+        driver = self.driver
+        driver.get(self.website)
+
+        rail_line_menu_button = driver.find_element_by_id('tool-line')
+        rail_line_menu_button.click()
+
+        self.helper_erase_blank_to_save(driver)
+        metro_map = driver.execute_script("return activeMap;")
+
+        # Of the defaults, only the purple line is not in use in the default WMATA map
+        # Confirm it's there, then delete it
+        self.assertEqual(
+            metro_map['global']['lines']['662c90'],
+            {'displayName': 'Purple Line'}
+        )
+        purple_line_button = driver.find_element_by_id('rail-line-662c90')
+
+        delete_unused_lines_button = driver.find_element_by_id('rail-line-delete')
+        delete_unused_lines_button.click()
+
+        metro_map = driver.execute_script("return activeMap;")
+
+        self.assertFalse(metro_map['global']['lines'].get('662c90'))
+        with self.assertRaises(StaleElementReferenceException):
+            purple_line_button.click()
 
     # def test_edit_line_colors(self):
 
@@ -433,6 +491,7 @@ class FrontendFunctionalityTestCase(TestCase):
     #     #   that multiple posts with the same data do not overwrite
     #     #   the original mapdata or urlhash
 
+    @unittest.skip(reason='GOOD')
     def test_name_map(self):
 
         """ Confirm that a newly-created map can be named
