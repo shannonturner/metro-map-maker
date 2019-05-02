@@ -148,7 +148,7 @@ class FrontendFunctionalityTestCase(TestCase):
         for line in rail_lines:
             self.assertFalse(line.is_displayed())
 
-    @unittest.skip(reason="TODO: needs work on click+drag")
+    @unittest.skip(reason="GOOD")
     def test_paint_rail_line(self):
 
         """ Confirm that painting a rail line on the canvas stores that data in activeMap
@@ -179,28 +179,27 @@ class FrontendFunctionalityTestCase(TestCase):
             {'line': 'bd1038'},
         )
 
-        # TODO: Click and drag (needs work)
         # Click and drag
         # First, change the color (helps debugging)
-        # rail_line_button = driver.find_element_by_id('rail-line-0896d7')
-        # rail_line_button.click()
-        # action = webdriver.common.action_chains.ActionChains(driver)
-        # action.move_to_element_with_offset(canvas, 120, 100) # 20, 17
-        # action.click_and_hold()
-        # action.move_by_offset(0, 20)
-        # action.release()
-        # # # action.move_to_element_with_offset(canvas, 120, 120) # 20, 20
-        # # action.drag_and_drop_by_offset(canvas, 120, 120)
-        # action.perform()
+        rail_line_button = driver.find_element_by_id('rail-line-0896d7')
+        rail_line_button.click()
+        action = webdriver.common.action_chains.ActionChains(driver)
+        action.move_to_element_with_offset(canvas, 120, 100) # 20, 17
+        action.click()
+        action.click_and_hold()
+        action.move_by_offset(0, 5)
+        action.move_by_offset(0, 5)
+        action.move_by_offset(0, 5)
+        action.move_by_offset(0, 5)
+        action.release()
+        action.perform()
 
-        # import pdb; pdb.set_trace()
-
-        # metro_map = driver.execute_script("return activeMap;")
-        # for col in range(17, 21): # 17, 18, 19, 20
-        #     self.assertEqual(
-        #         metro_map['20'][str(col)],
-        #         {'line': '0896d7'}
-        #     )
+        metro_map = driver.execute_script("return activeMap;")
+        for col in range(17, 21): # 17, 18, 19, 20
+            self.assertEqual(
+                metro_map['20'][str(col)],
+                {'line': '0896d7'}
+            )
 
     @unittest.skip(reason="GOOD")
     def test_overpaint_rail_line(self):
@@ -250,10 +249,53 @@ class FrontendFunctionalityTestCase(TestCase):
             {'line': '0896d7'},
         )
 
-    # def test_add_new_line(self):
+    @unittest.skip(reason='GOOD')
+    def test_add_new_line(self):
 
-    #     """ Confirm that adding a new rail line makes it available in the rail line options and in the global
-    #     """
+        """ Confirm that adding a new rail line makes it available in the rail line options and in the global
+        """
+
+        driver = self.driver
+        driver.get(self.website)
+
+        rail_line_menu_button = driver.find_element_by_id('tool-line')
+        rail_line_menu_button.click()
+
+        create_new_line_button = driver.find_element_by_id('rail-line-new')
+        create_new_line_button.click()
+
+        # I don't know the "correct" way to have Selenium actually click the color, so this will have to suffice
+        driver.execute_script('document.getElementById("new-rail-line-color").value="#8efa00"')
+
+        new_line_name = driver.find_element_by_id('new-rail-line-name')
+        action = webdriver.common.action_chains.ActionChains(driver)
+        action.send_keys_to_element(new_line_name, 'Lime Line')
+        action.perform()
+        save_new_line_button = driver.find_element_by_id('create-new-rail-line')
+        save_new_line_button.click()
+
+        # Confirm it actually will paint, too
+        lime_line_button = driver.find_element_by_id('rail-line-8efa00')
+        lime_line_button.click()
+
+        # Click on the canvas at 100,100
+        canvas = driver.find_element_by_id('metro-map-canvas')
+        action = webdriver.common.action_chains.ActionChains(driver) # Create a new action chains
+        action.move_to_element_with_offset(canvas, 100, 100) # 17, 17
+        action.click()
+        action.perform()
+
+        metro_map = driver.execute_script("return activeMap;")
+        self.assertEqual(
+            metro_map['17']['17'],
+            {'line': '8efa00'},
+        )
+
+        # Confirm it exists in the global
+        self.assertEqual(
+            metro_map['global']['lines']['8efa00'],
+            {'displayName': 'Lime Line'}
+        )
 
     @unittest.skip(reason='GOOD')
     def test_delete_unused_lines(self):
@@ -286,6 +328,12 @@ class FrontendFunctionalityTestCase(TestCase):
         self.assertFalse(metro_map['global']['lines'].get('662c90'))
         with self.assertRaises(StaleElementReferenceException):
             purple_line_button.click()
+
+        # Confirm the rest of the lines were not deleted
+        remaining_lines = ["0896d7", "df8600", "000000", "00b251", "a2a2a2", "f0ce15", "bd1038", "79bde9", "cfe4a7"]
+        for line in remaining_lines:
+            self.assertTrue(metro_map['global']['lines'][line])
+            line_button = driver.find_element_by_id(f'rail-line-{line}')
 
     # def test_edit_line_colors(self):
 
@@ -576,4 +624,9 @@ class FrontendFunctionalityTestCase(TestCase):
         self.assertTrue(type(metro_map) == dict, type(metro_map))
         self.assertTrue(len(metro_map) == 1)
         self.assertTrue(metro_map["global"]["lines"]) # Confirm that the lines still exist
+
+    # def test_clear_delete_lines_refresh(self):
+
+    #     """ Confirm that the default rail lines will be loaded when clearing map, then deleting the rail lines, then saving the map and reloading the page
+    #     """
 
