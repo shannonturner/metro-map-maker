@@ -592,6 +592,9 @@ function drawPoint(ctx, x, y, metroMap, erasedLine) {
   // Draw a single point at position x, y
 
   var activeLine = getActiveLine(x, y, metroMap);
+  if (!activeLine) {
+    return // Fixes bug where clearing a map and resizing would sometimes paint undefined spots
+  }
 
   ctx.beginPath();
 
