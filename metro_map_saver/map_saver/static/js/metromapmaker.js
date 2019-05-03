@@ -356,7 +356,7 @@ function bindGridSquareEvents(event) {
 } // bindGridSquareEvents()
 
 function bindGridSquareMouseover(event) {
-  // $('#title').text(getCanvasXY(event.pageX, event.pageY)) // useful when debugging
+  // $('#title').text([event.pageX, event.pageY, getCanvasXY(event.pageX, event.pageY)]) // useful when debugging
   if (!mouseIsDown) {
     drawHoverIndicator(event.pageX, event.pageY)
   }
@@ -495,7 +495,7 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
   } // if redrawStations
 } // drawArea(x, y, metroMap, redrawStations)
 
-function drawCanvas(metroMap, stationsOnly) {
+function drawCanvas(metroMap, stationsOnly, clearOnly) {
   // Fully redraw the canvas based on the provided metroMap;
   //    if no metroMap is provided, then save the existing grid as a metroMap object
   //    then redraw the canvas
@@ -513,6 +513,9 @@ function drawCanvas(metroMap, stationsOnly) {
   // Clear the canvas, make the background white instead of transparent
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  if (clearOnly) {
+    return
+  }
 
   if (!metroMap) {
     metroMap = activeMap
@@ -1441,10 +1444,27 @@ $(document).ready(function() {
     drawGrid()
     snapCanvasToGrid()
     lastStrokeStyle = undefined;
-    drawCanvas(activeMap)
+    drawCanvas(activeMap, false, true)
 
     window.sessionStorage.removeItem('userGivenMapName');
     window.sessionStorage.removeItem('userGivenMapTags');
+
+    $('.resize-grid').each(function() {
+      var resizeButtonSize = $(this).attr('id').split('-').slice(2);
+      var resizeButtonLabel = '(' + resizeButtonSize + 'x' + resizeButtonSize + ')';
+      if (resizeButtonSize == 80) {
+        resizeButtonLabel = 'Current Size ' + resizeButtonLabel;
+      } else if (resizeButtonSize == 120) {
+        resizeButtonLabel = 'Large ' + resizeButtonLabel;
+      } else if (resizeButtonSize == 160) {
+        resizeButtonLabel = 'Extra Large ' + resizeButtonLabel;
+      } else if (resizeButtonSize == 200) {
+        resizeButtonLabel = 'XXL ' + resizeButtonLabel;
+      } else if (resizeButtonSize == 240) {
+        resizeButtonLabel = 'XXXL ' + resizeButtonLabel;
+      }
+      $(this).html(resizeButtonLabel);
+    })
     
     $('.tooltip').hide();
   }); // #tool-clear-map.click()
