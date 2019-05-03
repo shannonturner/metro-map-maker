@@ -1098,12 +1098,6 @@ function getCanvasXY(pageX, pageY) {
   pageX = parseInt(pageX) - xOffset
   pageY = parseInt(pageY) - yOffset
 
-  // Example: with width = 960 and gridCols = 160, round to the nearest 6 pixels
-  var roundToNearest = width / gridCols
-
-  pageX = Math.round(pageX / roundToNearest) * roundToNearest
-  pageY = Math.round(pageY / roundToNearest) * roundToNearest
-
   var x = Math.floor(pageX / width * gridCols)
   var y = Math.floor(pageY / height * gridRows)
 
