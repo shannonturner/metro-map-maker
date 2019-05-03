@@ -1098,6 +1098,15 @@ function getCanvasXY(pageX, pageY) {
   pageX = parseInt(pageX) - xOffset
   pageY = parseInt(pageY) - yOffset
 
+  // Previously, roundToNearest was a calculated value and
+  //  the formula would sometimes result in a non-integer at specific grid sizes,
+  //  causing problems at specific coordinates
+  // 4px is the smallest number previously in use, but still gives good results
+  var roundToNearest = 4
+
+  pageX = Math.round(pageX / roundToNearest) * roundToNearest
+  pageY = Math.round(pageY / roundToNearest) * roundToNearest
+
   var x = Math.floor(pageX / width * gridCols)
   var y = Math.floor(pageY / height * gridRows)
 
