@@ -1,3 +1,4 @@
+import json
 import unittest
 
 from django.test import TestCase
@@ -5,7 +6,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.common.exceptions import StaleElementReferenceException
 
 from map_saver.models import SavedMap
@@ -335,10 +336,87 @@ class FrontendFunctionalityTestCase(TestCase):
             self.assertTrue(metro_map['global']['lines'][line])
             line_button = driver.find_element_by_id(f'rail-line-{line}')
 
-    # def test_edit_line_colors(self):
+    @unittest.skip(reason='GOOD')
+    def test_edit_line_colors(self):
 
-    #     """ Confirm that editing an existing rail line's name and/or color works as intended, replacing all instances in the ui, global, and map data
-    #     """
+        """ Confirm that editing an existing rail line's name and/or color works as intended, replacing all instances in the ui, global, and map data
+        """
+
+        driver = self.driver
+        driver.get(self.website)
+
+        # Wait 2 seconds for the default map to load; we're relying on Ft Totten to be there
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+
+        # Confirm Ft Totten exists before we change the red line's color
+        metro_map = driver.execute_script("return activeMap;")
+        self.assertEqual(
+            metro_map['94']['40'],
+            {"line":"bd1038","station":{"transfer":1,"lines":["bd1038","f0ce15","00b251"],"name":"Fort_Totten","orientation":"0"}}
+        )
+
+        # Count number of times the red line appears
+        red_line_mentions = json.dumps(metro_map).count('bd1038')
+
+        # Download the map as an image; after editing the color we'll make sure it's not the same
+        download_as_image_button = driver.find_element_by_id('tool-export-canvas')
+        download_as_image_button.click()
+        map_image = driver.find_element_by_id('metro-map-image').get_attribute('src')
+        download_as_image_button.click() # re-enable all the other buttons
+
+        # Change the Red Line to the Lime Line
+        rail_line_menu_button = driver.find_element_by_id('tool-line')
+        rail_line_menu_button.click()
+
+        edit_color_button = driver.find_element_by_id('rail-line-change')
+        edit_color_button.click()
+
+        edit_rail_line_select = Select(driver.find_element_by_id('tool-lines-to-change'))
+        edit_rail_line_select.select_by_visible_text('Red Line')
+
+        # I don't know the "correct" way to have Selenium actually click the color, so this will have to suffice
+        driver.execute_script('document.getElementById("change-line-color").value="#8efa00"')
+
+        edit_line_name = driver.find_element_by_id('change-line-name')
+        edit_line_name.clear()
+        action = webdriver.common.action_chains.ActionChains(driver)
+        action.send_keys_to_element(edit_line_name, 'Lime Line')
+        action.perform()
+
+        save_rail_line_edits_button = driver.find_element_by_id('save-rail-line-edits')
+        save_rail_line_edits_button.click()
+
+        # Reload the map and confirm that everything is changed over
+        metro_map = driver.execute_script("return activeMap;")
+        self.assertEqual(
+            red_line_mentions,
+            json.dumps(metro_map).count('8efa00') # Lime Line mentions
+        )
+        self.assertEqual(
+            0,
+            json.dumps(metro_map).count('bd1038') # Red Line mentions in the new map
+        )
+        self.assertEqual(
+            metro_map['94']['40'],
+            {"line":"8efa00","station":{"transfer":1,"lines":["8efa00","f0ce15","00b251"],"name":"Fort_Totten","orientation":"0"}}
+        )
+        self.assertEqual(
+            metro_map['global']['lines']['8efa00'],
+            {'displayName': 'Lime Line'}
+        )
+        self.assertFalse(metro_map['global']['lines'].get('bd1038'))
+
+        # Confirm the new map image isn't the same
+        download_as_image_button.click()
+        new_map_image = driver.find_element_by_id('metro-map-image').get_attribute('src')
+        download_as_image_button.click() # re-enable all the other buttons
+
+        self.assertNotEqual(
+            map_image,
+            new_map_image
+        )
 
     @unittest.skip(reason="GOOD")
     def test_add_station(self):
@@ -525,19 +603,87 @@ class FrontendFunctionalityTestCase(TestCase):
             "Has the default WMATA map been updated? Its length was last measured as 1026214"
         )
 
-    # def test_save_share_map(self):
+    @unittest.skip(reason='GOOD')
+    def test_save_share_map(self):
 
-    #     """ Confirm that clicking Save and Share map will generate a unique URL based on the mapdata, and visiting that URL contains a map with that data
-    #     """
+        """ Confirm that clicking Save and Share map will generate a unique URL based on the mapdata, and visiting that URL contains a map with that data
+        """
 
-    # def test_save_share_map_no_overwrite(self):
+        driver = self.driver
+        driver.get(self.website)
 
-    #     """ Confirm that clicking Save and Share map multiple times return the same urlhash
-    #     """
+        self.helper_clear_draw_single_point(driver)
 
-    #     # Note: test_validation's test_valid_map_saves() also confirms
-    #     #   that multiple posts with the same data do not overwrite
-    #     #   the original mapdata or urlhash
+        # Download the map as an image for comparing later
+        download_as_image_button = driver.find_element_by_id('tool-export-canvas')
+        download_as_image_button.click()
+        map_image = driver.find_element_by_id('metro-map-image').get_attribute('src')
+        download_as_image_button.click() # re-enable all the other buttons
+
+        save_map_button = driver.find_element_by_id('tool-save-map')
+        save_map_button.click()
+
+        WebDriverWait(driver, 1).until(
+            expected_conditions.presence_of_element_located((By.ID, "shareable-map-link"))
+        )
+
+        map_link = driver.find_element_by_id('shareable-map-link').get_attribute('href')
+        metro_map = driver.execute_script("return activeMap;")
+
+        driver.get(f'{map_link}')
+
+        # Wait two seconds until the map has re-loaded
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+
+        self.helper_erase_blank_to_save(driver)
+        new_metro_map = driver.execute_script("return activeMap;")
+
+        self.assertEqual(metro_map, new_metro_map)
+
+        download_as_image_button = driver.find_element_by_id('tool-export-canvas')
+        download_as_image_button.click()
+        new_map_image = driver.find_element_by_id('metro-map-image').get_attribute('src')
+        download_as_image_button.click() # re-enable all the other buttons
+
+        self.assertEqual(map_image, new_map_image)
+
+    @unittest.skip(reason='GOOD')
+    def test_save_share_map_no_overwrite(self):
+
+        """ Confirm that clicking Save and Share map multiple times return the same urlhash
+        """
+
+        # Note: test_validation's test_valid_map_saves() also confirms
+        #   that multiple posts with the same data do not overwrite
+        #   the original mapdata or urlhash
+
+        driver = self.driver
+        driver.get(self.website)
+
+        self.helper_clear_draw_single_point(driver)
+        save_map_button = driver.find_element_by_id('tool-save-map')
+
+        map_links = set()
+
+        for attempt in range(5):
+            save_map_button.click()
+
+            WebDriverWait(driver, 2).until(
+                expected_conditions.presence_of_element_located((By.ID, "shareable-map-link"))
+            )
+
+            map_link = driver.find_element_by_id('shareable-map-link').get_attribute('href')
+            map_links.add(map_link)
+
+            # Prevent state elements by making sure we delete it in between saves
+            driver.execute_script("document.getElementById('shareable-map-link').remove()")
+
+        self.assertEqual(
+            1,
+            len(map_links)
+        )
 
     @unittest.skip(reason='GOOD')
     def test_name_map(self):
@@ -591,6 +737,118 @@ class FrontendFunctionalityTestCase(TestCase):
     #     """ Confirm that a map that is named by an admin cannot be overwritten by a visitor
     #     """
 
+    @unittest.skip(reason='GOOD')
+    def test_show_hide_grid(self):
+
+        """ Confirm that showing/hiding the grid works correctly
+        """
+
+        # Test by looking for the opacity change of the grid-canvas
+
+        driver = self.driver
+        driver.get(self.website)
+
+        grid_button = driver.find_element_by_id('tool-grid')
+        grid_canvas = driver.find_element_by_id('grid-canvas')
+
+        # Grid begins visible
+        self.assertEqual(
+            1,
+            int(grid_canvas.value_of_css_property('opacity'))
+        )
+
+        # First click hides the grid
+        grid_button.click()
+        self.assertEqual(
+            0,
+            int(grid_canvas.value_of_css_property('opacity'))
+        )
+
+        # Next click shows it again
+        grid_button.click()
+        self.assertEqual(
+            1,
+            int(grid_canvas.value_of_css_property('opacity'))
+        )
+
+    @unittest.skip(reason='GOOD')
+    def test_zoom_in(self):
+
+        """ Confirm that zooming in resizes the canvas container and eventually shows the Snap to Left button
+        """
+
+        driver = self.driver
+        driver.get(self.website)
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+
+        canvas_container = driver.find_element_by_id('canvas-container')
+        columns = driver.execute_script("return gridCols;")
+        width = int(canvas_container.value_of_css_property('width')[:-2])
+        snap_controls_button = driver.find_element_by_id('snap-controls-left')
+
+        zoom_in_button = driver.find_element_by_id('tool-zoom-in')
+        zoom_in_button.click()
+
+        new_width = int(canvas_container.value_of_css_property('width')[:-2])
+        self.assertEqual(
+            columns + width,
+            new_width
+        )
+
+        # The Snap Controls to Left button isn't here yet, but will be in one more zoom
+        self.assertEqual(
+            'none',
+            snap_controls_button.value_of_css_property('display')
+        )
+
+        zoom_in_button.click()
+        new_width = int(canvas_container.value_of_css_property('width')[:-2])
+        self.assertEqual(
+            (columns * 2) + width,
+            new_width
+        )
+        self.assertEqual(
+            'block',
+            snap_controls_button.value_of_css_property('display')
+        )
+
+    @unittest.skip(reason='GOOD')
+    def test_zoom_out(self):
+
+        """ Confirm that zooming out resizes the canvas container
+        """
+
+        driver = self.driver
+        driver.get(self.website)
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+
+        canvas_container = driver.find_element_by_id('canvas-container')
+        columns = driver.execute_script("return gridCols;")
+        width = int(canvas_container.value_of_css_property('width')[:-2])
+
+        zoom_out_button = driver.find_element_by_id('tool-zoom-out')
+        zoom_out_button.click()
+
+        new_width = int(canvas_container.value_of_css_property('width')[:-2])
+        self.assertEqual(
+            width - columns,
+            new_width
+        )
+
+        # Confirm that zooming out again won't go below 800 pixels
+        zoom_out_button.click()
+        new_width = int(canvas_container.value_of_css_property('width')[:-2])
+        self.assertEqual(
+            800,
+            new_width
+        )
+
     # def test_move_map(self):
 
     #     """ Confirm that using the "Move map" feature moves the painted rail lines and stations as expected
@@ -629,4 +887,3 @@ class FrontendFunctionalityTestCase(TestCase):
 
     #     """ Confirm that the default rail lines will be loaded when clearing map, then deleting the rail lines, then saving the map and reloading the page
     #     """
-
