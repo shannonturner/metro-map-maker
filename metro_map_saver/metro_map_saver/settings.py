@@ -24,6 +24,43 @@ SECRET_KEY = ''
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+ADMINS = [
+    ('Shannon Turner', 'hello@shannonvturner.com'),
+]
+MANAGERS = ADMINS
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'mail_admins': {
+            'level': 'ERROR',
+            'class': 'django.utils.log.AdminEmailHandler',
+            'email_backend': 'django.core.mail.backends.smtp.EmailBackend',
+            'include_html': True
+        }
+    },
+    'loggers': {
+        'map_saver.views': {
+            'handlers': ['mail_admins'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    }
+}
+
+########## EMAIL CONFIGURATION
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.webfaction.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'metromapmaker'
+EMAIL_HOST_PASSWORD = ''
+EMAIL_SUBJECT_PREFIX = '[metromapmaker] '
+SERVER_EMAIL = 'reports@metromapmaker.com'
+DEFAULT_FROM_EMAIL = 'reports@metromapmaker.com'
+MAILER_LIST = ADMINS
+########## END EMAIL CONFIGURATION
 
 ALLOWED_HOSTS = [
     'metromapmaker.com',

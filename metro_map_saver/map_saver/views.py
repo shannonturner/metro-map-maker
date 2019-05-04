@@ -22,13 +22,6 @@ from taggit.models import Tag
 from .models import SavedMap
 from .validator import is_hex, sanitize_string, validate_metro_map, hex64
 
-# Create your views here.
-logging.basicConfig(
-    filename="mapvalidationfailed.log",
-    filemode="a",
-    level=logging.ERROR,
-    format='%(asctime)s %(message)s',
-)
 logger = logging.getLogger(__name__)
 
 class HomeView(TemplateView):
