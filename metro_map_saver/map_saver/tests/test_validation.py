@@ -14,6 +14,18 @@ class ValidateMapTestCase(TestCase):
     def test_fixtures_loaded(self):
         self.assertEqual(SavedMap.objects.count(), 3983)
 
+    def _post_metromap(self, metro_map):
+
+        """ Posts the metro_map to the /save/ endpoint and returns the response as a string
+        """
+
+        client = Client()
+        response = client.post(
+            '/save/',
+            {'metroMap': metro_map}
+        )
+        return str(response.content)
+
     def test_validator(self):
 
         """ Ensure that all maps already saved will pass the validation
@@ -82,6 +94,11 @@ class ValidateMapTestCase(TestCase):
             metro_map = '["mapdata", "needs to be a dict"]'
             validate_metro_map(metro_map)
 
+        self.assertIn(
+            "Bad map object, needs to be an object.",
+            self._post_metromap(metro_map)
+        )
+
     def test_invalid_map_no_global(self):
 
         """ Reject a map that has no global key at the root level
@@ -92,6 +109,11 @@ class ValidateMapTestCase(TestCase):
         ) as assertion:
             metro_map = '{"it is a dict": "but has no global"}'
             validate_metro_map(metro_map)
+
+        self.assertIn(
+            "Bad map object, missing global.",
+            self._post_metromap(metro_map)
+        )
 
     def test_invalid_map_no_lines(self):
 
@@ -105,6 +127,11 @@ class ValidateMapTestCase(TestCase):
             metro_map = '{"global": {"I have global but": "I dont have any lines"} }'
             validate_metro_map(metro_map)
 
+        self.assertIn(
+            "Map does not have any rail lines defined.",
+            self._post_metromap(metro_map)
+        )
+
     def test_invalid_map_lines_not_dict(self):
 
         """ Reject a map that has the global dictionary at the root
@@ -117,6 +144,11 @@ class ValidateMapTestCase(TestCase):
         ) as assertion:
             metro_map = '{"global": {"lines": ["this should be a dict, not a list"]} }'
             validate_metro_map(metro_map)
+
+        self.assertIn(
+            "Map lines must be stored as an object.",
+            self._post_metromap(metro_map)
+        )
 
     def test_invalid_toomanylines(self):
 
@@ -136,6 +168,11 @@ class ValidateMapTestCase(TestCase):
             metro_map = metro_map.replace("'", '"')
             validate_metro_map(metro_map)
 
+        self.assertIn(
+            "Map has too many lines (limit is 100); remove unused lines.",
+            self._post_metromap(metro_map)
+        )
+
     def test_invalid_global_line_not_hex(self):
 
         """ Reject a map that has a non-hex color in the global lines
@@ -147,6 +184,11 @@ class ValidateMapTestCase(TestCase):
         ) as assertion:
             metro_map = '{"global": {"lines": {"qwerty": {"displayName": "non-hex rail line"} } } }'
             validate_metro_map(metro_map)
+
+        self.assertIn(
+            "qwerty is not a valid rail line color.",
+            self._post_metromap(metro_map)
+        )
 
     def test_invalid_global_line_wrong_size(self):
 
@@ -161,6 +203,11 @@ class ValidateMapTestCase(TestCase):
             metro_map = '{"global": {"lines": {"beef": {"problem": "color code not six chars"} } } }'
             validate_metro_map(metro_map)
 
+        self.assertIn(
+            "The color beef must be 6 characters long.",
+            self._post_metromap(metro_map)
+        )
+
     def test_invalid_global_line_display_too_short(self):
 
         """ Reject a map that has a color in the global lines
@@ -173,6 +220,11 @@ class ValidateMapTestCase(TestCase):
         ):
             metro_map = '{"global" : {"lines": {"000000": {"displayName": ""} } } }'
             validate_metro_map(metro_map)
+
+        self.assertIn(
+            "Rail line names must be between 1 and 255 characters long (spaces are okay).",
+            self._post_metromap(metro_map)
+        )
 
     def test_invalid_global_line_display_too_long(self):
 
@@ -188,6 +240,11 @@ class ValidateMapTestCase(TestCase):
             metro_map = '{{"global" : {{"lines": {{"000000": {{"displayName": "{0}"}} }} }} }}'.format(too_long_display_name)
             validate_metro_map(metro_map)
 
+        self.assertIn(
+            "Rail line names must be between 1 and 255 characters long (spaces are okay).",
+            self._post_metromap(metro_map)
+        )
+
     def test_invalid_point_line_not_hex(self):
 
         """ Reject a map that has a non-hex color at a coordinate.
@@ -201,6 +258,11 @@ class ValidateMapTestCase(TestCase):
             metro_map = '{"global": { "lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "nonhex"} } }'
             validate_metro_map(metro_map)
 
+        self.assertIn(
+            "Point at (2, 2) is not a valid color  nonhex.",
+            self._post_metromap(metro_map)
+        )
+
     def test_invalid_point_line_not_six(self):
 
         """ Reject a map that has a color at a coordinate
@@ -213,6 +275,11 @@ class ValidateMapTestCase(TestCase):
         ) as assertion:
             metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "beef"} } }'
             validate_metro_map(metro_map)
+
+        self.assertIn(
+            "Point at (2, 2) has a color that needs to be 6 characters long  beef",
+            self._post_metromap(metro_map)
+        )
 
     @expectedFailure
     def test_invalid_point_line_not_valid(self):
@@ -241,6 +308,11 @@ class ValidateMapTestCase(TestCase):
             metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "000000", "station": "bad station"} } }'
             validate_metro_map(metro_map)
 
+        self.assertIn(
+            "Point at (2, 2) has a malformed station, must be an object.",
+            self._post_metromap(metro_map)
+        )
+
     @expectedFailure
     def test_invalid_station_name_too_short(self):
 
@@ -266,6 +338,11 @@ class ValidateMapTestCase(TestCase):
             metro_map = '{{"global": {{"lines": {{"000000": {{"displayName": "Black Line"}} }} }}, "1": {{"1": {{"line": "000000", "station": {{"name": "{0}"}} }} }} }}'.format(station_name_too_long)
             validate_metro_map(metro_map)
 
+        self.assertIn(
+            "Point at (2, 2) has a station whose name is not between 1 and 255 characters long. Please rename it.",
+            self._post_metromap(metro_map)
+        )
+
     def test_invalid_station_lines_not_list(self):
 
         """ Reject a map with station lines that are not a list
@@ -276,6 +353,11 @@ class ValidateMapTestCase(TestCase):
         ) as assertion:
             metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "000000", "station": {"name": "OK", "lines": "000000"} } } }'
             validate_metro_map(metro_map)
+
+        self.assertIn(
+            "Point at (2, 2) has its station lines in the incorrect format; must be a list.",
+            self._post_metromap(metro_map)
+        )
 
     def test_invalid_station_line_not_hex(self):
 
@@ -288,6 +370,11 @@ class ValidateMapTestCase(TestCase):
             metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "000000", "station": {"name": "OK", "lines": ["not hex"]} } } }'
             validate_metro_map(metro_map)
 
+        self.assertIn(
+            "Station Rail line not hex is not a valid color.",
+            self._post_metromap(metro_map)
+        )
+
     def test_invalid_station_line_not_six(self):
 
         """ Reject a map with a station line that is not a color six characters long
@@ -298,6 +385,11 @@ class ValidateMapTestCase(TestCase):
         ) as assertion:
             metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "000000", "station": {"name": "OK", "lines": ["beef"]} } } }'
             validate_metro_map(metro_map)
+
+        self.assertIn(
+            "Station Rail line color beef needs to be 6 characters long.",
+            self._post_metromap(metro_map)
+        )
 
     @expectedFailure
     def test_invalid_station_line_not_valid(self):
