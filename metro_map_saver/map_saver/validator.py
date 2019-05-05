@@ -148,6 +148,8 @@ def validate_metro_map(metro_map):
                         validated_metro_map[x][y]["line"] = metro_map[x][y]["line"]
                     if metro_map[x][y].get('station'):
                         assert type(metro_map[x][y]["station"]) == dict, "[VALIDATIONFAILED] 11 metro_map[x][y]['station'] at ({0}, {1}) IS NOT DICT: Point at ({2}, {3}) has a malformed station, must be an object.".format(x, y, int(x) + 1, int(y) + 1)
+                        if metro_map[x][y]["station"]["name"] == '':
+                            metro_map[x][y]["station"]["name"] = "_" # Gracefully rename a zero-length station name to be a single space
                         assert 1 <= len(metro_map[x][y]["station"]["name"]) < 256, "[VALIDATIONFAILED] 12 station name at ({0}, {1}) BAD SIZE {2} is {3}: Point at ({4}, {5}) has a station whose name is not between 1 and 255 characters long. Please rename it.".format(x, y, metro_map[x][y]["station"]["name"], len(metro_map[x][y]["station"]["name"]), int(x) + 1, int(y) + 1)
                         assert type(metro_map[x][y]["station"]["lines"]) == list, "[VALIDATIONFAILED] 13 station lines at ({0}, {1}) NOT A LIST: Point at ({2}, {3}) has its station lines in the incorrect format; must be a list.".format(x, y, int(x) + 1, int(y) + 1)
                         # Okay, this probably *should* pass - but I think I have some bug in the javascript somewhere because https://metromapmaker.com/?map=zCq7R223 obviously passed validation but once reconstituted, fails. But this isn't a big enough deal that I can't wave this validation through while I figure out what's going on.

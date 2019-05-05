@@ -241,9 +241,11 @@ class ValidateMapTestCase(TestCase):
             metro_map = '{"global": {"lines": {"000000": {"displayName": "Black Line"} } }, "1": {"1": {"line": "000000", "station": "bad station"} } }'
             validate_metro_map(metro_map)
 
+    @expectedFailure
     def test_invalid_station_name_too_short(self):
 
         """ Reject a map with a station name that is too short (no characters)
+            Now that we are gracefully renaming any station of zero length, we expect this to no longer raise the assertion
         """
         with self.assertRaisesRegex(
             AssertionError,
@@ -375,7 +377,7 @@ class ValidateMapTestCase(TestCase):
 
         saved_map.refresh_from_db()
 
-        # Tags from users are not directly applied; 
+        # Tags from users are not directly applied;
         #   they are appended to the name
         self.assertEqual('hooray (coolmap)', saved_map.name)
 
