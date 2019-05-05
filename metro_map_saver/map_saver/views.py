@@ -49,7 +49,7 @@ class HomeView(TemplateView):
             try:
                 saved_map = SavedMap.objects.get(urlhash=request.GET.get('map'))
             except Exception:
-                pass
+                context = {}
             else:
                 context = {
                     'saved_map': saved_map,
