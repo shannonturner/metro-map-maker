@@ -860,6 +860,8 @@ function autoLoad() {
 
   var savedMapHash = getURLParameter('map');
   if (savedMapHash) {
+    // Remove invalid characters from the hash
+    savedMapHash = savedMapHash.replace(/[^\w\d\-_]/g, '')
     $.get('/load/' + savedMapHash).done(function (savedMapData) {
       savedMapData = savedMapData.replaceAll(" u&#39;", "'").replaceAll("{u&#39;", '{"').replaceAll("\\[u&#39;", '["').replaceAll('&#39;', '"').replaceAll("'", '"').replaceAll('\\\\x', '&#x');
       if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
