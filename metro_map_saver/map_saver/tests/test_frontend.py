@@ -727,10 +727,89 @@ class FrontendFunctionalityTestCase(TestCase):
             name_map_button.get_attribute('style')
         )
 
-    # def test_name_map_subsequent(self):
+    def test_name_map_subsequent(self):
 
-    #     """ Confirm that subsequent clicks to Save and Share map will remember what you named your previous map
-    #     """
+        """ Confirm that subsequent clicks to Save and Share map will remember what you named your previous map
+        """
+
+        driver = self.driver
+        driver.get(self.website)
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+
+        self.helper_clear_draw_single_point(driver)
+
+        blue_line_button = driver.find_element_by_id('rail-line-0896d7')
+        blue_line_button.click()
+
+        canvas = driver.find_element_by_id('metro-map-canvas')
+
+        action = webdriver.common.action_chains.ActionChains(driver)
+        action.move_to_element_with_offset(canvas, 200, 200)
+        action.click()
+        action.perform()
+
+        save_button = driver.find_element_by_id('tool-save-map')
+        save_button.click()
+        
+        WebDriverWait(driver, 1).until(
+            expected_conditions.presence_of_element_located((By.ID, "shareable-map-link"))
+        )
+
+        map_link = driver.find_element_by_id('shareable-map-link')
+        self.assertTrue(map_link.text)
+
+        map_name = driver.find_element_by_id('user-given-map-name')
+        action = webdriver.common.action_chains.ActionChains(driver)
+        action.send_keys_to_element(map_name, 'test_name_map_subsequent', Keys.ENTER)
+        action.perform()
+
+        name_map_button = driver.find_element_by_id('name-this-map')
+        name_map_button.click()
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.invisibility_of_element((By.ID, 'name-this-map'))
+        )
+
+        # Now draw another mark and re-click the save button
+        blue_line_button.click()
+        action = webdriver.common.action_chains.ActionChains(driver)        
+        action.move_to_element_with_offset(canvas, 100, 200)
+        action.click()
+        action.perform()
+        save_button.click()
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.visibility_of_element_located((By.ID, "user-given-map-name"))
+        )
+
+        # Confirm that the text input and tag dropdown both show if only the name was entered
+        map_name = driver.find_element_by_id('user-given-map-name')
+        map_name.click()
+        map_tags = Select(driver.find_element_by_id('user-given-map-tags'))
+        map_tags.select_by_visible_text('This is a real metro system')
+        name_map_button = driver.find_element_by_id('name-this-map')
+        name_map_button.click()
+
+        # Now draw a final mark and re-click the save button
+        blue_line_button.click()
+        action = webdriver.common.action_chains.ActionChains(driver)        
+        action.move_to_element_with_offset(canvas, 50, 50)
+        action.click()
+        action.perform()
+        save_button.click()
+
+        # Confirm that the previous map's name and tags were remembered
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "map-somewhere-else"))
+        )
+        remembered_map_name = driver.find_element_by_id('map-somewhere-else')
+        self.assertEqual(
+            'Not a map of test_name_map_subsequent? Click here to rename',
+            remembered_map_name.text
+        )
 
     # def test_name_map_no_overwrite(self):
 
@@ -984,7 +1063,54 @@ class FrontendFunctionalityTestCase(TestCase):
         self.assertTrue(len(metro_map) == 1)
         self.assertTrue(metro_map["global"]["lines"]) # Confirm that the lines still exist
 
-    # def test_clear_delete_lines_refresh(self):
+    @unittest.skip(reason='GOOD')
+    def test_clear_delete_lines_refresh(self):
 
-    #     """ Confirm that the default rail lines will be loaded when clearing map, then deleting the rail lines, then saving the map and reloading the page
-    #     """
+        """ Confirm that the default rail lines will be loaded when clearing map, then deleting the rail lines, then saving the map and reloading the page
+        """
+
+        driver = self.driver
+        driver.get(self.website)
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+
+        clear_map_button = driver.find_element_by_id('tool-clear-map')
+        clear_map_button.click()
+
+        rail_line_menu_button = driver.find_element_by_id('tool-line')
+        rail_line_menu_button.click()
+
+        red_line_button = driver.find_element_by_id('rail-line-bd1038')
+
+        delete_unused_lines_button = driver.find_element_by_id('rail-line-delete')
+        delete_unused_lines_button.click()
+
+        self.helper_erase_blank_to_save(driver)
+        tool_line_options_length = driver.execute_script("return document.getElementById('tool-line-options').children.length")
+
+        # Other children besides the rail lines themselves are the add/edit/delete line buttons, etc
+        self.assertEqual(
+            6,
+            tool_line_options_length
+        )
+
+        with self.assertRaises(StaleElementReferenceException):
+            red_line_button.click()
+
+        # Reload the page
+        driver.get(self.website)
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-bd1038"))
+        )
+
+        red_line_button = driver.find_element_by_id('rail-line-bd1038')
+        tool_line_options_length = driver.execute_script("return document.getElementById('tool-line-options').children.length")
+
+        # Other children besides the rail lines themselves are the add/edit/delete line buttons, etc
+        self.assertEqual(
+            16,
+            tool_line_options_length
+        )
