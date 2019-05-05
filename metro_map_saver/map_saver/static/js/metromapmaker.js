@@ -858,7 +858,14 @@ function autoLoad() {
     return
   }
 
-  var savedMapHash = getURLParameter('map');
+  try {
+    var savedMapHash = getURLParameter('map');
+  } catch (e) {
+    // Even if the URL is completely malformed, still show the grid
+    drawGrid()
+    bindRailLineEvents()
+    drawCanvas()
+  }
   if (savedMapHash) {
     // Remove invalid characters from the hash
     savedMapHash = savedMapHash.replace(/[^\w\d\-_]/g, '')
