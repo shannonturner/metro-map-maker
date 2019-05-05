@@ -106,6 +106,9 @@
         <button id="rail-line-0896d7" class="rail-line original-rail-line">Blue Line</button>
         <button id="rail-line-662c90" class="rail-line original-rail-line">Purple Line</button>
         <button id="rail-line-a2a2a2" class="rail-line original-rail-line">Silver Line</button>
+        <button id="rail-line-000000" class="rail-line original-rail-line">Logo</button>
+        <button id="rail-line-79bde9" class="rail-line original-rail-line">Rivers</button>
+        <button id="rail-line-cfe4a7" class="rail-line original-rail-line">Parks</button>
         <button id="rail-line-new" class="btn">+ Add New Line</button>
         <div id="tool-new-line-options" class="text-left start-hidden">
           <h4 id="tool-new-line-errors" class="bg-danger"></h4>
@@ -225,7 +228,7 @@
     {% if saved_map_name %}window.sessionStorage.setItem('userGivenMapName', "{{ saved_map_name }}"){% endif %}
   </script>
   {% endif %}
-  <script src='{% static "js/metromapmaker.js" %}?version=20190504'></script>
+  <script src='{% static "js/metromapmaker.js" %}?version=20190505'></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js" integrity="sha256-ZdnRjhC/+YiBbXTHIuJdpf7u6Jh5D2wD5y0SNRWDREQ=" crossorigin="anonymous"></script>
 
   </body>

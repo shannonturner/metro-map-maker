@@ -961,14 +961,14 @@ function loadMapFromObject(metroMapObject, update) {
     } else {
       // If there are no rail lines, load up the defaults, since that's what will show
       metroMapObject['global']['lines'] = {
-        "0896d7": {"displayName":"Blue Line"},
+        "bd1038": {"displayName":"Red Line"},
         "df8600": {"displayName":"Orange Line"},
-        "000000": {"displayName":"Logo"},
+        "f0ce15": {"displayName":"Yellow Line"},
         "00b251": {"displayName":"Green Line"},
+        "0896d7": {"displayName":"Blue Line"},
         "662c90": {"displayName":"Purple Line"},
         "a2a2a2": {"displayName":"Silver Line"},
-        "f0ce15": {"displayName":"Yellow Line"},
-        "bd1038": {"displayName":"Red Line"},
+        "000000": {"displayName":"Logo"},
         "79bde9": {"displayName":"Rivers"},
         "cfe4a7": {"displayName":"Parks"}
       }
