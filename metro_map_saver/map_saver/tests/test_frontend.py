@@ -849,10 +849,111 @@ class FrontendFunctionalityTestCase(TestCase):
             new_width
         )
 
-    # def test_move_map(self):
+    @unittest.skip(reason='GOOD')
+    def test_snap_left_right(self):
 
-    #     """ Confirm that using the "Move map" feature moves the painted rail lines and stations as expected
-    #     """
+        """ Confirm that the Snap Controls to Left/Right buttons correctly move the toolbox
+        """
+
+        driver = self.driver
+        driver.get(self.website)
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+
+        canvas_container = driver.find_element_by_id('canvas-container')
+        columns = driver.execute_script("return gridCols;")
+        width = int(canvas_container.value_of_css_property('width')[:-2])
+        snap_controls_left_button = driver.find_element_by_id('snap-controls-left')
+        snap_controls_right_button = driver.find_element_by_id('snap-controls-right')
+
+        zoom_in_button = driver.find_element_by_id('tool-zoom-in')
+        zoom_in_button.click()
+        zoom_in_button.click() # snap controls button appears in two zooms
+
+        self.assertEqual(
+            'block',
+            snap_controls_left_button.value_of_css_property('display')
+        )
+
+        # Controls begins pinned to the right
+        controls = driver.find_element_by_id('controls')
+        self.assertEqual(
+            '5px',
+            controls.value_of_css_property('right')
+        )
+
+        # After clicked, the controls snap to the left
+        snap_controls_left_button.click()
+        self.assertEqual(
+            '5px',
+            controls.value_of_css_property('left')
+        )
+        self.assertEqual(
+            '995px',
+            controls.value_of_css_property('right')
+        )
+
+        # Clicking again snaps it back to the right
+        snap_controls_right_button.click()
+        self.assertEqual(
+            '5px',
+            controls.value_of_css_property('right')
+        )
+        self.assertEqual(
+            '995px',
+            controls.value_of_css_property('left')
+        )
+
+    @unittest.skip(reason='GOOD')
+    def test_move_map(self):
+
+        """ Confirm that using the "Move map" feature moves the painted rail lines and stations as expected
+        """
+
+        driver = self.driver
+        driver.get(self.website)
+
+        self.helper_clear_draw_single_point(driver)
+        move_menu_button = driver.find_element_by_id('tool-move-all')
+        move_menu_button.click()
+
+        directions = ['up', 'down', 'left', 'right']
+
+        move_buttons = {direction: driver.find_element_by_id(f'tool-move-{direction}') for direction in directions}
+
+        # Initial state: 8,8
+        metro_map = driver.execute_script('return activeMap;')
+        self.assertTrue(metro_map['8']['8'])
+
+        move_buttons['up'].click()
+        metro_map = driver.execute_script('return activeMap;')
+        self.assertTrue(metro_map['8']['7'])
+
+        move_buttons['right'].click()
+        metro_map = driver.execute_script('return activeMap;')
+        self.assertTrue(metro_map['9']['7'])
+
+        move_buttons['down'].click()
+        metro_map = driver.execute_script('return activeMap;')
+        self.assertTrue(metro_map['9']['8'])
+
+        move_buttons['left'].click()
+        metro_map = driver.execute_script('return activeMap;')
+        self.assertTrue(metro_map['8']['8'])
+
+        # Confirm that moving a point off the grid deletes it
+        for click in range(1,9):
+            move_buttons['left'].click()
+            metro_map = driver.execute_script('return activeMap;')
+            self.assertTrue(
+                metro_map[str(8 - click)]['8']
+            )
+        else:
+            move_buttons['left'].click()
+            metro_map = driver.execute_script('return activeMap;')
+            self.assertFalse(metro_map.get('0')) # 0,8 was the last coordinate
 
     # def test_resize_grid(self):
 
