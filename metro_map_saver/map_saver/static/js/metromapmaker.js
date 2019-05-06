@@ -858,31 +858,7 @@ function autoLoad() {
     return
   }
 
-  try {
-    var savedMapHash = getURLParameter('map');
-  } catch (e) {
-    // Even if the URL is completely malformed, still show the grid
-    drawGrid()
-    bindRailLineEvents()
-    drawCanvas()
-  }
-  if (savedMapHash) {
-    // Remove invalid characters from the hash
-    savedMapHash = savedMapHash.replace(/[^\w\d\-_]/g, '')
-    $.get('/load/' + savedMapHash).done(function (savedMapData) {
-      savedMapData = savedMapData.replaceAll(" u&#39;", "'").replaceAll("{u&#39;", '{"').replaceAll("\\[u&#39;", '["').replaceAll('&#39;', '"').replaceAll("'", '"').replaceAll('\\\\x', '&#x');
-      if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
-        // Fallback to an empty grid
-        drawGrid();
-        bindRailLineEvents();
-        drawCanvas();
-      } else {
-        // This should no longer happen, but is available as a fallback
-        getMapSize(savedMapData);
-        loadMapFromObject(JSON.parse(savedMapData));
-      }
-    });
-  } else if (window.localStorage.getItem('metroMap')) {
+  if (window.localStorage.getItem('metroMap')) {
     // Load from local storage
     savedMapData = JSON.parse(window.localStorage.getItem('metroMap'));
     getMapSize(savedMapData);
