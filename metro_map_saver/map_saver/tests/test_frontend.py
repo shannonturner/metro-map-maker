@@ -102,6 +102,7 @@ class FrontendFunctionalityTestCase(TestCase):
         WebDriverWait(driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
         )
+        self.helper_erase_blank_to_save(driver)
         metro_map = driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['94']['40'],
@@ -115,6 +116,7 @@ class FrontendFunctionalityTestCase(TestCase):
         WebDriverWait(driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
         )
+        self.helper_erase_blank_to_save(driver)
         metro_map = driver.execute_script("return activeMap;")
 
         self.assertFalse(metro_map.get('94'))
@@ -122,6 +124,48 @@ class FrontendFunctionalityTestCase(TestCase):
             metro_map['8']['8'],
             {"line": "bd1038"},
         )
+
+    @unittest.skip(reason='GOOD')
+    def test_bad_url_hash(self):
+
+        """ Confirm that the grid loads and the rail lines are bound even if the provided URLhash was bad
+        """
+
+        driver = self.driver
+
+        bad_url_hashes = [
+            '000BADMAP000_001', # no map at this hash
+            '`000BADMAP000%%%_002', # malformed urlhash
+            '', # missing urlhash
+        ]
+
+        for index, bad_hash in enumerate(bad_url_hashes):
+            driver.get(f'{self.website}?map={bad_hash}')
+
+            WebDriverWait(driver, 2).until(
+                expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+            )
+
+            rail_line_menu_button = driver.find_element_by_id('tool-line')
+            rail_line_menu_button.click()
+
+            red_line_button = driver.find_element_by_id('rail-line-bd1038')
+            red_line_button.click()
+
+            canvas = driver.find_element_by_id('metro-map-canvas')
+
+            # Click on the canvas at 100,100
+            action = webdriver.common.action_chains.ActionChains(driver)
+            action.move_to_element_with_offset(canvas, 100, 100 + (index * 6)) # 17, 17
+            action.click()
+            action.perform()
+
+            # Confirm that there is a line painted at the expected coordinates
+            metro_map = driver.execute_script("return activeMap;")
+            self.assertEqual(
+                metro_map['17'][str(17 + index)],
+                {'line': 'bd1038'},
+            )
 
     @unittest.skip(reason="GOOD")
     def test_expand_collapse_rail_line_menu(self):
@@ -727,6 +771,7 @@ class FrontendFunctionalityTestCase(TestCase):
             name_map_button.get_attribute('style')
         )
 
+    @unittest.skip(reason='GOOD')
     def test_name_map_subsequent(self):
 
         """ Confirm that subsequent clicks to Save and Share map will remember what you named your previous map
@@ -753,7 +798,7 @@ class FrontendFunctionalityTestCase(TestCase):
 
         save_button = driver.find_element_by_id('tool-save-map')
         save_button.click()
-        
+
         WebDriverWait(driver, 1).until(
             expected_conditions.presence_of_element_located((By.ID, "shareable-map-link"))
         )
@@ -775,7 +820,7 @@ class FrontendFunctionalityTestCase(TestCase):
 
         # Now draw another mark and re-click the save button
         blue_line_button.click()
-        action = webdriver.common.action_chains.ActionChains(driver)        
+        action = webdriver.common.action_chains.ActionChains(driver)
         action.move_to_element_with_offset(canvas, 100, 200)
         action.click()
         action.perform()
@@ -795,7 +840,7 @@ class FrontendFunctionalityTestCase(TestCase):
 
         # Now draw a final mark and re-click the save button
         blue_line_button.click()
-        action = webdriver.common.action_chains.ActionChains(driver)        
+        action = webdriver.common.action_chains.ActionChains(driver)
         action.move_to_element_with_offset(canvas, 50, 50)
         action.click()
         action.perform()
