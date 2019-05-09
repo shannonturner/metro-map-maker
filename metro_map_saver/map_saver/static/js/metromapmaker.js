@@ -592,7 +592,7 @@ function drawPoint(ctx, x, y, metroMap, erasedLine) {
   // Draw a single point at position x, y
 
   var activeLine = getActiveLine(x, y, metroMap);
-  if (!activeLine) {
+  if (!activeLine && activeTool != 'eraser') {
     return // Fixes bug where clearing a map and resizing would sometimes paint undefined spots
   }
 
@@ -1241,6 +1241,8 @@ $(document).ready(function() {
     $('.tooltip').hide();
   }); // #tool-resize-all.click()
   $('.resize-grid').click(function() {
+    var lastToolUsed = activeTool;
+    activeTool = 'resize'
     size = $(this).attr('id').split('-').slice(2);
     // Indicate which size the map is now sized to, and reset any other buttons
     $('.resize-grid').each(function() {
@@ -1263,6 +1265,7 @@ $(document).ready(function() {
     })
     $(this).html('Current Size (' + size + 'x' + size + ')');
     resizeGrid(size);
+    activeTool = lastToolUsed; // Reset tool after drawing the grid to avoid undefined behavior when eraser was the last-used tool
   }); // .resize-grid.click()
   $('#tool-move-all').click(function() {
     if ($('#tool-move-options').is(':visible')) {
