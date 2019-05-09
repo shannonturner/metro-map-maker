@@ -7,7 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait, Select
-from selenium.common.exceptions import StaleElementReferenceException
+from selenium.common.exceptions import StaleElementReferenceException, NoSuchElementException
 
 from map_saver.models import SavedMap
 
@@ -490,6 +490,61 @@ class FrontendFunctionalityTestCase(TestCase):
         )
 
     @unittest.skip(reason='GOOD')
+    def test_station_name_zero_size(self):
+
+        """ Confirm that naming a station (required to place it), then renaming it to zero size, then saving will pass validation and the station will have a single space for its name when the new URL is opened
+        """
+
+        driver = self.driver
+        driver.get(self.website)
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+
+        self.helper_clear_draw_single_point(driver)
+
+        station_button = driver.find_element_by_id('tool-station')
+        station_button.click()
+
+        canvas = driver.find_element_by_id('metro-map-canvas')
+        action = webdriver.common.action_chains.ActionChains(driver)
+        action.move_to_element_with_offset(canvas, 100, 100) # 8, 8
+        action.click()
+        action.send_keys('abc').send_keys(Keys.ENTER)
+        action.perform()
+
+        station_name = driver.find_element_by_id('station-name')
+        station_name.clear()
+
+        save_map_button = driver.find_element_by_id('tool-save-map')
+        save_map_button.click()
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "shareable-map-link"))
+        )
+
+        map_link = driver.find_element_by_id('shareable-map-link').get_attribute('href')
+        driver.get(f'{map_link}')
+
+        # Wait two seconds until the map has re-loaded
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+
+        station_button = driver.find_element_by_id('tool-station')
+        station_button.click()
+
+        canvas = driver.find_element_by_id('metro-map-canvas')
+        action = webdriver.common.action_chains.ActionChains(driver)
+        action.move_to_element_with_offset(canvas, 100, 100) # 8, 8
+        action.click()
+        action.perform()
+
+        station_name = driver.find_element_by_id('station-name')
+        self.assertEqual(' ', station_name.get_attribute('value'))
+
+    @unittest.skip(reason='GOOD')
     def test_edit_station(self):
 
         """ Confirm that clicking on an existing station will edit it
@@ -856,10 +911,32 @@ class FrontendFunctionalityTestCase(TestCase):
             remembered_map_name.text
         )
 
-    # def test_name_map_no_overwrite(self):
+    @unittest.skip(reason='GOOD')
+    def test_name_map_no_overwrite(self):
 
-    #     """ Confirm that a map that is named by an admin cannot be overwritten by a visitor
-    #     """
+        """ Confirm that a map that is named by an admin cannot be overwritten by a visitor
+        """
+
+        driver = self.driver
+        driver.get(f'{self.website}?map=y87c6hf7') # Washington, DC
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+
+        save_button = driver.find_element_by_id('tool-save-map')
+        save_button.click()
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "shareable-map-link"))
+        )
+
+        map_link = driver.find_element_by_id('shareable-map-link')
+        self.assertTrue(map_link.text)
+
+        # There's no option given to allow the user to name this, since it already has an admin-given name
+        with self.assertRaises(NoSuchElementException):
+            map_name = driver.find_element_by_id('user-given-map-name')
 
     @unittest.skip(reason='GOOD')
     def test_show_hide_grid(self):
@@ -1079,7 +1156,7 @@ class FrontendFunctionalityTestCase(TestCase):
             metro_map = driver.execute_script('return activeMap;')
             self.assertFalse(metro_map.get('0')) # 0,8 was the last coordinate
 
-    # def test_resize_grid(self):
+    # def test_resize_grid(self): # TODO
 
     #     """ Confirm that resizing the grid expands / contracts as expected; truncating the map data if necessary
     #     """
