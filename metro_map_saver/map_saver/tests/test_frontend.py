@@ -24,6 +24,9 @@ class FrontendFunctionalityTestCase(TestCase):
     def tearDown(self):
         self.driver.close()
 
+    # Leave these helper functions prefixed with helper_
+    #   so it's easier to find them all when writing tests
+    #   & you won't have to remember all of their names
     def helper_erase_blank_to_save(self, driver):
 
         """ activeMap begins as false until autoSaved, so erase a blank square to save
@@ -59,7 +62,18 @@ class FrontendFunctionalityTestCase(TestCase):
         action.click()
         action.perform()
 
-    @unittest.skip(reason="GOOD")
+    def helper_return_image_canvas_data(self, driver):
+
+        """ Getting the image canvas data for comparison is common and requires lots of steps.
+        """
+
+        download_as_image_button = driver.find_element_by_id('tool-export-canvas')
+        download_as_image_button.click()
+        map_image = driver.find_element_by_id('metro-map-image').get_attribute('src')
+        download_as_image_button.click() # re-enable all the other buttons
+        return map_image
+
+    #@unittest.skip(reason='DEBUG')
     def test_loads_default_map(self):
 
         """ Confirm that the WMATA map loads by default
@@ -77,6 +91,7 @@ class FrontendFunctionalityTestCase(TestCase):
         parks_rail_line = driver.find_element_by_id('rail-line-cfe4a7')
         self.assertTrue(parks_rail_line)
 
+        self.helper_erase_blank_to_save(driver)
         metro_map = driver.execute_script("return activeMap;")
 
         self.assertEqual(
@@ -89,7 +104,7 @@ class FrontendFunctionalityTestCase(TestCase):
             {"lines":["a2a2a2"],"name":"Silver_Line_-_Wiehle-Reston_East_to_Largo","orientation":"0"}
         )
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_subsequent_loads_saved_map(self):
 
         """ Confirms that subsequent page loads will load the map saved in localstorage rather than the default WMATA map
@@ -125,7 +140,7 @@ class FrontendFunctionalityTestCase(TestCase):
             {"line": "bd1038"},
         )
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_bad_url_hash(self):
 
         """ Confirm that the grid loads and the rail lines are bound even if the provided URLhash was bad
@@ -161,13 +176,14 @@ class FrontendFunctionalityTestCase(TestCase):
             action.perform()
 
             # Confirm that there is a line painted at the expected coordinates
+            self.helper_erase_blank_to_save(driver)
             metro_map = driver.execute_script("return activeMap;")
             self.assertEqual(
                 metro_map['17'][str(17 + index)],
                 {'line': 'bd1038'},
             )
 
-    @unittest.skip(reason="GOOD")
+    #@unittest.skip(reason='DEBUG')
     def test_expand_collapse_rail_line_menu(self):
 
         """ Confirm that clicking Draw Rail Line will expand/hide the available rail lines
@@ -175,6 +191,10 @@ class FrontendFunctionalityTestCase(TestCase):
 
         driver = self.driver
         driver.get(self.website)
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
 
         rail_line_menu_button = driver.find_element_by_id('tool-line')
         rail_lines = driver.find_elements_by_class_name('rail-line')
@@ -193,7 +213,7 @@ class FrontendFunctionalityTestCase(TestCase):
         for line in rail_lines:
             self.assertFalse(line.is_displayed())
 
-    @unittest.skip(reason="GOOD")
+    #@unittest.skip(reason='DEBUG')
     def test_paint_rail_line(self):
 
         """ Confirm that painting a rail line on the canvas stores that data in activeMap
@@ -204,6 +224,9 @@ class FrontendFunctionalityTestCase(TestCase):
 
         rail_line_menu_button = driver.find_element_by_id('tool-line')
         rail_line_menu_button.click()
+
+        # Get image canvas data for comparison later
+        map_image = self.helper_return_image_canvas_data(driver)
 
         # Click the Red button
         rail_line_button = driver.find_element_by_id('rail-line-bd1038')
@@ -246,7 +269,11 @@ class FrontendFunctionalityTestCase(TestCase):
                 {'line': '0896d7'}
             )
 
-    @unittest.skip(reason="GOOD")
+        new_map_image = self.helper_return_image_canvas_data(driver)
+
+        self.assertNotEqual(map_image, new_map_image)
+
+    #@unittest.skip(reason='DEBUG')
     def test_overpaint_rail_line(self):
 
         """ Confirm that painting over a coordinate with a different color will overwrite it
@@ -277,6 +304,9 @@ class FrontendFunctionalityTestCase(TestCase):
             {'line': 'bd1038'},
         )
 
+        # Get image canvas data for later comparison
+        map_image = self.helper_return_image_canvas_data(driver)
+
         # Click the Blue button
         rail_line_button = driver.find_element_by_id('rail-line-0896d7')
         rail_line_button.click()
@@ -294,7 +324,10 @@ class FrontendFunctionalityTestCase(TestCase):
             {'line': '0896d7'},
         )
 
-    @unittest.skip(reason='GOOD')
+        new_map_image = self.helper_return_image_canvas_data(driver)
+        self.assertNotEqual(map_image, new_map_image)
+
+    #@unittest.skip(reason='DEBUG')
     def test_add_new_line(self):
 
         """ Confirm that adding a new rail line makes it available in the rail line options and in the global
@@ -342,7 +375,7 @@ class FrontendFunctionalityTestCase(TestCase):
             {'displayName': 'Lime Line'}
         )
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_delete_unused_lines(self):
 
         """ Confirm that deleting unused lines only deletes the correct lines, and deletes them from the rail line options and the global
@@ -380,7 +413,7 @@ class FrontendFunctionalityTestCase(TestCase):
             self.assertTrue(metro_map['global']['lines'][line])
             line_button = driver.find_element_by_id(f'rail-line-{line}')
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_edit_line_colors(self):
 
         """ Confirm that editing an existing rail line's name and/or color works as intended, replacing all instances in the ui, global, and map data
@@ -395,6 +428,7 @@ class FrontendFunctionalityTestCase(TestCase):
         )
 
         # Confirm Ft Totten exists before we change the red line's color
+        self.helper_erase_blank_to_save(driver)
         metro_map = driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['94']['40'],
@@ -405,10 +439,7 @@ class FrontendFunctionalityTestCase(TestCase):
         red_line_mentions = json.dumps(metro_map).count('bd1038')
 
         # Download the map as an image; after editing the color we'll make sure it's not the same
-        download_as_image_button = driver.find_element_by_id('tool-export-canvas')
-        download_as_image_button.click()
-        map_image = driver.find_element_by_id('metro-map-image').get_attribute('src')
-        download_as_image_button.click() # re-enable all the other buttons
+        map_image = self.helper_return_image_canvas_data(driver)
 
         # Change the Red Line to the Lime Line
         rail_line_menu_button = driver.find_element_by_id('tool-line')
@@ -453,16 +484,14 @@ class FrontendFunctionalityTestCase(TestCase):
         self.assertFalse(metro_map['global']['lines'].get('bd1038'))
 
         # Confirm the new map image isn't the same
-        download_as_image_button.click()
-        new_map_image = driver.find_element_by_id('metro-map-image').get_attribute('src')
-        download_as_image_button.click() # re-enable all the other buttons
+        new_map_image = self.helper_return_image_canvas_data(driver)
 
         self.assertNotEqual(
             map_image,
             new_map_image
         )
 
-    @unittest.skip(reason="GOOD")
+    #@unittest.skip(reason='DEBUG')
     def test_add_station(self):
 
         """ Confirm that you can add a station to a coordinate with a rail line
@@ -470,6 +499,8 @@ class FrontendFunctionalityTestCase(TestCase):
 
         driver = self.driver
         driver.get(self.website)
+
+        map_image = self.helper_return_image_canvas_data(driver)
 
         station_button = driver.find_element_by_id('tool-station')
         station_button.click()
@@ -489,7 +520,11 @@ class FrontendFunctionalityTestCase(TestCase):
             'abc'
         )
 
-    @unittest.skip(reason='GOOD')
+        new_map_image = self.helper_return_image_canvas_data(driver)
+
+        self.assertNotEqual(map_image, new_map_image)
+
+    #@unittest.skip(reason='DEBUG')
     def test_station_name_zero_size(self):
 
         """ Confirm that naming a station (required to place it), then renaming it to zero size, then saving will pass validation and the station will have a single space for its name when the new URL is opened
@@ -544,7 +579,7 @@ class FrontendFunctionalityTestCase(TestCase):
         station_name = driver.find_element_by_id('station-name')
         self.assertEqual(' ', station_name.get_attribute('value'))
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_edit_station(self):
 
         """ Confirm that clicking on an existing station will edit it
@@ -552,6 +587,8 @@ class FrontendFunctionalityTestCase(TestCase):
 
         driver = self.driver
         driver.get(self.website)
+
+        self.helper_erase_blank_to_save(driver)
 
         station_button = driver.find_element_by_id('tool-station')
         station_button.click()
@@ -577,7 +614,7 @@ class FrontendFunctionalityTestCase(TestCase):
             'Fort_Tottenabc'
         )
 
-    @unittest.skip(reason="GOOD")
+    #@unittest.skip(reason='DEBUG')
     def test_noadd_empty_station(self):
 
         """ Confirm that clicking on a coordinate with a rail line to add a station, then clicking somewhere else will not create the station
@@ -607,7 +644,7 @@ class FrontendFunctionalityTestCase(TestCase):
             metro_map['17']['55'].get('station')
         )
 
-    @unittest.skip(reason="GOOD")
+    #@unittest.skip(reason='DEBUG')
     def test_noadd_invalid_station_position(self):
 
         """ Confirm that a station cannot be placed on an empty coordinate
@@ -631,7 +668,7 @@ class FrontendFunctionalityTestCase(TestCase):
         metro_map = driver.execute_script("return activeMap;")
         self.assertFalse(metro_map['17'].get('17'))
 
-    @unittest.skip("GOOD")
+    #@unittest.skip("GOOD")
     def test_eraser(self):
 
         """ Confirm that erasing will delete any station and/or rail line at that coordinate
@@ -646,11 +683,14 @@ class FrontendFunctionalityTestCase(TestCase):
         )
 
         # Confirm Ft Totten exists before we delete it
+        self.helper_erase_blank_to_save(driver)
         metro_map = driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['94']['40'],
             {"line":"bd1038","station":{"transfer":1,"lines":["bd1038","f0ce15","00b251"],"name":"Fort_Totten","orientation":"0"}}
         )
+
+        map_image = self.helper_return_image_canvas_data(driver)
 
         eraser_button = driver.find_element_by_id('tool-eraser')
         eraser_button.click()
@@ -667,7 +707,10 @@ class FrontendFunctionalityTestCase(TestCase):
             metro_map['94'].get('40')
         )
 
-    @unittest.skip(reason='GOOD')
+        new_map_image = self.helper_return_image_canvas_data(driver)
+        self.assertNotEqual(map_image, new_map_image)
+
+    #@unittest.skip(reason='DEBUG')
     def test_download_as_image(self):
 
         """ Confirm that clicking download as image prepares the image canvas and disables the other buttons
@@ -702,7 +745,7 @@ class FrontendFunctionalityTestCase(TestCase):
             "Has the default WMATA map been updated? Its length was last measured as 1026214"
         )
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_save_share_map(self):
 
         """ Confirm that clicking Save and Share map will generate a unique URL based on the mapdata, and visiting that URL contains a map with that data
@@ -714,10 +757,7 @@ class FrontendFunctionalityTestCase(TestCase):
         self.helper_clear_draw_single_point(driver)
 
         # Download the map as an image for comparing later
-        download_as_image_button = driver.find_element_by_id('tool-export-canvas')
-        download_as_image_button.click()
-        map_image = driver.find_element_by_id('metro-map-image').get_attribute('src')
-        download_as_image_button.click() # re-enable all the other buttons
+        map_image = self.helper_return_image_canvas_data(driver)
 
         save_map_button = driver.find_element_by_id('tool-save-map')
         save_map_button.click()
@@ -741,14 +781,11 @@ class FrontendFunctionalityTestCase(TestCase):
 
         self.assertEqual(metro_map, new_metro_map)
 
-        download_as_image_button = driver.find_element_by_id('tool-export-canvas')
-        download_as_image_button.click()
-        new_map_image = driver.find_element_by_id('metro-map-image').get_attribute('src')
-        download_as_image_button.click() # re-enable all the other buttons
+        new_map_image = self.helper_return_image_canvas_data(driver)
 
         self.assertEqual(map_image, new_map_image)
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_save_share_map_no_overwrite(self):
 
         """ Confirm that clicking Save and Share map multiple times return the same urlhash
@@ -784,7 +821,7 @@ class FrontendFunctionalityTestCase(TestCase):
             len(map_links)
         )
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_name_map(self):
 
         """ Confirm that a newly-created map can be named
@@ -826,7 +863,7 @@ class FrontendFunctionalityTestCase(TestCase):
             name_map_button.get_attribute('style')
         )
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_name_map_subsequent(self):
 
         """ Confirm that subsequent clicks to Save and Share map will remember what you named your previous map
@@ -911,7 +948,7 @@ class FrontendFunctionalityTestCase(TestCase):
             remembered_map_name.text
         )
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_name_map_no_overwrite(self):
 
         """ Confirm that a map that is named by an admin cannot be overwritten by a visitor
@@ -938,7 +975,7 @@ class FrontendFunctionalityTestCase(TestCase):
         with self.assertRaises(NoSuchElementException):
             map_name = driver.find_element_by_id('user-given-map-name')
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_show_hide_grid(self):
 
         """ Confirm that showing/hiding the grid works correctly
@@ -972,7 +1009,7 @@ class FrontendFunctionalityTestCase(TestCase):
             int(grid_canvas.value_of_css_property('opacity'))
         )
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_zoom_in(self):
 
         """ Confirm that zooming in resizes the canvas container and eventually shows the Snap to Left button
@@ -1016,7 +1053,7 @@ class FrontendFunctionalityTestCase(TestCase):
             snap_controls_button.value_of_css_property('display')
         )
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_zoom_out(self):
 
         """ Confirm that zooming out resizes the canvas container
@@ -1050,7 +1087,7 @@ class FrontendFunctionalityTestCase(TestCase):
             new_width
         )
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_snap_left_right(self):
 
         """ Confirm that the Snap Controls to Left/Right buttons correctly move the toolbox
@@ -1107,7 +1144,7 @@ class FrontendFunctionalityTestCase(TestCase):
             controls.value_of_css_property('left')
         )
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_move_map(self):
 
         """ Confirm that using the "Move map" feature moves the painted rail lines and stations as expected
@@ -1156,12 +1193,140 @@ class FrontendFunctionalityTestCase(TestCase):
             metro_map = driver.execute_script('return activeMap;')
             self.assertFalse(metro_map.get('0')) # 0,8 was the last coordinate
 
-    # def test_resize_grid(self): # TODO
+    #@unittest.skip(reason='DEBUG')
+    def test_resize_grid(self):
 
-    #     """ Confirm that resizing the grid expands / contracts as expected; truncating the map data if necessary
-    #     """
+        """ Confirm that resizing the grid expands / contracts as expected; truncating the map data if necessary
+        """
 
-    @unittest.skip(reason="GOOD")
+        driver = self.driver
+        driver.get(self.website)
+
+        # Default WMATA map is 160x160
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+
+        # Confirm initial state
+        self.helper_erase_blank_to_save(driver)
+        metro_map = driver.execute_script("return activeMap;")
+        grid_cols = driver.execute_script("return gridCols;")
+        grid_rows = driver.execute_script("return gridRows;")
+
+        # Download the map as an image; after resizing we'll make sure it's not the same
+        map_image = self.helper_return_image_canvas_data(driver)
+
+        self.assertEqual(grid_cols, grid_rows)
+        self.assertEqual(grid_cols, 160)
+
+        resize_menu_button = driver.find_element_by_id('tool-resize-all')
+        resize_menu_button.click()
+
+        sizes = [240, 200, 160, 120, 80, 120, 160, 200, 240]
+        for size in sizes:
+            resize_button = driver.find_element_by_id(f'tool-resize-{size}')
+            resize_button.click()
+            grid_cols = driver.execute_script("return gridCols;")
+            grid_rows = driver.execute_script("return gridRows;")
+            self.assertEqual(grid_cols, grid_rows)
+            self.assertEqual(grid_cols, size)
+            self.assertEqual(
+                resize_button.text,
+                f'Current Size ({size}x{size})'
+            )
+
+            # Confirm that the data has been deleted when sizing down
+            self.helper_erase_blank_to_save(driver) # requires we save in the first place
+            metro_map = driver.execute_script("return activeMap;")
+            metro_map.pop('global')
+            self.assertTrue(max([int(k) for k in metro_map.keys()]) < size)
+            for x in metro_map:
+                self.assertTrue(max([int(k) for k in metro_map[x].keys()]) < size)
+
+            # Confirm the map canvas has changed
+            new_map_image = self.helper_return_image_canvas_data(driver)
+            self.assertNotEqual(
+                map_image,
+                new_map_image
+            )
+            # Set the current map image to be the new standard for comparison
+            #   That way, we know it always changes
+            map_image = new_map_image
+
+    #@unittest.skip(reason='DEBUG')
+    def test_resize_grid_saved(self):
+
+        """ Confirm that reloading the map will size down to the smallest viable grid (does not recenter the map to do this)
+        """
+
+        driver = self.driver
+        driver.get(self.website) # Default WMATA map is 160x160
+
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-bd1038"))
+        )
+
+        resize_menu_button = driver.find_element_by_id('tool-resize-all')
+        resize_menu_button.click()
+        resize_button = driver.find_element_by_id('tool-resize-240')
+        resize_button.click()
+
+        # Create a metro map that has strategically-placed dots; when erased and the page is reloaded, the map should size down accordingly.
+        metro_map = {
+            "global": {"lines": {"bd1038": {"displayName": "Red Line"} } },
+            "10": {
+                "10": {"line": "bd1038"}, # just here to look pretty
+                "80": {"line": "bd1038"}, # forces map to 120x120
+                "120": {"line": "bd1038"}, # forces map to 160x160
+                "160": {"line": "bd1038"}, # forces map to 200x200
+                "200": {"line": "bd1038"}, # forces map to 240x240
+            }
+        }
+        metro_map = json.dumps(metro_map)
+
+        driver.execute_script(f"activeMap = '{metro_map}'; autoSave(activeMap); drawCanvas(activeMap);")
+        driver.get(self.website)
+        WebDriverWait(driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-bd1038"))
+        )
+
+        # # Download the map as an image; after reloading we'll make sure it's not the same
+        map_image = self.helper_return_image_canvas_data(driver)
+
+        sizes = [200, 160, 120, 80]
+        for size in sizes:
+
+            grid_cols = driver.execute_script('return gridCols;')
+            grid_rows = driver.execute_script('return gridRows;')
+
+            self.assertEqual(grid_cols, grid_rows)
+            self.assertEqual(grid_cols, size + 40) # we haven't sized down yet
+
+            resize_menu_button = driver.find_element_by_id('tool-resize-all')
+            resize_menu_button.click()
+            resize_button = driver.find_element_by_id(f'tool-resize-{size}')
+            resize_button.click()
+
+            # Save the map to localStorage and reload
+            driver.execute_script('autoSave(activeMap);') # oddly, erase_blank_to_save is not saving here
+            driver.get(self.website)
+            WebDriverWait(driver, 2).until(
+                expected_conditions.presence_of_element_located((By.ID, "rail-line-bd1038"))
+            )
+
+            # Confirm the map canvas has changed
+            new_map_image = self.helper_return_image_canvas_data(driver)
+            self.assertNotEqual(
+                map_image,
+                new_map_image,
+                'map_image is identical to new_map_image'
+            )
+
+            # Set the current map image to be the new standard for comparison
+            #   That way, we know it always changes
+            map_image = new_map_image
+
+    #@unittest.skip(reason='DEBUG')
     def test_clear_map(self):
 
         """ Confirm that clicking Clear Map will delete all coordinate data
@@ -1185,7 +1350,7 @@ class FrontendFunctionalityTestCase(TestCase):
         self.assertTrue(len(metro_map) == 1)
         self.assertTrue(metro_map["global"]["lines"]) # Confirm that the lines still exist
 
-    @unittest.skip(reason='GOOD')
+    #@unittest.skip(reason='DEBUG')
     def test_clear_delete_lines_refresh(self):
 
         """ Confirm that the default rail lines will be loaded when clearing map, then deleting the rail lines, then saving the map and reloading the page
