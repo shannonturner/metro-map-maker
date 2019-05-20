@@ -11,15 +11,12 @@ from selenium.common.exceptions import StaleElementReferenceException, NoSuchEle
 
 from map_saver.models import SavedMap
 
-class FrontendFunctionalityTestCase(TestCase):
+class FrontendFunctionalityTestCase(object):
 
     """ Selenium testing to confirm that front-end functionality changes do not cause regressions
     """
 
     website = 'http://127.0.0.1:8000/'
-
-    def setUp(self):
-        self.driver = webdriver.Chrome()
 
     def tearDown(self):
         self.driver.close()
@@ -1401,3 +1398,32 @@ class FrontendFunctionalityTestCase(TestCase):
             16,
             tool_line_options_length
         )
+
+class ChromeFrontendFunctionalityTestCase(FrontendFunctionalityTestCase, TestCase):
+
+    """ Inherit all tests, use Chrome to perform them
+    """
+
+    def setUp(self):
+        self.driver = webdriver.Chrome()
+
+# class FirefoxFrontendFunctionalityTestCase(FrontendFunctionalityTestCase, TestCase):
+
+#     """ NOT IN USE:
+#             Currently fails most tests because geckodriver does not scrollIntoView
+#             & they won't fix it because it's not officialy in spec:
+#             https://github.com/mozilla/geckodriver/issues/776
+#     """
+
+#     def setUp(self):
+#         self.driver = webdriver.Firefox()
+
+# class SafariFrontendFunctionalityTestCase(FrontendFunctionalityTestCase, TestCase):
+
+#     """ NOT IN USE:
+#             Currently fails most tests because Safari driver has issues
+#                 with the pause key_action & the workaround didn't work for me
+#     """
+
+#     def setUp(self):
+#         self.driver = webdriver.Safari()
