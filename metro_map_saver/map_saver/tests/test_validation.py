@@ -245,6 +245,18 @@ class ValidateMapTestCase(TestCase):
             self._post_metromap(metro_map)
         )
 
+    def test_global_line_display_removes_backslash_special_chars(self):
+
+        """ Confirm that saving a rail line that somehow had a tab, backspace, or newline in its name will replace that with a space
+        """
+
+        metro_map = '{"global": {"lines": {"000000": {"displayName": "Tab\\t\\b\\nCentral"} } } }'
+        metro_map = validate_metro_map(metro_map)
+        self.assertNotIn('\\t', metro_map)
+        self.assertNotIn('\\b', metro_map)
+        self.assertNotIn('\\n', metro_map)
+        self.assertEqual('Tab   Central', metro_map["global"]["lines"]["000000"]["displayName"])
+
     def test_invalid_point_line_not_hex(self):
 
         """ Reject a map that has a non-hex color at a coordinate.
