@@ -203,7 +203,8 @@
     {% for map in saved_maps %}
 
         <div id="map-container-{{ map.id }}" class="map-container{% if forloop.first %} active-map{% endif %}">
-          <a id="download-link-{{ map.id }}" onClick="galleryDownloadFromCanvas({{ map.id }});" href="#" download="{{ map.urlhash }}.png"><canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive map-image"></canvas></a>
+          <a id="download-link-{{ map.id }}" href="#" download="{{ map.urlhash }}.png"></a>
+          <canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive map-image"></canvas>
           <canvas id="metro-map-thumbnail-canvas-{{ map.id }}" width="120" height="120" class="hidden"></canvas>
           <hr class="map-divider">
         </div>
@@ -239,12 +240,32 @@
   var gridSize = 80;
   var preferredGridPixelMultiplier = 20;
   var redrawOverlappingPoints = {};
+  var pngUrl = false;
 
   function galleryDownloadFromCanvas(mapId) {
     var downloadLink = document.getElementById("download-link-" + mapId);
-    var image = document.getElementById("metro-map-gallery-canvas-" + mapId).toDataURL("image/png").replace("image/png", "image/octet-stream");
-    downloadLink.setAttribute("href", image);
-  }
+    var canvas = document.getElementById('metro-map-gallery-canvas-' + mapId)
+    if (!HTMLCanvasElement.prototype.toBlob) {
+      var image = canvas.toDataURL()
+      downloadLink.setAttribute("href", image);
+      downloadLink.click()
+    } else {
+      if (pngUrl) {
+        URL.revokeObjectURL(pngUrl) // Revoke any previously-created blobs
+      }
+      canvas.toBlob(function(blob) {
+        pngUrl = URL.createObjectURL(blob)
+        downloadLink.setAttribute("href", pngUrl);
+        console.log(pngUrl)
+        downloadLink.click()
+      }) // canvas.toBlob()
+    } // if/else .toBlob
+  } // galleryDownloadFromCanvas(mapId)
+
+  $('.map-image').click(function() {
+    var mapId = $(this).attr('id').split("-").slice(-1)
+    galleryDownloadFromCanvas(mapId)
+  })
 
   function galleryGetMapSize(metroMapObject) {
     highestValue = 0;
