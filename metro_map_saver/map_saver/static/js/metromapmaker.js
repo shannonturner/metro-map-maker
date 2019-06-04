@@ -1788,9 +1788,7 @@ $('#try-on-mobile').click(function() {
   $('#favorite-maps').hide();
   $('#toolbox-mobile-hint').removeClass('hidden-xs');
   $('#controls').removeClass('hidden-xs');
-
-  // Needed if not viewing a specific map
-  $('#canvas-container').removeClass('hidden-xs');
+  $('#controls').css({'margin-top': '10px'})
   snapCanvasToGrid();
   drawCanvas()
 });
