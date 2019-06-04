@@ -203,7 +203,7 @@
     {% for map in saved_maps %}
 
         <div id="map-container-{{ map.id }}" class="map-container{% if forloop.first %} active-map{% endif %}">
-          <a id="download-link-{{ map.id }}" href="#" download="{{ map.urlhash }}.png"></a>
+          <a id="download-link-{{ map.id }}" href="#" download="{{ map.urlhash }}.png" target="_blank"></a>
           <canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive map-image"></canvas>
           <canvas id="metro-map-thumbnail-canvas-{{ map.id }}" width="120" height="120" class="hidden"></canvas>
           <hr class="map-divider">
