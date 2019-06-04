@@ -1792,4 +1792,5 @@ $('#try-on-mobile').click(function() {
   // Needed if not viewing a specific map
   $('#canvas-container').removeClass('hidden-xs');
   snapCanvasToGrid();
+  drawCanvas()
 });
