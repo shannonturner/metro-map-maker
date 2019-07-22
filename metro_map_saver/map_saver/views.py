@@ -220,20 +220,17 @@ class MapSimilarView(TemplateView):
             Reduce the search space so that it only compares against maps
             1. that are actually in the public gallery
             2. or have not been reviewed yet
+
+        2019-07: Reducing the search space even further by using the pre-calculated
+                 station_count attribute and filtering by a small threshold +/- that
     """
 
     @method_decorator(gzip_page)
     @method_decorator(login_required)
     def get(self, request, **kwargs):
 
-        visible_maps = SavedMap.objects.filter(gallery_visible=True).filter(tags__exact=None)
-        gallery_maps = SavedMap.objects.filter(gallery_visible=True) \
-            .exclude(thumbnail__exact='') \
-            .exclude(name__exact='') \
-            .exclude(tags__name='reviewed')
-        visible_maps = visible_maps | gallery_maps # merge these querysets
-        visible_maps = visible_maps.prefetch_related('tags').order_by('id')
-        tags = Tag.objects.all().order_by('id')
+        # Filter by +/- 20% of the current map's number of stations instead of all visible maps
+        STATION_THRESHOLD = 0.2
 
         try:
             this_map = SavedMap.objects.prefetch_related('tags').get(urlhash=kwargs.get('urlhash'))
@@ -241,6 +238,22 @@ class MapSimilarView(TemplateView):
             similar_maps = []
             similarity_scores = {}
         else:
+
+            this_map_stations_lower_bound = this_map.station_count * (1 - STATION_THRESHOLD)
+            this_map_stations_upper_bound = this_map.station_count * (1 + STATION_THRESHOLD)
+
+            visible_maps = SavedMap.objects.filter(gallery_visible=True).filter(tags__exact=None) \
+                .exclude(station_count__lt=this_map_stations_lower_bound) \
+                .exclude(station_count__gt=this_map_stations_upper_bound)
+            gallery_maps = SavedMap.objects.filter(gallery_visible=True) \
+                .exclude(thumbnail__exact='') \
+                .exclude(name__exact='') \
+                .exclude(tags__name='reviewed') \
+                .exclude(station_count__lt=this_map_stations_lower_bound) \
+                .exclude(station_count__gt=this_map_stations_upper_bound)
+            visible_maps = visible_maps | gallery_maps # merge these querysets
+            visible_maps = visible_maps.prefetch_related('tags').order_by('id')
+            tags = Tag.objects.all().order_by('id')
 
             this_map_stations = set(this_map.stations.split(','))
 

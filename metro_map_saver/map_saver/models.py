@@ -16,6 +16,7 @@ class SavedMap(models.Model):
     name = models.CharField(max_length=255, blank=True, default='')
     thumbnail = models.TextField(blank=True, default='')
     stations = models.TextField(blank=True, default='')
+    station_count = models.IntegerField(default=-1)
     created_at = models.DateField(auto_now_add=True)
 
     # Create a token that can be used for creators to be able to name their maps
@@ -27,7 +28,7 @@ class SavedMap(models.Model):
     def suggest_city(self):
         return suggest_city(set(self.stations.lower().split(',')))
 
-    def station_count(self):
+    def _station_count(self):
         if self.stations:
             return self.stations.count(',')
         else:
@@ -35,6 +36,10 @@ class SavedMap(models.Model):
 
     def __str__(self):
         return self.urlhash
+
+    def save(self, *args, **kwargs):
+        self.station_count = self._station_count()
+        super().save(*args, **kwargs)
 
     class Meta:
         permissions = (
