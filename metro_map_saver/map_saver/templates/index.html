@@ -37,7 +37,7 @@
       <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
     <![endif]-->
 
-    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' %}?version=20190505">
+    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' %}?version=20190722">
     <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css" integrity="sha256-f83N12sqX/GO43Y7vXNt9MjrHkPc4yi9Uq9cLy1wGIU=" crossorigin="anonymous" />
 
@@ -60,7 +60,7 @@
 
 <div id="main-container" class="container-fluid">
 
-  <div class="visible-xs text-left row">
+  <div id="mobile-header" class="visible-xs text-left row">
     <div class="col-lg-10 col-offset-1">
       <h3 class="text-center"><span class="M">M</span>etro <span class="M">M</span>ap <span class="M">M</span>aker</h3>
       <h5>Create your own metro maps, save them, and share with friends!</h5>
@@ -228,7 +228,7 @@
     {% if saved_map_name %}window.sessionStorage.setItem('userGivenMapName', "{{ saved_map_name }}"){% endif %}
   </script>
   {% endif %}
-  <script src='{% static "js/metromapmaker.js" %}?version=20190722'></script>
+  <script src='{% static "js/metromapmaker.js" %}?version=201907230724'></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js" integrity="sha256-ZdnRjhC/+YiBbXTHIuJdpf7u6Jh5D2wD5y0SNRWDREQ=" crossorigin="anonymous"></script>
 
   </body>

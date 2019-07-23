@@ -1083,7 +1083,7 @@ function getCanvasXY(pageX, pageY) {
   var height = container.height();
 
   var xOffset = parseInt($('#main-container').css('padding-left'))
-  var yOffset = parseInt($('#main-container').css('margin-top'))
+  var yOffset = parseInt($('#main-container').css('margin-top')) + parseInt($('#mobile-header').height())
 
   pageX = parseInt(pageX) - xOffset
   pageY = parseInt(pageY) - yOffset
