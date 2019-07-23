@@ -144,7 +144,8 @@ class MapGalleryView(TemplateView):
                 station_count = int(request.GET.get('stations'))
             except Exception:
                 station_count = 100
-            visible_maps = SavedMap.objects.filter(station_count__gte=station_count)
+            visible_maps = SavedMap.objects.filter(gallery_visible=True) \
+                .filter(station_count__gte=station_count)
         else:
             visible_maps = SavedMap.objects.filter(gallery_visible=True)
 
