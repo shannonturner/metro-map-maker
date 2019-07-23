@@ -927,8 +927,9 @@ function getMapSize(metroMapObject) {
   resizeGrid(gridRows)
 
   // Size the canvas container to the nearest multiple of gridCols
+  // #canvas-container height and width must always be the same
   $('#canvas-container').width(Math.round($('#canvas-container').width() / gridCols) * gridCols)
-  $('#canvas-container').height(Math.round($('#canvas-container').height() / gridRows) * gridRows)
+  $('#canvas-container').height(Math.round($('#canvas-container').width() / gridRows) * gridRows)
 } // getMapSize(metroMapObject)
 
 function loadMapFromObject(metroMapObject, update) {
