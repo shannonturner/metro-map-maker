@@ -136,6 +136,15 @@ class MapGalleryView(TemplateView):
             #   or by   /admin/direct/8RkQTRav
             direct = request.GET.get('map', kwargs.get('direct', '')[-8:])
             visible_maps = SavedMap.objects.filter(urlhash=direct)
+        elif request.GET.get('stations'):
+            # Return maps with at least this many stations.
+            # Accessible with ?stations=500
+            # Can be mixed with tags below like notags, named, thumbnail, or by name
+            try:
+                station_count = int(request.GET.get('stations'))
+            except Exception:
+                station_count = 100
+            visible_maps = SavedMap.objects.filter(station_count__gte=station_count)
         else:
             visible_maps = SavedMap.objects.filter(gallery_visible=True)
 
