@@ -47,7 +47,6 @@ div#toolbox {
 }
 
 #canvas-container {
-  overflow: scroll;
   padding: 0;
   height: 100%;
   cursor: crosshair;
