@@ -172,6 +172,7 @@ class MapGalleryView(TemplateView):
             saved_maps = paginator.get_page(paginator.num_pages)
 
         context = {
+            'stations': request.GET.get('stations'),
             'saved_maps': saved_maps,
             'maps_total': visible_maps.count(),
             'tags': tags,
