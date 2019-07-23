@@ -121,6 +121,7 @@ function snapCanvasToGrid() {
   } // if canvas.height / gridCols != preferredGridPixelMultiplier
 
   $('#canvas-container').height($('#metro-map-canvas').height());
+  $('#canvas-container').width($('#metro-map-canvas').height());
 } // snapCanvasToGrid()
 
 function getActiveLine(x, y, metroMap) {
