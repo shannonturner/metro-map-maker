@@ -970,6 +970,7 @@ function loadMapFromObject(metroMapObject, update) {
     $(function () {
       $('[data-toggle="tooltip"]').tooltip({"container": "body"});
       bindRailLineEvents();
+      drawCanvas(metroMapObject);
       var savedMapHash = getURLParameter('map');
       if ($('.visible-xs').is(':visible') && savedMapHash) {
         $('#canvas-container').removeClass('hidden-xs');
