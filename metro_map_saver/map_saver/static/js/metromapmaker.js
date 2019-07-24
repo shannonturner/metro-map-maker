@@ -970,7 +970,6 @@ function loadMapFromObject(metroMapObject, update) {
     $(function () {
       $('[data-toggle="tooltip"]').tooltip({"container": "body"});
       bindRailLineEvents();
-      drawCanvas(metroMapObject);
       var savedMapHash = getURLParameter('map');
       if ($('.visible-xs').is(':visible') && savedMapHash) {
         $('#canvas-container').removeClass('hidden-xs');
@@ -1642,7 +1641,6 @@ $(document).ready(function() {
       autoSave(activeMap)
     }
 
-    drawCanvas(activeMap, true)
     drawIndicator(x, y);
   }); // $('#station-transfer').click()
 
@@ -1717,6 +1715,7 @@ function stretchMap(metroMapObject) {
   newMapObject["global"] = metroMapObject["global"];
   activeMap = newMapObject;
   loadMapFromObject(newMapObject);
+  drawCanvas(newMapObject);
   return newMapObject;
 } // stretchMap(metroMapObject)
 
