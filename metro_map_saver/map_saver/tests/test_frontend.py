@@ -18,78 +18,91 @@ class FrontendFunctionalityTestCase(object):
 
     website = 'http://127.0.0.1:8000/'
 
+    def setUp(self):
+        self.driver.get(self.website)
+        # Wait up to two seconds;
+        # if rail-line-cfe4a7 (Parks) is loaded, we know we have the default map
+        WebDriverWait(self.driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
+        )
+
     def tearDown(self):
         self.driver.close()
 
     # Leave these helper functions prefixed with helper_
     #   so it's easier to find them all when writing tests
     #   & you won't have to remember all of their names
-    def helper_erase_blank_to_save(self, driver):
+    def helper_erase_blank_to_save(self):
 
         """ activeMap begins as false until autoSaved, so erase a blank square to save
         """
 
-        eraser_button = driver.find_element_by_id('tool-eraser')
-        canvas = driver.find_element_by_id('metro-map-canvas')
-        action = webdriver.common.action_chains.ActionChains(driver)
+        eraser_button = self.driver.find_element_by_id('tool-eraser')
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 0, 0)
         action.click()
         action.perform()
 
-    def helper_clear_draw_single_point(self, driver):
+    def helper_clear_draw_single_point(self):
 
         """ Erase the map, then add a single point
         """
 
-        clear_map_button = driver.find_element_by_id('tool-clear-map')
+        clear_map_button = self.driver.find_element_by_id('tool-clear-map')
         clear_map_button.click()
 
-        rail_line_menu_button = driver.find_element_by_id('tool-line')
+        rail_line_menu_button = self.driver.find_element_by_id('tool-line')
         rail_line_menu_button.click()
 
         # Click the Red button
-        rail_line_button = driver.find_element_by_id('rail-line-bd1038')
+        rail_line_button = self.driver.find_element_by_id('rail-line-bd1038')
         rail_line_button.click()
 
-        canvas = driver.find_element_by_id('metro-map-canvas')
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
 
         # Click on the canvas at 100,100
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 100, 100) # 8, 8 since the map was cleared and is now on a smaller grid size
         action.click()
         action.perform()
 
-    def helper_return_image_canvas_data(self, driver):
+    def helper_return_image_canvas_data(self):
 
-        """ Getting the image canvas data for comparison is common and requires lots of steps.
+        """ Getting the image canvas data for comparison is common.
         """
 
-        download_as_image_button = driver.find_element_by_id('tool-export-canvas')
-        download_as_image_button.click()
-        map_image = driver.find_element_by_id('metro-map-image').get_attribute('src')
-        download_as_image_button.click() # re-enable all the other buttons
+        self.driver.execute_script('drawCanvas(activeMap);')
+        map_image = self.driver.execute_script('return combineCanvases().toDataURL();')
+
         return map_image
 
-    #@unittest.skip(reason='DEBUG')
+    class expected_condition_element_has_attr(object):
+
+        """ An expectation for checking that an element has a particular attribute.
+        """
+
+        def __init__(self, element, attr):
+            self.element = element
+            self.attr = attr
+
+        def __call__(self, driver):
+            if self.element.get_attribute(self.attr):
+                return self.element.get_attribute(self.attr)
+            else:
+                return False
+
+    # @unittest.skip(reason='DEBUG')
     def test_loads_default_map(self):
 
         """ Confirm that the WMATA map loads by default
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        # Wait up to two seconds;
-        # if rail-line-cfe4a7 (Parks) is loaded, we know we have the default map
-        WebDriverWait(driver, 2).until(
-            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
-        )
-
-        parks_rail_line = driver.find_element_by_id('rail-line-cfe4a7')
+        parks_rail_line = self.driver.find_element_by_id('rail-line-cfe4a7')
         self.assertTrue(parks_rail_line)
 
-        self.helper_erase_blank_to_save(driver)
-        metro_map = driver.execute_script("return activeMap;")
+        self.helper_erase_blank_to_save()
+        metro_map = self.driver.execute_script("return activeMap;")
 
         self.assertEqual(
             metro_map['94']['40'],
@@ -101,35 +114,30 @@ class FrontendFunctionalityTestCase(object):
             {"lines":["a2a2a2"],"name":"Silver_Line_-_Wiehle-Reston_East_to_Largo","orientation":"0"}
         )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_subsequent_loads_saved_map(self):
 
         """ Confirms that subsequent page loads will load the map saved in localstorage rather than the default WMATA map
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
         # First, confirm that we've loaded the default WMATA map by checking for Fort Totten
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
         )
-        self.helper_erase_blank_to_save(driver)
-        metro_map = driver.execute_script("return activeMap;")
+        self.helper_erase_blank_to_save()
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['94']['40'],
             {"line":"bd1038","station":{"transfer":1,"lines":["bd1038","f0ce15","00b251"],"name":"Fort_Totten","orientation":"0"}}
         )
 
         # Next, clear the map and reload the page
-        self.helper_clear_draw_single_point(driver)
-        driver.get(self.website)
-
-        WebDriverWait(driver, 2).until(
+        self.helper_clear_draw_single_point()
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
         )
-        self.helper_erase_blank_to_save(driver)
-        metro_map = driver.execute_script("return activeMap;")
+        self.helper_erase_blank_to_save()
+        metro_map = self.driver.execute_script("return activeMap;")
 
         self.assertFalse(metro_map.get('94'))
         self.assertEqual(
@@ -137,14 +145,11 @@ class FrontendFunctionalityTestCase(object):
             {"line": "bd1038"},
         )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_bad_url_hash(self):
 
         """ Confirm that the grid loads and the rail lines are bound even if the provided URLhash was bad
         """
-
-        driver = self.driver
-
         bad_url_hashes = [
             '000BADMAP000_001', # no map at this hash
             '`000BADMAP000%%%_002', # malformed urlhash
@@ -152,49 +157,42 @@ class FrontendFunctionalityTestCase(object):
         ]
 
         for index, bad_hash in enumerate(bad_url_hashes):
-            driver.get(f'{self.website}?map={bad_hash}')
+            self.driver.get(f'{self.website}?map={bad_hash}')
 
-            WebDriverWait(driver, 2).until(
+            WebDriverWait(self.driver, 2).until(
                 expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
             )
 
-            rail_line_menu_button = driver.find_element_by_id('tool-line')
+            rail_line_menu_button = self.driver.find_element_by_id('tool-line')
             rail_line_menu_button.click()
 
-            red_line_button = driver.find_element_by_id('rail-line-bd1038')
+            red_line_button = self.driver.find_element_by_id('rail-line-bd1038')
             red_line_button.click()
 
-            canvas = driver.find_element_by_id('metro-map-canvas')
+            canvas = self.driver.find_element_by_id('metro-map-canvas')
 
             # Click on the canvas at 100,100
-            action = webdriver.common.action_chains.ActionChains(driver)
+            action = webdriver.common.action_chains.ActionChains(self.driver)
             action.move_to_element_with_offset(canvas, 100, 100 + (index * 6)) # 17, 17
             action.click()
             action.perform()
 
             # Confirm that there is a line painted at the expected coordinates
-            self.helper_erase_blank_to_save(driver)
-            metro_map = driver.execute_script("return activeMap;")
+            self.helper_erase_blank_to_save()
+            metro_map = self.driver.execute_script("return activeMap;")
             self.assertEqual(
                 metro_map['17'][str(17 + index)],
                 {'line': 'bd1038'},
             )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_expand_collapse_rail_line_menu(self):
 
         """ Confirm that clicking Draw Rail Line will expand/hide the available rail lines
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        WebDriverWait(driver, 2).until(
-            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
-        )
-
-        rail_line_menu_button = driver.find_element_by_id('tool-line')
-        rail_lines = driver.find_elements_by_class_name('rail-line')
+        rail_line_menu_button = self.driver.find_element_by_id('tool-line')
+        rail_lines = self.driver.find_elements_by_class_name('rail-line')
 
         # Rail lines begin hidden
         for line in rail_lines:
@@ -210,35 +208,32 @@ class FrontendFunctionalityTestCase(object):
         for line in rail_lines:
             self.assertFalse(line.is_displayed())
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_paint_rail_line(self):
 
         """ Confirm that painting a rail line on the canvas stores that data in activeMap
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        rail_line_menu_button = driver.find_element_by_id('tool-line')
+        rail_line_menu_button = self.driver.find_element_by_id('tool-line')
         rail_line_menu_button.click()
 
         # Get image canvas data for comparison later
-        map_image = self.helper_return_image_canvas_data(driver)
+        map_image = self.helper_return_image_canvas_data()
 
         # Click the Red button
-        rail_line_button = driver.find_element_by_id('rail-line-bd1038')
+        rail_line_button = self.driver.find_element_by_id('rail-line-bd1038')
         rail_line_button.click()
 
-        canvas = driver.find_element_by_id('metro-map-canvas')
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
 
         # Click on the canvas at 100,100
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 100, 100) # 17, 17
         action.click()
         action.perform()
 
         # Confirm that there is a line painted at the expected coordinates
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['17']['17'],
             {'line': 'bd1038'},
@@ -246,9 +241,9 @@ class FrontendFunctionalityTestCase(object):
 
         # Click and drag
         # First, change the color (helps debugging)
-        rail_line_button = driver.find_element_by_id('rail-line-0896d7')
+        rail_line_button = self.driver.find_element_by_id('rail-line-0896d7')
         rail_line_button.click()
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 120, 100) # 20, 17
         action.click()
         action.click_and_hold()
@@ -259,108 +254,102 @@ class FrontendFunctionalityTestCase(object):
         action.release()
         action.perform()
 
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         for col in range(17, 21): # 17, 18, 19, 20
             self.assertEqual(
                 metro_map['20'][str(col)],
                 {'line': '0896d7'}
             )
 
-        new_map_image = self.helper_return_image_canvas_data(driver)
+        new_map_image = self.helper_return_image_canvas_data()
 
         self.assertNotEqual(map_image, new_map_image)
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_overpaint_rail_line(self):
 
         """ Confirm that painting over a coordinate with a different color will overwrite it
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        rail_line_menu_button = driver.find_element_by_id('tool-line')
+        rail_line_menu_button = self.driver.find_element_by_id('tool-line')
         rail_line_menu_button.click()
 
         # Click the Red button
-        rail_line_button = driver.find_element_by_id('rail-line-bd1038')
+        rail_line_button = self.driver.find_element_by_id('rail-line-bd1038')
         rail_line_button.click()
 
-        canvas = driver.find_element_by_id('metro-map-canvas')
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
 
         # Click on the canvas at 100,100
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 100, 100) # 17, 17
         action.click()
         action.perform()
 
         # Confirm that there is a line painted at the expected coordinates
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['17']['17'],
             {'line': 'bd1038'},
         )
 
         # Get image canvas data for later comparison
-        map_image = self.helper_return_image_canvas_data(driver)
+        map_image = self.helper_return_image_canvas_data()
 
         # Click the Blue button
-        rail_line_button = driver.find_element_by_id('rail-line-0896d7')
+        rail_line_button = self.driver.find_element_by_id('rail-line-0896d7')
         rail_line_button.click()
 
         # Click on the canvas at 100,100
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 100, 100) # 17, 17
         action.click()
         action.perform()
 
         # Confirm that there is a line painted at the expected coordinates
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['17']['17'],
             {'line': '0896d7'},
         )
 
-        new_map_image = self.helper_return_image_canvas_data(driver)
+        new_map_image = self.helper_return_image_canvas_data()
         self.assertNotEqual(map_image, new_map_image)
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_add_new_line(self):
 
         """ Confirm that adding a new rail line makes it available in the rail line options and in the global
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        rail_line_menu_button = driver.find_element_by_id('tool-line')
+        rail_line_menu_button = self.driver.find_element_by_id('tool-line')
         rail_line_menu_button.click()
 
-        create_new_line_button = driver.find_element_by_id('rail-line-new')
+        create_new_line_button = self.driver.find_element_by_id('rail-line-new')
         create_new_line_button.click()
 
         # I don't know the "correct" way to have Selenium actually click the color, so this will have to suffice
-        driver.execute_script('document.getElementById("new-rail-line-color").value="#8efa00"')
+        self.driver.execute_script('document.getElementById("new-rail-line-color").value="#8efa00"')
 
-        new_line_name = driver.find_element_by_id('new-rail-line-name')
-        action = webdriver.common.action_chains.ActionChains(driver)
+        new_line_name = self.driver.find_element_by_id('new-rail-line-name')
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.send_keys_to_element(new_line_name, 'Lime Line')
         action.perform()
-        save_new_line_button = driver.find_element_by_id('create-new-rail-line')
+        save_new_line_button = self.driver.find_element_by_id('create-new-rail-line')
         save_new_line_button.click()
 
         # Confirm it actually will paint, too
-        lime_line_button = driver.find_element_by_id('rail-line-8efa00')
+        lime_line_button = self.driver.find_element_by_id('rail-line-8efa00')
         lime_line_button.click()
 
         # Click on the canvas at 100,100
-        canvas = driver.find_element_by_id('metro-map-canvas')
-        action = webdriver.common.action_chains.ActionChains(driver) # Create a new action chains
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
+        action = webdriver.common.action_chains.ActionChains(self.driver) # Create a new action chains
         action.move_to_element_with_offset(canvas, 100, 100) # 17, 17
         action.click()
         action.perform()
 
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['17']['17'],
             {'line': '8efa00'},
@@ -372,20 +361,17 @@ class FrontendFunctionalityTestCase(object):
             {'displayName': 'Lime Line'}
         )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_delete_unused_lines(self):
 
         """ Confirm that deleting unused lines only deletes the correct lines, and deletes them from the rail line options and the global
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        rail_line_menu_button = driver.find_element_by_id('tool-line')
+        rail_line_menu_button = self.driver.find_element_by_id('tool-line')
         rail_line_menu_button.click()
 
-        self.helper_erase_blank_to_save(driver)
-        metro_map = driver.execute_script("return activeMap;")
+        self.helper_erase_blank_to_save()
+        metro_map = self.driver.execute_script("return activeMap;")
 
         # Of the defaults, only the purple line is not in use in the default WMATA map
         # Confirm it's there, then delete it
@@ -393,12 +379,12 @@ class FrontendFunctionalityTestCase(object):
             metro_map['global']['lines']['662c90'],
             {'displayName': 'Purple Line'}
         )
-        purple_line_button = driver.find_element_by_id('rail-line-662c90')
+        purple_line_button = self.driver.find_element_by_id('rail-line-662c90')
 
-        delete_unused_lines_button = driver.find_element_by_id('rail-line-delete')
+        delete_unused_lines_button = self.driver.find_element_by_id('rail-line-delete')
         delete_unused_lines_button.click()
 
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
 
         self.assertFalse(metro_map['global']['lines'].get('662c90'))
         with self.assertRaises(StaleElementReferenceException):
@@ -408,25 +394,17 @@ class FrontendFunctionalityTestCase(object):
         remaining_lines = ["0896d7", "df8600", "000000", "00b251", "a2a2a2", "f0ce15", "bd1038", "79bde9", "cfe4a7"]
         for line in remaining_lines:
             self.assertTrue(metro_map['global']['lines'][line])
-            line_button = driver.find_element_by_id(f'rail-line-{line}')
+            line_button = self.driver.find_element_by_id(f'rail-line-{line}')
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_edit_line_colors(self):
 
         """ Confirm that editing an existing rail line's name and/or color works as intended, replacing all instances in the ui, global, and map data
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        # Wait 2 seconds for the default map to load; we're relying on Ft Totten to be there
-        WebDriverWait(driver, 2).until(
-            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
-        )
-
         # Confirm Ft Totten exists before we change the red line's color
-        self.helper_erase_blank_to_save(driver)
-        metro_map = driver.execute_script("return activeMap;")
+        self.helper_erase_blank_to_save()
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['94']['40'],
             {"line":"bd1038","station":{"transfer":1,"lines":["bd1038","f0ce15","00b251"],"name":"Fort_Totten","orientation":"0"}}
@@ -436,32 +414,32 @@ class FrontendFunctionalityTestCase(object):
         red_line_mentions = json.dumps(metro_map).count('bd1038')
 
         # Download the map as an image; after editing the color we'll make sure it's not the same
-        map_image = self.helper_return_image_canvas_data(driver)
+        map_image = self.helper_return_image_canvas_data()
 
         # Change the Red Line to the Lime Line
-        rail_line_menu_button = driver.find_element_by_id('tool-line')
+        rail_line_menu_button = self.driver.find_element_by_id('tool-line')
         rail_line_menu_button.click()
 
-        edit_color_button = driver.find_element_by_id('rail-line-change')
+        edit_color_button = self.driver.find_element_by_id('rail-line-change')
         edit_color_button.click()
 
-        edit_rail_line_select = Select(driver.find_element_by_id('tool-lines-to-change'))
+        edit_rail_line_select = Select(self.driver.find_element_by_id('tool-lines-to-change'))
         edit_rail_line_select.select_by_visible_text('Red Line')
 
         # I don't know the "correct" way to have Selenium actually click the color, so this will have to suffice
-        driver.execute_script('document.getElementById("change-line-color").value="#8efa00"')
+        self.driver.execute_script('document.getElementById("change-line-color").value="#8efa00"')
 
-        edit_line_name = driver.find_element_by_id('change-line-name')
+        edit_line_name = self.driver.find_element_by_id('change-line-name')
         edit_line_name.clear()
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.send_keys_to_element(edit_line_name, 'Lime Line')
         action.perform()
 
-        save_rail_line_edits_button = driver.find_element_by_id('save-rail-line-edits')
+        save_rail_line_edits_button = self.driver.find_element_by_id('save-rail-line-edits')
         save_rail_line_edits_button.click()
 
         # Reload the map and confirm that everything is changed over
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertEqual(
             red_line_mentions,
             json.dumps(metro_map).count('8efa00') # Lime Line mentions
@@ -481,152 +459,136 @@ class FrontendFunctionalityTestCase(object):
         self.assertFalse(metro_map['global']['lines'].get('bd1038'))
 
         # Confirm the new map image isn't the same
-        new_map_image = self.helper_return_image_canvas_data(driver)
+        new_map_image = self.helper_return_image_canvas_data()
 
         self.assertNotEqual(
             map_image,
             new_map_image
         )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_add_station(self):
 
         """ Confirm that you can add a station to a coordinate with a rail line
         """
 
-        driver = self.driver
-        driver.get(self.website)
+        map_image = self.helper_return_image_canvas_data()
 
-        map_image = self.helper_return_image_canvas_data(driver)
-
-        station_button = driver.find_element_by_id('tool-station')
+        station_button = self.driver.find_element_by_id('tool-station')
         station_button.click()
 
-        canvas = driver.find_element_by_id('metro-map-canvas')
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
 
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 100, 330) # 17, 55
         action.click()
         # using .send_keys() also confirms that #station-name has been given focus
         action.send_keys('abc').send_keys(Keys.ENTER)
         action.perform()
 
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['17']['55']['station']['name'],
             'abc'
         )
 
-        new_map_image = self.helper_return_image_canvas_data(driver)
+        new_map_image = self.helper_return_image_canvas_data()
 
         self.assertNotEqual(map_image, new_map_image)
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_station_name_zero_size(self):
 
         """ Confirm that naming a station (required to place it), then renaming it to zero size, then saving will pass validation and the station will have a single space for its name when the new URL is opened
         """
 
-        driver = self.driver
-        driver.get(self.website)
+        self.helper_clear_draw_single_point()
 
-        WebDriverWait(driver, 2).until(
-            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
-        )
-
-        self.helper_clear_draw_single_point(driver)
-
-        station_button = driver.find_element_by_id('tool-station')
+        station_button = self.driver.find_element_by_id('tool-station')
         station_button.click()
 
-        canvas = driver.find_element_by_id('metro-map-canvas')
-        action = webdriver.common.action_chains.ActionChains(driver)
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 100, 100) # 8, 8
         action.click()
         action.send_keys('abc').send_keys(Keys.ENTER)
         action.perform()
 
-        station_name = driver.find_element_by_id('station-name')
+        station_name = self.driver.find_element_by_id('station-name')
         station_name.clear()
 
-        save_map_button = driver.find_element_by_id('tool-save-map')
+        save_map_button = self.driver.find_element_by_id('tool-save-map')
         save_map_button.click()
 
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "shareable-map-link"))
         )
 
-        map_link = driver.find_element_by_id('shareable-map-link').get_attribute('href')
-        driver.get(f'{map_link}')
+        map_link = self.driver.find_element_by_id('shareable-map-link').get_attribute('href')
+        self.driver.get(f'{map_link}')
 
         # Wait two seconds until the map has re-loaded
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
         )
 
-        station_button = driver.find_element_by_id('tool-station')
+        station_button = self.driver.find_element_by_id('tool-station')
         station_button.click()
 
-        canvas = driver.find_element_by_id('metro-map-canvas')
-        action = webdriver.common.action_chains.ActionChains(driver)
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 100, 100) # 8, 8
         action.click()
         action.perform()
 
-        station_name = driver.find_element_by_id('station-name')
+        station_name = self.driver.find_element_by_id('station-name')
         self.assertEqual(' ', station_name.get_attribute('value'))
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_edit_station(self):
 
         """ Confirm that clicking on an existing station will edit it
         """
 
-        driver = self.driver
-        driver.get(self.website)
+        self.helper_erase_blank_to_save()
 
-        self.helper_erase_blank_to_save(driver)
-
-        station_button = driver.find_element_by_id('tool-station')
+        station_button = self.driver.find_element_by_id('tool-station')
         station_button.click()
 
-        canvas = driver.find_element_by_id('metro-map-canvas')
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
 
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['94']['40']['station']['name'],
             'Fort_Totten'
         )
 
         # Edit Ft Totten
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 562, 238) # 94, 40
         action.click()
         action.send_keys('abc').send_keys(Keys.ENTER)
         action.perform()
 
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['94']['40']['station']['name'],
             'Fort_Tottenabc'
         )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_noadd_empty_station(self):
 
         """ Confirm that clicking on a coordinate with a rail line to add a station, then clicking somewhere else will not create the station
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        station_button = driver.find_element_by_id('tool-station')
+        station_button = self.driver.find_element_by_id('tool-station')
         station_button.click()
 
-        canvas = driver.find_element_by_id('metro-map-canvas')
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
 
         # Click on the canvas at 100,100
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 100, 323) # 17, 55
         action.click()
         action.perform()
@@ -636,153 +598,123 @@ class FrontendFunctionalityTestCase(object):
         action.click()
         action.perform()
 
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertFalse(
             metro_map['17']['55'].get('station')
         )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_noadd_invalid_station_position(self):
 
         """ Confirm that a station cannot be placed on an empty coordinate
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        station_button = driver.find_element_by_id('tool-station')
+        station_button = self.driver.find_element_by_id('tool-station')
         station_button.click()
 
-        canvas = driver.find_element_by_id('metro-map-canvas')
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
 
         # Click on the canvas at 100,100
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 100, 100) # 17, 17
         action.click()
         action.perform()
 
         # Confirm that there is a line painted at the expected coordinates
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertFalse(metro_map['17'].get('17'))
 
-    #@unittest.skip("GOOD")
+    # @unittest.skip(reason='DEBUG')
     def test_eraser(self):
 
         """ Confirm that erasing will delete any station and/or rail line at that coordinate
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        # Wait 2 seconds for the default map to load; we're relying on Ft Totten to be there
-        WebDriverWait(driver, 2).until(
-            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
-        )
-
         # Confirm Ft Totten exists before we delete it
-        self.helper_erase_blank_to_save(driver)
-        metro_map = driver.execute_script("return activeMap;")
+        self.helper_erase_blank_to_save()
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['94']['40'],
             {"line":"bd1038","station":{"transfer":1,"lines":["bd1038","f0ce15","00b251"],"name":"Fort_Totten","orientation":"0"}}
         )
 
-        map_image = self.helper_return_image_canvas_data(driver)
+        map_image = self.helper_return_image_canvas_data()
 
-        eraser_button = driver.find_element_by_id('tool-eraser')
+        eraser_button = self.driver.find_element_by_id('tool-eraser')
         eraser_button.click()
 
-        canvas = driver.find_element_by_id('metro-map-canvas')
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
 
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 562, 238) # 94, 40
         action.click()
         action.perform()
 
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertFalse(
             metro_map['94'].get('40')
         )
 
-        new_map_image = self.helper_return_image_canvas_data(driver)
+        new_map_image = self.helper_return_image_canvas_data()
         self.assertNotEqual(map_image, new_map_image)
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_download_as_image(self):
 
-        """ Confirm that clicking download as image prepares the image canvas and disables the other buttons
+        """ Confirm that clicking download as image creates a download link
         """
 
-        driver = self.driver
-        driver.get(self.website)
+        # The image download link does not have an href yet
+        image_download_link = self.driver.find_element_by_id('metro-map-image-download-link')
+        self.assertFalse(image_download_link.get_attribute('href'))
 
-        # Wait 2 seconds for the default map to load; we're relying on the default WMATA map
-        WebDriverWait(driver, 2).until(
-            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
-        )
-
-        download_as_image_button = driver.find_element_by_id('tool-export-canvas')
+        download_as_image_button = self.driver.find_element_by_id('tool-export-canvas')
         download_as_image_button.click()
 
-        # Confirm that the button now reads "Edit Map"
-        self.assertEqual(
-            download_as_image_button.text,
-            'Edit map'
+        # Confirm that the download link now has an href
+        WebDriverWait(self.driver, 2).until(
+            self.expected_condition_element_has_attr(image_download_link, 'href')
         )
+        self.assertTrue(image_download_link.get_attribute('href'))
 
-        # Confirm that the other buttons are disabled
-        eraser_button = driver.find_element_by_id('tool-eraser')
-        self.assertFalse(eraser_button.is_enabled())
-
-        # Confirm that the src now has a data/img
-        image_canvas = driver.find_element_by_id('metro-map-image')
-        self.assertEqual(
-            len(image_canvas.get_attribute('src')),
-            1026214,
-            "Has the default WMATA map been updated? Its length was last measured as 1026214"
-        )
-
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_save_share_map(self):
 
         """ Confirm that clicking Save and Share map will generate a unique URL based on the mapdata, and visiting that URL contains a map with that data
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        self.helper_clear_draw_single_point(driver)
+        self.helper_clear_draw_single_point()
 
         # Download the map as an image for comparing later
-        map_image = self.helper_return_image_canvas_data(driver)
+        map_image = self.helper_return_image_canvas_data()
 
-        save_map_button = driver.find_element_by_id('tool-save-map')
+        save_map_button = self.driver.find_element_by_id('tool-save-map')
         save_map_button.click()
 
-        WebDriverWait(driver, 1).until(
+        WebDriverWait(self.driver, 1).until(
             expected_conditions.presence_of_element_located((By.ID, "shareable-map-link"))
         )
 
-        map_link = driver.find_element_by_id('shareable-map-link').get_attribute('href')
-        metro_map = driver.execute_script("return activeMap;")
+        map_link = self.driver.find_element_by_id('shareable-map-link').get_attribute('href')
+        metro_map = self.driver.execute_script("return activeMap;")
 
-        driver.get(f'{map_link}')
+        self.driver.get(f'{map_link}')
 
         # Wait two seconds until the map has re-loaded
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
         )
 
-        self.helper_erase_blank_to_save(driver)
-        new_metro_map = driver.execute_script("return activeMap;")
+        self.helper_erase_blank_to_save()
+        new_metro_map = self.driver.execute_script("return activeMap;")
 
         self.assertEqual(metro_map, new_metro_map)
 
-        new_map_image = self.helper_return_image_canvas_data(driver)
+        new_map_image = self.helper_return_image_canvas_data()
 
         self.assertEqual(map_image, new_map_image)
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_save_share_map_no_overwrite(self):
 
         """ Confirm that clicking Save and Share map multiple times return the same urlhash
@@ -792,33 +724,30 @@ class FrontendFunctionalityTestCase(object):
         #   that multiple posts with the same data do not overwrite
         #   the original mapdata or urlhash
 
-        driver = self.driver
-        driver.get(self.website)
-
-        self.helper_clear_draw_single_point(driver)
-        save_map_button = driver.find_element_by_id('tool-save-map')
+        self.helper_clear_draw_single_point()
+        save_map_button = self.driver.find_element_by_id('tool-save-map')
 
         map_links = set()
 
         for attempt in range(5):
             save_map_button.click()
 
-            WebDriverWait(driver, 2).until(
+            WebDriverWait(self.driver, 2).until(
                 expected_conditions.presence_of_element_located((By.ID, "shareable-map-link"))
             )
 
-            map_link = driver.find_element_by_id('shareable-map-link').get_attribute('href')
+            map_link = self.driver.find_element_by_id('shareable-map-link').get_attribute('href')
             map_links.add(map_link)
 
             # Prevent state elements by making sure we delete it in between saves
-            driver.execute_script("document.getElementById('shareable-map-link').remove()")
+            self.driver.execute_script("document.getElementById('shareable-map-link').remove()")
 
         self.assertEqual(
             1,
             len(map_links)
         )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_name_map(self):
 
         """ Confirm that a newly-created map can be named
@@ -829,29 +758,26 @@ class FrontendFunctionalityTestCase(object):
         # As a result, I can't use SavedMap.objects.get() here after clicking #tool-save-map
         # But this is okay - I'm using test_validation's test_valid_map_saves() to confirm that the backend responds properly.
 
-        driver = self.driver
-        driver.get(self.website)
-
-        self.helper_clear_draw_single_point(driver)
-        save_button = driver.find_element_by_id('tool-save-map')
+        self.helper_clear_draw_single_point()
+        save_button = self.driver.find_element_by_id('tool-save-map')
         save_button.click()
         
-        WebDriverWait(driver, 1).until(
+        WebDriverWait(self.driver, 1).until(
             expected_conditions.presence_of_element_located((By.ID, "shareable-map-link"))
         )
 
-        map_link = driver.find_element_by_id('shareable-map-link')
+        map_link = self.driver.find_element_by_id('shareable-map-link')
         self.assertTrue(map_link.text)
 
-        map_name = driver.find_element_by_id('user-given-map-name')
-        action = webdriver.common.action_chains.ActionChains(driver)
+        map_name = self.driver.find_element_by_id('user-given-map-name')
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.send_keys_to_element(map_name, 'single dot', Keys.ENTER)
         action.perform()
 
-        name_map_button = driver.find_element_by_id('name-this-map')
+        name_map_button = self.driver.find_element_by_id('name-this-map')
         name_map_button.click()
 
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.invisibility_of_element((By.ID, 'name-this-map'))
         )
 
@@ -860,119 +786,111 @@ class FrontendFunctionalityTestCase(object):
             name_map_button.get_attribute('style')
         )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_name_map_subsequent(self):
 
         """ Confirm that subsequent clicks to Save and Share map will remember what you named your previous map
         """
 
-        driver = self.driver
-        driver.get(self.website)
+        self.helper_clear_draw_single_point()
 
-        WebDriverWait(driver, 2).until(
-            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
-        )
-
-        self.helper_clear_draw_single_point(driver)
-
-        blue_line_button = driver.find_element_by_id('rail-line-0896d7')
+        blue_line_button = self.driver.find_element_by_id('rail-line-0896d7')
         blue_line_button.click()
 
-        canvas = driver.find_element_by_id('metro-map-canvas')
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
 
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 200, 200)
         action.click()
         action.perform()
 
-        save_button = driver.find_element_by_id('tool-save-map')
+        save_button = self.driver.find_element_by_id('tool-save-map')
         save_button.click()
 
-        WebDriverWait(driver, 1).until(
+        WebDriverWait(self.driver, 1).until(
             expected_conditions.presence_of_element_located((By.ID, "shareable-map-link"))
         )
 
-        map_link = driver.find_element_by_id('shareable-map-link')
+        map_link = self.driver.find_element_by_id('shareable-map-link')
         self.assertTrue(map_link.text)
 
-        map_name = driver.find_element_by_id('user-given-map-name')
-        action = webdriver.common.action_chains.ActionChains(driver)
+        map_name = self.driver.find_element_by_id('user-given-map-name')
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.send_keys_to_element(map_name, 'test_name_map_subsequent', Keys.ENTER)
         action.perform()
 
-        name_map_button = driver.find_element_by_id('name-this-map')
+        name_map_button = self.driver.find_element_by_id('name-this-map')
         name_map_button.click()
 
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.invisibility_of_element((By.ID, 'name-this-map'))
         )
 
         # Now draw another mark and re-click the save button
         blue_line_button.click()
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 100, 200)
         action.click()
         action.perform()
         save_button.click()
 
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.visibility_of_element_located((By.ID, "user-given-map-name"))
         )
 
         # Confirm that the text input and tag dropdown both show if only the name was entered
-        map_name = driver.find_element_by_id('user-given-map-name')
+        map_name = self.driver.find_element_by_id('user-given-map-name')
         map_name.click()
-        map_tags = Select(driver.find_element_by_id('user-given-map-tags'))
+        map_tags = Select(self.driver.find_element_by_id('user-given-map-tags'))
         map_tags.select_by_visible_text('This is a real metro system')
-        name_map_button = driver.find_element_by_id('name-this-map')
+        name_map_button = self.driver.find_element_by_id('name-this-map')
         name_map_button.click()
 
         # Now draw a final mark and re-click the save button
         blue_line_button.click()
-        action = webdriver.common.action_chains.ActionChains(driver)
+        action = webdriver.common.action_chains.ActionChains(self.driver)
         action.move_to_element_with_offset(canvas, 50, 50)
         action.click()
         action.perform()
         save_button.click()
 
         # Confirm that the previous map's name and tags were remembered
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "map-somewhere-else"))
         )
-        remembered_map_name = driver.find_element_by_id('map-somewhere-else')
+        remembered_map_name = self.driver.find_element_by_id('map-somewhere-else')
         self.assertEqual(
             'Not a map of test_name_map_subsequent? Click here to rename',
             remembered_map_name.text
         )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_name_map_no_overwrite(self):
 
         """ Confirm that a map that is named by an admin cannot be overwritten by a visitor
         """
 
-        driver = self.driver
-        driver.get(f'{self.website}?map=y87c6hf7') # Washington, DC
+        self.driver.get(f'{self.website}?map=y87c6hf7') # Washington, DC
 
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
         )
 
-        save_button = driver.find_element_by_id('tool-save-map')
+        save_button = self.driver.find_element_by_id('tool-save-map')
         save_button.click()
 
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "shareable-map-link"))
         )
 
-        map_link = driver.find_element_by_id('shareable-map-link')
+        map_link = self.driver.find_element_by_id('shareable-map-link')
         self.assertTrue(map_link.text)
 
         # There's no option given to allow the user to name this, since it already has an admin-given name
         with self.assertRaises(NoSuchElementException):
-            map_name = driver.find_element_by_id('user-given-map-name')
+            map_name = self.driver.find_element_by_id('user-given-map-name')
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_show_hide_grid(self):
 
         """ Confirm that showing/hiding the grid works correctly
@@ -980,11 +898,8 @@ class FrontendFunctionalityTestCase(object):
 
         # Test by looking for the opacity change of the grid-canvas
 
-        driver = self.driver
-        driver.get(self.website)
-
-        grid_button = driver.find_element_by_id('tool-grid')
-        grid_canvas = driver.find_element_by_id('grid-canvas')
+        grid_button = self.driver.find_element_by_id('tool-grid')
+        grid_canvas = self.driver.find_element_by_id('grid-canvas')
 
         # Grid begins visible
         self.assertEqual(
@@ -1006,25 +921,22 @@ class FrontendFunctionalityTestCase(object):
             int(grid_canvas.value_of_css_property('opacity'))
         )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_zoom_in(self):
 
         """ Confirm that zooming in resizes the canvas container and eventually shows the Snap to Left button
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
         )
 
-        canvas_container = driver.find_element_by_id('canvas-container')
-        columns = driver.execute_script("return gridCols;")
+        canvas_container = self.driver.find_element_by_id('canvas-container')
+        columns = self.driver.execute_script("return gridCols;")
         width = int(canvas_container.value_of_css_property('width')[:-2])
-        snap_controls_button = driver.find_element_by_id('snap-controls-left')
+        snap_controls_button = self.driver.find_element_by_id('snap-controls-left')
 
-        zoom_in_button = driver.find_element_by_id('tool-zoom-in')
+        zoom_in_button = self.driver.find_element_by_id('tool-zoom-in')
         zoom_in_button.click()
 
         new_width = int(canvas_container.value_of_css_property('width')[:-2])
@@ -1050,24 +962,21 @@ class FrontendFunctionalityTestCase(object):
             snap_controls_button.value_of_css_property('display')
         )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_zoom_out(self):
 
         """ Confirm that zooming out resizes the canvas container
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
         )
 
-        canvas_container = driver.find_element_by_id('canvas-container')
-        columns = driver.execute_script("return gridCols;")
+        canvas_container = self.driver.find_element_by_id('canvas-container')
+        columns = self.driver.execute_script("return gridCols;")
         width = int(canvas_container.value_of_css_property('width')[:-2])
 
-        zoom_out_button = driver.find_element_by_id('tool-zoom-out')
+        zoom_out_button = self.driver.find_element_by_id('tool-zoom-out')
         zoom_out_button.click()
 
         new_width = int(canvas_container.value_of_css_property('width')[:-2])
@@ -1084,26 +993,19 @@ class FrontendFunctionalityTestCase(object):
             new_width
         )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_snap_left_right(self):
 
         """ Confirm that the Snap Controls to Left/Right buttons correctly move the toolbox
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        WebDriverWait(driver, 2).until(
-            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
-        )
-
-        canvas_container = driver.find_element_by_id('canvas-container')
-        columns = driver.execute_script("return gridCols;")
+        canvas_container = self.driver.find_element_by_id('canvas-container')
+        columns = self.driver.execute_script("return gridCols;")
         width = int(canvas_container.value_of_css_property('width')[:-2])
-        snap_controls_left_button = driver.find_element_by_id('snap-controls-left')
-        snap_controls_right_button = driver.find_element_by_id('snap-controls-right')
+        snap_controls_left_button = self.driver.find_element_by_id('snap-controls-left')
+        snap_controls_right_button = self.driver.find_element_by_id('snap-controls-right')
 
-        zoom_in_button = driver.find_element_by_id('tool-zoom-in')
+        zoom_in_button = self.driver.find_element_by_id('tool-zoom-in')
         zoom_in_button.click()
         zoom_in_button.click() # snap controls button appears in two zooms
 
@@ -1113,7 +1015,7 @@ class FrontendFunctionalityTestCase(object):
         )
 
         # Controls begins pinned to the right
-        controls = driver.find_element_by_id('controls')
+        controls = self.driver.find_element_by_id('controls')
         self.assertEqual(
             '5px',
             controls.value_of_css_property('right')
@@ -1141,90 +1043,80 @@ class FrontendFunctionalityTestCase(object):
             controls.value_of_css_property('left')
         )
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_move_map(self):
 
         """ Confirm that using the "Move map" feature moves the painted rail lines and stations as expected
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        self.helper_clear_draw_single_point(driver)
-        move_menu_button = driver.find_element_by_id('tool-move-all')
+        self.helper_clear_draw_single_point()
+        move_menu_button = self.driver.find_element_by_id('tool-move-all')
         move_menu_button.click()
 
         directions = ['up', 'down', 'left', 'right']
 
-        move_buttons = {direction: driver.find_element_by_id(f'tool-move-{direction}') for direction in directions}
+        move_buttons = {direction: self.driver.find_element_by_id(f'tool-move-{direction}') for direction in directions}
 
         # Initial state: 8,8
-        metro_map = driver.execute_script('return activeMap;')
+        metro_map = self.driver.execute_script('return activeMap;')
         self.assertTrue(metro_map['8']['8'])
 
         move_buttons['up'].click()
-        metro_map = driver.execute_script('return activeMap;')
+        metro_map = self.driver.execute_script('return activeMap;')
         self.assertTrue(metro_map['8']['7'])
 
         move_buttons['right'].click()
-        metro_map = driver.execute_script('return activeMap;')
+        metro_map = self.driver.execute_script('return activeMap;')
         self.assertTrue(metro_map['9']['7'])
 
         move_buttons['down'].click()
-        metro_map = driver.execute_script('return activeMap;')
+        metro_map = self.driver.execute_script('return activeMap;')
         self.assertTrue(metro_map['9']['8'])
 
         move_buttons['left'].click()
-        metro_map = driver.execute_script('return activeMap;')
+        metro_map = self.driver.execute_script('return activeMap;')
         self.assertTrue(metro_map['8']['8'])
 
         # Confirm that moving a point off the grid deletes it
         for click in range(1,9):
             move_buttons['left'].click()
-            metro_map = driver.execute_script('return activeMap;')
+            metro_map = self.driver.execute_script('return activeMap;')
             self.assertTrue(
                 metro_map[str(8 - click)]['8']
             )
         else:
             move_buttons['left'].click()
-            metro_map = driver.execute_script('return activeMap;')
+            metro_map = self.driver.execute_script('return activeMap;')
             self.assertFalse(metro_map.get('0')) # 0,8 was the last coordinate
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_resize_grid(self):
 
         """ Confirm that resizing the grid expands / contracts as expected; truncating the map data if necessary
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
         # Default WMATA map is 160x160
-        WebDriverWait(driver, 2).until(
-            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
-        )
-
         # Confirm initial state
-        self.helper_erase_blank_to_save(driver)
-        metro_map = driver.execute_script("return activeMap;")
-        grid_cols = driver.execute_script("return gridCols;")
-        grid_rows = driver.execute_script("return gridRows;")
+        self.helper_erase_blank_to_save()
+        metro_map = self.driver.execute_script("return activeMap;")
+        grid_cols = self.driver.execute_script("return gridCols;")
+        grid_rows = self.driver.execute_script("return gridRows;")
 
         # Download the map as an image; after resizing we'll make sure it's not the same
-        map_image = self.helper_return_image_canvas_data(driver)
+        map_image = self.helper_return_image_canvas_data()
 
         self.assertEqual(grid_cols, grid_rows)
         self.assertEqual(grid_cols, 160)
 
-        resize_menu_button = driver.find_element_by_id('tool-resize-all')
+        resize_menu_button = self.driver.find_element_by_id('tool-resize-all')
         resize_menu_button.click()
 
         sizes = [240, 200, 160, 120, 80, 120, 160, 200, 240]
         for size in sizes:
-            resize_button = driver.find_element_by_id(f'tool-resize-{size}')
+            resize_button = self.driver.find_element_by_id(f'tool-resize-{size}')
             resize_button.click()
-            grid_cols = driver.execute_script("return gridCols;")
-            grid_rows = driver.execute_script("return gridRows;")
+            grid_cols = self.driver.execute_script("return gridCols;")
+            grid_rows = self.driver.execute_script("return gridRows;")
             self.assertEqual(grid_cols, grid_rows)
             self.assertEqual(grid_cols, size)
             self.assertEqual(
@@ -1233,15 +1125,15 @@ class FrontendFunctionalityTestCase(object):
             )
 
             # Confirm that the data has been deleted when sizing down
-            self.helper_erase_blank_to_save(driver) # requires we save in the first place
-            metro_map = driver.execute_script("return activeMap;")
+            self.helper_erase_blank_to_save() # requires we save in the first place
+            metro_map = self.driver.execute_script("return activeMap;")
             metro_map.pop('global')
             self.assertTrue(max([int(k) for k in metro_map.keys()]) < size)
             for x in metro_map:
                 self.assertTrue(max([int(k) for k in metro_map[x].keys()]) < size)
 
             # Confirm the map canvas has changed
-            new_map_image = self.helper_return_image_canvas_data(driver)
+            new_map_image = self.helper_return_image_canvas_data()
             self.assertNotEqual(
                 map_image,
                 new_map_image
@@ -1250,22 +1142,21 @@ class FrontendFunctionalityTestCase(object):
             #   That way, we know it always changes
             map_image = new_map_image
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_resize_grid_saved(self):
 
         """ Confirm that reloading the map will size down to the smallest viable grid (does not recenter the map to do this)
         """
 
-        driver = self.driver
-        driver.get(self.website) # Default WMATA map is 160x160
+        # Default WMATA map is 160x160
 
-        WebDriverWait(driver, 2).until(
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "rail-line-bd1038"))
         )
 
-        resize_menu_button = driver.find_element_by_id('tool-resize-all')
+        resize_menu_button = self.driver.find_element_by_id('tool-resize-all')
         resize_menu_button.click()
-        resize_button = driver.find_element_by_id('tool-resize-240')
+        resize_button = self.driver.find_element_by_id('tool-resize-240')
         resize_button.click()
 
         # Create a metro map that has strategically-placed dots; when erased and the page is reloaded, the map should size down accordingly.
@@ -1281,38 +1172,39 @@ class FrontendFunctionalityTestCase(object):
         }
         metro_map = json.dumps(metro_map)
 
-        driver.execute_script(f"activeMap = '{metro_map}'; autoSave(activeMap); drawCanvas(activeMap);")
-        driver.get(self.website)
-        WebDriverWait(driver, 2).until(
+        self.driver.execute_script(f"activeMap = '{metro_map}'; autoSave(activeMap); drawCanvas(activeMap);")
+        self.driver.get(self.website)
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "rail-line-bd1038"))
         )
 
         # # Download the map as an image; after reloading we'll make sure it's not the same
-        map_image = self.helper_return_image_canvas_data(driver)
+        map_image = self.helper_return_image_canvas_data()
 
         sizes = [200, 160, 120, 80]
         for size in sizes:
 
-            grid_cols = driver.execute_script('return gridCols;')
-            grid_rows = driver.execute_script('return gridRows;')
+            grid_cols = self.driver.execute_script('return gridCols;')
+            grid_rows = self.driver.execute_script('return gridRows;')
 
             self.assertEqual(grid_cols, grid_rows)
             self.assertEqual(grid_cols, size + 40) # we haven't sized down yet
 
-            resize_menu_button = driver.find_element_by_id('tool-resize-all')
+            resize_menu_button = self.driver.find_element_by_id('tool-resize-all')
             resize_menu_button.click()
-            resize_button = driver.find_element_by_id(f'tool-resize-{size}')
+            resize_button = self.driver.find_element_by_id(f'tool-resize-{size}')
             resize_button.click()
 
             # Save the map to localStorage and reload
-            driver.execute_script('autoSave(activeMap);') # oddly, erase_blank_to_save is not saving here
-            driver.get(self.website)
-            WebDriverWait(driver, 2).until(
+            self.driver.execute_script('autoSave(activeMap);') # oddly, erase_blank_to_save is not saving here
+
+            self.driver.get(self.website)
+            WebDriverWait(self.driver, 2).until(
                 expected_conditions.presence_of_element_located((By.ID, "rail-line-bd1038"))
             )
 
             # Confirm the map canvas has changed
-            new_map_image = self.helper_return_image_canvas_data(driver)
+            new_map_image = self.helper_return_image_canvas_data()
             self.assertNotEqual(
                 map_image,
                 new_map_image,
@@ -1323,56 +1215,46 @@ class FrontendFunctionalityTestCase(object):
             #   That way, we know it always changes
             map_image = new_map_image
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_clear_map(self):
 
         """ Confirm that clicking Clear Map will delete all coordinate data
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        self.helper_erase_blank_to_save(driver)
+        self.helper_erase_blank_to_save()
 
         # Now activeMap has a value of the existing map
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertTrue(type(metro_map) == dict, type(metro_map))
         self.assertTrue(len(metro_map) > 100) # default WMATA has ~140
 
-        clear_map_button = driver.find_element_by_id('tool-clear-map')
+        clear_map_button = self.driver.find_element_by_id('tool-clear-map')
         clear_map_button.click()
 
-        metro_map = driver.execute_script("return activeMap;")
+        metro_map = self.driver.execute_script("return activeMap;")
         self.assertTrue(type(metro_map) == dict, type(metro_map))
         self.assertTrue(len(metro_map) == 1)
         self.assertTrue(metro_map["global"]["lines"]) # Confirm that the lines still exist
 
-    #@unittest.skip(reason='DEBUG')
+    # @unittest.skip(reason='DEBUG')
     def test_clear_delete_lines_refresh(self):
 
         """ Confirm that the default rail lines will be loaded when clearing map, then deleting the rail lines, then saving the map and reloading the page
         """
 
-        driver = self.driver
-        driver.get(self.website)
-
-        WebDriverWait(driver, 2).until(
-            expected_conditions.presence_of_element_located((By.ID, "rail-line-cfe4a7"))
-        )
-
-        clear_map_button = driver.find_element_by_id('tool-clear-map')
+        clear_map_button = self.driver.find_element_by_id('tool-clear-map')
         clear_map_button.click()
 
-        rail_line_menu_button = driver.find_element_by_id('tool-line')
+        rail_line_menu_button = self.driver.find_element_by_id('tool-line')
         rail_line_menu_button.click()
 
-        red_line_button = driver.find_element_by_id('rail-line-bd1038')
+        red_line_button = self.driver.find_element_by_id('rail-line-bd1038')
 
-        delete_unused_lines_button = driver.find_element_by_id('rail-line-delete')
+        delete_unused_lines_button = self.driver.find_element_by_id('rail-line-delete')
         delete_unused_lines_button.click()
 
-        self.helper_erase_blank_to_save(driver)
-        tool_line_options_length = driver.execute_script("return document.getElementById('tool-line-options').children.length")
+        self.helper_erase_blank_to_save()
+        tool_line_options_length = self.driver.execute_script("return document.getElementById('tool-line-options').children.length")
 
         # Other children besides the rail lines themselves are the add/edit/delete line buttons, etc
         self.assertEqual(
@@ -1384,14 +1266,13 @@ class FrontendFunctionalityTestCase(object):
             red_line_button.click()
 
         # Reload the page
-        driver.get(self.website)
-
-        WebDriverWait(driver, 2).until(
+        self.driver.get(self.website)
+        WebDriverWait(self.driver, 2).until(
             expected_conditions.presence_of_element_located((By.ID, "rail-line-bd1038"))
         )
 
-        red_line_button = driver.find_element_by_id('rail-line-bd1038')
-        tool_line_options_length = driver.execute_script("return document.getElementById('tool-line-options').children.length")
+        red_line_button = self.driver.find_element_by_id('rail-line-bd1038')
+        tool_line_options_length = self.driver.execute_script("return document.getElementById('tool-line-options').children.length")
 
         # Other children besides the rail lines themselves are the add/edit/delete line buttons, etc
         self.assertEqual(
@@ -1405,7 +1286,16 @@ class ChromeFrontendFunctionalityTestCase(FrontendFunctionalityTestCase, TestCas
     """
 
     def setUp(self):
-        self.driver = webdriver.Chrome()
+        # Set w3c to False because I was getting the same
+        # selenium.common.exceptions.MoveTargetOutOfBoundsException: Message: move target out of bounds
+        # I was getting on Firefox; maybe by figuring out how to set
+        #   w3c to False on Firefox I could then run those tests too
+        # But that doesn't seem like an available option
+        # and probably a higher priority is figuring out how to avoid that error in the first place?
+        options = webdriver.ChromeOptions()
+        options.add_experimental_option('w3c', False)
+        self.driver = webdriver.Chrome(chrome_options=options)
+        super().setUp()
 
 # class FirefoxFrontendFunctionalityTestCase(FrontendFunctionalityTestCase, TestCase):
 
@@ -1417,13 +1307,15 @@ class ChromeFrontendFunctionalityTestCase(FrontendFunctionalityTestCase, TestCas
 
 #     def setUp(self):
 #         self.driver = webdriver.Firefox()
+#         super().setUp()
 
 # class SafariFrontendFunctionalityTestCase(FrontendFunctionalityTestCase, TestCase):
 
 #     """ NOT IN USE:
-#             Currently fails most tests because Safari driver has issues
+#             Currently fails most tests because Safari self.driver has issues
 #                 with the pause key_action & the workaround didn't work for me
 #     """
 
-#     def setUp(self):
-#         self.driver = webdriver.Safari()
+    # def setUp(self):
+    #     self.driver = webdriver.Safari()
+    #     super().setUp()

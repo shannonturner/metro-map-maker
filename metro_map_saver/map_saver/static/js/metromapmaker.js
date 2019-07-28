@@ -10,6 +10,7 @@ var redrawOverlappingPoints = {};
 var dragX = false;
 var dragY = false;
 var temporaryStation = {};
+var pngUrl = false;
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -1106,6 +1107,62 @@ function getCanvasXY(pageX, pageY) {
   return [x, y]
 } // getCanvasXY(pageX, pageY)
 
+function combineCanvases() {
+  // Combine all the separate canvases onto the main canvas so you can save the image
+  drawCanvas(activeMap);
+  var canvas = document.getElementById('metro-map-canvas');
+  var canvasStations = document.getElementById('metro-map-stations-canvas');
+  // Layer the stations on top of the canvas
+  var ctx = canvas.getContext('2d', {alpha: false});
+  ctx.drawImage(canvasStations, 0, 0);
+  return canvas
+} // combineCanvases()
+
+function downloadImage(canvas, showImg) {
+  // Generates the necessary image data based on browser capability
+  //  and applies it to the hidden link
+  var pngFilename = 'metromapmaker.png' // Maybe: it might be nice to name this as the user-given map name, or the known/canonical map name when available (though it will need to be sanitized)
+  if (!HTMLCanvasElement.prototype.toBlob) {
+    var imageData = canvas.toDataURL()
+    $('#metro-map-image-download-link').attr({
+      "download": pngFilename,
+      "href": imageData
+    })
+    if (showImg) {
+      $('#grid-canvas').hide();
+      $('#hover-canvas').hide();
+      $('#metro-map-canvas').hide();
+      $('#metro-map-stations-canvas').hide();
+      $('#metro-map-image').attr('src', imageData)
+      $('#metro-map-image').show()
+    } else {
+      document.getElementById('metro-map-image-download-link').click()
+    }
+  } else {
+    if (pngUrl) {
+      // Revoke any previously-created blobs
+      URL.revokeObjectURL(pngUrl)
+    }
+    canvas.toBlob(function(blob) {
+      pngUrl = URL.createObjectURL(blob)
+      $('#metro-map-image-download-link').attr({
+        "download": pngFilename,
+        "href": pngUrl
+      })
+      if (showImg) {
+        $('#grid-canvas').hide();
+        $('#hover-canvas').hide();
+        $('#metro-map-canvas').hide();
+        $('#metro-map-stations-canvas').hide();
+        $('#metro-map-image').attr('src', pngUrl)
+        $('#metro-map-image').show()
+      } else {
+        document.getElementById('metro-map-image-download-link').click()
+      } // else
+    }) // canvas.toBlob()
+  } // else (.toBlob available)
+} // downloadImage()
+
 $(document).ready(function() {
 
   document.getElementById('canvas-container').addEventListener('click', bindGridSquareEvents, false);
@@ -1380,8 +1437,20 @@ $(document).ready(function() {
     });
     $('.tooltip').hide();
   }); // $('#tool-save-map').click()
+  $('#tool-download-image').click(function() {
+    activeTool = 'look';
+
+    // Download image on desktop, which is more robust than on mobile
+
+    var canvas = combineCanvases()
+    downloadImage(canvas)
+
+    $('.tooltip').hide();
+  }); // #tool-download-image.click()
   $('#tool-export-canvas').click(function() {
     activeTool = 'look';
+
+    // On mobile, you need to tap and hold on the canvas to save the image
     drawCanvas(activeMap);
     $('#tool-station-options').hide();
     $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station');
@@ -1790,7 +1859,16 @@ $('#try-on-mobile').click(function() {
   $('#favorite-maps').hide();
   $('#toolbox-mobile-hint').removeClass('hidden-xs');
   $('#controls').removeClass('hidden-xs');
-  $('#controls').css({'margin-top': '10px'})
+
+  $('#grid-canvas').show();
+  $('#hover-canvas').show();
+  $('#metro-map-canvas').show();
+  $('#metro-map-stations-canvas').show();
+  $('#metro-map-image').hide()
+
+  // Needed if not viewing a specific map
+  $('#canvas-container').removeClass('hidden-xs');
   snapCanvasToGrid();
-  drawCanvas()
+
+  drawCanvas();
 });

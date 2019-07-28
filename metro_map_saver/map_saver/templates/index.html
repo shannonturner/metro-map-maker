@@ -89,6 +89,7 @@
     <canvas id='metro-map-stations-canvas' width="1600" height="1600"></canvas>
     <canvas id='grid-canvas' width="1600" height="1600"></canvas>
     <canvas id="hover-canvas" width="1600" height="1600"></canvas>
+    <a id="metro-map-image-download-link" class="start-hidden" target="_blank"></a>
     <img id="metro-map-image" class="img-responsive start-hidden">
   </div>
 
@@ -159,9 +160,10 @@
         <div id="station-other-lines"></div>
       </div>
       <button id="tool-eraser" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station"><i class="fa fa-eraser" aria-hidden="true"></i> Eraser</button>
-      <button id="tool-export-canvas" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
+      <button id="tool-download-image" class="btn btn-info has-tooltip hidden-xs" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
+      <button id="tool-export-canvas" class="btn btn-info has-tooltip visible-xs" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
       <div id="export-canvas-help" class="text-left start-hidden">
-        <h5><b>Right click the map and click "Save Image As" to save your finished map.</b></h5>
+        <h5><b>Tap and hold the map to save as an image, or right click the map and click "Save Image As".</b></h5>
         <h5>Or click "Edit map" to continue editing your map.</h5>
         <h5>Happy with your map? Be sure to click Save &amp; Share map and it might be <a href="https://metromapmaker.com/gallery" target="_blank">featured in the gallery</a>!</h5>
       </div>
@@ -228,7 +230,7 @@
     {% if saved_map_name %}window.sessionStorage.setItem('userGivenMapName', "{{ saved_map_name }}"){% endif %}
   </script>
   {% endif %}
-  <script src='{% static "js/metromapmaker.js" %}?version=201907230724'></script>
+  <script src='{% static "js/metromapmaker.js" %}?version=20190728'></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js" integrity="sha256-ZdnRjhC/+YiBbXTHIuJdpf7u6Jh5D2wD5y0SNRWDREQ=" crossorigin="anonymous"></script>
 
   </body>
