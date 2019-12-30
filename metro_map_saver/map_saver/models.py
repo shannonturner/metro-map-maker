@@ -5,6 +5,12 @@ from django.db import models
 from citysuggester.utils import suggest_city
 from taggit.managers import TaggableManager
 
+PUBLICLY_VISIBLE_TAGS = [
+    'real',
+    'speculative',
+    'unknown',
+]
+
 class SavedMap(models.Model):
 
     """ Saves map data and its corresponding urlhash together so that maps can be easily shared
@@ -34,6 +40,14 @@ class SavedMap(models.Model):
         else:
             return 0
 
+    @property
+    def publicly_visible(self):
+        return all([
+            self.gallery_visible,
+            self.name,
+            self.thumbnail,
+        ]) and set([tag.name for tag in self.tags.all()]).intersection(set(PUBLICLY_VISIBLE_TAGS))
+
     def __str__(self):
         return self.urlhash
 
@@ -47,4 +61,5 @@ class SavedMap(models.Model):
             ('name_map', "Can set a map's name"),
             ('tag_map', "Can change the tags associated with a map"),
             ('generate_thumbnail', "Can generate thumbnails for a map"),
+            ('edit_publicly_visible', "Can edit a publicly visible map"),
         )

@@ -11,14 +11,14 @@ class AdminPermissionsTestCase(TestCase):
         """ Create a map and a user
         """
 
-        saved_map = SavedMap(**{
+        self.saved_map = SavedMap(**{
             'urlhash': 'abc123',
             'mapdata': '{"global": {"lines": {"0896d7": {"displayName": "Blue Line"}}}, "1": {"1": {"line": "0896d7"}, "2": {"line": "0896d7"}}, "2": {"1": {"line": "0896d7"}}, "3": {"1": {"line": "0896d7"}}, "4": {"1": {"line": "0896d7"}, "2": {"line": "0896d7"}}}'
         })
-        saved_map.save()
+        self.saved_map.save()
 
-        test_user = User.objects.create_user(username='testuser1', password='1X<ISRUkw+tuK')
-        test_user.save()
+        self.test_user = User.objects.create_user(username='testuser1', password='1X<ISRUkw+tuK')
+        self.test_user.save()
 
     def test_redirect_if_not_logged_in(self):
 
@@ -55,7 +55,7 @@ class AdminPermissionsTestCase(TestCase):
         client = Client()
         client.login(username='testuser1', password='1X<ISRUkw+tuK')
 
-        saved_map = SavedMap.objects.get(urlhash='abc123')
+        saved_map = self.saved_map
 
         self.assertTrue(saved_map.gallery_visible)
         client.post('/admin/action/', {
@@ -100,14 +100,14 @@ class AdminPermissionsTestCase(TestCase):
         """
 
         permission = Permission.objects.get(name="Can set a map's gallery_visible to hidden")
-        test_user = User.objects.get(username='testuser1')
+        test_user = self.test_user
         test_user.user_permissions.add(permission)
         test_user.save()
 
         client = Client()
         client.login(username='testuser1', password='1X<ISRUkw+tuK')
 
-        saved_map = SavedMap.objects.get(urlhash='abc123')
+        saved_map = self.saved_map
 
         self.assertTrue(saved_map.gallery_visible)
         response = client.post('/admin/action/', {
@@ -124,14 +124,14 @@ class AdminPermissionsTestCase(TestCase):
         """
 
         permission = Permission.objects.get(name="Can change the tags associated with a map")
-        test_user = User.objects.get(username='testuser1')
+        test_user = self.test_user
         test_user.user_permissions.add(permission)
         test_user.save()
 
         client = Client()
         client.login(username='testuser1', password='1X<ISRUkw+tuK')
 
-        saved_map = SavedMap.objects.get(urlhash='abc123')
+        saved_map = self.saved_map
 
         self.assertEqual(0, saved_map.tags.count())
         response = client.post('/admin/action/', {
@@ -149,14 +149,14 @@ class AdminPermissionsTestCase(TestCase):
         """
 
         permission = Permission.objects.get(name="Can set a map's name")
-        test_user = User.objects.get(username='testuser1')
+        test_user = self.test_user
         test_user.user_permissions.add(permission)
         test_user.save()
 
         client = Client()
         client.login(username='testuser1', password='1X<ISRUkw+tuK')
 
-        saved_map = SavedMap.objects.get(urlhash='abc123')
+        saved_map = self.saved_map
 
         self.assertEqual('', saved_map.name)
         client.post('/admin/action/', {
@@ -174,14 +174,14 @@ class AdminPermissionsTestCase(TestCase):
         """
 
         permission = Permission.objects.get(name="Can generate thumbnails for a map")
-        test_user = User.objects.get(username='testuser1')
+        test_user = self.test_user
         test_user.user_permissions.add(permission)
         test_user.save()
 
         client = Client()
         client.login(username='testuser1', password='1X<ISRUkw+tuK')
 
-        saved_map = SavedMap.objects.get(urlhash='abc123')
+        saved_map = self.saved_map
 
         self.assertEqual('', saved_map.thumbnail)
         client.post('/admin/action/', {
@@ -191,3 +191,49 @@ class AdminPermissionsTestCase(TestCase):
         })
         saved_map.refresh_from_db()
         self.assertTrue(saved_map.thumbnail)
+
+    def test_admin_permission_edit_publicly_visible(self):
+
+        """ Confirm that a logged-in user with the proper permissions
+            can edit a publicly visible map
+        """
+
+        # Give permission to hide
+        permission = Permission.objects.get(name="Can set a map's gallery_visible to hidden")
+        test_user = self.test_user
+        test_user.user_permissions.add(permission)
+        test_user.save()
+
+        client = Client()
+        client.login(username='testuser1', password='1X<ISRUkw+tuK')
+
+        # Add a name, thumbnail, and tag, then confirm this map is publicly visible
+        saved_map = self.saved_map
+        saved_map.gallery_visible = True
+        saved_map.name = saved_map.thumbnail = 'test_admin_permission_granted_edit_publicly_visible'
+        saved_map.tags.add('real')
+        saved_map.save()
+        saved_map.refresh_from_db()
+        self.assertTrue(saved_map.publicly_visible)
+
+        # We haven't added the permission yet, so the hide action should fail
+        response = client.post('/admin/action/', {
+            'action': 'hide',
+            'map': saved_map.id
+        })
+        saved_map.refresh_from_db()
+        self.assertTrue(saved_map.publicly_visible)
+
+        # Add the permission to edit a publicly visible map
+        permission = Permission.objects.get(name="Can edit a publicly visible map")
+        test_user = User.objects.get(username='testuser1')
+        test_user.user_permissions.add(permission)
+        test_user.save()
+
+        # Now the hide action will succeed
+        response = client.post('/admin/action/', {
+            'action': 'hide',
+            'map': saved_map.id
+        })
+        saved_map.refresh_from_db()
+        self.assertFalse(saved_map.publicly_visible)

@@ -376,6 +376,8 @@ class MapAdminActionView(TemplateView):
             except ObjectDoesNotExist:
                 context['status'] = '[ERROR] Map does not exist.'
             else:
+                if this_map.publicly_visible and not request.user.has_perm('map_saver.edit_publicly_visible'):
+                    raise PermissionDenied
                 if request.POST.get('action') == 'hide' and request.user.has_perm('map_saver.hide_map'):
                     if this_map.gallery_visible:
                         this_map.gallery_visible = False
