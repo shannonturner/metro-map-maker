@@ -167,6 +167,12 @@
                 {% endfor %}
               <!-- </p> -->
               {% endif %}
+
+              {% if map.activitylog_set.count %}
+              <span class="vertical-divider"></span>
+              <a href="/admin/activity/{{ map.urlhash }}/">Log</a>
+              {% endif %}
+
           </div> <!-- /.map-control-buttons -->
         </li>
       {% endfor %}

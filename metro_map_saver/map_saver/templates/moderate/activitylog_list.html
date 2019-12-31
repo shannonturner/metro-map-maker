@@ -38,7 +38,12 @@
 
 <div id="main-container" class="container-fluid">
 
-  <h2>Activity Log {% if activity_user %} for {{ activity_user }} {% endif %}</h2>
+  <h2>
+    Activity Log
+    {% if activity_user %} for {{ activity_user }}
+    {% elif activity_map %} for <a href="/admin/gallery/direct/?map={{ activity_map }}">{{ activity_map }}</a>
+    {% endif %}
+  </h2>
 
   <table class="table">
 

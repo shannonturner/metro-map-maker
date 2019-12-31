@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.utils.decorators import method_decorator
 from django.contrib.auth.decorators import login_required
 
+from map_saver.models import SavedMap
 from .models import ActivityLog
 
 class ActivityLogList(ListView):
@@ -29,10 +30,15 @@ class ActivityLogList(ListView):
         if self.kwargs.get('user_id'):
             self.user = get_object_or_404(User, id=self.kwargs['user_id'])
             self.queryset = self.queryset.filter(user=self.user)
+        elif self.kwargs.get('map'):
+            self.savedmap = get_object_or_404(SavedMap, urlhash=self.kwargs['map'])
+            self.queryset = self.queryset.filter(savedmap=self.savedmap)
         return self.queryset.order_by('-created_at')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        if self.user:
+        if getattr(self, 'user', None):
             context['activity_user'] = self.user
+        elif getattr(self, 'savedmap', None):
+            context['activity_map'] = self.savedmap
         return context

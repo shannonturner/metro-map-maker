@@ -57,6 +57,7 @@ urlpatterns = [
     path('admin/bydate/', MapsByDateView.as_view(), name='by_date'),
 
     # Admin: Activity Log
+    re_path(r'admin/activity/(?P<map>[\w\d\-\_]{8})/?$', ActivityLogList.as_view(), name='activity_map'),
     re_path(r'admin/activity/(?P<user_id>\d+)?/?$', ActivityLogList.as_view(), name='activity'),
 
     # Thumbnails
