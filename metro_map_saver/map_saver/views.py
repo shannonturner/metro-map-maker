@@ -142,20 +142,10 @@ class MapGalleryView(TemplateView):
             # Allow fine-grained filtering of how many stations
             #   or any other attribute
             # Accessible with ?dynamic=1&station_count__lte=10 or similar
-            filters = {k: v for k, v in request.GET.items()}
+            filters = {k: v for k, v in request.GET.items() if k != 'page'}
             filters.pop('dynamic')
             visible_maps = SavedMap.objects.filter(gallery_visible=True) \
                 .filter(**filters)
-        elif request.GET.get('stations'):
-            # Return maps with at least this many stations.
-            # Accessible with ?stations=500
-            # Can be mixed with tags below like notags, named, thumbnail, or by name
-            try:
-                station_count = int(request.GET.get('stations'))
-            except Exception:
-                station_count = 100
-            visible_maps = SavedMap.objects.filter(gallery_visible=True) \
-                .filter(station_count__gte=station_count)
         else:
             visible_maps = SavedMap.objects.filter(gallery_visible=True)
 
@@ -182,8 +172,10 @@ class MapGalleryView(TemplateView):
         except EmptyPage:
             saved_maps = paginator.get_page(paginator.num_pages)
 
+        pagination_args = {k: v for k, v in request.GET.items() if k != 'page'}
+
         context = {
-            'stations': request.GET.get('stations'),
+            'args': pagination_args,
             'saved_maps': saved_maps,
             'maps_total': visible_maps.count(),
             'tags': tags,
@@ -415,6 +407,7 @@ class MapAdminActionView(TemplateView):
                 else:
                     raise PermissionDenied
                 context['status'] = 'Success'
+                # TODO: Activity log
             return render(request, 'MapAdminActionView.html', context)
 
 
