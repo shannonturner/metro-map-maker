@@ -141,7 +141,7 @@
             <button id="diff-b-{{ map.urlhash }}-{{ map.id }}" class="diff diff-b btn-primary">Diff B</button>
 
               {% if permissions.hide_map %}
-              <button id="hide-{{ map.id }}" class="hide-map btn-warning">Hide</button>
+              <button id="hide-{{ map.id }}" class="hide-map {% if map.gallery_visible %}btn-warning{% else %}btn-success{% endif %}">{% if map.gallery_visible %}Hide{% else %}&#10004; Hidden{% endif %}</button>
               {% endif %}
               <a href="{% url 'similar' urlhash=map.urlhash %}"><button class="btn-default">View Similar</button></a>
               {% if similarity_scores %}
