@@ -1,6 +1,5 @@
 from django.contrib import admin
 
-# Register your models here.
-# from .models import AuthUserRestrictions
+from .models import ActivityLog
 
-# admin.site.register(AuthUserRestrictions)
+admin.site.register(ActivityLog)
