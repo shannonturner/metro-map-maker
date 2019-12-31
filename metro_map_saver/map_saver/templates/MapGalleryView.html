@@ -168,7 +168,7 @@
               <!-- </p> -->
               {% endif %}
 
-              {% if map.activitylog_set.count %}
+              {% if map.activitylog_set.count and request.user.is_superuser %}
               <span class="vertical-divider"></span>
               <a href="/admin/activity/{{ map.urlhash }}/">Log</a>
               {% endif %}
