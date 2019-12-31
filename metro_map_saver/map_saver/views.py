@@ -130,12 +130,22 @@ class MapGalleryView(TemplateView):
 
         tags = Tag.objects.all().order_by('id')
 
+        dynamic_filters = request.GET.get('dynamic')
+
         if request.GET.get('map') or kwargs.get('direct'):
             # Accessible either by
             #           /admin/direct/https://metromapmaker.com/?map=8RkQTRav
             #   or by   /admin/direct/8RkQTRav
             direct = request.GET.get('map', kwargs.get('direct', '')[-8:])
             visible_maps = SavedMap.objects.filter(urlhash=direct)
+        elif dynamic_filters:
+            # Allow fine-grained filtering of how many stations
+            #   or any other attribute
+            # Accessible with ?dynamic=1&station_count__lte=10 or similar
+            filters = {k: v for k, v in request.GET.items()}
+            filters.pop('dynamic')
+            visible_maps = SavedMap.objects.filter(gallery_visible=True) \
+                .filter(**filters)
         elif request.GET.get('stations'):
             # Return maps with at least this many stations.
             # Accessible with ?stations=500
@@ -370,7 +380,9 @@ class MapAdminActionView(TemplateView):
         )
         context = {}
 
-        if request.POST.get('action') in ALLOWED_ACTIONS and request.POST.get('map'):
+        action = request.POST.get('action')
+
+        if action in ALLOWED_ACTIONS and request.POST.get('map'):
             try:
                 this_map = SavedMap.objects.get(id=request.POST.get('map'))
             except ObjectDoesNotExist:
@@ -378,24 +390,24 @@ class MapAdminActionView(TemplateView):
             else:
                 if this_map.publicly_visible and not request.user.has_perm('map_saver.edit_publicly_visible'):
                     raise PermissionDenied
-                if request.POST.get('action') == 'hide' and request.user.has_perm('map_saver.hide_map'):
+                if action == 'hide' and request.user.has_perm('map_saver.hide_map'):
                     if this_map.gallery_visible:
                         this_map.gallery_visible = False
                     else:
                         this_map.gallery_visible = True
                     this_map.save()
-                elif request.POST.get('action') in ('addtag', 'removetag') and request.user.has_perm('map_saver.tag_map'):
+                elif action in ('addtag', 'removetag') and request.user.has_perm('map_saver.tag_map'):
                     tag = request.POST.get('tag')
                     if tag:
-                        if request.POST.get('action') == 'addtag':
+                        if action == 'addtag':
                             this_map.tags.add(tag)
-                        elif request.POST.get('action') == 'removetag':
+                        elif action == 'removetag':
                             this_map.tags.remove(tag)
                         this_map.save()
-                elif request.POST.get('action') == 'thumbnail' and request.user.has_perm('map_saver.generate_thumbnail'):
+                elif action == 'thumbnail' and request.user.has_perm('map_saver.generate_thumbnail'):
                     this_map.thumbnail = request.POST.get('data', '')
                     this_map.save()
-                elif request.POST.get('action') == 'name' and request.user.has_perm('map_saver.name_map'):
+                elif action == 'name' and request.user.has_perm('map_saver.name_map'):
                     name = request.POST.get('name')
                     this_map.name = name
                     this_map.naming_token = '' # This map can no longer be named by the end user
