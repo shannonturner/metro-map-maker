@@ -46,6 +46,7 @@ class AdminPermissionsTestCase(TestCase):
             '/admin/gallery/real/?page=2',
             '/admin/similar/abc123',
             '/admin/direct/https://metromapmaker.com/?map=abc123',
+            '/admin/activity/',
         )
 
         for admin_only_page in admin_only_pages:
