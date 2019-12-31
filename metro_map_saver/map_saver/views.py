@@ -137,6 +137,7 @@ class MapGalleryView(TemplateView):
             #   or by   /admin/direct/8RkQTRav
             direct = request.GET.get('map', kwargs.get('direct', '')[-8:])
             visible_maps = SavedMap.objects.filter(urlhash=direct)
+            filters = None
         else:
             # Most common usage is to see gallery visible maps,
             #   but it should be possible to view non-visible maps too
