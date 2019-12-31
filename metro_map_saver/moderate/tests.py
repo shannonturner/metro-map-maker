@@ -2,9 +2,17 @@ from django.test import Client
 from django.test import TestCase
 from django.contrib.auth.models import User, Permission
 
+from map_saver.models import SavedMap
+
 class ModeratePermissionsTestCase(TestCase):
 
     def setUp(self):
+
+        self.saved_map = SavedMap(**{
+            'urlhash': 'abcd1234',
+            'mapdata': '{"global": {"lines": {"0896d7": {"displayName": "Blue Line"}}}, "1": {"1": {"line": "0896d7"}, "2": {"line": "0896d7"}}, "2": {"1": {"line": "0896d7"}}, "3": {"1": {"line": "0896d7"}}, "4": {"1": {"line": "0896d7"}, "2": {"line": "0896d7"}}}'
+        })
+        self.saved_map.save()
 
         self.test_user = User.objects.create_user(username='testuser1', password='1X<ISRUkw+tuK')
         self.test_user.save()
@@ -28,6 +36,10 @@ class ModeratePermissionsTestCase(TestCase):
 
         # Not allowed to view someone else's log
         response = client.get(f'/admin/activity/{self.test_user.id}')
+        self.assertEqual(response.status_code, 403)
+
+        # Not allowed to view a map directly, either
+        response = client.get(f'/admin/activity/{self.saved_map.urlhash}')
         self.assertEqual(response.status_code, 403)
 
         # But allowed to view my own log
