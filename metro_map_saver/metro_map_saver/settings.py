@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     'map_saver',
     'taggit',
     'citysuggester',
+    'moderate',
     'debug_toolbar',
 ]
 

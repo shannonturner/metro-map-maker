@@ -20,6 +20,17 @@ class AdminPermissionsTestCase(TestCase):
         self.test_user = User.objects.create_user(username='testuser1', password='1X<ISRUkw+tuK')
         self.test_user.save()
 
+    def confirm_activity_log(self, action, details=''):
+
+        """ Helper function to confirm that an ActivityLog is created for every entry
+        """
+
+        activity_log = self.saved_map.activitylog_set.order_by('-created_at').first()
+        self.assertEqual(activity_log.user, self.test_user)
+        self.assertEqual(activity_log.savedmap, self.saved_map)
+        self.assertEqual(activity_log.action, action)
+        self.assertEqual(activity_log.details, details)
+
     def test_redirect_if_not_logged_in(self):
 
         """ Confirm that if you are not logged in,
@@ -109,6 +120,8 @@ class AdminPermissionsTestCase(TestCase):
 
         saved_map = self.saved_map
 
+        action = 'hide'
+
         self.assertTrue(saved_map.gallery_visible)
         response = client.post('/admin/action/', {
             'action': 'hide',
@@ -116,6 +129,22 @@ class AdminPermissionsTestCase(TestCase):
         })
         saved_map.refresh_from_db()
         self.assertFalse(saved_map.gallery_visible, response.context['status'])
+
+        # Confirm there is a record of this action
+        self.assertEqual(saved_map.activitylog_set.count(), 1)
+        self.confirm_activity_log(action)
+
+        # Hiding the map again will show it
+        response = client.post('/admin/action/', {
+            'action': 'hide',
+            'map': saved_map.id
+        })
+        saved_map.refresh_from_db()
+        self.assertTrue(saved_map.gallery_visible)
+
+        # Confirm there is a record of this action
+        self.assertEqual(saved_map.activitylog_set.count(), 2)
+        self.confirm_activity_log('show')
 
     def test_admin_permission_granted_add_tag(self):
 
@@ -133,14 +162,34 @@ class AdminPermissionsTestCase(TestCase):
 
         saved_map = self.saved_map
 
+        action = 'addtag'
+
         self.assertEqual(0, saved_map.tags.count())
         response = client.post('/admin/action/', {
-            'action': 'addtag',
+            'action': action,
             'map': saved_map.id,
             'tag': 'real'
         })
         saved_map.refresh_from_db()
         self.assertEqual(1, saved_map.tags.count())
+
+        # Confirm there is a record of this action
+        self.assertEqual(saved_map.activitylog_set.count(), 1)
+        self.confirm_activity_log(action, 'real')
+
+        # Remove the tag
+        action = 'removetag'
+        response = client.post('/admin/action/', {
+            'action': action,
+            'map': saved_map.id,
+            'tag': 'real'
+        })
+        saved_map.refresh_from_db()
+        self.assertEqual(0, saved_map.tags.count())
+
+        # Confirm there is a record of this action
+        self.assertEqual(saved_map.activitylog_set.count(), 2)
+        self.confirm_activity_log(action, 'real')
 
     def test_admin_permission_granted_name_map(self):
 
@@ -158,14 +207,20 @@ class AdminPermissionsTestCase(TestCase):
 
         saved_map = self.saved_map
 
+        action = 'name'
+
         self.assertEqual('', saved_map.name)
         client.post('/admin/action/', {
-            'action': 'name',
+            'action': action,
             'map': saved_map.id,
             'name': 'London'
         })
         saved_map.refresh_from_db()
         self.assertEqual('London', saved_map.name)
+
+        # Confirm there is a record of this action
+        self.assertEqual(saved_map.activitylog_set.count(), 1)
+        self.confirm_activity_log(action, 'London')
 
     def test_admin_permission_granted_generate_thumbnail(self):
 
@@ -183,6 +238,8 @@ class AdminPermissionsTestCase(TestCase):
 
         saved_map = self.saved_map
 
+        action = 'thumbnail'
+
         self.assertEqual('', saved_map.thumbnail)
         client.post('/admin/action/', {
             'action': 'thumbnail',
@@ -191,6 +248,10 @@ class AdminPermissionsTestCase(TestCase):
         })
         saved_map.refresh_from_db()
         self.assertTrue(saved_map.thumbnail)
+
+        # Confirm there is a record of this action
+        self.assertEqual(saved_map.activitylog_set.count(), 1)
+        self.confirm_activity_log(action, 'data:image/png;base64')
 
     def test_admin_permission_edit_publicly_visible(self):
 

@@ -19,6 +19,7 @@ import random
 
 from taggit.models import Tag
 
+from moderate.models import ActivityLog
 from .models import SavedMap
 from .validator import is_hex, sanitize_string, validate_metro_map, hex64
 
@@ -407,7 +408,15 @@ class MapAdminActionView(TemplateView):
                 else:
                     raise PermissionDenied
                 context['status'] = 'Success'
-                # TODO: Activity log
+                activity_details = request.POST.get('tag') or request.POST.get('name') or request.POST.get('data', '')[:21]
+                if action == 'hide' and this_map.gallery_visible:
+                    action = 'show'
+                ActivityLog.objects.create(
+                    user=request.user,
+                    savedmap=this_map,
+                    action=action,
+                    details=activity_details,
+                )
             return render(request, 'MapAdminActionView.html', context)
 
 
