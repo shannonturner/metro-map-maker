@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+
+{% load static %}
+
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Metro Map Maker</title>
+
+    <link rel="icon" href="{% static 'assets/metromapmaker-gallery.ico' %}">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <style>
+
+    body {
+      font-family: Helvetica, Arial, sans-serif;
+      position: relative;
+    }
+
+    </style>
+
+  </head>
+
+<body>
+
+
+<div id="main-container" class="container-fluid">
+
+  <h2>Activity Log {% if activity_user %} for {{ activity_user }} {% endif %}</h2>
+
+  <table class="table">
+
+    <tr>
+      <th scope="col">Date</th>
+      <th scope="col">Map</th>
+      <th scope="col">Action</th>
+      <th scope="col">Details</th>
+    </tr>
+  {% for obj in object_list %}
+
+    <tr>
+      <td>{{ obj.created_at }}</td>
+      <td><a href="/admin/gallery/direct/?map={{ obj.savedmap }}">{{ obj.savedmap }}</a></td>
+      <td>{{ obj.action }}</td>
+      <td>{{ obj.details }}</td>
+    </tr>
+
+  {% endfor %}
+  </table>
+
+  <!-- Pagination -->
+    <div id="pagination-controls" class="text-left">
+      <div class="pagination">
+        <span class="step-links">
+          {% if page_obj.has_previous %}
+              <a href="?page=1"><button class="btn-primary">First Page</button></a>
+              <a href="?page={{ page_obj.previous_page_number }}"><button class="btn-info">Previous Page</button></a>
+          {% endif %}
+
+          {% if page_obj.paginator %}
+          <span class="current" style="margin: 10px;">
+              <b>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }} (Showing {{ page_obj|length }} of {{ page_obj.paginator.count }} total)</b>
+          </span>
+          {% endif %}
+
+          {% if page_obj.has_next %}
+              <a href="?page={{ page_obj.next_page_number }}"><button class="btn-info">Next Page</button></a>
+              <a href="?page={{ page_obj.paginator.num_pages }}"><button class="btn-primary">Last Page</button></a>
+          {% endif %}
+        </span>
+      </div> <!-- div.pagination -->
+    </div> <!-- div#pagination-controls -->
+
+</div> <!-- div#main-container -->
+
+  </body>
+</html>

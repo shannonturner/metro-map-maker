@@ -20,6 +20,7 @@ from django.conf import settings
 from django.contrib.auth import views as auth_views
 
 from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminActionView, MapSimilarView, MapsByDateView, ThumbnailGalleryView, HomeView, PublicGalleryView, CreatorNameMapView
+from moderate.views import ActivityLogList
 
 urlpatterns = [
     # Main page
@@ -54,6 +55,9 @@ urlpatterns = [
 
     # Admin: Maps created by date
     path('admin/bydate/', MapsByDateView.as_view(), name='by_date'),
+
+    # Admin: Activity Log
+    re_path(r'admin/activity/(?P<user_id>\d+)?/?$', ActivityLogList.as_view(), name='activity'),
 
     # Thumbnails
     path('admin/thumbnail/<slug:tag>/', ThumbnailGalleryView.as_view(), name='thumbnail_tag'),
