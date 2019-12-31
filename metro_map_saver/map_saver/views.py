@@ -131,24 +131,25 @@ class MapGalleryView(TemplateView):
 
         tags = Tag.objects.all().order_by('id')
 
-        dynamic_filters = request.GET.get('dynamic')
-
         if request.GET.get('map') or kwargs.get('direct'):
             # Accessible either by
             #           /admin/direct/https://metromapmaker.com/?map=8RkQTRav
             #   or by   /admin/direct/8RkQTRav
             direct = request.GET.get('map', kwargs.get('direct', '')[-8:])
             visible_maps = SavedMap.objects.filter(urlhash=direct)
-        elif dynamic_filters:
-            # Allow fine-grained filtering of how many stations
-            #   or any other attribute
-            # Accessible with ?dynamic=1&station_count__lte=10 or similar
-            filters = {k: v for k, v in request.GET.items() if k != 'page'}
-            filters.pop('dynamic')
-            visible_maps = SavedMap.objects.filter(gallery_visible=True) \
-                .filter(**filters)
         else:
-            visible_maps = SavedMap.objects.filter(gallery_visible=True)
+            # Most common usage is to see gallery visible maps,
+            #   but it should be possible to view non-visible maps too
+            gallery_visible = request.GET.get('gallery_visible', True)
+            if gallery_visible in ('0', 'False', 'false'):
+                gallery_visible = False
+            visible_maps = SavedMap.objects.filter(gallery_visible=gallery_visible)
+            # Allow fine-grained filtering of how many stations
+            #   or any other attribute in the URL params
+            # Example: ?station_count__lte=10&activitylog__user=1
+            filters = {k: v for k, v in request.GET.items() if k != 'page'}
+            if filters:
+                visible_maps = visible_maps.filter(**filters).distinct()
 
         if kwargs.get('tag') == 'notags':
             visible_maps = visible_maps.filter(tags__exact=None)
@@ -173,10 +174,8 @@ class MapGalleryView(TemplateView):
         except EmptyPage:
             saved_maps = paginator.get_page(paginator.num_pages)
 
-        pagination_args = {k: v for k, v in request.GET.items() if k != 'page'}
-
         context = {
-            'args': pagination_args,
+            'args': filters,
             'saved_maps': saved_maps,
             'maps_total': visible_maps.count(),
             'tags': tags,
