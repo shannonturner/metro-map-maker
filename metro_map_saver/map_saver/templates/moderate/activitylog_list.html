@@ -52,6 +52,9 @@
       <th scope="col">Map</th>
       <th scope="col">Action</th>
       <th scope="col">Details</th>
+      {% if activity_map %}
+      <th scope="col">User</th>
+      {% endif %}
     </tr>
   {% for obj in object_list %}
 
@@ -60,6 +63,9 @@
       <td><a href="/admin/gallery/direct/?map={{ obj.savedmap }}">{{ obj.savedmap }}</a></td>
       <td>{{ obj.action }}</td>
       <td>{{ obj.details }}</td>
+      {% if activity_map %}
+      <td><a href="/admin/activity/{{ obj.user.id }}">{{ obj.user }}</a></td>
+      {% endif %}
     </tr>
 
   {% endfor %}
