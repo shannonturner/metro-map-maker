@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+
+{% load static %}
+
+<html lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Metro Map Maker</title>
+
+    <link rel="icon" href="{% static 'assets/metromapmaker-gallery.ico' %}">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' %}?version=20190722">
+
+    <style>
+
+      .tiny {
+        font-size: 75%;
+        margin-left: 5px;
+        color: #666;
+      }
+
+    </style>
+
+  </head>
+
+<body>
+
+
+<div id="main-container" class="container-fluid">
+
+  <h1><span class="M">M</span>etro <span class="M">M</span>ap <span class="M">M</span>aker</h1>
+
+  <div id="maps-by-date" class="row">
+
+  <div class="col-sm-3">
+    <h3>Maps created <a href="/admin/bydate">by date</a></h3>
+  </div>
+  <div class="col-sm-9">
+    <table class="table">
+      <tr>
+        <td><h3>{{ last_30 }}</h3></td>
+        <td><h3>{{ last_90 }}</h3></td>
+        <td><h3>{{ prev_90 }}</h3></td>
+      </tr>
+
+      <tr>
+        <th scope="col">last 30 days</th>
+        <th scope="col">last 90 days</th>
+        <th scope="col">previous 90 days</th>
+      </tr>
+    </table>
+  </div>
+  </div> <!-- #maps-by-date -->
+
+  <div id="needing-review" class="row">
+    <div class="col-sm-3">
+      <h3>Maps by station counts</h3>
+    </div>
+    <div class="col-sm-9">
+      <table class="table">
+
+        <tr>
+          <th scope="col">Number of stations</th>
+          <th scope="col">Needing review</th>
+          <th scope="col">Total</th>
+        </tr>
+
+        {% for group, counts in maps.items %}
+          <tr>
+            <td><a href="{{ counts.review_link }}">{{ group }}</a></td>
+            <td>{{ counts.needing_review }} <span class="tiny">{% widthratio counts.needing_review totals.needing_review 100 %}%</span></td>
+            <td>{{ counts.total }} <span class="tiny">{% widthratio counts.total totals.total 100 %}%</span></td>
+          </tr>
+        {% endfor %}
+
+        <tr>
+          <td><h4>Total</h4></td>
+          <td><h4>{{ totals.needing_review }} <span class="tiny">{% widthratio totals.needing_review totals.total 100 %}%</span></h4></td>
+          <td><h4>{{ totals.total }}</h4></td>
+        </tr>
+
+      </table>
+    </div>
+  </div> <!-- #needing-review -->
+
+</div> <!-- div#main-container -->
+
+  </body>
+</html>

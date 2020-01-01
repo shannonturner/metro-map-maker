@@ -19,49 +19,52 @@ from django.contrib import admin
 from django.conf import settings
 from django.contrib.auth import views as auth_views
 
-from map_saver.views import MapDataView, MapDiffView, MapGalleryView, MapAdminActionView, MapSimilarView, MapsByDateView, ThumbnailGalleryView, HomeView, PublicGalleryView, CreatorNameMapView
-from moderate.views import ActivityLogList
+import map_saver.views
+import moderate.views
 
 urlpatterns = [
     # Main page
-    path('', HomeView.as_view(), name='home'),
+    path('', map_saver.views.HomeView.as_view(), name='home'),
 
     # Public Gallery
-    path('gallery/', PublicGalleryView.as_view(), name='public_gallery'),
+    path('gallery/', map_saver.views.PublicGalleryView.as_view(), name='public_gallery'),
 
     # End-user actions (saving, loading, naming maps)
-    path('save/', MapDataView.as_view(), name='save_map'),
-    path('load/<slug:urlhash>', MapDataView.as_view(), name='load_map'),
-    path('name/', CreatorNameMapView.as_view(), name='name_map'),
+    path('save/', map_saver.views.MapDataView.as_view(), name='save_map'),
+    path('load/<slug:urlhash>', map_saver.views.MapDataView.as_view(), name='load_map'),
+    path('name/', map_saver.views.CreatorNameMapView.as_view(), name='name_map'),
 
     # Admin and Moderation
     path('admin/', admin.site.urls),
     path('accounts/login/', auth_views.LoginView.as_view()),
 
+    # Admin HQ
+    path('admin/home/', map_saver.views.AdminHomeView.as_view(), name='admin_home'),
+
     # Admin Gallery
-    re_path(r'admin/gallery/(?P<tag>[\w^\d]+)?/?$', MapGalleryView.as_view(), name='admin_gallery'),
+    re_path(r'admin/gallery/(?P<tag>[\w^\d]+)?/?$', map_saver.views.MapGalleryView.as_view(), name='admin_gallery'),
 
     # Admin Gallery: Admin actions
-    path('admin/action/', MapAdminActionView.as_view(), name='admin_action'),
+    path('admin/action/', map_saver.views.MapAdminActionView.as_view(), name='admin_action'),
 
     # Admin Gallery: Similar
-    path('admin/similar/<slug:urlhash>', MapSimilarView.as_view(), name='similar'),
+    path('admin/similar/<slug:urlhash>', map_saver.views.MapSimilarView.as_view(), name='similar'),
 
     # Admin Gallery: Direct View
-    path('admin/direct/<path:direct>', MapGalleryView.as_view(), name='direct'),
+    path('admin/direct/<path:direct>', map_saver.views.MapGalleryView.as_view(), name='direct'),
 
     # Admin Gallery: Diff
-    path('admin/diff/<slug:urlhash_first>/<slug:urlhash_second>/', MapDiffView.as_view(), name='diff'),
+    path('admin/diff/<slug:urlhash_first>/<slug:urlhash_second>/', map_saver.views.MapDiffView.as_view(), name='diff'),
 
     # Admin: Maps created by date
-    path('admin/bydate/', MapsByDateView.as_view(), name='by_date'),
+    path('admin/bydate/', map_saver.views.MapsByDateView.as_view(), name='by_date'),
 
     # Admin: Activity Log
-    re_path(r'admin/activity/(?P<map>[\w\d\-\_]{8})/?$', ActivityLogList.as_view(), name='activity_map'),
-    re_path(r'admin/activity/(?P<user_id>\d+)?/?$', ActivityLogList.as_view(), name='activity'),
+    re_path(r'admin/activity/(?P<map>[\w\d\-\_]{8})/?$', moderate.views.ActivityLogList.as_view(), name='activity_map'),
+    re_path(r'admin/activity/(?P<user_id>\d+)?/?$', moderate.views.ActivityLogList.as_view(), name='activity'),
 
     # Thumbnails
-    path('admin/thumbnail/<slug:tag>/', ThumbnailGalleryView.as_view(), name='thumbnail_tag'),
+    path('admin/thumbnail/<slug:tag>/', map_saver.views.ThumbnailGalleryView.as_view(), name='thumbnail_tag'),
 ]
 
 if settings.DEBUG:

@@ -16,6 +16,7 @@ import json
 import logging
 import pprint
 import random
+import urllib.parse
 
 from taggit.models import Tag
 
@@ -537,6 +538,77 @@ class MapDataView(TemplateView):
         return render(request, 'MapDataView.html', context)
 
 
+class AdminHomeView(TemplateView):
+
+    """ A sort of 'home base' for admins like me
+        to review important stats centrally
+        and serve as a dashboard for all of the main reviewing tasks
+    """
+
+    template_name = 'AdminHome.html'
+
+    @method_decorator(staff_member_required)
+    def get(self, request, **kwargs):
+        return super().get(request, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Get basic usage stats of number of maps created
+        last_30 = datetime.datetime.today() - \
+            datetime.timedelta(days=30)
+
+        last_90 = datetime.datetime.today() - \
+            datetime.timedelta(days=90)
+
+        prev_90_start = datetime.datetime.today() - \
+            datetime.timedelta(days=180)
+        prev_90_end = datetime.datetime.today() - \
+            datetime.timedelta(days=91)
+
+        context['last_30'] = SavedMap.objects.filter(created_at__gt=last_30).count()
+        context['last_90'] = SavedMap.objects.filter(created_at__gt=last_90).count()
+        context['prev_90'] = SavedMap.objects.filter(
+            created_at__gt=prev_90_start,
+            created_at__lte=prev_90_end,
+        ).count()
+
+        # Get numbers of maps needing review
+        filter_groups = {
+            '0 stations': {'station_count': 0},
+            '1-10 stations': {'station_count__gte': 1, 'station_count__lte': 10},
+            '11-20 stations': {'station_count__gte': 11, 'station_count__lte': 20},
+            '21-30 stations': {'station_count__gte': 21, 'station_count__lte': 30},
+            '31-40 stations': {'station_count__gte': 31, 'station_count__lte': 40},
+            '41-50 stations': {'station_count__gte': 41, 'station_count__lte': 50},
+            '51-75 stations': {'station_count__gte': 51, 'station_count__lte': 75},
+            '76-100 stations': {'station_count__gte': 76, 'station_count__lte': 100},
+            '101-200 stations': {'station_count__gte': 101, 'station_count__lte': 200},
+            '201-500 stations': {'station_count__gte': 201, 'station_count__lte': 500},
+            '501+ stations': {'station_count__gte': 501},
+        }
+
+        maps_needing_review = SavedMap.objects.filter(tags__exact=None).filter(gallery_visible=True)
+
+        PER_PAGE = 100
+
+        context['maps'] = {
+            group: {
+                'needing_review': maps_needing_review.filter(**filters).count(),
+                'total': SavedMap.objects.filter(**filters).count(),
+                'review_link': '/admin/gallery/notags/?per_page={0}&{1}'.format(
+                    PER_PAGE,
+                    urllib.parse.urlencode(filters)
+                ),
+            } for group, filters in filter_groups.items()
+        }
+
+        context['totals'] = {
+            'needing_review': maps_needing_review.count(),
+            'total': SavedMap.objects.count(),
+        }
+
+        return context
 
 
 class MapsByDateView(TemplateView):
