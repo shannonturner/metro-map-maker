@@ -128,6 +128,10 @@ class MapGalleryView(TemplateView):
     def get(self, request, **kwargs):
 
         MAPS_PER_PAGE = 25
+        NON_FILTERABLE = (
+            'page',
+            'per_page',
+        )
 
         tags = Tag.objects.all().order_by('id')
 
@@ -148,7 +152,8 @@ class MapGalleryView(TemplateView):
             # Allow fine-grained filtering of how many stations
             #   or any other attribute in the URL params
             # Example: ?station_count__lte=10&activitylog__user=1
-            filters = {k: v for k, v in request.GET.items() if k != 'page'}
+            MAPS_PER_PAGE = int(request.GET.get('per_page', 25))
+            filters = {k: v for k, v in request.GET.items() if k not in NON_FILTERABLE}
             if filters:
                 visible_maps = visible_maps.filter(**filters).distinct()
 
