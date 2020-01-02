@@ -69,7 +69,7 @@ class Command(BaseCommand):
             elif action == 'show':
                 saved_map.gallery_visible = True
             # For logging purposes, the raw ID would let me revert any mistakes the easiest
-            self.stdout.write(saved_map.id)
+            self.stdout.write(str(saved_map.id))
             saved_map.save()
         
         self.stdout.write(f"Finished applying {action} to {count} maps.")
