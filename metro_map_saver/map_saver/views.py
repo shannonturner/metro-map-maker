@@ -157,6 +157,8 @@ class MapGalleryView(TemplateView):
             filters = {k: v for k, v in request.GET.items() if k not in NON_FILTERABLE}
             if filters:
                 visible_maps = visible_maps.filter(**filters).distinct()
+                # Add per_page to filters so it persists through pagination
+                filters['per_page'] = MAPS_PER_PAGE
 
         if kwargs.get('tag') == 'notags':
             visible_maps = visible_maps.filter(tags__exact=None)
