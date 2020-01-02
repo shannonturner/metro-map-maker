@@ -32,6 +32,18 @@
         color: #666;
       }
 
+      .extra-tiny {
+        font-size: 50%;
+      }
+
+      .red {
+        color: #d33;
+      }
+
+      .green {
+        color: #3a3;
+      }
+
     </style>
 
   </head>
@@ -52,7 +64,15 @@
     <table class="table">
       <tr>
         <td><h3>{{ last_30 }}</h3></td>
-        <td><h3>{{ last_90 }}</h3></td>
+        <td>
+          <h3>{{ last_90 }}
+          {% if last_90 > prev_90 %}
+            <span class="tiny extra-tiny green">+{% widthratio last_90_change prev_90 100 %}%</span>
+          {% elif last_90 < prev_90 %}
+            <span class="tiny extra-tiny red">{% widthratio last_90_change prev_90 100 %}%</span>
+          {% endif%}
+          </h3>
+        </td>
         <td><h3>{{ prev_90 }}</h3></td>
       </tr>
 

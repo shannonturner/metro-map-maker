@@ -574,6 +574,7 @@ class AdminHomeView(TemplateView):
             created_at__gt=prev_90_start,
             created_at__lte=prev_90_end,
         ).count()
+        context['last_90_change'] = context['last_90'] - context['prev_90']
 
         # Get numbers of maps needing review
         filter_groups = {
