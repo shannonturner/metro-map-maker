@@ -40,8 +40,8 @@ class HomeView(TemplateView):
                 .filter(gallery_visible=True) \
                 .exclude(thumbnail__exact='') \
                 .exclude(name__exact='') \
-                .exclude(tags__name='reviewed') \
-                .filter(tags__name='favorite') \
+                .exclude(tags__slug='reviewed') \
+                .filter(tags__slug='favorite') \
                 .order_by('?')
 
             context = {
@@ -87,9 +87,9 @@ class PublicGalleryView(TemplateView):
             .filter(gallery_visible=True) \
             .exclude(thumbnail__exact='') \
             .exclude(name__exact='') \
-            .exclude(tags__name='reviewed')
+            .exclude(tags__slug='reviewed')
 
-        context = {tag:thumbnails.filter(tags__name=tag).order_by('name') for tag in tags}
+        context = {tag:thumbnails.filter(tags__slug=tag).order_by('name') for tag in tags}
         context['favorite'] = context['favorite'].order_by('?')[:8]
 
         return render(request, self.template_name, context)
@@ -103,10 +103,10 @@ class ThumbnailGalleryView(TemplateView):
             .filter(gallery_visible=True) \
             .exclude(thumbnail__exact='') \
             .exclude(name__exact='') \
-            .exclude(tags__name='reviewed')
+            .exclude(tags__slug='reviewed')
 
         if kwargs.get('tag'):
-            thumbnails = thumbnails.filter(tags__name=kwargs.get('tag'))
+            thumbnails = thumbnails.filter(tags__slug=kwargs.get('tag'))
 
         if kwargs.get('tag') == 'favorite':
             thumbnails = thumbnails.order_by('?')[:8]
@@ -168,8 +168,8 @@ class MapGalleryView(TemplateView):
             # Return all the ones with thumbnails, which will allow me to quickly
             #   regenerate any thumbnails if I make changes to the rendering
             visible_maps = visible_maps.exclude(thumbnail__exact='')
-        elif kwargs.get('tag') in [t.name for t in tags]:
-            visible_maps = visible_maps.filter(tags__name=kwargs.get('tag'))
+        elif kwargs.get('tag') in [t.slug for t in tags]:
+            visible_maps = visible_maps.filter(tags__slug=kwargs.get('tag'))
 
         visible_maps = visible_maps.prefetch_related('tags').order_by('-id')
 
@@ -270,7 +270,7 @@ class MapSimilarView(TemplateView):
             gallery_maps = SavedMap.objects.filter(gallery_visible=True) \
                 .exclude(thumbnail__exact='') \
                 .exclude(name__exact='') \
-                .exclude(tags__name='reviewed') \
+                .exclude(tags__slug='reviewed') \
                 .exclude(station_count__lt=this_map_stations_lower_bound) \
                 .exclude(station_count__gt=this_map_stations_upper_bound)
             visible_maps = visible_maps | gallery_maps # merge these querysets

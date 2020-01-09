@@ -42,7 +42,7 @@ urlpatterns = [
     path('admin/home/', map_saver.views.AdminHomeView.as_view(), name='admin_home'),
 
     # Admin Gallery
-    re_path(r'admin/gallery/(?P<tag>[\w^\d]+)?/?$', map_saver.views.MapGalleryView.as_view(), name='admin_gallery'),
+    re_path(r'admin/gallery/(?P<tag>[\w\-\_^\d]+)?/?$', map_saver.views.MapGalleryView.as_view(), name='admin_gallery'),
 
     # Admin Gallery: Admin actions
     path('admin/action/', map_saver.views.MapAdminActionView.as_view(), name='admin_action'),
