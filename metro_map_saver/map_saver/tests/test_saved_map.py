@@ -91,3 +91,7 @@ class SavedMapTest(TestCase):
         # Finally, remove the 'real' tag and confirm it's no longer visible
         self.saved_map.tags.remove('real')
         self.confirm_gallery_presence(False)
+
+        # Maliciously set publicly_visible = True, save, and confirm it's unset
+        self.saved_map.publicly_visible = True
+        self.confirm_gallery_presence(False)        
