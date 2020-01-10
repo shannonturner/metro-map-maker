@@ -56,8 +56,12 @@ class SavedMap(models.Model):
             self.gallery_visible,
             self.name,
             self.thumbnail,
-        ]) and set([tag.slug for tag in self.tags.all()]).intersection(set(PUBLICLY_VISIBLE_TAGS)) \
-        and not set([tag.slug for tag in self.tags.all()]).intersection(set(EXCLUDED_TAGS))
+        ]) and (
+            # New maps won't have an ID; can't access tags until a map has an ID
+            not self.id or \
+            set([tag.slug for tag in self.tags.all()]).intersection(set(PUBLICLY_VISIBLE_TAGS)) \
+            and not set([tag.slug for tag in self.tags.all()]).intersection(set(EXCLUDED_TAGS))
+        )
 
     def __str__(self):
         return self.urlhash
