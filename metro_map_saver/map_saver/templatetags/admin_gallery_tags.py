@@ -14,6 +14,6 @@ def existing_maps(value, arg):
         'publicly_visible': True,
         # user-named maps have suggested tags in parentheses,
         # we don't want these considered part of the name
-        'name': value.name.split("(")[0],
+        'name': value.name.split("(")[0].strip(),
         'tags__slug': arg,
     }).count()
