@@ -16,6 +16,22 @@ class SavedMapTest(TestCase):
         })
         self.saved_map.save()
 
+    def confirm_gallery_presence(self, visible):
+
+        """ Helper function to DRY this test;
+            Confirms that .publicly_visible and actual gallery presence are the same
+        """
+        self.saved_map.save()
+        self.saved_map.refresh_from_db()
+
+        client = Client()
+        response = client.get('/gallery/')
+        self.assertEqual(visible, self.saved_map.publicly_visible)
+        if visible:
+            self.assertContains(response, 'Cool Map')
+        else:
+            self.assertNotContains(response, 'Cool Map')
+
     def test_publicly_visible(self):
 
         """ Confirm that a map is only publicly visible
@@ -30,7 +46,7 @@ class SavedMapTest(TestCase):
             the map should stop being publicly visible upon .save()
         """
 
-        client = Client()
+        self.confirm_gallery_presence(False)
 
         assignments = {
             'gallery_visible': True,
@@ -38,31 +54,17 @@ class SavedMapTest(TestCase):
             'thumbnail': 'Thumbnail',
         }
 
-        self.assertFalse(self.saved_map.publicly_visible)
-        response = client.get('/gallery/')
-        self.assertNotContains(response, 'Cool Map')
-
         # Even after all of these, I still don't have the tag
         for key, value in assignments.items():
             setattr(self.saved_map, key, value)
-            self.saved_map.save()
-            self.saved_map.refresh_from_db()
-            self.assertFalse(self.saved_map.publicly_visible)
+            self.confirm_gallery_presence(False)
 
         self.saved_map.tags.add('irrelevant')
-        self.saved_map.save()
-        self.saved_map.refresh_from_db()
-        self.assertFalse(self.saved_map.publicly_visible)
+        self.confirm_gallery_presence(False)
 
         # This tag is good, so now my map is finally publicly visible
         self.saved_map.tags.add('real')
-        self.saved_map.save()
-        self.saved_map.refresh_from_db()
-        self.assertTrue(self.saved_map.publicly_visible)
-
-        # And it will appear in the 'real' section of the public gallery
-        response = client.get('/gallery/')
-        self.assertContains(response, 'Cool Map')
+        self.confirm_gallery_presence(True)
 
         # Any of these is sufficient to make the map no longer publicly visible
         negative_assignments = {
@@ -72,24 +74,20 @@ class SavedMapTest(TestCase):
         }
         for key, value in negative_assignments.items():
             setattr(self.saved_map, key, value)
-            self.saved_map.save()
-            self.saved_map.refresh_from_db()
-            self.assertFalse(self.saved_map.publicly_visible)
-            response = client.get('/gallery/')
-            self.assertNotContains(response, 'Cool Map')
+            self.confirm_gallery_presence(False)
 
             # But let's put it back the way it was and confirm we're visible again
             setattr(self.saved_map, key, assignments[key])
-            self.saved_map.save()
-            self.saved_map.refresh_from_db()
-            self.assertTrue(self.saved_map.publicly_visible)
-            response = client.get('/gallery/')
-            self.assertContains(response, 'Cool Map')
+            self.confirm_gallery_presence(True)
 
-        # Finally, remove the tag and confirm it's no longer visible
+        # Addding the 'reviewed' tag makes it no longer visible
+        self.saved_map.tags.add('reviewed')
+        self.confirm_gallery_presence(False)
+
+        # Remove the 'reviewed' tag and it's visible again
+        self.saved_map.tags.remove('reviewed')
+        self.confirm_gallery_presence(True)
+
+        # Finally, remove the 'real' tag and confirm it's no longer visible
         self.saved_map.tags.remove('real')
-        self.saved_map.save()
-        self.saved_map.refresh_from_db()
-        self.assertFalse(self.saved_map.publicly_visible)
-        response = client.get('/gallery/')
-        self.assertNotContains(response, 'Cool Map')
+        self.confirm_gallery_presence(False)

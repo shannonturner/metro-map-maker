@@ -11,6 +11,12 @@ PUBLICLY_VISIBLE_TAGS = [
     'unknown',
 ]
 
+# Having any of these tags excludes you from public visibility
+EXCLUDED_TAGS = [
+    'reviewed',
+    'excluded',
+]
+
 class SavedMap(models.Model):
 
     """ Saves map data and its corresponding urlhash together so that maps can be easily shared
@@ -50,7 +56,8 @@ class SavedMap(models.Model):
             self.gallery_visible,
             self.name,
             self.thumbnail,
-        ]) and set([tag.name for tag in self.tags.all()]).intersection(set(PUBLICLY_VISIBLE_TAGS))
+        ]) and set([tag.slug for tag in self.tags.all()]).intersection(set(PUBLICLY_VISIBLE_TAGS)) \
+        and not set([tag.slug for tag in self.tags.all()]).intersection(set(EXCLUDED_TAGS))
 
     def __str__(self):
         return self.urlhash
