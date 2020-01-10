@@ -18,7 +18,11 @@ class SavedMap(models.Model):
 
     urlhash = models.CharField(max_length=64)
     mapdata = models.TextField()
+    # gallery_visible: should this be shown in the default view of the Admin Gallery?
     gallery_visible = models.BooleanField(default=True, db_index=True)
+    # publicly_visible: should this be shown in the publicly-visible gallery?
+    #   (using this to improve speed and reduce query complexity)
+    publicly_visible = models.BooleanField(default=False, db_index=True)
     name = models.CharField(max_length=255, blank=True, default='')
     thumbnail = models.TextField(blank=True, default='')
     stations = models.TextField(blank=True, default='')
@@ -41,7 +45,7 @@ class SavedMap(models.Model):
             return 0
 
     @property
-    def publicly_visible(self):
+    def _publicly_visible(self):
         return all([
             self.gallery_visible,
             self.name,
@@ -53,6 +57,12 @@ class SavedMap(models.Model):
 
     def save(self, *args, **kwargs):
         self.station_count = self._station_count()
+        self.name = self.name.strip()
+        self.thumbnail = self.thumbnail.strip()
+        if self._publicly_visible:
+            self.publicly_visible = True
+        else:
+            self.publicly_visible = False
         super().save(*args, **kwargs)
 
     class Meta:
