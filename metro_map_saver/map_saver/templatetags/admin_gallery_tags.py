@@ -12,6 +12,8 @@ def existing_maps(value, arg):
 
     return SavedMap.objects.filter(**{
         'publicly_visible': True,
-        'name': value.name,
+        # user-named maps have suggested tags in parentheses,
+        # we don't want these considered part of the name
+        'name': value.name.split("(")[0],
         'tags__slug': arg,
     }).count()
