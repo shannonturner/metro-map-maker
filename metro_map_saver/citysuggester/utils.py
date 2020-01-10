@@ -23,14 +23,14 @@ def load_systems():
 
     return systems
 
+systems = load_systems()
+
 def suggest_city(map_stations):
 
     """ Given a set of stations from a map,
         suggest a city it might be located in
         based on known stations in known metro systems
     """
-
-    systems = load_systems()
 
     possible_cities = {}
 
