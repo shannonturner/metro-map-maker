@@ -1,4 +1,5 @@
 from map_saver.models import SavedMap
+from map_saver.templatetags.admin_gallery_tags import existing_maps
 
 from django.test import Client
 from django.test import TestCase
@@ -95,3 +96,25 @@ class SavedMapTest(TestCase):
         # Maliciously set publicly_visible = True, save, and confirm it's unset
         self.saved_map.publicly_visible = True
         self.confirm_gallery_presence(False)        
+
+    def test_existing_maps(self):
+
+        """ Confirm the |existing_maps template filter
+            returns the correct numbers
+        """
+
+        for count in range(1, 11):
+            saved_map = SavedMap(**{
+                'name': 'test_existing_maps',
+                'gallery_visible': True,
+                'thumbnail': 'test_existing_maps',
+                'urlhash': 'abc123',
+                'mapdata': '{"global": {"lines": {"0896d7": {"displayName": "Blue Line"}}}, "1": {"1": {"line": "0896d7"}, "2": {"line": "0896d7"}}, "2": {"1": {"line": "0896d7"}}, "3": {"1": {"line": "0896d7"}}, "4": {"1": {"line": "0896d7"}, "2": {"line": "0896d7"}}}',
+            })
+            saved_map.save()
+
+            saved_map.refresh_from_db()
+            saved_map.tags.add('real')
+            saved_map.save()
+
+            self.assertEqual(count, existing_maps(saved_map, 'real'))

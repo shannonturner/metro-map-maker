@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
 {% load static %}
+{% load admin_gallery_tags %}
 
 <html lang="en">
   <head>
@@ -159,11 +160,13 @@
               <!-- <p style="margin-top: 10px;"> -->
               {% if permissions.tag_map %}
                 {% for tag in tags %}
+                  {% with map|existing_maps:tag.name as existing_maps %}
                   {% if tag in map.tags.all %}
-                    <button id="removetag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map removetag-map btn-primary">{{ tag.name }}</button>
+                    <button id="removetag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map removetag-map btn-primary">{{ tag.name }} {% if request.user.is_superuser and existing_maps %}({{ existing_maps }}){% endif %}</button>
                   {% else %}
-                    <button id="addtag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map addtag-map btn-default">{{ tag.name }}</button>
+                    <button id="addtag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map addtag-map btn-default">{{ tag.name }} {% if request.user.is_superuser and existing_maps %}({{ existing_maps }}){% endif %}</button>
                   {% endif %}
+                  {% endwith %}
                 {% endfor %}
               <!-- </p> -->
               {% endif %}
