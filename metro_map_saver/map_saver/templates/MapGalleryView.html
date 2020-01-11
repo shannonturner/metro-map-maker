@@ -135,7 +135,6 @@
               {% else %}
                 {{ map.station_count }} stations
               {% endif %}
-            {% endwith %}
           </h4>
           <div class="map-control-buttons">
             <button id="diff-a-{{ map.urlhash }}-{{ map.id }}" class="diff diff-a btn-info">Diff A</button>
@@ -161,16 +160,23 @@
               {% if permissions.tag_map %}
                 {% for tag in tags %}
                   {% with map|existing_maps:tag.name as existing_maps %}
+
                     <button id="changetag-map-{{ map.id }}-{{ tag.name }}" data-slug="{{ tag.slug }}" class="changetag-map {% if tag in map.tags.all %}removetag-map btn-primary{% else %}addtag-map btn-default{% endif %}">
                       {{ tag.name }}
                       {% if request.user.is_superuser and existing_maps %}
-                        ({{ existing_maps }})
-                      {% endif %}
+                          ({{ existing_maps }})
+                      {% elif not map.name and suggested_city and tag.slug == 'real' %}
+                          ({% find_existing_maps suggested_city.0.0 "real" %})
+                      {% elif not map.name and suggested_city and tag.slug == 'speculative' %}
+                          ({% find_existing_maps suggested_city.0.0 "speculative" %})
+                      {% endif %} {# if superuser and existing_maps #}
                     </button>
-                  {% endwith %}
+                  {% endwith %} {# existing_maps #}
+
                 {% endfor %}
               <!-- </p> -->
               {% endif %}
+              {% endwith %} {# suggested_city #}
 
               {% if map.activitylog_set.count and request.user.is_superuser %}
               <span class="vertical-divider"></span>
