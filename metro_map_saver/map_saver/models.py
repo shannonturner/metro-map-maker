@@ -52,13 +52,14 @@ class SavedMap(models.Model):
 
     @property
     def _publicly_visible(self):
+        # New maps won't have an ID; can't access tags until a map has an ID
+        if not self.id:
+            return
         return all([
             self.gallery_visible,
             self.name,
             self.thumbnail,
         ]) and (
-            # New maps won't have an ID; can't access tags until a map has an ID
-            not self.id or \
             set([tag.slug for tag in self.tags.all()]).intersection(set(PUBLICLY_VISIBLE_TAGS)) \
             and not set([tag.slug for tag in self.tags.all()]).intersection(set(EXCLUDED_TAGS))
         )
