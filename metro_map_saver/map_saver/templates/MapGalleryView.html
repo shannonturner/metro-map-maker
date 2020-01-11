@@ -161,11 +161,12 @@
               {% if permissions.tag_map %}
                 {% for tag in tags %}
                   {% with map|existing_maps:tag.name as existing_maps %}
-                  {% if tag in map.tags.all %}
-                    <button id="removetag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map removetag-map btn-primary">{{ tag.name }} {% if request.user.is_superuser and existing_maps %}({{ existing_maps }}){% endif %}</button>
-                  {% else %}
-                    <button id="addtag-map-{{ map.id }}-{{ tag.name }}" class="changetag-map addtag-map btn-default">{{ tag.name }} {% if request.user.is_superuser and existing_maps %}({{ existing_maps }}){% endif %}</button>
-                  {% endif %}
+                    <button id="changetag-map-{{ map.id }}-{{ tag.name }}" data-slug="{{ tag.slug }}" class="changetag-map {% if tag in map.tags.all %}removetag-map btn-primary{% else %}addtag-map btn-default{% endif %}">
+                      {{ tag.name }}
+                      {% if request.user.is_superuser and existing_maps %}
+                        ({{ existing_maps }})
+                      {% endif %}
+                    </button>
                   {% endwith %}
                 {% endfor %}
               <!-- </p> -->
@@ -807,7 +808,7 @@
     $('.changetag-map').click(function() {
       var tagMapButton = $(this);
       var thisMapId = $(this).attr('id').split('-').slice(2, 3);
-      var tag = $(this).text();
+      var tag = $(this).attr('data-slug');
 
       if ($(this).hasClass('removetag-map')) {
         var action = "removetag";
