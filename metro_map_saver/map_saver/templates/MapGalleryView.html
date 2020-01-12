@@ -159,26 +159,27 @@
               <!-- <p style="margin-top: 10px;"> -->
               {% if permissions.tag_map %}
                 {% for tag in tags %}
-                  {% with map|existing_maps:tag.name as existing_maps %}
-
                     <button id="changetag-map-{{ map.id }}-{{ tag.name }}" data-slug="{{ tag.slug }}" class="changetag-map {% if tag in map.tags.all %}removetag-map btn-primary{% else %}addtag-map btn-default{% endif %}">
                       {{ tag.name }}
-                      {% if request.user.is_superuser and existing_maps %}
-                          ({{ existing_maps }})
+                      {% if request.user.is_superuser and map.name %}
+                        {% with map|existing_maps:tag.name as existing_maps %}
+                          {% if existing_maps %}
+                            ({{ existing_maps }})
+                          {% endif %}
+                        {% endwith %} {# existing_maps #}
                       {% elif not map.name and suggested_city and tag.slug == 'real' %}
                           ({% find_existing_maps suggested_city.0.0 "real" %})
                       {% elif not map.name and suggested_city and tag.slug == 'speculative' %}
                           ({% find_existing_maps suggested_city.0.0 "speculative" %})
-                      {% endif %} {# if superuser and existing_maps #}
+                      {% endif %} {# if superuser and map.name #}
                     </button>
-                  {% endwith %} {# existing_maps #}
 
                 {% endfor %}
               <!-- </p> -->
               {% endif %}
               {% endwith %} {# suggested_city #}
 
-              {% if map.activitylog_set.count and request.user.is_superuser %}
+              {% if request.user.is_superuser and map.activitylog_set.count %}
               <span class="vertical-divider"></span>
               <a href="/admin/activity/{{ map.urlhash }}/">Log</a>
               {% endif %}
