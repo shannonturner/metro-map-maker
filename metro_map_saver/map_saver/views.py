@@ -399,12 +399,20 @@ class MapAdminActionView(TemplateView):
                     this_map.save()
                 elif action in ('addtag', 'removetag') and request.user.has_perm('map_saver.tag_map'):
                     tag = request.POST.get('tag')
-                    if tag:
-                        if action == 'addtag':
-                            this_map.tags.add(tag)
-                        elif action == 'removetag':
-                            this_map.tags.remove(tag)
-                        this_map.save()
+                    try:
+                        # Only use existing tags; explicitly use slug intead of name
+                        # This fixes the problem where 'favorite' wouldn't duplicate on .add()
+                        #   but 'needs-review' would
+                        tag = Tag.objects.get(slug=tag)
+                    except ObjectDoesNotExist:
+                        pass
+                    else:
+                        if tag:
+                            if action == 'addtag':
+                                this_map.tags.add(tag)
+                            elif action == 'removetag':
+                                this_map.tags.remove(tag)
+                            this_map.save()
                 elif action == 'thumbnail' and request.user.has_perm('map_saver.generate_thumbnail'):
                     this_map.thumbnail = request.POST.get('data', '')
                     this_map.save()
