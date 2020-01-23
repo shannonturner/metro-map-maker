@@ -11,6 +11,8 @@ var dragX = false;
 var dragY = false;
 var temporaryStation = {};
 var pngUrl = false;
+var mapHistory = []; // A list of the last several map objects
+var maxUndoHistory = 25;
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -824,10 +826,28 @@ function rgb2hex(rgb) {
     return "#" + hex(rgb[1]) + hex(rgb[2]) + hex(rgb[3]);
 } // rgb2hex(rgb)
 
+function saveMapHistory(metroMap) {
+  // Adds the map to the history, then
+  // Saves the provided metroMap to localStorage
+
+  // Add the metroMap to the history and delete the oldest once there are 10 maps stored
+  // Map versions are stored from Oldest -------- Newest
+  if (mapHistory.length >= maxUndoHistory) {
+    mapHistory.shift(); // Remove first item in array
+  }
+  // I can't just push metroMap; I need to create a new deep copy of the object and push that
+  //   otherwise all copies of the history will be identical.
+  if (JSON.stringify(mapHistory[mapHistory.length-1]) != JSON.stringify(metroMap)) {
+    // Only save a new history if the map state actually changed
+    mapHistory.push(JSON.parse(JSON.stringify(metroMap)))
+  }
+} // saveMapHistory(metroMap)
+
 function autoSave(metroMap) {
   // Saves the provided metroMap to localStorage
   if (typeof metroMap == 'object') {
     activeMap = metroMap;
+    saveMapHistory(activeMap)
     metroMap = JSON.stringify(metroMap);
   }
   window.localStorage.setItem('metroMap', metroMap);
@@ -836,6 +856,22 @@ function autoSave(metroMap) {
     $('#autosave-indicator').html('');
   }, 1500)
 } // autoSave(metroMap)
+
+function undo() {
+  // Rewind to an earlier map in the mapHistory
+  if (mapHistory.length > 1) {
+    mapHistory.pop(); // Remove the most recently added item in the history
+    previousMap = mapHistory[mapHistory.length-1]
+    loadMapFromObject(previousMap, true)
+    drawCanvas(previousMap);
+  } else if (mapHistory.length == 1) {
+    previousMap = mapHistory.pop()
+    loadMapFromObject(previousMap, true)
+    drawCanvas(previousMap)
+  } else {
+    // mapHistory.length is < 1
+  }
+} // undo()
 
 function getURLParameter(name) {
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
@@ -1163,12 +1199,24 @@ function downloadImage(canvas, showImg) {
   } // else (.toBlob available)
 } // downloadImage()
 
+function throttle(callback, interval) {
+  let enableCall = true;
+
+  return function(...args) {
+    if (!enableCall) return;
+
+    enableCall = false;
+    callback.apply(this, args);
+    setTimeout(() => enableCall = true, interval);
+  }
+} // throttle()
+
 $(document).ready(function() {
 
   document.getElementById('canvas-container').addEventListener('click', bindGridSquareEvents, false);
   // when exactly do I need mousedown? do I need it anymore?
   // document.getElementById('canvas-container').addEventListener('mousedown', bindGridSquareEvents, false);
-  document.getElementById('canvas-container').addEventListener('mousemove', bindGridSquareMouseover, false);
+  document.getElementById('canvas-container').addEventListener('mousemove', throttle(bindGridSquareMouseover, 5), false);
   document.getElementById('canvas-container').addEventListener('mouseup', bindGridSquareMouseup, false);
 
   // Bind to the mousedown and mouseup events so we can implement dragging easily
@@ -1193,6 +1241,13 @@ $(document).ready(function() {
   $(function () {
     $('[data-toggle="tooltip"]').tooltip({"container": "body"});
   })
+
+  document.addEventListener("keydown", function(event) {
+    if (event.which == 90 && (event.metaKey || event.ctrlKey)) {
+      // If Control+Z is pressed
+      undo();
+    }
+  });
 
   activeTool = 'look';
 
