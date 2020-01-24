@@ -9,6 +9,8 @@ var lineWidth = 1.175;
 var redrawOverlappingPoints = {};
 var dragX = false;
 var dragY = false;
+var clickX = false;
+var clickY = false;
 var temporaryStation = {};
 var pngUrl = false;
 var mapHistory = []; // A list of the last several map objects
@@ -340,6 +342,21 @@ function bindGridSquareEvents(event) {
   var x = xy[0]
   var y = xy[1]
 
+  // Straight line assist:
+  // if this is a click and drag,
+  // check to see if this is a straight line; otherwise return early (don't draw this)
+  if (!event.isTrusted) {
+    if (x == clickX || y == clickY) {
+      // At least one coordinate matches, it's a straight line, do nothing
+    } else if (Math.abs(x - clickX) == Math.abs(y - clickY)) {
+      // Diagonal lines, do nothing
+    } else {
+      if ($('#straight-line-assist').prop('checked')) {
+        return // Not a straight line, end early!
+      }
+    }
+  }
+
   if (activeTool == 'line') {
     makeLine(x, y)
   } else if (activeTool == 'eraser') {
@@ -371,25 +388,58 @@ function bindGridSquareMouseover(event) {
   }
 } // bindGridSquareMouseover()
 
-function bindGridSquareMouseup() {
+function bindGridSquareMouseup(event) {
   // Workaround to give focus to #station-name after mousedown
   // Just don't steal focus away from another text box
   if (activeTool == 'station' && document.activeElement.type != 'text') {
     $('#station-name').focus()
   }
+  // Unset current click's x, y coordinates,
+  // since we don't need to do straight line assist drawing anymore
+  clickX = false
+  clickY = false
+
+  mouseIsDown = false
+
+  // Immediately clear the straight line assist indicator upon mouseup
+  drawHoverIndicator(event.pageX, event.pageY)
 }
 
-function drawHoverIndicator(x, y) {
+function bindGridSquareMousedown(event) {
+  // Set the current click's x, y coordinates
+  // to facilitate straight line assist drawing
+  xy = getCanvasXY(event.pageX, event.pageY)
+  clickX = xy[0]
+  clickY = xy[1]
+
+  // Visually indicate which squares you can fill in with
+  //  straight line assist
+  if ($('#straight-line-assist').prop('checked') && (activeTool == 'line' || activeTool == 'eraser')) {
+    for (var x=0; x<gridRows; x++) {
+      for (var y=0; y<gridCols; y++) {
+        if (x == clickX || y == clickY || Math.abs(x - clickX) == Math.abs(y - clickY)) {
+          drawHoverIndicator(x, y, '#2E71CC')
+        } // if it's a straight line from the origin
+      } // for y
+    } // for x
+  } // if straight line assist is checked
+} // function bindGridSquareMousedown()
+
+function drawHoverIndicator(x, y, fillColor) {
   // Displays a hover indicator on the hover canvas at x,y
   var canvas = document.getElementById('hover-canvas')
   var ctx = canvas.getContext('2d')
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  if (!fillColor) {
+    // Only clear the canvas if we aren't indicating straight line assist
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    // When using straight line assist, we calculate the x, y ahead of time
+    xy = getCanvasXY(x, y)
+    x = xy[0]
+    y = xy[1]
+  }
   ctx.globalAlpha = 0.5
-  ctx.fillStyle = '#2ECC71'
+  ctx.fillStyle = fillColor || '#2ECC71'
   var gridPixelMultiplier = canvas.width / gridCols
-  xy = getCanvasXY(x, y)
-  x = xy[0]
-  y = xy[1]
   ctx.fillRect((x * gridPixelMultiplier) - (gridPixelMultiplier / 2), (y * gridPixelMultiplier) - (gridPixelMultiplier / 2), gridPixelMultiplier, gridPixelMultiplier)
 } // drawHoverIndicator(x, y)
 
@@ -1214,8 +1264,7 @@ function throttle(callback, interval) {
 $(document).ready(function() {
 
   document.getElementById('canvas-container').addEventListener('click', bindGridSquareEvents, false);
-  // when exactly do I need mousedown? do I need it anymore?
-  // document.getElementById('canvas-container').addEventListener('mousedown', bindGridSquareEvents, false);
+  document.getElementById('canvas-container').addEventListener('mousedown', bindGridSquareMousedown, false);
   document.getElementById('canvas-container').addEventListener('mousemove', throttle(bindGridSquareMouseover, 5), false);
   document.getElementById('canvas-container').addEventListener('mouseup', bindGridSquareMouseup, false);
 

@@ -167,9 +167,9 @@
                             ({{ existing_maps }})
                           {% endif %}
                         {% endwith %} {# existing_maps #}
-                      {% elif not map.name and suggested_city and tag.slug == 'real' %}
+                      {% elif not map.name and tag.slug == 'real' and suggested_city %}
                           ({% find_existing_maps suggested_city.0.0 "real" %})
-                      {% elif not map.name and suggested_city and tag.slug == 'speculative' %}
+                      {% elif not map.name and tag.slug == 'speculative' and suggested_city %}
                           ({% find_existing_maps suggested_city.0.0 "speculative" %})
                       {% endif %} {# if superuser and map.name #}
                     </button>

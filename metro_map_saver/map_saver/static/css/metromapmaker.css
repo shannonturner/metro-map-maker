@@ -37,6 +37,15 @@ div#toolbox {
   color: #fff;
 }
 
+label.mmm-help-setting {
+  display: inline;
+}
+
+div.mmm-help-setting {
+  text-align: left;
+  margin-left: 5px;
+}
+
 #zoom-in-container button, #zoom-out-container button {
   margin-top: 0;
   margin-bottom: 0;
