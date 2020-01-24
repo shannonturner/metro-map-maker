@@ -49,7 +49,10 @@ class SavedMap(models.Model):
         """
 
         stations = set()
-        mapdata = json.loads(self.mapdata)
+        try:
+            mapdata = json.loads(self.mapdata)
+        except Exception:
+            return ''
 
         for x in mapdata:
             for y in mapdata[x]:

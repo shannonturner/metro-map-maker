@@ -1256,9 +1256,9 @@ class FrontendFunctionalityTestCase(object):
         self.helper_erase_blank_to_save()
         tool_line_options_length = self.driver.execute_script("return document.getElementById('tool-line-options').children.length")
 
-        # Other children besides the rail lines themselves are the add/edit/delete line buttons, etc
+        # Other children besides the rail lines themselves are the add/edit/delete line buttons, straight line assist, etc
         self.assertEqual(
-            6,
+            7,
             tool_line_options_length
         )
 
@@ -1276,7 +1276,7 @@ class FrontendFunctionalityTestCase(object):
 
         # Other children besides the rail lines themselves are the add/edit/delete line buttons, etc
         self.assertEqual(
-            16,
+            17,
             tool_line_options_length
         )
 
