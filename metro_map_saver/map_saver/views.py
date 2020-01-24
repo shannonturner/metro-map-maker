@@ -214,19 +214,6 @@ def load_map_data(saved_map):
                 )
             )
 
-def get_stations(mapdata):
-
-    """ Returns a set of station names from a given mapdata
-    """
-
-    stations = set()
-
-    for x in mapdata:
-        for y in mapdata[x]:
-            stations.add(mapdata[x][y].get('station', {}).get('name', ''))
-
-    return stations
-
 class MapSimilarView(TemplateView):
 
     """ Get: Display a gallery of maps that are similar to the specified map.
@@ -528,16 +515,11 @@ class MapDataView(TemplateView):
                 # Doesn't override the saved map if it already exists.
                 saved_map = SavedMap.objects.get(urlhash=urlhash)
             except ObjectDoesNotExist:
-                saved_map = SavedMap(**{
+                saved_map = SavedMap.objects.create(**{
                     'urlhash': urlhash,
                     'mapdata': json.dumps(mapdata),
+                    'naming_token': hashlib.sha256('{0}'.format(random.randint(1, 100000)).encode('utf-8')).hexdigest(),
                     })
-                saved_map.naming_token = hashlib.sha256('{0}'.format(random.randint(1, 100000)).encode('utf-8')).hexdigest()
-                try:
-                    saved_map.stations = ','.join(get_stations(mapdata)).lower()
-                except Exception as e:
-                    logger.error('[WARN] Failed to save stations for {0}: {1}'.format(urlhash, e))
-                saved_map.save()
             except MultipleObjectsReturned:
                 # This should never happen, but it happened once
                 # Perhaps this was due to a race condition?

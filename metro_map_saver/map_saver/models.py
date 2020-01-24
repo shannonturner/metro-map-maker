@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+import json
 
 from django.db import models
 from citysuggester.utils import suggest_city
@@ -44,9 +43,26 @@ class SavedMap(models.Model):
     def suggest_city(self):
         return suggest_city(set(self.stations.lower().split(',')))
 
+    def _get_stations(self):
+
+        """ Returns a set of station names from a given mapdata
+        """
+
+        stations = set()
+        mapdata = json.loads(self.mapdata)
+
+        for x in mapdata:
+            for y in mapdata[x]:
+                if 'station' in mapdata[x][y]:
+                    stations.add(mapdata[x][y]['station'].get('name', '').lower())
+
+        return stations
+
     def _station_count(self):
-        if self.stations:
+        if isinstance(self.stations, str):
             return self.stations.count(',')
+        elif isinstance(self.stations, set):
+            return len(self.stations)
         else:
             return 0
 
@@ -68,6 +84,7 @@ class SavedMap(models.Model):
         return self.urlhash
 
     def save(self, *args, **kwargs):
+        self.stations = self._get_stations()
         self.station_count = self._station_count()
         self.name = self.name.strip()
         self.thumbnail = self.thumbnail.strip()
