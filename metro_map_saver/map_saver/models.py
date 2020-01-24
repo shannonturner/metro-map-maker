@@ -56,13 +56,11 @@ class SavedMap(models.Model):
                 if 'station' in mapdata[x][y]:
                     stations.add(mapdata[x][y]['station'].get('name', '').lower())
 
-        return stations
+        return ','.join(stations)
 
     def _station_count(self):
-        if isinstance(self.stations, str):
+        if self.stations:
             return self.stations.count(',')
-        elif isinstance(self.stations, set):
-            return len(self.stations)
         else:
             return 0
 
