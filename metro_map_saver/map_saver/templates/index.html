@@ -196,13 +196,15 @@
       </div>
       <button id="tool-resize-all" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Resize the grid, allowing you to make larger maps"><i class="fa fa-expand" aria-hidden="true"></i> Resize grid</button>
       <div id="tool-resize-options" class="text-left start-hidden">
-        <h5>Be careful! If your map is large and you resize it to be smaller, you'll lose your work.</h5>
+        <h5>Be careful! If your map is large and you resize it to be smaller, you'll lose your work. <b>Use Control+Z to undo.</b></h5>
         <button id="tool-resize-80" class="btn btn-info resize-grid">Standard (80x80)</button>
         <button id="tool-resize-120" class="btn btn-info resize-grid">Large (120x120)</button>
         <button id="tool-resize-160" class="btn btn-info resize-grid">Extra Large (160x160)</button>
         <button id="tool-resize-200" class="btn btn-info resize-grid">XXL (200x200)</button>
         <button id="tool-resize-240" class="btn btn-info resize-grid">XXXL (240x240)</button>
-        <!-- <h5>Be patient: Metro Map Maker runs a little more slowly at the largest grid sizes.</h5> -->
+        <div id="tool-resize-stretch-options" class="start-hidden">
+          <button id="tool-resize-stretch" class="btn btn-info has-tooltip stretch-grid" data-toggle="tooltip" data-placement="left" title="Increase the available space between stations so you can add more stations in between.">Stretch Map</button>
+        </div>
       </div>
 
       <hr>

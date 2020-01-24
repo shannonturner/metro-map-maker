@@ -415,6 +415,7 @@ function bindGridSquareMousedown(event) {
   // Visually indicate which squares you can fill in with
   //  straight line assist
   if ($('#straight-line-assist').prop('checked') && (activeTool == 'line' || activeTool == 'eraser')) {
+    // TODO: Optimize this; don't need to loop over every xy
     for (var x=0; x<gridRows; x++) {
       for (var y=0; y<gridCols; y++) {
         if (x == clickX || y == clickY || Math.abs(x - clickX) == Math.abs(y - clickY)) {
@@ -912,14 +913,16 @@ function undo() {
   if (mapHistory.length > 1) {
     mapHistory.pop(); // Remove the most recently added item in the history
     previousMap = mapHistory[mapHistory.length-1]
-    loadMapFromObject(previousMap, true)
-    drawCanvas(previousMap);
   } else if (mapHistory.length == 1) {
     previousMap = mapHistory.pop()
-    loadMapFromObject(previousMap, true)
-    drawCanvas(previousMap)
   } else {
-    // mapHistory.length is < 1
+    return // mapHistory.length is < 1
+  }
+  if (previousMap) {
+    loadMapFromObject(previousMap)
+    getMapSize(previousMap)
+    drawCanvas(previousMap)
+    resetResizeButtons(gridCols)
   }
 } // undo()
 
@@ -1019,6 +1022,17 @@ function getMapSize(metroMapObject) {
   $('#canvas-container').width(Math.round($('#canvas-container').width() / gridCols) * gridCols)
   $('#canvas-container').height(Math.round($('#canvas-container').width() / gridRows) * gridRows)
 } // getMapSize(metroMapObject)
+
+function isMapStretchable(size) {
+  // Determine if the map is small enough to be stretched
+  // If changing max map size, change this calculation, too
+  if (size) {
+    return size <= 120
+  } else {
+    // Enhancement TODO: align map to top left, then calculate size (will improve number of maps that can be stretched)
+    return (gridRows <= 120 && gridCols <= 120)
+  }
+}
 
 function loadMapFromObject(metroMapObject, update) {
   // Loads a map from the provided metroMapObject and 
@@ -1249,6 +1263,34 @@ function downloadImage(canvas, showImg) {
   } // else (.toBlob available)
 } // downloadImage()
 
+function resetResizeButtons(size) {
+  $('.resize-grid').each(function() {
+    if ($(this).html().split(' ')[0] == 'Current') {
+      var resizeButtonSize = $(this).attr('id').split('-').slice(2);
+      var resizeButtonLabel = '(' + resizeButtonSize + 'x' + resizeButtonSize + ')';
+      if (resizeButtonSize == 80) {
+        resizeButtonLabel = 'Standard ' + resizeButtonLabel;
+      } else if (resizeButtonSize == 120) {
+        resizeButtonLabel = 'Large ' + resizeButtonLabel;
+      } else if (resizeButtonSize == 160) {
+        resizeButtonLabel = 'Extra Large ' + resizeButtonLabel;
+      } else if (resizeButtonSize == 200) {
+        resizeButtonLabel = 'XXL ' + resizeButtonLabel;
+      } else if (resizeButtonSize == 240) {
+        resizeButtonLabel = 'XXXL ' + resizeButtonLabel;
+      }
+      $(this).html(resizeButtonLabel);
+    }
+  })
+  $('#tool-resize-' + size).text('Current Size (' + size + 'x' + size + ')');
+  if (isMapStretchable(size)) {
+    $('#tool-resize-stretch-options').show()
+    $('#tool-resize-stretch').text('Stretch map to ' + size * 2 + 'x' + size * 2)
+  } else {
+    $('#tool-resize-stretch-options').hide()
+  }
+} // function resetResizeButtons()
+
 function throttle(callback, interval) {
   let enableCall = true;
 
@@ -1400,36 +1442,30 @@ $(document).ready(function() {
     } else {
       $('#tool-resize-options').show();
       $('#tool-resize-all').html('<i class="fa fa-expand" aria-hidden="true"></i> Hide Resize options');
+      if (isMapStretchable()) {
+        $('#tool-resize-stretch-options').show()
+        $('#tool-resize-stretch').text('Stretch map to ' + gridRows * 2 + 'x' + gridCols * 2)
+      } else {
+        $('#tool-resize-stretch-options').hide()
+      }
     }
     $('.tooltip').hide();
   }); // #tool-resize-all.click()
   $('.resize-grid').click(function() {
+    autoSave(activeMap)
     var lastToolUsed = activeTool;
     activeTool = 'resize'
     size = $(this).attr('id').split('-').slice(2);
     // Indicate which size the map is now sized to, and reset any other buttons
-    $('.resize-grid').each(function() {
-      if ($(this).html().split(' ')[0] == 'Current') {
-        var resizeButtonSize = $(this).attr('id').split('-').slice(2);
-        var resizeButtonLabel = '(' + resizeButtonSize + 'x' + resizeButtonSize + ')';
-        if (resizeButtonSize == 80) {
-          resizeButtonLabel = 'Standard ' + resizeButtonLabel;
-        } else if (resizeButtonSize == 120) {
-          resizeButtonLabel = 'Large ' + resizeButtonLabel;
-        } else if (resizeButtonSize == 160) {
-          resizeButtonLabel = 'Extra Large ' + resizeButtonLabel;
-        } else if (resizeButtonSize == 200) {
-          resizeButtonLabel = 'XXL ' + resizeButtonLabel;
-        } else if (resizeButtonSize == 240) {
-          resizeButtonLabel = 'XXXL ' + resizeButtonLabel;
-        }
-        $(this).html(resizeButtonLabel);
-      }
-    })
-    $(this).html('Current Size (' + size + 'x' + size + ')');
+    resetResizeButtons(size)
     resizeGrid(size);
     activeTool = lastToolUsed; // Reset tool after drawing the grid to avoid undefined behavior when eraser was the last-used tool
   }); // .resize-grid.click()
+  $('#tool-resize-stretch').click(function() {
+    autoSave(activeMap)
+    stretchMap()
+    $('#tool-resize-stretch-options').show()
+  }) // #tool-resize-stretch.click()
   $('#tool-move-all').click(function() {
     if ($('#tool-move-options').is(':visible')) {
       $('#tool-move-options').hide();
