@@ -547,17 +547,18 @@ class AdminHomeView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         # Get basic usage stats of number of maps created
-        last_30 = datetime.datetime.today() - \
-            datetime.timedelta(days=30)
+        today = datetime.datetime.today()
+        yesterday = today - datetime.timedelta(days=1)
+        last_30 = today - datetime.timedelta(days=30)
+        last_90 = today - datetime.timedelta(days=90)
+        prev_90_start = today - datetime.timedelta(days=180)
+        prev_90_end = today - datetime.timedelta(days=91)
 
-        last_90 = datetime.datetime.today() - \
-            datetime.timedelta(days=90)
+        context['today'] = today
+        context['yesterday'] = yesterday
 
-        prev_90_start = datetime.datetime.today() - \
-            datetime.timedelta(days=180)
-        prev_90_end = datetime.datetime.today() - \
-            datetime.timedelta(days=91)
-
+        context['created_today'] = SavedMap.objects.filter(created_at=today).count()
+        context['created_yesterday'] = SavedMap.objects.filter(created_at=yesterday).count()
         context['last_30'] = SavedMap.objects.filter(created_at__gt=last_30).count()
         context['last_90'] = SavedMap.objects.filter(created_at__gt=last_90).count()
         context['prev_90'] = SavedMap.objects.filter(

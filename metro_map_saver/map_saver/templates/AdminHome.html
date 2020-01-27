@@ -63,6 +63,8 @@
   <div class="col-sm-9">
     <table class="table">
       <tr>
+        <td><h3>{{ created_yesterday }}</h3></td>
+        <td><h3>{{ created_today }}</h3></td>
         <td><h3>{{ last_30 }}</h3></td>
         <td>
           <h3>{{ last_90 }}
@@ -77,6 +79,8 @@
       </tr>
 
       <tr>
+        <th scope="col">{{ yesterday|date:"D, M jS" }}
+        <th scope="col">{{ today|date:"D, M jS" }}</th>
         <th scope="col">last 30 days</th>
         <th scope="col">last 90 days</th>
         <th scope="col">previous 90 days</th>
