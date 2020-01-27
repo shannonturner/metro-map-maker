@@ -1677,7 +1677,7 @@ $(document).ready(function() {
 
   $('#create-new-rail-line').click(function() {
 
-    $('#new-rail-line-name').val($('#new-rail-line-name').val().replaceAll('<', '').replaceAll('>', '').replaceAll('"', '').replaceAll('\\\\', '').replace('&amp;', '&').replaceAll('&', '&amp;').replaceAll('/', '-').replaceAll("'", '&#27;'));
+    $('#new-rail-line-name').val($('#new-rail-line-name').val().replaceAll('<', '').replaceAll('>', '').replaceAll('"', '').replaceAll('\\\\', '').replaceAll('/', '-'));
 
     var allColors = [], allNames = [];
     $('.rail-line').each(function() {
@@ -1761,7 +1761,7 @@ $(document).ready(function() {
       var lineColorToChange = $('#tool-lines-to-change').val()
       var lineColorToChangeTo = $('#change-line-color').val().slice(1)
       var lineNameToChange = $('#tool-lines-to-change option:selected').text()
-      var lineNameToChangeTo = $('#change-line-name').val().replaceAll('<', '').replaceAll('>', '').replaceAll('"', '').replaceAll('\\\\', '').replace('&amp;', '&').replaceAll('&', '&amp;').replaceAll('/', '-').replaceAll("'", '&#27;') // use same replaces as in $('#create-new-rail-line').click()
+      var lineNameToChangeTo = $('#change-line-name').val().replaceAll('<', '').replaceAll('>', '').replaceAll('"', '').replaceAll('\\\\', '').replaceAll('/', '-') // use same replaces as in $('#create-new-rail-line').click()
 
       if ((lineColorToChange != lineColorToChangeTo) && (Object.keys(activeMap["global"]["lines"]).indexOf(lineColorToChangeTo) >= 0)) {
         $('#cant-save-rail-line-edits').text('Can\'t change ' + lineNameToChange + ' - it has the same color as ' + activeMap["global"]["lines"][lineColorToChangeTo]["displayName"])
