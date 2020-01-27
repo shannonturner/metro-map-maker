@@ -1987,6 +1987,12 @@ function replaceColors(color1, color2) {
     }
 
     savedMapData = JSON.parse(savedMapData);
+
+    // Fix problem where renaming a line would not 'stick'
+    if (color1.color && typeof color2 == 'object' && color2.name) {
+      savedMapData["global"]["lines"][color1.color]["displayName"] = color2.name
+    }
+
     activeMap = savedMapData;
     loadMapFromObject(activeMap);
     drawCanvas(activeMap);
