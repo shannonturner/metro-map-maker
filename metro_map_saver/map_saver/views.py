@@ -584,7 +584,7 @@ class AdminHomeView(TemplateView):
             '501+ stations': {'station_count__gte': 501},
         }
 
-        maps_needing_review = SavedMap.objects.filter(tags__exact=None).filter(gallery_visible=True)
+        maps_needing_review = SavedMap.objects.filter(tags__exact=None, gallery_visible=True)
 
         PER_PAGE = 100
 
@@ -603,6 +603,18 @@ class AdminHomeView(TemplateView):
             'needing_review': maps_needing_review.count(),
             'total': SavedMap.objects.count(),
         }
+
+        maps_tagged_need_review = SavedMap.objects.filter(
+            tags__slug='needs-review',
+            gallery_visible=True,
+        ).count()
+        maps_no_tags = SavedMap.objects.filter(
+            tags__exact=None,
+            gallery_visible=True,
+        ).count()
+
+        context['maps_no_tags'] = maps_no_tags
+        context['maps_tagged_need_review'] = maps_tagged_need_review
 
         return context
 
