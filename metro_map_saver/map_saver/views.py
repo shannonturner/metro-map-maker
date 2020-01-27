@@ -15,6 +15,7 @@ import hashlib
 import json
 import logging
 import pprint
+import pytz
 import random
 import urllib.parse
 
@@ -547,7 +548,8 @@ class AdminHomeView(TemplateView):
         context = super().get_context_data(**kwargs)
 
         # Get basic usage stats of number of maps created
-        today = datetime.datetime.today()
+        eastern_time = pytz.timezone('US/Eastern')
+        today = datetime.datetime.now(tz=eastern_time).date()
         yesterday = today - datetime.timedelta(days=1)
         last_30 = today - datetime.timedelta(days=30)
         last_90 = today - datetime.timedelta(days=90)
