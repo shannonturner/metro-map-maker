@@ -40,8 +40,14 @@ class SavedMap(models.Model):
 
     tags = TaggableManager(blank=True)
 
-    def suggest_city(self):
-        return suggest_city(set(self.stations.lower().split(',')))
+    def suggest_city(self, overlap=None):
+
+        """ Override overlap to specify the number of stations
+            that must overlap to be considered a match;
+            uses utils.MINIMUM_STATION_OVERLAP otherwise
+        """
+
+        return suggest_city(set(self.stations.lower().split(',')), overlap)
 
     def _get_stations(self):
 

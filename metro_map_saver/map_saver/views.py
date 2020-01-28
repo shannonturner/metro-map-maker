@@ -22,6 +22,7 @@ import urllib.parse
 from taggit.models import Tag
 
 from moderate.models import ActivityLog
+from citysuggester.models import TravelSystem
 from .models import SavedMap
 from .validator import is_hex, sanitize_string, validate_metro_map, hex64
 
@@ -615,6 +616,36 @@ class AdminHomeView(TemplateView):
 
         context['maps_no_tags'] = maps_no_tags
         context['maps_tagged_need_review'] = maps_tagged_need_review
+
+        # How many travel systems do we have a publicly visible real/speculative map for?
+        travel_system_names = [ts.name for ts in TravelSystem.objects.all()]
+        travel_system_has_real_map = set()
+        maps_tagged_real = SavedMap.objects.filter(
+            tags__slug='real',
+            publicly_visible=True,
+        )
+
+        travel_system_has_speculative_map = set()
+        maps_tagged_speculative = SavedMap.objects.filter(
+            tags__slug='speculative',
+            publicly_visible=True,
+        )
+
+        # TODO: If switching to calculated suggested_city field,
+        #       will need to adjust it here too
+        for real_map in maps_tagged_real:
+            if real_map.name in travel_system_names or \
+            real_map.suggest_city(overlap=int(real_map.station_count * 0.8)):
+                travel_system_has_real_map.add(real_map.name)
+
+        for speculative_map in maps_tagged_speculative:
+            if speculative_map.name in travel_system_names or \
+            speculative_map.suggest_city(overlap=int(speculative_map.station_count * 0.4)):
+                travel_system_has_speculative_map.add(speculative_map.name)
+
+        context['travel_system_has_real_map'] = sorted(travel_system_has_real_map)
+        context['travel_system_has_speculative_map'] = sorted(travel_system_has_speculative_map)
+        context['total_travel_systems'] = TravelSystem.objects.order_by('name')
 
         return context
 
