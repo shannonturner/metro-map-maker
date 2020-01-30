@@ -139,7 +139,7 @@
       <table class="table">
       <tr>
         <td><a href="/admin/gallery/notags/"><h3>{{ maps_no_tags }}</h3></a></td>
-        <td><a href="/admin/gallery/needs-review/"><h3>{{ maps_tagged_need_review }}</h3></a></td>
+        <td><a href="/admin/gallery/needs-review/?per_page=100"><h3>{{ maps_tagged_need_review }}</h3></a></td>
       </tr>
 
       <tr>
@@ -161,7 +161,7 @@
       <table class="table">
       <tr>
         {% for tag, count in public_tags.items %}
-        <td><a href="/admin/gallery/{{ tag }}/?publicly_visible=True"><h3>{{ count }}</h3></a></td>
+        <td><a href="/admin/gallery/{{ tag }}/?publicly_visible=True&per_page=100"><h3>{{ count }}</h3></a></td>
         {% endfor %}
       </tr>
 
