@@ -134,6 +134,7 @@ class MapGalleryView(TemplateView):
         NON_FILTERABLE = (
             'page',
             'per_page',
+            'order_by',
         )
 
         tags = Tag.objects.all().order_by('id')
@@ -159,8 +160,13 @@ class MapGalleryView(TemplateView):
             filters = {k: v for k, v in request.GET.items() if k not in NON_FILTERABLE}
             if filters:
                 visible_maps = visible_maps.filter(**filters).distinct()
-                # Add per_page to filters so it persists through pagination
+            # Add per_page and order_by to filters so they persist through pagination
+            # Awkward structure but I don't care to put order_by=-id in the URL every time
+                #   when I'm not specifying the order
+            if request.GET.get('per_page'):
                 filters['per_page'] = MAPS_PER_PAGE
+            if request.GET.get('order_by'):
+                filters['order_by'] = request.GET.get('order_by')
 
         if kwargs.get('tag') == 'notags':
             visible_maps = visible_maps.filter(tags__exact=None)
@@ -173,7 +179,8 @@ class MapGalleryView(TemplateView):
         elif kwargs.get('tag') in [t.slug for t in tags]:
             visible_maps = visible_maps.filter(tags__slug=kwargs.get('tag'))
 
-        visible_maps = visible_maps.prefetch_related('tags').order_by('-id')
+        order_by = request.GET.get('order_by', '-id')
+        visible_maps = visible_maps.prefetch_related('tags').order_by(order_by)
 
         paginator = Paginator(visible_maps, MAPS_PER_PAGE)
 

@@ -161,7 +161,7 @@
       <table class="table">
       <tr>
         {% for tag, count in public_tags.items %}
-        <td><a href="/admin/gallery/{{ tag }}/?publicly_visible=True&per_page=100"><h3>{{ count }}</h3></a></td>
+        <td><a href="/admin/gallery/{{ tag }}/?publicly_visible=True&per_page=100&order_by=name"><h3>{{ count }}</h3></a></td>
         {% endfor %}
       </tr>
 
