@@ -647,6 +647,14 @@ class AdminHomeView(TemplateView):
         context['travel_system_has_speculative_map'] = sorted(travel_system_has_speculative_map)
         context['total_travel_systems'] = TravelSystem.objects.order_by('name')
 
+        # Maps currently in the public gallery
+        public_tags = ['real', 'speculative', 'unknown', 'favorite']
+        public_tags = {tag: {} for tag in public_tags}
+        context['public_tags'] = {}
+        public = SavedMap.objects.filter(publicly_visible=True)
+        for tag in public_tags:
+            context['public_tags'][tag] = public.filter(tags__slug=tag).count()
+
         return context
 
 
