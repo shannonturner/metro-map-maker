@@ -661,6 +661,7 @@ class AdminHomeView(TemplateView):
         public = SavedMap.objects.filter(publicly_visible=True)
         for tag in public_tags:
             context['public_tags'][tag] = public.filter(tags__slug=tag).count()
+        context['public_total'] = public.count()
 
         return context
 
