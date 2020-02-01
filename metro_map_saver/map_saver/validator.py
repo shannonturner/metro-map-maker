@@ -60,7 +60,7 @@ def convert_nonascii_to_ascii(input_str):
         Used by TravelSystem.models, but available here because it's a general-purpose utility function.
     """
 
-    nfkd_form = unicodedata.normalize('NFKD', unicode(input_str))
+    nfkd_form = unicodedata.normalize('NFKD', str(input_str))
     return u"".join([c for c in nfkd_form if not unicodedata.combining(c)])
 
 def html_dom_id_safe(string):
