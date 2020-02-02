@@ -26,6 +26,11 @@ class TravelSystem(models.Model):
     name = models.CharField(max_length=255, unique=True)
     stations = models.TextField() # all stations stored together, one per line
 
+    def _station_count(self):
+        """ Return a count of how many stations there are in this system
+        """
+        return len(self.stations.split('\n'))
+
     def save(self, *args, **kwargs):
 
         """ Formats stations in the same manner as they are saved through the validator 
@@ -43,5 +48,5 @@ class TravelSystem(models.Model):
 
     def __str__(self):
         return '{0} ({1} stations)'.format(
-            self.name, len(self.stations.split('\n'))
+            self.name, self._station_count
         )

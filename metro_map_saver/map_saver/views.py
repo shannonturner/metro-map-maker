@@ -255,6 +255,9 @@ class MapSimilarView(TemplateView):
         except ObjectDoesNotExist:
             similar_maps = []
             similarity_scores = {}
+        except MultipleObjectsReturned:
+            # This should never happen, but it happened once?
+            this_map = SavedMap.objects.prefetch_related('tags').filter(urlhash=kwargs.get('urlhash')).order_by('id')[0]
         else:
 
             this_map_stations_lower_bound = this_map.station_count * (1 - STATION_THRESHOLD)
@@ -638,16 +641,19 @@ class AdminHomeView(TemplateView):
             publicly_visible=True,
         )
 
-        # TODO: If switching to calculated suggested_city field,
-        #       will need to adjust it here too
+        # Note: even though I have a stored field for suggested_city,
+        # it's still valuable to check the calculated value below
+        # since I'm overriding the overlap parameter
         for real_map in maps_tagged_real:
             if real_map.name in travel_system_names or \
-            real_map.suggest_city(overlap=int(real_map.station_count * 0.8)):
+            real_map.suggested_city in travel_system_names or \
+            real_map._suggest_city(overlap=int(real_map.station_count * 0.8)):
                 travel_system_has_real_map.add(real_map.name)
 
         for speculative_map in maps_tagged_speculative:
             if speculative_map.name in travel_system_names or \
-            speculative_map.suggest_city(overlap=int(speculative_map.station_count * 0.4)):
+            speculative_map.suggested_city in travel_system_names or \
+            speculative_map._suggest_city(overlap=int(speculative_map.station_count * 0.4)):
                 travel_system_has_speculative_map.add(speculative_map.name)
 
         context['travel_system_has_real_map'] = sorted(travel_system_has_real_map)
@@ -662,6 +668,11 @@ class AdminHomeView(TemplateView):
         for tag in public_tags:
             context['public_tags'][tag] = public.filter(tags__slug=tag).count()
         context['public_total'] = public.count()
+
+        context['most_popular_cities'] = SavedMap.objects.exclude(suggested_city='') \
+            .values_list('suggested_city') \
+            .annotate(city_count=Count('suggested_city')) \
+            .order_by('-city_count')[:50]
 
         return context
 

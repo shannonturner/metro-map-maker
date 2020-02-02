@@ -1,5 +1,6 @@
 from django import template
 from map_saver.models import SavedMap
+from citysuggester.models import TravelSystem
 
 register = template.Library()
 
@@ -34,3 +35,11 @@ def existing_maps_search_by_name_tag(name, tag):
             'name__contains': name,
             'tags__slug': tag,
         }).count()
+
+@register.simple_tag(name='stations_in_travelsystem')
+def stations_in_travelsystem(name):
+
+    """ Use to get a count of how many stations
+        there are in a given TravelSystem
+    """
+    return TravelSystem.objects.get(name__startswith=name)._station_count()

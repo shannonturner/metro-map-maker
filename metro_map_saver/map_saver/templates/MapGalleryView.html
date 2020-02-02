@@ -129,9 +129,9 @@
         <li id="map-control-{{ map.id }}" class="nav-item map-control {% if not forloop.first %}start-hidden{% endif %}"><a class="nav-link hidden" href="#map-container-{{ map.id }}"><!-- a link with anchor is needed but I don't need it to be visible {{ map.id }}--></a>
         
           <h4 class="map-link">{% if is_staff %}<a href="/admin/map_saver/savedmap/{{ map.id }}/change/" target="_blank">#{{ map.id }}</a>{% else %}#{{ map.id }}{% endif %} (<a href="/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>) <input type="text" name="map_name" class="map-name" id="map-name-{{ map.id }}" value="{{ map.name }}" placeholder="(unnamed)">
-            {% with map.suggest_city as suggested_city %}
+            {% with map.suggested_city as suggested_city %}
               {% if suggested_city %}
-                Suggested: {{ suggested_city.0.0 }} (overlap: {{ suggested_city.0.1 }} / this: {{ map.station_count }})
+                Suggested: {{ suggested_city }} ({% stations_in_travelsystem suggested_city %}) (overlap: {{ map.suggested_city_overlap }} / this: {{ map.station_count }})
               {% else %}
                 {{ map.station_count }} stations
               {% endif %}
@@ -168,9 +168,9 @@
                           {% endif %}
                         {% endwith %} {# existing_maps #}
                       {% elif not map.name and tag.slug == 'real' and suggested_city %}
-                          ({% find_existing_maps suggested_city.0.0 "real" %})
+                          ({% find_existing_maps suggested_city "real" %})
                       {% elif not map.name and tag.slug == 'speculative' and suggested_city %}
-                          ({% find_existing_maps suggested_city.0.0 "speculative" %})
+                          ({% find_existing_maps suggested_city "speculative" %})
                       {% endif %} {# if superuser and map.name #}
                     </button>
 

@@ -38,9 +38,14 @@ class SavedMap(models.Model):
     # but subsequent visitors to that map will not be able to rename it
     naming_token = models.CharField(max_length=64, blank=True, default='')
 
+    # Store the suggested city (if any) so we can refer to it
+    # without needing to calculate it every time
+    suggested_city = models.CharField(max_length=255, blank=True, default='')
+    suggested_city_overlap = models.IntegerField(default=-1)
+
     tags = TaggableManager(blank=True)
 
-    def suggest_city(self, overlap=None):
+    def _suggest_city(self, overlap=None):
 
         """ Override overlap to specify the number of stations
             that must overlap to be considered a match;
@@ -99,6 +104,10 @@ class SavedMap(models.Model):
             self.publicly_visible = True
         else:
             self.publicly_visible = False
+        suggested_city = self._suggest_city()
+        if suggested_city:
+            self.suggested_city = suggested_city[0][0].split("(")[0].strip()
+            self.suggested_city_overlap = suggested_city[0][1]
         super().save(*args, **kwargs)
 
     class Meta:

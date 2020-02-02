@@ -1280,6 +1280,10 @@ class FrontendFunctionalityTestCase(object):
             tool_line_options_length
         )
 
+    # TODO:
+    # Undo functionality (include confirmation that it leaves the map in a valid, save-able state)
+    # Assisted straight line drawing (including that you can disable it)
+
 class ChromeFrontendFunctionalityTestCase(FrontendFunctionalityTestCase, TestCase):
 
     """ Inherit all tests, use Chrome to perform them

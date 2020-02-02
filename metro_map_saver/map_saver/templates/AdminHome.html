@@ -183,8 +183,6 @@
       <h3>Stats</h3>
     </div>
     <div class="col-sm-9">
-      </a>
-      </a>
       <table class="table">
       <tr>
         <td><h3>{{ travel_system_has_real_map|length }} of {{ total_travel_systems.count }} <span class="tiny">{% widthratio travel_system_has_real_map|length total_travel_systems.count 100 %}%</span></h3></td>
@@ -241,12 +239,22 @@
         </td>
 
       </tr>
-
-      </tr>
-    </table>
-
+      </table>
     </div>
-  </div> <!-- #quick-links -->
+  </div> <!-- #stats -->
+
+  <div id="most-popular" class="row">
+    <div class="col-sm-3">
+      <h3>Most popular cities</h3>
+    </div>
+    <div class="col-sm-9">
+      <ol>
+      {% for city in most_popular_cities %}
+        <li>{% if city.0 %}{{ city.0 }}{% else %}(no city){% endif %} ({{ city.1 }})</li>
+      {% endfor %}
+      </ol>
+    </div>
+  </div> <!-- #most-popular -->
 
 </div> <!-- div#main-container -->
 
