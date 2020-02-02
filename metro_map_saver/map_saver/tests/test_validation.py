@@ -7,7 +7,7 @@ from map_saver.validator import validate_metro_map
 from django.test import TestCase, Client
 from django.core.exceptions import ObjectDoesNotExist
 
-class ValidateMapTestCase(TestCase):
+class ValidateMap(TestCase):
 
     fixtures = ['backups/2018/mmm-backup-20181110.json']
 
@@ -24,7 +24,7 @@ class ValidateMapTestCase(TestCase):
             '/save/',
             {'metroMap': metro_map}
         )
-        return str(response.content)
+        return response.content.decode('utf-8')
 
     def test_validator(self):
 
@@ -131,6 +131,20 @@ class ValidateMapTestCase(TestCase):
             "Map does not have any rail lines defined.",
             self._post_metromap(metro_map)
         )
+
+    def test_graceful_failure_map_no_lines(self):
+
+        """ Approve a map that has no rail lines in the global dictionary
+            but does have these lines in the map data itself
+        """
+
+        metro_map = '{"40":{"54":{"line":"0896d7","station":{"name":"Tunnford","lines":["0896d7"]}},"55":{"line":"0896d7"},"56":{"line":"0896d7"},"57":{"line":"0896d7"},"58":{"line":"0896d7","station":{"name":"Slarnton","lines":["0896d7"]}},"59":{"line":"0896d7"},"60":{"line":"0896d7"},"61":{"line":"0896d7"},"62":{"line":"0896d7"},"63":{"line":"0896d7"},"64":{"line":"0896d7","station":{"name":"Rondington","lines":["0896d7"]}},"65":{"line":"0896d7"},"66":{"line":"0896d7"},"67":{"line":"0896d7"},"68":{"line":"0896d7"},"69":{"line":"0896d7","station":{"name":"Tardston","lines":["0896d7"]}},"70":{"line":"0896d7"},"71":{"line":"0896d7","station":{"name":"Tardston_Woods","lines":["0896d7"]}}},"global":{"lines":{}}}'
+        validate_metro_map(metro_map)
+
+        response = self._post_metromap(metro_map)
+        urlhash, naming_token = response.split(',')
+        self.assertEqual(len(urlhash.strip()), 8)
+        self.assertEqual(len(naming_token.strip()), 64)
 
     def test_invalid_map_lines_not_dict(self):
 

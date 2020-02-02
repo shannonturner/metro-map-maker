@@ -91,6 +91,7 @@ def validate_metro_map(metro_map):
 
     max_map_size = 240
     validated_metro_map = {}
+    valid_xy = [str(x) for x in range(max_map_size)]
 
     # The map is passed through as a string, which needs to be converted to a dictionary first
     metro_map = json.loads(metro_map)
@@ -101,7 +102,28 @@ def validate_metro_map(metro_map):
 
     assert type(metro_map) == dict, "[VALIDATIONFAILED] 01 metro_map IS NOT DICT: Bad map object, needs to be an object."
     assert metro_map.get('global'), "[VALIDATIONFAILED] 02 metro_map DOES NOT HAVE GLOBAL: Bad map object, missing global."
-    assert metro_map['global'].get('lines'), "[VALIDATIONFAILED] 03 metro_map DOES NOT HAVE LINES: Map does not have any rail lines defined."
+    try:
+        assert metro_map['global'].get('lines'), "[VALIDATIONFAILED] 03 metro_map DOES NOT HAVE LINES: Map does not have any rail lines defined."
+    except AssertionError:
+        # Gracefully fail by looping through the coordinates;
+        # collecting any lines, and adding them to the globals list.
+        # The displayName won't be pretty,
+        # and the map could fail to validate for other reasons,
+        # but at least this check will pass if there are lines in the mapdata itself
+        inferred_lines = {}
+        for x in metro_map.keys():
+            if x == 'global' or x not in valid_xy:
+                continue
+            for y in metro_map[x].keys():
+                if y not in valid_xy:
+                    continue
+                line = metro_map[x][y].get('line')
+                if line:
+                    inferred_lines[line] = {'displayName': line}
+        if inferred_lines:
+            metro_map['global']['lines'] = inferred_lines
+        else:
+            raise
     assert type(metro_map['global']['lines']) == dict, "[VALIDATIONFAILED] 04 metro_map LINES IS NOT DICT: Map lines must be stored as an object."
     assert len(metro_map['global']['lines']) <= 100, "[VALIDATIONFAILED] 04B metro_map HAS TOO MANY LINES: Map has too many lines (limit is 100); remove unused lines."
 
@@ -113,7 +135,6 @@ def validate_metro_map(metro_map):
         }
     }
 
-    valid_xy = [str(x) for x in range(max_map_size)]
     valid_lines = []
 
     for global_line in metro_map['global']['lines'].keys():
