@@ -675,6 +675,7 @@ class AdminHomeView(TemplateView):
             .order_by('-city_count')[:10]
 
         context['most_popular_cities_by_name'] = SavedMap.objects.exclude(name='') \
+            .filter(publicly_visible=True) \
             .values_list('name') \
             .annotate(city_count=Count('name')) \
             .order_by('-city_count')[:10]
