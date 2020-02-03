@@ -15,6 +15,7 @@ var temporaryStation = {};
 var pngUrl = false;
 var mapHistory = []; // A list of the last several map objects
 var maxUndoHistory = 25;
+var currentlyClickingAndDragging = false;
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -355,6 +356,15 @@ function bindGridSquareEvents(event) {
         return // Not a straight line, end early!
       }
     }
+    currentlyClickingAndDragging = true
+  } else {
+    if (currentlyClickingAndDragging) {
+      // Returning here will prevent the line from being painted outside of the guide
+      //  upon mouseup after clicking + dragging,
+      // but I also need to make sure we are currently clicking and dragging or
+      // it would also prevent drawing a single dot
+      return
+    }
   }
 
   if (activeTool == 'line') {
@@ -424,6 +434,14 @@ function bindGridSquareMousedown(event) {
       } // for y
     } // for x
   } // if straight line assist is checked
+
+  if (mouseIsDown && dragX) {
+    // Already clicking and dragging
+  } else {
+    mouseIsDown = true
+    currentlyClickingAndDragging = false
+  }
+
 } // function bindGridSquareMousedown()
 
 function drawHoverIndicator(x, y, fillColor) {
@@ -1312,11 +1330,6 @@ $(document).ready(function() {
 
   // Bind to the mousedown and mouseup events so we can implement dragging easily
   mouseIsDown = false;
-  $(document).mousedown(function() {
-      mouseIsDown = true;
-  }).mouseup(function() {
-      mouseIsDown = false;
-  });
 
   autoLoad();
 
