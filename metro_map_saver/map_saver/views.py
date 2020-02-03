@@ -672,7 +672,12 @@ class AdminHomeView(TemplateView):
         context['most_popular_cities'] = SavedMap.objects.exclude(suggested_city='') \
             .values_list('suggested_city') \
             .annotate(city_count=Count('suggested_city')) \
-            .order_by('-city_count')[:50]
+            .order_by('-city_count')[:10]
+
+        context['most_popular_cities_by_name'] = SavedMap.objects.exclude(name='') \
+            .values_list('name') \
+            .annotate(city_count=Count('name')) \
+            .order_by('-city_count')[:10]
 
         return context
 

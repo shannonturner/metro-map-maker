@@ -53,6 +53,10 @@
         color: #3a3;
       }
 
+      ol.most-popular {
+        padding-left: 15px;
+      }
+
     </style>
 
   </head>
@@ -248,11 +252,28 @@
       <h3>Most popular cities</h3>
     </div>
     <div class="col-sm-9">
-      <ol>
-      {% for city in most_popular_cities %}
-        <li>{% if city.0 %}{{ city.0 }}{% else %}(no city){% endif %} ({{ city.1 }})</li>
-      {% endfor %}
-      </ol>
+      <table class="table">
+        <tr>
+          <th scope="col">By suggested city</th>
+          <th scope="col">By name</th>
+        </tr>
+        <tr>
+          <td>
+            <ol class="most-popular">
+            {% for city in most_popular_cities %}
+              <li>{{ city.0 }} ({{ city.1 }})</li>
+            {% endfor %}
+            </ol>
+          </td>
+          <td>
+            <ol class="most-popular">
+            {% for city in most_popular_cities_by_name %}
+              <li>{{ city.0 }} ({{ city.1 }})
+            {% endfor %}
+            </ol>
+          </td>
+        </tr>
+      </table>
     </div>
   </div> <!-- #most-popular -->
 
