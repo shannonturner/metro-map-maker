@@ -48,5 +48,5 @@ class TravelSystem(models.Model):
 
     def __str__(self):
         return '{0} ({1} stations)'.format(
-            self.name, self._station_count
+            self.name, self._station_count()
         )
