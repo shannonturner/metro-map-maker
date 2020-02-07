@@ -189,8 +189,8 @@
     <div class="col-sm-9">
       <table class="table">
       <tr>
-        <td><h3>{{ travel_system_has_real_map|length }} of {{ total_travel_systems.count }} <span class="tiny">{% widthratio travel_system_has_real_map|length total_travel_systems.count 100 %}%</span></h3></td>
-        <td><h3>{{ travel_system_has_speculative_map|length }} of {{ total_travel_systems.count }} <span class="tiny">{% widthratio travel_system_has_speculative_map|length total_travel_systems.count 100 %}%</span></h3></td>
+        <td><h3>{{ travel_system_has_real_map|length }} of {{ total_travel_systems }} <span class="tiny">{% widthratio travel_system_has_real_map|length total_travel_systems 100 %}%</span></h3></td>
+        <td><h3>{{ travel_system_has_speculative_map|length }} of {{ total_travel_systems }} <span class="tiny">{% widthratio travel_system_has_speculative_map|length total_travel_systems 100 %}%</span></h3></td>
       </tr>
 
       <tr id="toggle-target-cities">
@@ -211,10 +211,8 @@
           </div>
           <div class="col-sm-4">
             <ul>
-            {% for travel_system in total_travel_systems %}
-              {% if travel_system.name not in travel_system_has_real_map %}
-              <li class="red">{{ travel_system.name }}</li>
-              {% endif %}
+            {% for travel_system in travel_system_missing_real_map %}
+              <li class="red">{{ travel_system }}</li>
             {% endfor %}
             </ul>
           </div>
@@ -232,10 +230,8 @@
           </div>
           <div class="col-sm-4">
             <ul>
-              {% for travel_system in total_travel_systems %}
-                {% if travel_system.name not in travel_system_has_speculative_map %}
-                <li class="red">{{ travel_system.name }}</li>
-                {% endif %}
+              {% for travel_system in travel_system_missing_speculative_map %}
+                <li class="red">{{ travel_system }}</li>
               {% endfor %}
             </ul>
           </div>

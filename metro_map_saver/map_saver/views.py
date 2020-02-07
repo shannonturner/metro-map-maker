@@ -656,9 +656,17 @@ class AdminHomeView(TemplateView):
             speculative_map._suggest_city(overlap=int(speculative_map.station_count * 0.4)):
                 travel_system_has_speculative_map.add(speculative_map.name)
 
+        travel_system_names = set([ts.split(',')[0] for ts in travel_system_names])
+
         context['travel_system_has_real_map'] = sorted(travel_system_has_real_map)
+        context['travel_system_missing_real_map'] = sorted(
+            travel_system_names - travel_system_has_real_map
+        )
         context['travel_system_has_speculative_map'] = sorted(travel_system_has_speculative_map)
-        context['total_travel_systems'] = TravelSystem.objects.order_by('name')
+        context['travel_system_missing_speculative_map'] = sorted(
+            travel_system_names - travel_system_has_speculative_map
+        )
+        context['total_travel_systems'] = TravelSystem.objects.count()
 
         # Maps currently in the public gallery
         public_tags = ['real', 'speculative', 'unknown', 'favorite']
