@@ -81,15 +81,13 @@ class PublicGalleryView(TemplateView):
         tags = [
             'favorite',
             'real',
-            'speculative',
-            'unknown',
+            # As long as we're fetching these ajaxy, no sense in loading them here too
+            # 'speculative',
+            # 'unknown',
         ]
 
-        thumbnails = SavedMap.objects \
-            .filter(gallery_visible=True) \
-            .exclude(thumbnail__exact='') \
-            .exclude(name__exact='') \
-            .exclude(tags__slug='reviewed')
+        thumbnails = SavedMap.objects.filter(publicly_visible=True) \
+            .values('thumbnail', 'name', 'urlhash')
 
         context = {tag:thumbnails.filter(tags__slug=tag).order_by('name') for tag in tags}
         context['favorite'] = context['favorite'].order_by('?')[:8]
