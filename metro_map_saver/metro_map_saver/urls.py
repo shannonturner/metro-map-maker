@@ -18,13 +18,14 @@ from django.urls import include, path, re_path
 from django.contrib import admin
 from django.conf import settings
 from django.contrib.auth import views as auth_views
+from django.views.decorators.cache import cache_page, never_cache
 
 import map_saver.views
 import moderate.views
 
 urlpatterns = [
-    # Main page
-    path('', map_saver.views.HomeView.as_view(), name='home'),
+    # Main page; only caches for 15 minutes so you don't have to wait a full day for static asset updates
+    path('', cache_page(60 * 15)(map_saver.views.HomeView.as_view()), name='home'),
 
     # Public Gallery
     path('gallery/', map_saver.views.PublicGalleryView.as_view(), name='public_gallery'),
@@ -39,13 +40,13 @@ urlpatterns = [
     path('accounts/login/', auth_views.LoginView.as_view()),
 
     # Admin HQ
-    path('admin/home/', map_saver.views.AdminHomeView.as_view(), name='admin_home'),
+    path('admin/home/', never_cache(map_saver.views.AdminHomeView.as_view()), name='admin_home'),
 
     # Admin Gallery
-    re_path(r'admin/gallery/(?P<tag>[\w\-\_^\d]+)?/?$', map_saver.views.MapGalleryView.as_view(), name='admin_gallery'),
+    re_path(r'admin/gallery/(?P<tag>[\w\-\_^\d]+)?/?$', never_cache(map_saver.views.MapGalleryView.as_view()), name='admin_gallery'),
 
     # Admin Gallery: Admin actions
-    path('admin/action/', map_saver.views.MapAdminActionView.as_view(), name='admin_action'),
+    path('admin/action/', never_cache(map_saver.views.MapAdminActionView.as_view()), name='admin_action'),
 
     # Admin Gallery: Similar
     path('admin/similar/<slug:urlhash>', map_saver.views.MapSimilarView.as_view(), name='similar'),
@@ -60,8 +61,8 @@ urlpatterns = [
     path('admin/bydate/', map_saver.views.MapsByDateView.as_view(), name='by_date'),
 
     # Admin: Activity Log
-    re_path(r'admin/activity/(?P<map>[\w\d\-\_]{8})/?$', moderate.views.ActivityLogList.as_view(), name='activity_map'),
-    re_path(r'admin/activity/(?P<user_id>\d+)?/?$', moderate.views.ActivityLogList.as_view(), name='activity'),
+    re_path(r'admin/activity/(?P<map>[\w\d\-\_]{8})/?$', never_cache(moderate.views.ActivityLogList.as_view()), name='activity_map'),
+    re_path(r'admin/activity/(?P<user_id>\d+)?/?$', never_cache(moderate.views.ActivityLogList.as_view()), name='activity'),
 
     # Thumbnails
     path('admin/thumbnail/<slug:tag>/', map_saver.views.ThumbnailGalleryView.as_view(), name='thumbnail_tag'),

@@ -1,6 +1,7 @@
 django>=2.1.11
 django-debug-toolbar==1.11
 django-taggit==0.24.0
+python-memcached==1.59
 psycopg2==2.7.4
 pytz==2017.2
 sqlparse==0.2.4
