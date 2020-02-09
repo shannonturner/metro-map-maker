@@ -668,7 +668,7 @@ class FrontendFunctionalityTestCase(object):
         image_download_link = self.driver.find_element_by_id('metro-map-image-download-link')
         self.assertFalse(image_download_link.get_attribute('href'))
 
-        download_as_image_button = self.driver.find_element_by_id('tool-export-canvas')
+        download_as_image_button = self.driver.find_element_by_id('tool-download-image')
         download_as_image_button.click()
 
         # Confirm that the download link now has an href
