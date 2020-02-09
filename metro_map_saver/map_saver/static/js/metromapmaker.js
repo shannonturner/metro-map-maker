@@ -1327,6 +1327,7 @@ $(document).ready(function() {
   document.getElementById('canvas-container').addEventListener('mousedown', bindGridSquareMousedown, false);
   document.getElementById('canvas-container').addEventListener('mousemove', throttle(bindGridSquareMouseover, 5), false);
   document.getElementById('canvas-container').addEventListener('mouseup', bindGridSquareMouseup, false);
+  window.addEventListener('resize', unfreezeMapControls);
 
   // Bind to the mousedown and mouseup events so we can implement dragging easily
   mouseIsDown = false;
@@ -2014,6 +2015,7 @@ function replaceColors(color1, color2) {
 
 // Steer mobile users toward the gallery, for a better experience
 $('#try-on-mobile').click(function() {
+  $(this).removeClass('visible-xs')
   $('#try-on-mobile').hide();
   $('#favorite-maps').hide();
   $('#toolbox-mobile-hint').removeClass('hidden-xs');
@@ -2031,3 +2033,13 @@ $('#try-on-mobile').click(function() {
 
   drawCanvas();
 });
+
+function unfreezeMapControls() {
+  // If #tool-export-canvas (screen size: xs) was clicked,
+  // then the screen resized to a larger breakpoint,
+  // the map controls won't be able to be unlocked.
+  // Unlock them automatically, and return the map to its editable state.
+  if (window.innerWidth > 768 && $('#tool-line').prop('disabled')) {
+    $('#tool-export-canvas').click()
+  }
+}
