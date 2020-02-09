@@ -8,6 +8,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.gzip import gzip_page
+from django.views.decorators.cache import cache_page, never_cache
 
 import datetime
 import difflib
@@ -490,6 +491,7 @@ class MapDataView(TemplateView):
         Post: Save your map and generate a hash URL to facilitate sharing
     """
 
+    @method_decorator(cache_page(60 * 60 * 24 * 30))
     @method_decorator(gzip_page)
     def get(self, request, **kwargs):
         urlhash = kwargs.get('urlhash')
@@ -502,11 +504,14 @@ class MapDataView(TemplateView):
             context['error'] = '[ERROR] The requested map does not exist ({0})'.format(urlhash)
         except MultipleObjectsReturned:
             context['error'] = '[ERROR] Multiple objects returned ({0}). This should never happen.'.format(urlhash)
+            saved_map = SavedMap.objects.filter(urlhash=urlhash).first()
+            context['saved_map'] = saved_map.mapdata
         else:
             context['saved_map'] = saved_map.mapdata
 
         return render(request, 'MapDataView.html', context)
 
+    @method_decorator(never_cache)
     def post(self, request, **kwargs):
         mapdata = request.POST.get('metroMap')
 
