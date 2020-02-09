@@ -1280,9 +1280,122 @@ class FrontendFunctionalityTestCase(object):
             tool_line_options_length
         )
 
-    # TODO:
-    # Undo functionality (include confirmation that it leaves the map in a valid, save-able state)
-    # Assisted straight line drawing (including that you can disable it)
+    # @unittest.skip(reason='DEBUG')
+    def test_undo(self):
+
+        """ Confirm that the undo function works
+            and leaves the map in a valid, save-able state
+        """
+
+        self.helper_erase_blank_to_save()
+
+        rail_line_menu_button = self.driver.find_element_by_id('tool-line')
+        rail_line_menu_button.click()
+
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
+        action = webdriver.common.action_chains.ActionChains(self.driver)
+
+        # Click and drag
+        rail_line_button = self.driver.find_element_by_id('rail-line-0896d7')
+        rail_line_button.click()
+        action = webdriver.common.action_chains.ActionChains(self.driver)
+        action.move_to_element_with_offset(canvas, 120, 100) # 20, 17
+        action.click()
+        action.click_and_hold()
+        action.move_by_offset(0, 5)
+        action.move_by_offset(0, 5)
+        action.move_by_offset(0, 5)
+        action.move_by_offset(0, 5)
+        action.release()
+        action.perform()
+
+        metro_map = self.driver.execute_script("return activeMap;")
+        for col in range(17, 21): # 17, 18, 19, 20
+            self.assertEqual(
+                metro_map['20'][str(col)],
+                {'line': '0896d7'}
+            )
+
+        # Undo will shrink the line
+        for undo in range(3):
+            last_metro_map = dict(metro_map)
+            self.driver.execute_script("undo();")
+            metro_map = self.driver.execute_script("return activeMap;")
+            self.assertNotEqual(last_metro_map, metro_map)
+
+        # Confirm the map is in a valid, saveable state
+        save_map_button = self.driver.find_element_by_id('tool-save-map')
+        save_map_button.click()
+        WebDriverWait(self.driver, 2).until(
+            expected_conditions.presence_of_element_located((By.ID, "shareable-map-link"))
+        )
+
+    # @unittest.skip(reason='DEBUG')
+    def test_draw_straight_lines(self):
+
+        """ Confirm that assisted-straight-line drawing
+            prevents stray marks, but can also be disabled
+        """
+
+        self.helper_erase_blank_to_save()
+
+        self.driver.execute_script("document.getElementById('straight-line-assist').checked = true;")
+
+        rail_line_menu_button = self.driver.find_element_by_id('tool-line')
+        rail_line_menu_button.click()
+
+        canvas = self.driver.find_element_by_id('metro-map-canvas')
+        action = webdriver.common.action_chains.ActionChains(self.driver)
+
+        # Click and drag
+        rail_line_button = self.driver.find_element_by_id('rail-line-0896d7')
+        rail_line_button.click()
+        action = webdriver.common.action_chains.ActionChains(self.driver)
+        action.move_to_element_with_offset(canvas, 120, 100) # 20, 17
+        action.click()
+        action.click_and_hold()
+        action.move_by_offset(0, 5)
+        action.move_by_offset(0, 5)
+        action.move_by_offset(0, 5)
+        action.move_by_offset(0, 5)
+        action.move_by_offset(5, 5) # Stray
+        action.release()
+        action.perform()
+
+        metro_map = self.driver.execute_script("return activeMap;")
+        for col in range(17, 21): # 17, 18, 19, 20
+            self.assertEqual(
+                metro_map['20'][str(col)],
+                {'line': '0896d7'}
+            )
+        # Confirm the stray line is not marked
+        self.assertFalse(metro_map['21'].get('21', {}))
+
+        # Disable straight line drawing
+        # First, change the color (helps debugging)
+        rail_line_button = self.driver.find_element_by_id('rail-line-bd1038')
+        rail_line_button.click()
+        self.driver.execute_script("document.getElementById('straight-line-assist').checked = false;")
+        action = webdriver.common.action_chains.ActionChains(self.driver)
+        action.move_to_element_with_offset(canvas, 120, 100) # 20, 17
+        action.click()
+        action.click_and_hold()
+        action.move_by_offset(0, 5)
+        action.move_by_offset(5, 5)
+        action.move_by_offset(5, 5)
+        action.move_by_offset(0, 5)
+        action.move_by_offset(5, 5)
+        action.release()
+        action.perform()
+
+        # Confirm all the "stray" lines are marked
+        metro_map = self.driver.execute_script("return activeMap;")
+        self.assertEqual(metro_map['20']['17'], {'line': 'bd1038'})
+        self.assertEqual(metro_map['20']['18'], {'line': 'bd1038'})
+        self.assertEqual(metro_map['21']['18'], {'line': 'bd1038'})
+        self.assertEqual(metro_map['22']['19'], {'line': 'bd1038'})
+        self.assertEqual(metro_map['22']['20'], {'line': 'bd1038'})
+        self.assertEqual(metro_map['23']['21'], {'line': 'bd1038'})
 
 class ChromeFrontendFunctionalityTestCase(FrontendFunctionalityTestCase, TestCase):
 
