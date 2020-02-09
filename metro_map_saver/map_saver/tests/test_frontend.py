@@ -1397,6 +1397,67 @@ class FrontendFunctionalityTestCase(object):
         self.assertEqual(metro_map['22']['20'], {'line': 'bd1038'})
         self.assertEqual(metro_map['23']['21'], {'line': 'bd1038'})
 
+    def test_mobile_edit_map_anyway(self):
+
+        """ Confirm that on mobile, the map controls appear hidden initially,
+            but can be revealed, hiding the 'Edit this map on mobile anyway' button
+        """
+
+        self.driver.set_window_size(600, 600)
+
+        edit_on_mobile_button = self.driver.find_element_by_id('try-on-mobile')
+
+        # Controls start off hidden
+        controls = self.driver.find_element_by_id('controls')
+        self.assertEqual(
+            controls.value_of_css_property('display'),
+            'none',
+        )
+
+        # After clicking, the controls are shown and the button disappears
+        edit_on_mobile_button.click()
+        self.assertEqual(
+            edit_on_mobile_button.value_of_css_property('display'),
+            'none',
+        )
+        self.assertEqual(
+            controls.value_of_css_property('display'),
+            'block',
+        )
+
+    def test_mobile_resize_reenables_disabled_buttons(self):
+
+        """ Confirm that starting on mobile,
+            then clicking the (mobile) download as image button (#tool-export-canvas)
+            (which works differently on mobile and disables the other buttons)
+            then resizing the window, will re-enable the disabled buttons
+        """
+
+        self.driver.set_window_size(600, 600)
+        edit_on_mobile_button = self.driver.find_element_by_id('try-on-mobile')
+        # After clicking, the controls are shown and the button disappears
+        edit_on_mobile_button.click()
+        self.assertEqual(
+            edit_on_mobile_button.value_of_css_property('display'),
+            'none',
+        )
+        # Click the download as image button (mobile)
+        # and confirm the rail line button is disabled
+        download_as_image_button = self.driver.find_element_by_id('tool-export-canvas')
+        download_as_image_button.click()
+        rail_line_button = self.driver.find_element_by_id('tool-line')
+        WebDriverWait(self.driver, 2).until(
+            self.expected_condition_element_has_attr(rail_line_button, 'disabled')
+        )
+        rail_line_button_is_disabled = self.driver.execute_script("return document.getElementById('tool-line').disabled;")
+        self.assertTrue(rail_line_button_is_disabled)
+
+        # Resizing the window above the mobile breakpoint will re-enable the buttons
+        self.driver.set_window_size(769, 600)
+        rail_line_button_is_disabled = self.driver.execute_script("return document.getElementById('tool-line').disabled;")
+        self.assertFalse(rail_line_button_is_disabled)
+
+
 class ChromeFrontendFunctionalityTestCase(FrontendFunctionalityTestCase, TestCase):
 
     """ Inherit all tests, use Chrome to perform them
