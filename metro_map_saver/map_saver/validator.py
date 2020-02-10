@@ -43,7 +43,7 @@ def hex64(hexdigest):
     return '{0}{1}{2}{3}'.format(hex2b64(hexdigest[:3]), hex2b64(hexdigest[3:6]), hex2b64(hexdigest[6:9]), hex2b64(hexdigest[9:]))
 
 def sanitize_string(string):
-    return string.replace('<', '').replace('>', '').replace('"', '').replace("'", '&#27;').replace('&', '&amp;').replace('/', '&#x2f;').replace('\x1b', '').replace('\\', '').replace('\t', ' ').replace('\n', ' ').replace('\b', ' ')
+    return string.replace('<', '').replace('>', '').replace('"', '').replace("'", '&#x27;').replace('&', '&amp;').replace('/', '&#x2f;').replace('\x1b', '').replace('\\', '').replace('\t', ' ').replace('\n', ' ').replace('\b', ' ')
 
 def convert_nonascii_to_ascii(input_str):
 
