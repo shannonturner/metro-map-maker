@@ -1,3 +1,4 @@
+from taggit.models import Tag
 from map_saver.models import SavedMap
 
 from django.test import Client
@@ -162,6 +163,9 @@ class AdminPermissionsTestCase(TestCase):
         client.login(username='testuser1', password='1X<ISRUkw+tuK')
 
         saved_map = self.saved_map
+
+        # Need to create the tag, because it only can add a tag if that tag exists already
+        Tag.objects.create(name='real', slug='real')
 
         action = 'addtag'
 

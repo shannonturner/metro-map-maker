@@ -350,7 +350,7 @@ class CreatorNameMapView(TemplateView):
             else:
                 if this_map.naming_token and this_map.naming_token == naming_token:
                     # This is the original creator of the map; allow them to name the map.
-                    this_map.name = f'{name} ({tags})' if tags else f'{name}'
+                    this_map.name = sanitize_string(f'{name} ({tags})' if tags else f'{name}')
                     this_map.save()
                     context['saved_map'] = 'Success'
                 else:
