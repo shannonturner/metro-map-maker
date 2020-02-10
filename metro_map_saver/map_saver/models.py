@@ -40,6 +40,10 @@ class SavedMap(models.Model):
 
     # Store the suggested city (if any) so we can refer to it
     # without needing to calculate it every time
+    # Consider: making suggested_city a foreign key to TravelSystem
+    #   this would also mean that renaming a TravelSystem wouldn't
+    #   require re-saving maps with that suggested_city to prevent 500 errors in the admin
+    #   (though I don't re-name TravelSystems often)
     suggested_city = models.CharField(max_length=255, blank=True, default='')
     suggested_city_overlap = models.IntegerField(default=-1)
 
