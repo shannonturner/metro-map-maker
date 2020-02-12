@@ -2019,6 +2019,8 @@ $('#try-on-mobile').click(function() {
   $(this).removeClass('visible-xs')
   $('#try-on-mobile').hide();
   $('#favorite-maps').hide();
+  $('#mobile-compatibility-warning').removeClass('visible-xs')
+  $('#mobile-compatibility-warning').hide()
   $('#toolbox-mobile-hint').removeClass('hidden-xs');
   $('#controls').removeClass('hidden-xs');
 

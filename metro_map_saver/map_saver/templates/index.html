@@ -63,8 +63,9 @@
   <div id="mobile-header" class="visible-xs text-left row">
     <div class="col-lg-10 col-offset-1">
       <h3 class="text-center"><span class="M">M</span>etro <span class="M">M</span>ap <span class="M">M</span>aker</h3>
-      <h5>Create your own metro maps, save them, and share with friends!</h5>
+      <h5>Build the Metro map of your dreams, save, and share with friends!</h5>
       <a href="gallery/"><h4><b>Check out maps created by visitors like you!</b></h4></a>
+      {% if not saved_map %}
       <div id="favorite-maps">
         <h5>Some of my favorites include:</h5>
         <div class="text-center">
@@ -78,8 +79,8 @@
         {% endfor %}
         </div>
       </div> <!-- #favorite-maps -->
+      {% endif %}
 
-      <h5>This works best on desktop; some features may not work correctly on your mobile device.</h5>
       <h5 id="toolbox-mobile-hint" class="hidden-xs">All the tools you need are below the grid.</h5>
     </div>
   </div>
@@ -93,6 +94,7 @@
     <img id="metro-map-image" class="img-responsive start-hidden">
   </div>
 
+  <h5 id="mobile-compatibility-warning" class="visible-xs">This works best on desktop; some features may not work correctly on your mobile device.</h5>
   <button id="try-on-mobile" class="btn btn-info visible-xs">Edit this map on mobile anyway</button>
 
   <div id="controls" class="col-md-3 col-lg-2 text-left hidden-xs">
@@ -240,7 +242,7 @@
     {% if saved_map_name %}window.sessionStorage.setItem('userGivenMapName', "{{ saved_map_name }}"){% endif %}
   </script>
   {% endif %}
-  <script src='{% static "js/metromapmaker.js" %}?version=202002090907'></script>
+  <script src='{% static "js/metromapmaker.js" %}?version=20200212'></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js" integrity="sha256-ZdnRjhC/+YiBbXTHIuJdpf7u6Jh5D2wD5y0SNRWDREQ=" crossorigin="anonymous"></script>
 
   </body>
