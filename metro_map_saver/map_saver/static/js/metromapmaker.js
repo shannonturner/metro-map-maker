@@ -1102,8 +1102,7 @@ function loadMapFromObject(metroMapObject, update) {
       $('[data-toggle="tooltip"]').tooltip({"container": "body"});
       bindRailLineEvents();
       drawCanvas(metroMapObject);
-      var savedMapHash = getURLParameter('map');
-      if ($('.visible-xs').is(':visible') && savedMapHash) {
+      if ($('.visible-xs').is(':visible')) {
         $('#canvas-container').removeClass('hidden-xs');
         $('#tool-export-canvas').click();
         $('#try-on-mobile').attr('disabled', false);
@@ -1659,7 +1658,6 @@ $(document).ready(function() {
   }); // #tool-download-image.click()
   $('#tool-export-canvas').click(function() {
     activeTool = 'look';
-
     // On mobile, you need to tap and hold on the canvas to save the image
     drawCanvas(activeMap);
     $('#tool-station-options').hide();
@@ -2081,6 +2079,9 @@ $('#try-on-mobile').click(function() {
   $('#toolbox-mobile-hint').removeClass('hidden-xs');
   $('#controls').removeClass('hidden-xs');
 
+  $('#tool-export-canvas').click()
+  $('#tool-export-canvas').removeClass('btn-primary')
+  $('#tool-export-canvas').addClass('btn-info')
   $('#grid-canvas').show();
   $('#hover-canvas').show();
   $('#metro-map-canvas').show();
