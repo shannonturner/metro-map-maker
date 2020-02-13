@@ -110,19 +110,22 @@ function snapCanvasToGrid() {
     // Maintain a nice, even gridPixelMultiplier so the map looks uniform at every size
     // On iPhone for Safari, canvases larger than 4096x4096 would crash, so cap it
     //  (this really only affects maps at 240x240)
-    if (gridCols * preferredGridPixelMultiplier <= 4096) {
+    // Note: Now capping this at 3600x3600, which will affect maps 200x200 and above;
+    //  because I noticed some highly detailed maps failed to load on iPhone for Safari
+    //  with the same symptoms as before
+    if (gridCols * preferredGridPixelMultiplier <= 3600) {
       canvas.height = gridCols * preferredGridPixelMultiplier;
       canvasStations.height = gridCols * preferredGridPixelMultiplier;
     } else {
-      canvas.height = 4096;
-      canvasStations.height = 4096;
+      canvas.height = 3600;
+      canvasStations.height = 3600;
     }
-    if (gridRows * preferredGridPixelMultiplier <= 4096) {
+    if (gridRows * preferredGridPixelMultiplier <= 3600) {
       canvas.width = gridRows * preferredGridPixelMultiplier;
       canvasStations.width = gridRows * preferredGridPixelMultiplier;
     } else {
-      canvas.width = 4096;
-      canvasStations.width = 4096;
+      canvas.width = 3600;
+      canvasStations.width = 3600;
     }
   } // if canvas.height / gridCols != preferredGridPixelMultiplier
 
