@@ -1974,7 +1974,6 @@ function stretchMap(metroMapObject) {
 
   // Set the gridRows and gridCols
   getMapSize(newMapObject)
-  $('#tool-resize-stretch-options').hide()
   resetResizeButtons(gridCols)
 
   // Fill in the newly created in-between spaces
