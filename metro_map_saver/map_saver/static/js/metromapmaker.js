@@ -1403,7 +1403,7 @@ $(document).ready(function() {
       // Draw rail colors in order of appearance, 1-10 (0 is 10)
       var railKey = parseInt(event.which) - 49
       if (railKey == -1)
-        railKey = 10
+        railKey = 9 // which is 10th
       var possibleRailLines = $('.rail-line')
       if (possibleRailLines[railKey])
         possibleRailLines[railKey].click()
