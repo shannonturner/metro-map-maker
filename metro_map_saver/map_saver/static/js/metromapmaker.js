@@ -1529,7 +1529,6 @@ $(document).ready(function() {
   $('#tool-resize-stretch').click(function() {
     autoSave(activeMap)
     stretchMap()
-    $('#tool-resize-stretch-options').show()
   }) // #tool-resize-stretch.click()
   $('#tool-move-all').click(function() {
     if ($('#tool-move-options').is(':visible')) {
@@ -1971,6 +1970,7 @@ function stretchMap(metroMapObject) {
 
   // Set the gridRows and gridCols
   getMapSize(newMapObject)
+  $('#tool-resize-stretch-options').hide()
 
   // Fill in the newly created in-between spaces
   for (var x=1;x<gridRows;x++) {
