@@ -1357,6 +1357,12 @@ $(document).ready(function() {
   // Enable the tooltips
   $(function () {
     $('[data-toggle="tooltip"]').tooltip({"container": "body"});
+    // If on mobile, set initial tooltip direction
+    if (window.innerWidth <= 768) {
+      $('.has-tooltip').each(function() {
+        $(this).data('bs.tooltip').options.placement = 'top'
+      })
+    }
   })
 
   document.addEventListener("keydown", function(event) {
@@ -2095,5 +2101,15 @@ function unfreezeMapControls() {
   // Unlock them automatically, and return the map to its editable state.
   if (window.innerWidth > 768 && $('#tool-line').prop('disabled')) {
     $('#tool-export-canvas').click()
+  }
+  if (window.innerWidth <= 768) {
+    // Set tooltip direction
+    $('.has-tooltip').each(function() {
+      $(this).data('bs.tooltip').options.placement = 'top'
+    })
+  } else {
+    $('.has-tooltip').each(function() {
+      $(this).data('bs.tooltip').options.placement = 'left'
+    })
   }
 }
