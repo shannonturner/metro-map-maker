@@ -102,18 +102,18 @@
 
     <div id="toolbox">
 
-      <button id="tool-line" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Draw a rail line on the grid"><i class="fa fa-pencil" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> Draw Rail Line</button>
+      <button id="tool-line" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Draw a rail line on the grid (Keyboard shortcut: D)"><i class="fa fa-pencil" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> <b><u>D</u></b>raw Rail Line</button>
       <div id="tool-line-options" class="start-hidden">
-        <button id="rail-line-bd1038" class="rail-line original-rail-line">Red Line</button>
-        <button id="rail-line-df8600" class="rail-line original-rail-line">Orange Line</button>
-        <button id="rail-line-f0ce15" class="rail-line original-rail-line">Yellow Line</button>
-        <button id="rail-line-00b251" class="rail-line original-rail-line">Green Line</button>
-        <button id="rail-line-0896d7" class="rail-line original-rail-line">Blue Line</button>
-        <button id="rail-line-662c90" class="rail-line original-rail-line">Purple Line</button>
-        <button id="rail-line-a2a2a2" class="rail-line original-rail-line">Silver Line</button>
-        <button id="rail-line-000000" class="rail-line original-rail-line">Logo</button>
-        <button id="rail-line-79bde9" class="rail-line original-rail-line">Rivers</button>
-        <button id="rail-line-cfe4a7" class="rail-line original-rail-line">Parks</button>
+        <button id="rail-line-bd1038" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 1">Red Line</button>
+        <button id="rail-line-df8600" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 2">Orange Line</button>
+        <button id="rail-line-f0ce15" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 3">Yellow Line</button>
+        <button id="rail-line-00b251" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 4">Green Line</button>
+        <button id="rail-line-0896d7" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 5">Blue Line</button>
+        <button id="rail-line-662c90" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 6">Purple Line</button>
+        <button id="rail-line-a2a2a2" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 7">Silver Line</button>
+        <button id="rail-line-000000" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 8">Logo</button>
+        <button id="rail-line-79bde9" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 9">Rivers</button>
+        <button id="rail-line-cfe4a7" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 0">Parks</button>
         <button id="rail-line-new" class="btn">+ Add New Line</button>
         <div id="tool-new-line-options" class="text-left start-hidden">
           <h4 id="tool-new-line-errors" class="bg-danger"></h4>
@@ -126,7 +126,7 @@
         </div>
         <div id="straight-line-assist-options" class="mmm-help-setting">
           <input id="straight-line-assist" type="checkbox" checked="true">
-          <label for="straight-line-assist" class="mmm-help-setting">
+          <label for="straight-line-assist" class="mmm-help-setting" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: G">
             Show guide to help me draw straight lines
           </label>
         </div>
@@ -146,7 +146,7 @@
         <button id="rail-line-delete" class="btn">- Delete Unused Lines</button>
       </div>
       
-      <button id="tool-station" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Place a station on an existing rail line, or select an existing station"><i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station</button>
+      <button id="tool-station" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Place a station on an existing rail line, or select an existing station (Keyboard shortcut: S)"><i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation</button>
       <div id="tool-station-options" class="text-left start-hidden">
         <h4>Station Name</h4>
         <input id="station-coordinates-x" type="hidden">
@@ -169,7 +169,7 @@
         <h4 id="add-other-lines">Add other lines this station serves:</h4>
         <div id="station-other-lines"></div>
       </div>
-      <button id="tool-eraser" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station"><i class="fa fa-eraser" aria-hidden="true"></i> Eraser</button>
+      <button id="tool-eraser" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station (Keyboard shortcut: E)"><i class="fa fa-eraser" aria-hidden="true"></i> <b><u>E</u></b>raser</button>
       <button id="tool-download-image" class="btn btn-info has-tooltip hidden-xs" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
       <button id="tool-export-canvas" class="btn btn-info has-tooltip visible-xs" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
       <div id="export-canvas-help" class="text-left start-hidden">
@@ -179,24 +179,24 @@
       </div>
       <button id="tool-save-map" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Create a unique, shareable URL for your map"><i class="fa fa-share" aria-hidden="true"></i> Save &amp; Share map</button>
       <div id="tool-save-options" class="text-left start-hidden"></div>
-      <button id="tool-grid" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Just hides the grid but you can still edit the map; to download your map click Download as image"><i class="fa fa-table" aria-hidden="true"></i> Hide grid</button>
+      <button id="tool-grid" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Just hides the grid but you can still edit the map; to download your map click Download as image (Keyboard shortcut: H)"><i class="fa fa-table" aria-hidden="true"></i> <b><u>H</u></b>ide grid</button>
       <div id="tool-zoom-controls" class="row">
         <div class="col-xs-6" id="zoom-in-container">
-        <button id="tool-zoom-in" class="btn btn-info"><i class="fa fa-search-plus" aria-hidden="true"></i> Zoom +</button>
+        <button id="tool-zoom-in" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: +"><i class="fa fa-search-plus" aria-hidden="true"></i> Zoom +</button>
         </div>
         <div class="col-xs-6" id="zoom-out-container">
-        <button id="tool-zoom-out" class="btn btn-info"><i class="fa fa-search-minus" aria-hidden="true"></i> Zoom -</button>
+        <button id="tool-zoom-out" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: -"><i class="fa fa-search-minus" aria-hidden="true"></i> Zoom -</button>
         </div>
       </div>
       <button id="snap-controls-left" class="btn btn-info has-tooltip start-hidden" data-toggle="tooltip" data-placement="left" title="Move all controls to the left side of the screen"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Snap controls to left</button>
       <button id="snap-controls-right" class="btn btn-info has-tooltip start-hidden" data-toggle="tooltip" data-placement="left" title="Move all controls to the right side of the screen"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Snap controls to right</button>
-      <button id="tool-move-all" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Recenter your Metro map"><i class="fa fa-arrows" aria-hidden="true"></i> Move map</button>
+      <button id="tool-move-all" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Recenter your Metro map (Keyboard shortcuts: Arrow keys)"><i class="fa fa-arrows" aria-hidden="true"></i> Move map</button>
       <div id="tool-move-options" class="text-left start-hidden">
         <h5>Be careful! If you move your map out of bounds, you'll lose your work.</h5>
-        <button id="tool-move-up" class="btn btn-info"><i class="fa fa-chevron-circle-up" aria-hidden="true"></i> Move everything up</button>
-        <button id="tool-move-left" class="btn btn-info"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Move everything left</button>
-        <button id="tool-move-right" class="btn btn-info"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Move everything right</button>
-        <button id="tool-move-down" class="btn btn-info"><i class="fa fa-chevron-circle-down" aria-hidden="true"></i> Move everything down</button>
+        <button id="tool-move-up" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Up arrow"><i class="fa fa-chevron-circle-up" aria-hidden="true"></i> Move everything up</button>
+        <button id="tool-move-left" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Left arrow"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Move everything left</button>
+        <button id="tool-move-right" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Right arrow"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Move everything right</button>
+        <button id="tool-move-down" class="btn btn-info" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Down arrow"><i class="fa fa-chevron-circle-down" aria-hidden="true"></i> Move everything down</button>
       </div>
       <button id="tool-resize-all" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Resize the grid, allowing you to make larger maps"><i class="fa fa-expand" aria-hidden="true"></i> Resize grid</button>
       <div id="tool-resize-options" class="text-left start-hidden">

@@ -164,7 +164,7 @@ function bindRailLineEvents() {
     activeToolOption = $(this).css('background-color');
     $('#toolbox button').removeClass('btn-primary').addClass('btn-info');
     $('#tool-station-options').hide();
-    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station');
+    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation');
   });  
 } // bindRailLineEvents()
 
@@ -187,7 +187,7 @@ function makeStation(x, y) {
   if (!getActiveLine(x, y, activeMap)) {
     // Only expand the #tool-station-options if it's actually on a line
     $('#tool-station-options').hide();
-    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station');
+    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation');
     drawCanvas(activeMap, true) // clear any stale station indicators
     return
   }
@@ -1080,9 +1080,18 @@ function loadMapFromObject(metroMapObject, update) {
       }
     } // else (if there are no lines in the global)
 
+    var numLines = 1;
     for (var line in metroMapObject['global']['lines']) {
       if (metroMapObject['global']['lines'].hasOwnProperty(line) && document.getElementById('rail-line-' + line) === null) {
-          $('#rail-line-new').before('<button id="rail-line-' + line + '" class="rail-line btn-info" style="background-color: #' + line + ';">' + metroMapObject['global']['lines'][line]['displayName'] + '</button>');
+          if (numLines < 10) {
+            keyboardShortcut = ' data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: ' + numLines + '"'
+          } else if (numLines == 10) {
+            keyboardShortcut = ' data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 0"'
+          } else {
+            keyboardShortcut = ''
+          }
+          $('#rail-line-new').before('<button id="rail-line-' + line + '" class="rail-line btn-info" style="background-color: #' + line + ';"' + keyboardShortcut + '>' + metroMapObject['global']['lines'][line]['displayName'] + '</button>');
+          numLines++;
       }
     }
 
@@ -1348,11 +1357,50 @@ $(document).ready(function() {
   })
 
   document.addEventListener("keydown", function(event) {
+    // Don't use keyboard shortcuts if any text input has focus
+    if (document.activeElement && document.activeElement.type == 'text') {
+      return
+    }
     if (event.which == 90 && (event.metaKey || event.ctrlKey)) {
       // If Control+Z is pressed
       undo();
     }
-  });
+    else if (event.which == 68) // D
+      $('#tool-line').click()
+    else if (event.which == 69) // E
+      $('#tool-eraser').click()
+    else if (event.which == 71) { // G
+      if ($('#straight-line-assist').prop('checked')) {
+        $('#straight-line-assist').prop('checked', false)
+      } else {
+        $('#straight-line-assist').prop('checked', true)
+      }
+    } else if (event.which == 72) // H
+      $('#tool-grid').click()
+    else if (event.which == 83) // S
+      $('#tool-station').click()
+    else if (event.which == 37) { // left arrow
+      event.preventDefault(); moveMap('left')
+    } else if (event.which == 38) { // up arrow
+      event.preventDefault(); moveMap('up')
+    } else if (event.which == 39) { // right arrow
+      event.preventDefault(); moveMap('right')
+    } else if (event.which == 40) {// down arrow
+      event.preventDefault(); moveMap('down')
+    } else if (event.which == 189) // minus
+      $('#tool-zoom-out').click()
+    else if (event.which == 187) // plus
+      $('#tool-zoom-in').click()
+    else if (event.which >= 48 && event.which <= 57) { // 0-9
+      // Draw rail colors in order of appearance, 1-10 (0 is 10)
+      var railKey = parseInt(event.which) - 49
+      if (railKey == -1)
+        railKey = 10
+      var possibleRailLines = $('.rail-line')
+      if (possibleRailLines[railKey])
+        possibleRailLines[railKey].click()
+    }
+  }); // document.addEventListener("keydown")
 
   activeTool = 'look';
 
@@ -1368,10 +1416,10 @@ $(document).ready(function() {
     if ($('#tool-line-options').is(':visible')) {
       $('#tool-line-options').hide();
       $('#tool-new-line-options').hide();
-      $('#tool-line').html('<i class="fa fa-pencil" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> Draw Rail Line');
+      $('#tool-line').html('<i class="fa fa-pencil" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> <b><u>D</u></b>raw Rail Line');
     } else {
       $('#tool-line-options').show();
-      $('#tool-line').html('<i class="fa fa-subway" aria-hidden="true"></i> Hide Rail Line options');
+      $('#tool-line').html('<i class="fa fa-subway" aria-hidden="true"></i> Hi<b><u>d</u></b>e Rail Line options');
     }
     $('.tooltip').hide();
   }); // #tool-line.click() (Show rail lines you can paint)
@@ -1403,25 +1451,25 @@ $(document).ready(function() {
     activeTool = 'station';
     if ($('#tool-station-options').is(':visible')) {
       $('#tool-station-options').hide();
-      $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station');
+      $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation');
     }
     $('.tooltip').hide();
   }); // #tool-station.click()
   $('#tool-eraser').click(function() {
     activeTool = 'eraser';
     $('#tool-station-options').hide();
-    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station');
+    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation');
     $('.tooltip').hide();
   }); // #tool-eraser.click()
   $('#tool-grid').click(function() {
     if ($('canvas#grid-canvas').hasClass('hide-gridlines')) {
       $('canvas#grid-canvas').removeClass('hide-gridlines');
       $('canvas#grid-canvas').css("opacity", 1);
-      $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> Hide grid');
+      $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> <b><u>H</u></b>ide grid');
     } else {
       $('canvas#grid-canvas').addClass('hide-gridlines');
       $('canvas#grid-canvas').css("opacity", 0);
-      $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> Show grid');
+      $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> S<b><u>h</u></b>ow grid');
     }
     $('.tooltip').hide()
   }); // #tool-grid.click() (Toggle grid visibility)
@@ -1607,7 +1655,7 @@ $(document).ready(function() {
     // On mobile, you need to tap and hold on the canvas to save the image
     drawCanvas(activeMap);
     $('#tool-station-options').hide();
-    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit Station');
+    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation');
 
     $('.tooltip').hide();
     if ($('#grid-canvas').is(':visible')) {
