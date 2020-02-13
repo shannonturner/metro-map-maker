@@ -2079,9 +2079,11 @@ $('#try-on-mobile').click(function() {
   $('#toolbox-mobile-hint').removeClass('hidden-xs');
   $('#controls').removeClass('hidden-xs');
 
-  $('#tool-export-canvas').click()
-  $('#tool-export-canvas').removeClass('btn-primary')
-  $('#tool-export-canvas').addClass('btn-info')
+  if ($('#tool-line').prop('disabled')) {
+    $('#tool-export-canvas').click()
+    $('#tool-export-canvas').removeClass('btn-primary')
+    $('#tool-export-canvas').addClass('btn-info')
+  }
   $('#grid-canvas').show();
   $('#hover-canvas').show();
   $('#metro-map-canvas').show();
