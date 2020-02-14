@@ -1922,7 +1922,7 @@ $(document).ready(function() {
     if (Object.keys(temporaryStation).length == 0) {
       autoSave(activeMap)
     }
-
+    drawCanvas(activeMap, true)
     drawIndicator(x, y);
   }); // $('#station-transfer').click()
 
