@@ -251,6 +251,7 @@ class MapSimilarView(TemplateView):
         similar_maps = []
         similarity_scores = {}
         urlhash_to_map = {} # this is so I can access the map object once it has been sorted by similarity
+        tags = Tag.objects.all().order_by('id')
 
         try:
             this_map = SavedMap.objects.prefetch_related('tags').get(urlhash=kwargs.get('urlhash'))
@@ -275,7 +276,6 @@ class MapSimilarView(TemplateView):
                 .exclude(station_count__gt=this_map_stations_upper_bound)
             visible_maps = visible_maps | gallery_maps # merge these querysets
             visible_maps = visible_maps.prefetch_related('tags').order_by('id')
-            tags = Tag.objects.all().order_by('id')
 
             this_map_stations = set(this_map.stations.split(','))
 
