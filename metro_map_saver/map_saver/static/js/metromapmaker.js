@@ -1367,6 +1367,10 @@ $(document).ready(function() {
   document.addEventListener("keydown", function(event) {
     // Don't use keyboard shortcuts if any text input has focus
     if (document.activeElement && document.activeElement.type == 'text') {
+      if (event.which == 13) { // Enter
+        // Unset the focus from the text box when hitting Enter
+        document.activeElement.blur()
+      }
       return
     }
     if (event.which == 90 && (event.metaKey || event.ctrlKey)) {
