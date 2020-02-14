@@ -248,12 +248,14 @@ class MapSimilarView(TemplateView):
 
         # Filter by +/- 20% of the current map's number of stations instead of all visible maps
         STATION_THRESHOLD = 0.2
+        similar_maps = []
+        similarity_scores = {}
+        urlhash_to_map = {} # this is so I can access the map object once it has been sorted by similarity
 
         try:
             this_map = SavedMap.objects.prefetch_related('tags').get(urlhash=kwargs.get('urlhash'))
         except ObjectDoesNotExist:
-            similar_maps = []
-            similarity_scores = {}
+            pass
         except MultipleObjectsReturned:
             # This should never happen, but it happened once?
             this_map = SavedMap.objects.prefetch_related('tags').filter(urlhash=kwargs.get('urlhash')).order_by('id')[0]
@@ -276,10 +278,6 @@ class MapSimilarView(TemplateView):
             tags = Tag.objects.all().order_by('id')
 
             this_map_stations = set(this_map.stations.split(','))
-
-            similar_maps = []
-            similarity_scores = {}
-            urlhash_to_map = {} # this is so I can access the map object once it has been sorted by similarity
 
             for one_map in visible_maps:
                 if one_map.id == this_map.id:
