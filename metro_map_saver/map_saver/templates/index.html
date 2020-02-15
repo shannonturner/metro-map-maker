@@ -28,7 +28,7 @@
 
     <link rel="icon" href="{% static 'assets/favicon.ico' %}?version=2">
 
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -91,7 +91,7 @@
     <canvas id='grid-canvas' width="1600" height="1600"></canvas>
     <canvas id="hover-canvas" width="1600" height="1600"></canvas>
     <a id="metro-map-image-download-link" class="start-hidden" target="_blank"></a>
-    <img id="metro-map-image" class="img-responsive start-hidden">
+    <img id="metro-map-image" class="img-responsive start-hidden" alt="">
   </div>
 
   <h5 id="mobile-compatibility-warning" class="visible-xs">This works best on desktop; some features may not work correctly on your mobile device.</h5>
@@ -224,7 +224,6 @@
       <hr>
       <div id="credits">
         <h5>Created by <a href="https://shannonvturner.com" target="_blank">Shannon Turner</a></h5>
-        <h5>Inspired by <a href="https://www.wired.com/2014/01/fantasy-transit-maps/" target="_blank">this</a> and <a href="https://io9.gizmodo.com/5513914/speculative-subway-maps-from-our-underground-future/" target="_blank">this</a></h5>
         <h6>By using MetroMapMaker, you place maps you make in the public domain.</h6>
       </div>
 
@@ -234,8 +233,10 @@
 
 </div> <!-- #main-container -->
 
-  <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
   {% if saved_map %}
   <script>
     var savedMapData = {% autoescape off %}'{{ saved_map.mapdata }}'{% endautoescape %}
