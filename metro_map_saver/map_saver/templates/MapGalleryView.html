@@ -665,6 +665,7 @@
         canvas.width = gridSize * preferredGridPixelMultiplier;
         galleryExportToCanvas(mapData, {{ map.id }});
         galleryDrawThumbnail(mapData, {{ map.id }});
+        reduceColorDepth('metro-map-thumbnail-canvas-' + {{ map.id }});
       } catch (e) {
         console.log("[WARN] Skipping #{{ map.id }} ({{ map.urlhash }}) - bad JSON: " + e)
       }
@@ -762,7 +763,6 @@
 
       if (getThumbnailButton.text() == 'Generate Thumbnail') {
         // No thumbnail exists -> generate one
-        reduceColorDepth('metro-map-thumbnail-canvas-' + thisMapId);
         var base64thumbnailData = document.getElementById('metro-map-thumbnail-canvas-' + thisMapId).toDataURL();
       } else {
         // Thumbnail exists -> delete it
