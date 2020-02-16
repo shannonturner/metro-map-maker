@@ -1372,6 +1372,11 @@ $(document).ready(function() {
     // Don't use keyboard shortcuts if any text input has focus
     if (document.activeElement && document.activeElement.type == 'text') {
       if (event.which == 13) { // Enter
+        // If focused on the rail line name, save the line
+        if (document.activeElement.id == 'new-rail-line-name')
+          $('#create-new-rail-line').click()
+        else if (document.activeElement.id == 'change-line-name')
+          $('#save-rail-line-edits').click()
         // Unset the focus from the text box when hitting Enter
         document.activeElement.blur()
       }
