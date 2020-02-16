@@ -27,19 +27,8 @@
     <title>Metro Map Maker</title>
 
     <link rel="icon" href="{% static 'assets/favicon.ico' %}?version=2">
-
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
-
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-
-    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' %}?version=20200124">
+    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' %}?version=20200216">
     <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css" integrity="sha256-f83N12sqX/GO43Y7vXNt9MjrHkPc4yi9Uq9cLy1wGIU=" crossorigin="anonymous" />
 
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
@@ -90,7 +79,7 @@
     <canvas id='metro-map-stations-canvas' width="1600" height="1600"></canvas>
     <canvas id='grid-canvas' width="1600" height="1600"></canvas>
     <canvas id="hover-canvas" width="1600" height="1600"></canvas>
-    <a id="metro-map-image-download-link" class="start-hidden" target="_blank"></a>
+    <a id="metro-map-image-download-link" class="start-hidden" rel="noopener" starget="_blank"></a>
     <img id="metro-map-image" class="img-responsive start-hidden" alt="">
   </div>
 
@@ -175,7 +164,7 @@
       <div id="export-canvas-help" class="text-left start-hidden">
         <h5><b>Tap and hold the map to save as an image, or right click the map and click "Save Image As".</b></h5>
         <h5>Or click "Edit map" to continue editing your map.</h5>
-        <h5>Happy with your map? Be sure to click Save &amp; Share map and it might be <a href="https://metromapmaker.com/gallery" target="_blank">featured in the gallery</a>!</h5>
+        <h5>Happy with your map? Be sure to click Save &amp; Share map and it might be <a href="https://metromapmaker.com/gallery" rel="noopener" target="_blank">featured in the gallery</a>!</h5>
       </div>
       <button id="tool-save-map" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Create a unique, shareable URL for your map"><i class="fa fa-share" aria-hidden="true"></i> Save &amp; Share map</button>
       <div id="tool-save-options" class="text-left start-hidden"></div>
@@ -223,7 +212,7 @@
 
       <hr>
       <div id="credits">
-        <h5>Created by <a href="https://shannonvturner.com" target="_blank">Shannon Turner</a></h5>
+        <h5>Created by <a href="https://shannonvturner.com" rel="noopener" target="_blank">Shannon Turner</a></h5>
         <h6>By using MetroMapMaker, you place maps you make in the public domain.</h6>
       </div>
 
@@ -236,15 +225,14 @@
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"
   integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
   crossorigin="anonymous"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
   {% if saved_map %}
   <script>
     var savedMapData = {% autoescape off %}'{{ saved_map.mapdata }}'{% endautoescape %}
     {% if saved_map_name %}window.sessionStorage.setItem('userGivenMapName', "{{ saved_map_name }}"){% endif %}
   </script>
   {% endif %}
-  <script src='{% static "js/metromapmaker.js" %}?version=202002132340'></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.js" integrity="sha256-ZdnRjhC/+YiBbXTHIuJdpf7u6Jh5D2wD5y0SNRWDREQ=" crossorigin="anonymous"></script>
+  <script src='{% static "js/metromapmaker.js" %}?version=20200216'></script>
+  <script src='{% static "js/tooltips.min.js" %}' defer=""></script>
 
   </body>
 </html>

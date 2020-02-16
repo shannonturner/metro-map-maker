@@ -1193,6 +1193,10 @@ function moveMap(direction) {
 
     activeMap = newMapObject;
     drawCanvas(activeMap);
+    // If I wanted, I could autoSave(activeMap) here,
+    // but saving the incremental step of each movement
+    // is probably less useful for "oops, undo!" purposes
+    // than undo taking you to the last non-movement save point
 } // moveMap(direction)
 
 function disableRightClick(event) {
@@ -1399,9 +1403,9 @@ $(document).ready(function() {
       event.preventDefault(); moveMap('right')
     } else if (event.which == 40) {// down arrow
       event.preventDefault(); moveMap('down')
-    } else if (event.which == 189) // minus
+    } else if (event.which == 189 || event.key == '-') // minus
       $('#tool-zoom-out').click()
-    else if (event.which == 187) // plus
+    else if (event.which == 187 || event.key == '=') // plus / equal sign
       $('#tool-zoom-in').click()
     else if (event.which >= 48 && event.which <= 57) { // 0-9
       // Draw rail colors in order of appearance, 1-10 (0 is 10)
@@ -1713,6 +1717,7 @@ $(document).ready(function() {
     snapCanvasToGrid()
     lastStrokeStyle = undefined;
     drawCanvas(activeMap, false, true)
+    drawCanvas(activeMap, true, true)
 
     window.sessionStorage.removeItem('userGivenMapName');
     window.sessionStorage.removeItem('userGivenMapTags');
