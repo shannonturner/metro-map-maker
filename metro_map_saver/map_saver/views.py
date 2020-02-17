@@ -629,7 +629,7 @@ class AdminHomeView(TemplateView):
         context['maps_tagged_need_review'] = maps_tagged_need_review
 
         # How many travel systems do we have a publicly visible real/speculative map for?
-        travel_system_names = [ts.name for ts in TravelSystem.objects.all()]
+        travel_system_names = [ts.name.split(',')[0] for ts in TravelSystem.objects.all()]
         travel_system_has_real_map = set()
         maps_tagged_real = SavedMap.objects.filter(
             tags__slug='real',
@@ -657,7 +657,7 @@ class AdminHomeView(TemplateView):
             speculative_map._suggest_city(overlap=int(speculative_map.station_count * 0.4)):
                 travel_system_has_speculative_map.add(speculative_map.name)
 
-        travel_system_names = set([ts.split(',')[0] for ts in travel_system_names])
+        travel_system_names = set(travel_system_names)
 
         context['travel_system_has_real_map'] = sorted(travel_system_has_real_map)
         context['travel_system_missing_real_map'] = sorted(
