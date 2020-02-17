@@ -944,6 +944,7 @@ function undo() {
     getMapSize(previousMap)
     drawCanvas(previousMap)
     resetResizeButtons(gridCols)
+    resetRailLineTooltips()
   }
 } // undo()
 
@@ -1084,16 +1085,19 @@ function loadMapFromObject(metroMapObject, update) {
     } // else (if there are no lines in the global)
 
     var numLines = 1;
+    var tooltipPlacement = 'left'
+    if (window.innerWidth < 768)
+      tooltipPlacement = 'top'
     for (var line in metroMapObject['global']['lines']) {
       if (metroMapObject['global']['lines'].hasOwnProperty(line) && document.getElementById('rail-line-' + line) === null) {
           if (numLines < 10) {
-            keyboardShortcut = ' data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: ' + numLines + '"'
+            keyboardShortcut = ' data-toggle="tooltip" data-placement="' + tooltipPlacement + '" title="Keyboard shortcut: ' + numLines + '"'
           } else if (numLines == 10) {
-            keyboardShortcut = ' data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 0"'
+            keyboardShortcut = ' data-toggle="tooltip" data-placement="' + tooltipPlacement + '" title="Keyboard shortcut: 0"'
           } else {
             keyboardShortcut = ''
           }
-          $('#rail-line-new').before('<button id="rail-line-' + line + '" class="rail-line btn-info" style="background-color: #' + line + ';"' + keyboardShortcut + '>' + metroMapObject['global']['lines'][line]['displayName'] + '</button>');
+          $('#rail-line-new').before('<button id="rail-line-' + line + '" class="rail-line btn-info has-tooltip" style="background-color: #' + line + ';"' + keyboardShortcut + '>' + metroMapObject['global']['lines'][line]['displayName'] + '</button>');
           numLines++;
       }
     }
@@ -1336,6 +1340,38 @@ function throttle(callback, interval) {
   }
 } // throttle()
 
+function resetTooltipOrientation() {
+  if (window.innerWidth <= 768) {
+    // Set tooltip direction
+    $('.has-tooltip').each(function() {
+      $(this).data('bs.tooltip').options.placement = 'top'
+    })
+  } else {
+    $('.has-tooltip').each(function() {
+      $(this).data('bs.tooltip').options.placement = 'left'
+    })
+  }
+} // resetTooltipOrientation()
+
+function resetRailLineTooltips() {
+  // Re-set rail line keyboard shortcut tooltips
+  var allLines = $('.rail-line');
+  var keyboardShortcut = ''
+  for (var a=0; a<allLines.length; a++) {
+    var line = $('.rail-line')[a].id.slice(10, 16)
+    numLines = a + 1
+    if (numLines < 10) {
+      keyboardShortcut = 'Keyboard shortcut: ' + numLines
+    } else if (numLines == 10) {
+      keyboardShortcut = 'Keyboard shortcut: 0'
+    } else {
+      break
+    }
+    $('#rail-line-' + line).attr('title', keyboardShortcut).tooltip('fixTitle')
+  } // for a in allLines
+  resetTooltipOrientation()
+} // resetRailLineTooltips
+
 $(document).ready(function() {
 
   document.getElementById('canvas-container').addEventListener('click', bindGridSquareEvents, false);
@@ -1466,7 +1502,8 @@ $(document).ready(function() {
       for (var d=0; d<linesToDelete.length; d++) {
         linesToDelete[d].remove();
       }
-    }
+      resetRailLineTooltips()
+    } // if linesToDelete.length > 0
   }); // #rail-line-delete.click() (Delete unused lines)
   $('#tool-station').click(function() {
     activeTool = 'station';
@@ -1785,7 +1822,7 @@ $(document).ready(function() {
       $('#tool-new-line-errors').text('Too many rail lines! Delete your unused ones before creating new ones.');
     } else {
       $('#tool-new-line-errors').text('');
-      $('#rail-line-new').before('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line btn-info" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');
+      $('#rail-line-new').before('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line btn-info has-tooltip" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');
       activeMap['global'] = new Object();
       activeMap['global']['lines'] = new Object();
       $('.rail-line').each(function() {
@@ -1799,6 +1836,7 @@ $(document).ready(function() {
     }
     // Re-bind events to .rail-line -- otherwise, newly created lines won't have events
     bindRailLineEvents();
+    resetRailLineTooltips()
   }); // $('#create-new-rail-line').click()
 
   $('#rail-line-change').click(function() {
@@ -1860,7 +1898,7 @@ $(document).ready(function() {
         $('#tool-change-line-options').hide()
       }
     }
-    
+    resetRailLineTooltips()
   }) // #save-rail-line-edits.click()
 
   $('#station-name').change(function() {
@@ -2119,14 +2157,5 @@ function unfreezeMapControls() {
   if (window.innerWidth > 768 && $('#tool-line').prop('disabled')) {
     $('#tool-export-canvas').click()
   }
-  if (window.innerWidth <= 768) {
-    // Set tooltip direction
-    $('.has-tooltip').each(function() {
-      $(this).data('bs.tooltip').options.placement = 'top'
-    })
-  } else {
-    $('.has-tooltip').each(function() {
-      $(this).data('bs.tooltip').options.placement = 'left'
-    })
-  }
+  resetTooltipOrientation()
 }
