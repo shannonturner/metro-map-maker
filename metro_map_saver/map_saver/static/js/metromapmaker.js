@@ -374,9 +374,11 @@ function bindGridSquareEvents(event) {
 
   if (activeTool == 'line') {
     if ($('#tool-flood-fill').prop('checked')){
-      var color = rgb2hex(activeToolOption).slice(1, 7);
-      floodFill(x, y, color)
+      var initialColor = getActiveLine(x, y, activeMap)
+      var replacementColor = rgb2hex(activeToolOption).slice(1, 7);
+      floodFill(x, y, initialColor, replacementColor)
       autoSave(activeMap)
+      drawCanvas(activeMap)
     } else
       makeLine(x, y)
   } else if (activeTool == 'eraser') {
@@ -1251,18 +1253,27 @@ function getCanvasXY(pageX, pageY) {
   return [x, y]
 } // getCanvasXY(pageX, pageY)
 
-function floodFill(x, y, color) {
-  if (getActiveLine(x, y, activeMap))
+function floodFill(x, y, initialColor, replacementColor) {
+  // TODO: Scanline would be faster than recursion, though recursion isn't that bad
+  // The largest bottleneck is actually in drawing all the points when dealing with large areas
+  // TODO: Right now, this doesn't floodFill along diagonals,
+  //  but I also don't want it to bleed beyond the diagonals
+  if (initialColor == replacementColor)
     return
-  makeLine(x, y, true) // deferSave until after all lines have been painted
+
+  if (getActiveLine(x, y, activeMap) != initialColor)
+    return
+
+  // updateMapObject & drawCanvas is significantly faster than makeLine
+  updateMapObject(x, y, "line", replacementColor);
   if (x > 0)
-    floodFill(x-1, y, color)
+    floodFill(x-1, y, initialColor, replacementColor)
   if (y > 0)
-    floodFill(x, y-1, color)
+    floodFill(x, y-1, initialColor, replacementColor)
   if (x < gridRows)
-    floodFill(x+1, y, color)
+    floodFill(x+1, y, initialColor, replacementColor)
   if (y < gridCols)
-    floodFill(x, y+1, color)
+    floodFill(x, y+1, initialColor, replacementColor)
 } // floodFill(x, y, color)
 
 function combineCanvases() {
