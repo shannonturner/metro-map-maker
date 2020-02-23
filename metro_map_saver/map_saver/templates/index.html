@@ -10,7 +10,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Build the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
 
+    {% if saved_map and saved_map.name and not saved_map.naming_token %}
+    <meta property="og:title" content="{{ saved_map.name }} - Metro Map Maker">
+    {% else %}
     <meta property="og:title" content="Metro Map Maker">
+    {% endif %}
     <meta property="og:site_name" content="Metro Map Maker">
     <meta property="og:url" content="https://metromapmaker.com{% if saved_map %}/?map={{ saved_map.urlhash }}{% endif %}">
     <meta property="og:type" content="website">
