@@ -12,7 +12,7 @@
 
     <meta property="og:title" content="Metro Map Maker">
     <meta property="og:site_name" content="Metro Map Maker">
-    <meta property="og:url" content="https://metromapmaker.com">
+    <meta property="og:url" content="https://metromapmaker.com{% if saved_map %}/?map={{ saved_map.urlhash }}{% endif %}">
     <meta property="og:type" content="website">
     <meta property="og:description" content="Build the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
     {% if saved_map %}
