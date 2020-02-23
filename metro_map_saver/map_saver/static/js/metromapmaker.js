@@ -390,9 +390,14 @@ function bindGridSquareEvents(event) {
     } else {
       var redrawStations = false;
     }
-    metroMap = updateMapObject(x, y);
-    autoSave(metroMap);
-    drawArea(x, y, metroMap, erasedLine, redrawStations);
+    if (erasedLine && $('#tool-flood-fill').prop('checked')) {
+      floodFill(x, y, erasedLine, '')
+      drawCanvas(activeMap)
+    } else {
+      metroMap = updateMapObject(x, y);
+      autoSave(metroMap);
+      drawArea(x, y, metroMap, erasedLine, redrawStations);
+    }
   } else if (activeTool == 'station') {
     makeStation(x, y)
   }
@@ -1404,6 +1409,19 @@ function resetRailLineTooltips() {
   resetTooltipOrientation()
 } // resetRailLineTooltips
 
+function setFloodFillUI() {
+  // Show appropriate eraser warnings when flood fill is set
+  if ($('#tool-flood-fill').prop('checked')) {
+    $('#tool-eraser').html('<i class="fa fa-eraser" aria-hidden="true"></i> Flood Fill <b><u>E</u></b>raser')
+    $('#tool-eraser-options').html("<b>Flood fill is ON</b>")
+    $('#tool-eraser-options').show()
+  } else {
+    $('#tool-eraser').html('<i class="fa fa-eraser" aria-hidden="true"></i> <b><u>E</u></b>raser')
+    $('#tool-eraser-options').text('')
+    $('#tool-eraser-options').hide()
+  }
+} // setFloodFillUI()
+
 $(document).ready(function() {
 
   document.getElementById('canvas-container').addEventListener('click', bindGridSquareEvents, false);
@@ -1464,6 +1482,7 @@ $(document).ready(function() {
       } else {
         $('#tool-flood-fill').prop('checked', true)
       }
+      setFloodFillUI()
     } else if (event.which == 71) { // G
       if ($('#straight-line-assist').prop('checked')) {
         $('#straight-line-assist').prop('checked', false)
@@ -1518,6 +1537,9 @@ $(document).ready(function() {
     }
     $('.tooltip').hide();
   }); // #tool-line.click() (Show rail lines you can paint)
+  $('#tool-flood-fill').change(function() {
+    setFloodFillUI()
+  }) // #tool-flood-fill.change()
   $('#rail-line-delete').click(function() {
     // Only delete lines that aren't in use
     var allLines = $('.rail-line');
