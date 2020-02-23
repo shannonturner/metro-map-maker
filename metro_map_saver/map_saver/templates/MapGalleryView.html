@@ -222,6 +222,7 @@
         <div id="map-container-{{ map.id }}" class="map-container{% if forloop.first %} active-map{% endif %}">
           <a id="download-link-{{ map.id }}" href="#" download="{{ map.urlhash }}.png"></a>
           <canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive map-image"></canvas>
+          <canvas id='metro-map-social-canvas-{{ map.id }}' width="1600" height="1600" class="hidden"></canvas>
           <canvas id="metro-map-thumbnail-canvas-{{ map.id }}" width="120" height="120" class="hidden"></canvas>
           <hr class="map-divider">
         </div>
@@ -451,8 +452,8 @@
     ctx.closePath();
   } // drawPoint(ctx, x, y, metroMap)
 
-  function galleryExportToCanvas(metroMap, mapId) {
-    var canvas = document.getElementById('metro-map-gallery-canvas-' + mapId);
+  function galleryExportToCanvas(metroMap, mapId, whichCanvas) {
+    var canvas = document.getElementById('metro-map-' + whichCanvas + '-canvas-' + mapId);
     var ctx = canvas.getContext('2d', {alpha: false});
     var gridRows = gridSize, gridCols = gridSize;
     // How much larger is the canvas than the grid has in squares?
@@ -494,7 +495,7 @@
     redrawOverlappingPoints = {};
 
     // Draw the stations last (and separately), or they will be painted over by the lines themselves.
-    ctx.font = '700 20px sans-serif';
+    ctx.font = '700 ' + gridPixelMultiplier + 'px sans-serif';
 
     for (var x in metroMap){
       for (var y in metroMap[x]) {
@@ -663,7 +664,8 @@
         var canvas = document.getElementById('metro-map-gallery-canvas-' + {{ map.id }});
         canvas.height = gridSize * preferredGridPixelMultiplier;
         canvas.width = gridSize * preferredGridPixelMultiplier;
-        galleryExportToCanvas(mapData, {{ map.id }});
+        galleryExportToCanvas(mapData, {{ map.id }}, 'gallery');
+        galleryExportToCanvas(mapData, {{ map.id }}, 'social');
         galleryDrawThumbnail(mapData, {{ map.id }});
         reduceColorDepth('metro-map-thumbnail-canvas-' + {{ map.id }});
       } catch (e) {
@@ -758,7 +760,8 @@
 
     {% if request.user.is_superuser %}
     function saveSocialSharingImage(mapId) {
-      var base64ImageData = document.getElementById('metro-map-gallery-canvas-' + mapId).toDataURL();
+      var canvas = document.getElementById('metro-map-social-canvas-' + mapId);
+      var base64ImageData = canvas.toDataURL();
       $.post('/admin/action/', {
         "action": "image",
         "map": parseInt(mapId),
