@@ -1964,6 +1964,12 @@ $(document).ready(function() {
         $('#tool-change-line-options').hide()
       }
     }
+    // If we might be replacing the active line,
+    // swap tools to force user to re-choose the active line,
+    // or you'll end up drawing with a color that no longer exists among the globals
+    // (I would check lineColorToChange here but it can be an rgb() value)
+    if (activeTool == 'line')
+      activeTool = 'look'
     resetRailLineTooltips()
   }) // #save-rail-line-edits.click()
 
