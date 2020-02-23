@@ -171,7 +171,7 @@ function bindRailLineEvents() {
   });  
 } // bindRailLineEvents()
 
-function makeLine(x, y) {
+function makeLine(x, y, deferSave) {
   // I need to clear the redrawArea first
   // BEFORE actually placing the line
   // The first call to drawArea() will erase the redrawSection
@@ -179,7 +179,9 @@ function makeLine(x, y) {
   drawArea(x, y, activeMap, true);
   var color = rgb2hex(activeToolOption).slice(1, 7);
   metroMap = updateMapObject(x, y, "line", color);
-  autoSave(metroMap);
+  if (!deferSave) {
+    autoSave(metroMap);
+  }
   drawArea(x, y, metroMap);
 }
 
@@ -371,7 +373,12 @@ function bindGridSquareEvents(event) {
   }
 
   if (activeTool == 'line') {
-    makeLine(x, y)
+    if ($('#tool-flood-fill').prop('checked')){
+      var color = rgb2hex(activeToolOption).slice(1, 7);
+      floodFill(x, y, color)
+      autoSave(activeMap)
+    } else
+      makeLine(x, y)
   } else if (activeTool == 'eraser') {
     // I need to check for the old line and station
     // BEFORE actually doing the erase operations
@@ -1244,6 +1251,20 @@ function getCanvasXY(pageX, pageY) {
   return [x, y]
 } // getCanvasXY(pageX, pageY)
 
+function floodFill(x, y, color) {
+  if (getActiveLine(x, y, activeMap))
+    return
+  makeLine(x, y, true) // deferSave until after all lines have been painted
+  if (x > 0)
+    floodFill(x-1, y, color)
+  if (y > 0)
+    floodFill(x, y-1, color)
+  if (x < gridRows)
+    floodFill(x+1, y, color)
+  if (y < gridCols)
+    floodFill(x, y+1, color)
+} // floodFill(x, y, color)
+
 function combineCanvases() {
   // Combine all the separate canvases onto the main canvas so you can save the image
   drawCanvas(activeMap);
@@ -1426,7 +1447,13 @@ $(document).ready(function() {
       $('#tool-line').click()
     else if (event.which == 69) // E
       $('#tool-eraser').click()
-    else if (event.which == 71) { // G
+    else if (event.which == 70) { // F
+      if ($('#tool-flood-fill').prop('checked')) {
+        $('#tool-flood-fill').prop('checked', false)
+      } else {
+        $('#tool-flood-fill').prop('checked', true)
+      }
+    } else if (event.which == 71) { // G
       if ($('#straight-line-assist').prop('checked')) {
         $('#straight-line-assist').prop('checked', false)
       } else {
