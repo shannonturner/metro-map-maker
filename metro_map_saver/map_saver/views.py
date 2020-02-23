@@ -9,12 +9,15 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.gzip import gzip_page
 from django.views.decorators.cache import cache_page, never_cache
+from django.conf import settings
 
+import base64
 import datetime
 import difflib
 import hashlib
 import json
 import logging
+import os
 import pprint
 import pytz
 import random
@@ -373,6 +376,7 @@ class MapAdminActionView(TemplateView):
             'addtag',
             'removetag',
             'thumbnail',
+            'image',
             'name',
         )
         context = {}
@@ -412,6 +416,10 @@ class MapAdminActionView(TemplateView):
                 elif action == 'thumbnail' and request.user.has_perm('map_saver.generate_thumbnail'):
                     this_map.thumbnail = request.POST.get('data', '')
                     this_map.save()
+                elif action == 'image' and request.user.is_superuser:
+                    data = request.POST.get('data')
+                    with open(os.path.join(settings.STATIC_ROOT, 'images/') + f"{this_map.urlhash}.png", "wb") as image_file:
+                        image_file.write(base64.b64decode(data[22:]))
                 elif action == 'name' and request.user.has_perm('map_saver.name_map'):
                     name = request.POST.get('name')
                     this_map.name = name

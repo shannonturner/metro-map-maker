@@ -756,6 +756,17 @@
       ctx.putImageData(imageData, 0, 0);
     } // reduceColorDepth(canvas)
 
+    {% if request.user.is_superuser %}
+    function saveSocialSharingImage(mapId) {
+      var base64ImageData = document.getElementById('metro-map-gallery-canvas-' + mapId).toDataURL();
+      $.post('/admin/action/', {
+        "action": "image",
+        "map": parseInt(mapId),
+        "data": base64ImageData,
+      })
+    } // saveSocialSharingImage(mapId)
+    {% endif %}
+
     {% if permissions.generate_thumbnail %}
     $('.get-thumbnail').click(function() {
       var getThumbnailButton = $(this);
@@ -764,6 +775,9 @@
       if (getThumbnailButton.text() == 'Generate Thumbnail') {
         // No thumbnail exists -> generate one
         var base64thumbnailData = document.getElementById('metro-map-thumbnail-canvas-' + thisMapId).toDataURL();
+        {% if request.user.is_superuser %}
+        saveSocialSharingImage(thisMapId)
+        {% endif %}
       } else {
         // Thumbnail exists -> delete it
         base64thumbnailData = '';

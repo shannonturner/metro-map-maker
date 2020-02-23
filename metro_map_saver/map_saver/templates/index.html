@@ -15,6 +15,9 @@
     <meta property="og:url" content="https://metromapmaker.com">
     <meta property="og:type" content="website">
     <meta property="og:description" content="Build the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
+    {% if saved_map %}
+    <meta property="og:image" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
+    {% endif %}
     <meta property="og:image" content="https://metromapmaker.com/static/assets/metromapmaker.png?version=2">
 
     <meta name="twitter:card" content="summary_large_image">
@@ -22,6 +25,9 @@
     <meta name="twitter:creator" content="@svthmc">
     <meta name="twitter:title" content="Metro Map Maker">
     <meta name="twitter:description" content="Build the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
+    {% if saved_map %}
+    <meta name="twitter:image:src" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
+    {% endif %}
     <meta name="twitter:image:src" content="https://metromapmaker.com/static/assets/metromapmaker.png?version=2">
 
     <title>Metro Map Maker</title>
