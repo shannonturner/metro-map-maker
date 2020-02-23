@@ -1387,11 +1387,13 @@ function resetTooltipOrientation() {
   if (window.innerWidth <= 768) {
     // Set tooltip direction
     $('.has-tooltip').each(function() {
-      $(this).data('bs.tooltip').options.placement = 'top'
+      if ($(this).data('bs.tooltip'))
+        $(this).data('bs.tooltip').options.placement = 'top'
     })
   } else {
     $('.has-tooltip').each(function() {
-      $(this).data('bs.tooltip').options.placement = 'left'
+      if ($(this).data('bs.tooltip'))
+        $(this).data('bs.tooltip').options.placement = 'left'
     })
   }
 } // resetTooltipOrientation()
@@ -1903,6 +1905,12 @@ $(document).ready(function() {
     // Re-bind events to .rail-line -- otherwise, newly created lines won't have events
     bindRailLineEvents();
     resetRailLineTooltips()
+    // Repopulate the Edit Rail Lines dropdown menu, in case it's open
+    $('#tool-lines-to-change').html('<option>Edit which rail line?</option>')
+    for (var line in activeMap["global"]["lines"]) {
+      console.log("adding line: " + line)
+      $('#tool-lines-to-change').append('<option value="' + line + '">' + activeMap["global"]["lines"][line]["displayName"] + '</option>')
+    }
   }); // $('#create-new-rail-line').click()
 
   $('#rail-line-change').click(function() {
