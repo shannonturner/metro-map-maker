@@ -532,6 +532,9 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
   var canvas = document.getElementById('metro-map-canvas');
   var ctx = canvas.getContext('2d', {alpha: false});
   gridPixelMultiplier = canvas.width / gridCols;
+  var fontSize = 20;
+  if (gridPixelMultiplier > 20)
+    fontSize = gridPixelMultiplier
 
   var redrawRadius = 1;
 
@@ -570,7 +573,7 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
     var canvasStations = document.getElementById('metro-map-stations-canvas');
     var ctxStations = canvasStations.getContext('2d', {alpha: true});
     ctxStations.clearRect(0, 0, canvasStations.width, canvasStations.height);
-    ctxStations.font = '700 20px sans-serif';
+    ctxStations.font = '700 ' + fontSize + 'px sans-serif';
 
     for (var x in metroMap){
       for (var y in metroMap[x]) {
@@ -599,6 +602,9 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
   // If the grid has 80x80 squares and the canvas is 1600x1600,
   //    then the gridPixelMultiplier is 20 (1600 / 80)
   gridPixelMultiplier = canvas.width / gridCols; // 20
+  var fontSize = 20;
+  if (gridPixelMultiplier > 20)
+    fontSize = gridPixelMultiplier
 
   // Clear the canvas, make the background white instead of transparent
   ctx.fillStyle = '#ffffff';
@@ -644,7 +650,7 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
   // Draw the stations separately, or they will be painted over by the lines themselves.
   var canvas = document.getElementById('metro-map-stations-canvas');
   var ctx = canvas.getContext('2d', {alpha: true});
-  ctx.font = '700 20px sans-serif';
+  ctx.font = '700 ' + fontSize + 'px sans-serif';
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -660,7 +666,7 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
   } // for x
 
   // Add a map credit to help promote the site
-  ctx.font = '700 20px sans-serif';
+  ctx.font = '700 ' + fontSize + 'px sans-serif';
   ctx.fillStyle = '#000000';
   var mapCredit = 'Created with MetroMapMaker.com';
   var textWidth = ctx.measureText(mapCredit).width;
