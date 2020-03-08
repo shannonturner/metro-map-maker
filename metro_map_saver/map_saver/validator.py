@@ -43,7 +43,10 @@ def hex64(hexdigest):
     return '{0}{1}{2}{3}'.format(hex2b64(hexdigest[:3]), hex2b64(hexdigest[3:6]), hex2b64(hexdigest[6:9]), hex2b64(hexdigest[9:]))
 
 def sanitize_string(string):
-    return string.replace('<', '').replace('>', '').replace('"', '').replace("'", '&#x27;').replace('&', '&amp;').replace('/', '&#x2f;').replace('\x1b', '').replace('\\', '').replace('\t', ' ').replace('\n', ' ').replace('\b', ' ')
+    return string.replace('<', '').replace('>', '').replace('"', '').replace("'", '&#x27;').replace('&', '&amp;').replace('/', '&#x2f;').replace('\x1b', '').replace('\\', '').replace('\t', ' ').replace('\n', ' ').replace('\b', ' ').replace('%', '')
+
+def sanitize_string_without_html_entities(string):
+    return string.replace('<', '').replace('>', '').replace('"', '').replace("'", '').replace('&', '').replace('/', '').replace('\x1b', '').replace('\\', '').replace('\t', ' ').replace('\n', ' ').replace('\b', ' ').replace('%', '')
 
 def convert_nonascii_to_ascii(input_str):
 
@@ -169,6 +172,7 @@ def validate_metro_map(metro_map):
                         validated_metro_map[x][y]["line"] = metro_map[x][y]["line"]
                     if metro_map[x][y].get('station'):
                         assert type(metro_map[x][y]["station"]) == dict, "[VALIDATIONFAILED] 11 metro_map[x][y]['station'] at ({0}, {1}) IS NOT DICT: Point at ({2}, {3}) has a malformed station, must be an object.".format(x, y, int(x) + 1, int(y) + 1)
+                        metro_map[x][y]["station"]["name"] = sanitize_string_without_html_entities(metro_map[x][y]["station"]["name"])
                         if metro_map[x][y]["station"]["name"] == '':
                             metro_map[x][y]["station"]["name"] = "_" # Gracefully rename a zero-length station name to be a single space
                         assert 1 <= len(metro_map[x][y]["station"]["name"]) < 256, "[VALIDATIONFAILED] 12 station name at ({0}, {1}) BAD SIZE {2} is {3}: Point at ({4}, {5}) has a station whose name is not between 1 and 255 characters long. Please rename it.".format(x, y, metro_map[x][y]["station"]["name"], len(metro_map[x][y]["station"]["name"]), int(x) + 1, int(y) + 1)
@@ -176,7 +180,8 @@ def validate_metro_map(metro_map):
                         # Okay, this probably *should* pass - but I think I have some bug in the javascript somewhere because https://metromapmaker.com/?map=zCq7R223 obviously passed validation but once reconstituted, fails. But this isn't a big enough deal that I can't wave this validation through while I figure out what's going on.
                         # assert len(metro_map[x][y]["station"]["lines"]) > 0, "[VALIDATIONFAILED] 14: station lines at ({0}, {1}) HAS ZERO LENGTH".format(x, y)
                         validated_metro_map[x][y]["station"] = {
-                            "name": html_dom_id_safe(metro_map[x][y]["station"]["name"].replace('/', '').replace("'", '').replace('&', '').replace('`', '')),
+                            # "name": html_dom_id_safe(metro_map[x][y]["station"]["name"].replace('/', '').replace("'", '').replace('&', '').replace('`', '')),
+                            "name": metro_map[x][y]["station"]["name"],
                             "lines": []
                         }
                         for station_line in metro_map[x][y]["station"]["lines"]:

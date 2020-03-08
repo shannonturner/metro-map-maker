@@ -1980,8 +1980,15 @@ $(document).ready(function() {
   }) // #save-rail-line-edits.click()
 
   $('#station-name').change(function() {
+    // While I was using HTML element IDs for station names,
+    //  I needed to remove all characters that weren't suitable for IDs
+    //  from a station's name and convert spaces to underscores
+    // Now that it's all a JSON object, I have more flexibility in
+    //  how a station can be named
     // Remove characters that are invalid for an HTML element ID
-    $(this).val($(this).val().replace(/[^A-Za-z0-9\- ]/g, ''));
+    // $(this).val($(this).val().replace(/[^A-Za-z0-9\- ]/g, ''));
+
+    $(this).val($(this).val().replaceAll('"', '').replaceAll("'", '').replaceAll('<', '').replaceAll('>', '').replaceAll('&', '').replaceAll('/', '').replaceAll('_', ' ').replaceAll('\\\\', '').replaceAll('%', ''))
 
     var x = $('#station-coordinates-x').val();
     var y = $('#station-coordinates-y').val();
@@ -1991,7 +1998,7 @@ $(document).ready(function() {
       temporaryStation = {}
     }
 
-    metroMap = updateMapObject(x, y, "name", $('#station-name').val().replaceAll(' ', '_'))
+    metroMap = updateMapObject(x, y, "name", $('#station-name').val())
     autoSave(metroMap);
     drawCanvas(metroMap, true);
   }); // $('#station-name').change()
