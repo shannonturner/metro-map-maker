@@ -140,6 +140,11 @@ canvas#grid-canvas, canvas#hover-canvas {
   left: 0;
 }
 
+.station-rail-lines {
+  /* I'm not sure how useful this feature is, maybe it's just clutter? Let's hide it */
+  display: none;
+}
+
 #remix, #credits {
   text-align: left;
 }

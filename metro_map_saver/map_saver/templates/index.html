@@ -37,7 +37,7 @@
     <title>Metro Map Maker</title>
 
     <link rel="icon" href="{% static 'assets/favicon.ico' %}?version=2">
-    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' %}?version=20200216">
+    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' %}?version=20200308">
     <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 
     <script>
@@ -170,10 +170,10 @@
           <option value="135">Below-left, 45&deg;</option>
           <option value="-135">Above-left, 45&deg;</option>
         </select>
-        <h4>This station is on these rail lines:</h4>
-        <div id="station-on-lines"></div>
-        <h4 id="add-other-lines">Add other lines this station serves:</h4>
-        <div id="station-other-lines"></div>
+        <h4 id="station-on-lines-title" class="station-rail-lines">This station is on these rail lines:</h4>
+        <div id="station-on-lines" class="station-rail-lines"></div>
+        <h4 id="add-other-lines" class="station-rail-lines">Add other lines this station serves:</h4>
+        <div id="station-other-lines" class="station-rail-lines"></div>
       </div>
       <button id="tool-eraser" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station (Keyboard shortcut: E)"><i class="fa fa-eraser" aria-hidden="true"></i> <b><u>E</u></b>raser</button>
       <div id="tool-eraser-options" class="text-center bg-danger start-hidden"></div>
