@@ -196,7 +196,7 @@ def validate_metro_map(metro_map):
                                 validated_metro_map[x][y]["station"]["lines"].append(station_line)
                         if metro_map[x][y]["station"].get('transfer'):
                            validated_metro_map[x][y]["station"]["transfer"] = 1
-                        if metro_map[x][y]["station"].get('orientation') and metro_map[x][y]["station"].get('orientation') in ('0', '-45', '45', '135', '180'):
+                        if metro_map[x][y]["station"].get('orientation') and metro_map[x][y]["station"].get('orientation') in ('0', '-45', '45', '135', '-135', '180'):
                             validated_metro_map[x][y]["station"]["orientation"] = metro_map[x][y]["station"].get('orientation')
 
     return validated_metro_map

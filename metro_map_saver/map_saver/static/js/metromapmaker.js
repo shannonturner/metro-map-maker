@@ -842,6 +842,15 @@ function drawStation(ctx, x, y, metroMap) {
     } else {
       ctx.fillText(activeStation, -1 * textSize - 15, 5);
     }
+  } else if (metroMap[x][y]["station"]["orientation"] == '-135') {
+    var textSize = ctx.measureText(activeStation).width;
+    ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
+    ctx.rotate(45 * (Math.PI/ 180));
+    if (isTransferStation) {
+      ctx.fillText(activeStation, -1 * textSize - 30, 5);
+    } else {
+      ctx.fillText(activeStation, -1 * textSize - 15, 5);
+    }
   } else if (metroMap[x][y]["station"]["orientation"] == '180') {
     // When drawing on the left, this isn't very different from drawing on the right
     //      with no rotation, except that we measure the text first
@@ -2007,7 +2016,7 @@ $(document).ready(function() {
     var x = $('#station-coordinates-x').val();
     var y = $('#station-coordinates-y').val();
 
-    const ALLOWED_ORIENTATIONS = ['0', '45', '-45', '135', '180'];
+    const ALLOWED_ORIENTATIONS = ['0', '45', '-45', '135', '-135', '180'];
 
     if (x >= 0 && y >= 0) {
       if ($(this).val() == '0') {

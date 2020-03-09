@@ -168,6 +168,7 @@
           <option value="-45">Above-right, 45&deg;</option>
           <option value="45">Below-right, 45&deg;</option>
           <option value="135">Below-left, 45&deg;</option>
+          <option value="-135">Above-left, 45&deg;</option>
         </select>
         <h4>This station is on these rail lines:</h4>
         <div id="station-on-lines"></div>
@@ -248,7 +249,7 @@
     {% if saved_map_name %}window.sessionStorage.setItem('userGivenMapName', "{{ saved_map_name }}"){% endif %}
   </script>
   {% endif %}
-  <script src='{% static "js/metromapmaker.js" %}?version=20200308'></script>
+  <script src='{% static "js/metromapmaker.js" %}?version=202003081954'></script>
   <script src='{% static "js/tooltips.min.js" %}' defer=""></script>
 
   </body>
