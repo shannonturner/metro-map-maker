@@ -176,7 +176,7 @@ def validate_metro_map(metro_map):
                         if metro_map[x][y]["station"]["name"] == '':
                             metro_map[x][y]["station"]["name"] = "_" # Gracefully rename a zero-length station name to be a single space
                         assert 1 <= len(metro_map[x][y]["station"]["name"]) < 256, "[VALIDATIONFAILED] 12 station name at ({0}, {1}) BAD SIZE {2} is {3}: Point at ({4}, {5}) has a station whose name is not between 1 and 255 characters long. Please rename it.".format(x, y, metro_map[x][y]["station"]["name"], len(metro_map[x][y]["station"]["name"]), int(x) + 1, int(y) + 1)
-                        assert type(metro_map[x][y]["station"]["lines"]) == list, "[VALIDATIONFAILED] 13 station lines at ({0}, {1}) NOT A LIST: Point at ({2}, {3}) has its station lines in the incorrect format; must be a list.".format(x, y, int(x) + 1, int(y) + 1)
+                        assert type(metro_map[x][y]["station"].get("lines", [])) == list, "[VALIDATIONFAILED] 13 station lines at ({0}, {1}) NOT A LIST: Point at ({2}, {3}) has its station lines in the incorrect format; must be a list.".format(x, y, int(x) + 1, int(y) + 1)
                         # Okay, this probably *should* pass - but I think I have some bug in the javascript somewhere because https://metromapmaker.com/?map=zCq7R223 obviously passed validation but once reconstituted, fails. But this isn't a big enough deal that I can't wave this validation through while I figure out what's going on.
                         # assert len(metro_map[x][y]["station"]["lines"]) > 0, "[VALIDATIONFAILED] 14: station lines at ({0}, {1}) HAS ZERO LENGTH".format(x, y)
                         validated_metro_map[x][y]["station"] = {
@@ -184,7 +184,7 @@ def validate_metro_map(metro_map):
                             "name": metro_map[x][y]["station"]["name"],
                             "lines": []
                         }
-                        for station_line in metro_map[x][y]["station"]["lines"]:
+                        for station_line in metro_map[x][y]["station"].get("lines", []):
                             assert is_hex(station_line), "[VALIDATIONFAILED] 15 station_line {0} FAILED is_hex(): Station Rail line {0} is not a valid color.".format(station_line)
                             assert len(station_line) == 6, "[VALIDATIONFAILED] 16 station_line {0} IS NOT 6 CHARACTERS: Station Rail line color {0} needs to be 6 characters long.".format(station_line)
                             try:
