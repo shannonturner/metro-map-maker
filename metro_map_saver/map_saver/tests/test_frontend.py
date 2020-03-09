@@ -921,6 +921,15 @@ class FrontendFunctionalityTestCase(object):
             int(grid_canvas.value_of_css_property('opacity'))
         )
 
+        # Keyboard shortcut: hide the grid
+        body = self.driver.find_element_by_xpath("//body")
+        body.send_keys('h')
+        self.assertEqual(0, int(grid_canvas.value_of_css_property('opacity')))
+
+        # Show it again
+        body.send_keys('h')
+        self.assertEqual(1, int(grid_canvas.value_of_css_property('opacity')))
+
     # @unittest.skip(reason='DEBUG')
     def test_zoom_in(self):
 
@@ -962,6 +971,14 @@ class FrontendFunctionalityTestCase(object):
             snap_controls_button.value_of_css_property('display')
         )
 
+        # Keyboard shortcut: zoom in
+        width = int(canvas_container.value_of_css_property('width')[:-2])
+        body = self.driver.find_element_by_xpath("//body")
+        body.send_keys('=')
+
+        new_width = int(canvas_container.value_of_css_property('width')[:-2])
+        self.assertGreater(new_width, width)
+
     # @unittest.skip(reason='DEBUG')
     def test_zoom_out(self):
 
@@ -992,6 +1009,15 @@ class FrontendFunctionalityTestCase(object):
             800,
             new_width
         )
+
+        # Zoom in a bunch so we can zoom out again
+        body = self.driver.find_element_by_xpath("//body")
+        body.send_keys('=====')
+        width = int(canvas_container.value_of_css_property('width')[:-2])
+
+        body.send_keys('-')
+        new_width = int(canvas_container.value_of_css_property('width')[:-2])
+        self.assertLess(new_width, width)
 
     # @unittest.skip(reason='DEBUG')
     def test_snap_left_right(self):
@@ -1456,6 +1482,31 @@ class FrontendFunctionalityTestCase(object):
         self.driver.set_window_size(769, 600)
         rail_line_button_is_disabled = self.driver.execute_script("return document.getElementById('tool-line').disabled;")
         self.assertFalse(rail_line_button_is_disabled)
+
+    def test_mobile_resize_tooltip_direction(self):
+
+        """ Confirm that starting on mobile,
+            the tooltips display above the buttons;
+            that resizing to a larger screen moves the tooltips to the left;
+            and resizing again to mobile puts the tooltips above again
+        """
+
+        self.driver.set_window_size(600, 600)
+        edit_on_mobile_button = self.driver.find_element_by_id('try-on-mobile')
+        # After clicking, the controls are shown and the button disappears
+        edit_on_mobile_button.click()
+
+        tooltip_placement = self.driver.execute_script("return $('.has-tooltip').data('bs.tooltip').options.placement;")
+        self.assertEqual("top", tooltip_placement)
+
+        # Resizing the window above the mobile breakpoint will re-enable the buttons
+        self.driver.set_window_size(769, 600)
+        tooltip_placement = self.driver.execute_script("return $('.has-tooltip').data('bs.tooltip').options.placement;")
+        self.assertEqual("left", tooltip_placement)
+
+        self.driver.set_window_size(600, 600)
+        tooltip_placement = self.driver.execute_script("return $('.has-tooltip').data('bs.tooltip').options.placement;")
+        self.assertEqual("top", tooltip_placement)
 
 
 class ChromeFrontendFunctionalityTestCase(FrontendFunctionalityTestCase, TestCase):
