@@ -546,3 +546,31 @@ class ValidateMap(TestCase):
         })
         saved_map.refresh_from_db()
         self.assertEqual('set in stone', saved_map.name)
+
+    def test_valid_map_station_lines(self):
+
+        """ Confirm that I'm safe to remove the
+            "Rail Lines this Station serves" feature
+            without causing any maps to fail validation.
+
+            Valid maps include:
+            No ["station"]["lines"] at all
+            ["station"]["lines"] is an empty list
+            ["station"]["lines"] is a list of hex values I don't have in the globals
+        """
+
+        metro_map = json.dumps({"8":{"8":{"line":"bd1038","station":{"name":"Nice Station"}}},"global":{"lines":{"0896d7":{"displayName":"Blue Line"},"df8600":{"displayName":"Orange Line"},"000000":{"displayName":"Logo"},"00b251":{"displayName":"Green Line"},"662c90":{"displayName":"Purple Line"},"a2a2a2":{"displayName":"Silver Line"},"f0ce15":{"displayName":"Yellow Line"},"bd1038":{"displayName":"Red Line"},"79bde9":{"displayName":"Rivers"},"cfe4a7":{"displayName":"Parks"}}}})
+        validate_metro_map(metro_map)
+        response = self._post_metromap(metro_map).strip()
+        # 73 = 8 character urlhash + comma + 64 char naming token
+        self.assertTrue(len(response), 73)
+
+        metro_map = json.dumps({"8":{"8":{"line":"bd1038","station":{"name":"Nice Station", "lines": []}}},"global":{"lines":{"0896d7":{"displayName":"Blue Line"},"df8600":{"displayName":"Orange Line"},"000000":{"displayName":"Logo"},"00b251":{"displayName":"Green Line"},"662c90":{"displayName":"Purple Line"},"a2a2a2":{"displayName":"Silver Line"},"f0ce15":{"displayName":"Yellow Line"},"bd1038":{"displayName":"Red Line"},"79bde9":{"displayName":"Rivers"},"cfe4a7":{"displayName":"Parks"}}}})
+        validate_metro_map(metro_map)
+        response = self._post_metromap(metro_map).strip()
+        self.assertTrue(len(response), 73)
+
+        metro_map = json.dumps({"8":{"8":{"line":"bd1038","station":{"name":"Nice Station", "lines": ['123456', '678909']}}},"global":{"lines":{"0896d7":{"displayName":"Blue Line"},"df8600":{"displayName":"Orange Line"},"000000":{"displayName":"Logo"},"00b251":{"displayName":"Green Line"},"662c90":{"displayName":"Purple Line"},"a2a2a2":{"displayName":"Silver Line"},"f0ce15":{"displayName":"Yellow Line"},"bd1038":{"displayName":"Red Line"},"79bde9":{"displayName":"Rivers"},"cfe4a7":{"displayName":"Parks"}}}})
+        validate_metro_map(metro_map)
+        response = self._post_metromap(metro_map).strip()
+        self.assertTrue(len(response), 73)
