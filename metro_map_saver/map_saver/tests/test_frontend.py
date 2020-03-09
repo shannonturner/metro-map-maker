@@ -208,6 +208,16 @@ class FrontendFunctionalityTestCase(object):
         for line in rail_lines:
             self.assertFalse(line.is_displayed())
 
+        # Keyboard shortcut: D to hide/reveal Draw Rail Lines
+        body = self.driver.find_element_by_xpath("//body")
+        body.send_keys('d')
+        for line in rail_lines:
+            self.assertTrue(line.is_displayed())
+
+        body.send_keys('d')
+        for line in rail_lines:
+            self.assertFalse(line.is_displayed())
+
     # @unittest.skip(reason='DEBUG')
     def test_paint_rail_line(self):
 
@@ -659,6 +669,46 @@ class FrontendFunctionalityTestCase(object):
         self.assertNotEqual(map_image, new_map_image)
 
     # @unittest.skip(reason='DEBUG')
+    def test_keyboard_shortcut_tools(self):
+
+        """ Confirm that keyboard shortcuts work for many tools
+        """
+
+        body = self.driver.find_element_by_xpath("//body")
+
+        activeTool = self.driver.execute_script("return activeTool;")
+        self.assertEqual(activeTool, 'look')
+
+        # Keyboard shortcut: 0-9 for rail lines
+        colors = []
+        for key in range(10):
+            body.send_keys(f'{key}')
+            activeTool = self.driver.execute_script("return activeTool;")
+            self.assertEqual(activeTool, 'line')
+            activeColor = self.driver.execute_script('return rgb2hex(activeToolOption).slice(1, 7)')
+            print(activeColor)
+            # Confirm it's a new color each time
+            self.assertNotIn(activeColor, colors)
+            colors.append(activeColor)
+
+        # Keyboard shortcut: E for eraser
+        body.send_keys('e')
+        activeTool = self.driver.execute_script("return activeTool;")
+        self.assertEqual(activeTool, 'eraser')
+
+        # Keyboard shortcut: S for station
+        body.send_keys('s')
+        activeTool = self.driver.execute_script("return activeTool;")
+        self.assertEqual(activeTool, 'station')
+
+        # Keyboard shortcut: G for straight-line-assist guide
+        straight_line_assist_guide = self.driver.find_element_by_id('straight-line-assist')
+        body.send_keys('g')
+        self.assertFalse(straight_line_assist_guide.get_attribute('checked'))
+        body.send_keys('g')
+        self.assertTrue(straight_line_assist_guide.get_attribute('checked'))
+
+    # @unittest.skip(reason='DEBUG')
     def test_download_as_image(self):
 
         """ Confirm that clicking download as image creates a download link
@@ -921,7 +971,7 @@ class FrontendFunctionalityTestCase(object):
             int(grid_canvas.value_of_css_property('opacity'))
         )
 
-        # Keyboard shortcut: hide the grid
+        # Keyboard shortcut: H to hide the grid
         body = self.driver.find_element_by_xpath("//body")
         body.send_keys('h')
         self.assertEqual(0, int(grid_canvas.value_of_css_property('opacity')))
@@ -971,7 +1021,7 @@ class FrontendFunctionalityTestCase(object):
             snap_controls_button.value_of_css_property('display')
         )
 
-        # Keyboard shortcut: zoom in
+        # Keyboard shortcut: = to zoom in
         width = int(canvas_container.value_of_css_property('width')[:-2])
         body = self.driver.find_element_by_xpath("//body")
         body.send_keys('=')
@@ -1015,6 +1065,7 @@ class FrontendFunctionalityTestCase(object):
         body.send_keys('=====')
         width = int(canvas_container.value_of_css_property('width')[:-2])
 
+        # Keyboard shortcut: - to zoom out
         body.send_keys('-')
         new_width = int(canvas_container.value_of_css_property('width')[:-2])
         self.assertLess(new_width, width)
@@ -1100,6 +1151,24 @@ class FrontendFunctionalityTestCase(object):
         self.assertTrue(metro_map['9']['8'])
 
         move_buttons['left'].click()
+        metro_map = self.driver.execute_script('return activeMap;')
+        self.assertTrue(metro_map['8']['8'])
+
+        # Keyboard shortcuts: arrow keys
+        body = self.driver.find_element_by_xpath("//body")
+        body.send_keys(Keys.DOWN)
+        metro_map = self.driver.execute_script('return activeMap;')
+        self.assertTrue(metro_map['8']['9'])
+
+        body.send_keys(Keys.UP)
+        metro_map = self.driver.execute_script('return activeMap;')
+        self.assertTrue(metro_map['8']['8'])
+
+        body.send_keys(Keys.RIGHT)
+        metro_map = self.driver.execute_script('return activeMap;')
+        self.assertTrue(metro_map['9']['8'])
+
+        body.send_keys(Keys.LEFT)
         metro_map = self.driver.execute_script('return activeMap;')
         self.assertTrue(metro_map['8']['8'])
 
