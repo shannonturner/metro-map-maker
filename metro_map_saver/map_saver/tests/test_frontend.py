@@ -583,7 +583,7 @@ class FrontendFunctionalityTestCase(object):
         metro_map = self.driver.execute_script("return activeMap;")
         self.assertEqual(
             metro_map['94']['40']['station']['name'],
-            'Fort_Tottenabc'
+            'Fort Tottenabc'
         )
 
     # @unittest.skip(reason='DEBUG')
@@ -1047,10 +1047,7 @@ class FrontendFunctionalityTestCase(object):
         zoom_out_button.click()
 
         new_width = int(canvas_container.value_of_css_property('width')[:-2])
-        self.assertEqual(
-            width - columns,
-            new_width
-        )
+        self.assertLess(new_width, width)
 
         # Confirm that zooming out again won't go below 800 pixels
         zoom_out_button.click()
@@ -1353,7 +1350,7 @@ class FrontendFunctionalityTestCase(object):
 
         # Other children besides the rail lines themselves are the add/edit/delete line buttons, straight line assist, etc
         self.assertEqual(
-            7,
+            8,
             tool_line_options_length
         )
 
@@ -1371,7 +1368,7 @@ class FrontendFunctionalityTestCase(object):
 
         # Other children besides the rail lines themselves are the add/edit/delete line buttons, etc
         self.assertEqual(
-            17,
+            18,
             tool_line_options_length
         )
 
