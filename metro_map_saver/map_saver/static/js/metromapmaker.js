@@ -2,6 +2,7 @@
 
 var gridRows = 80, gridCols = 80;
 var activeTool = 'look';
+var activeToolOption = false;
 var activeMap = false;
 var preferredGridPixelMultiplier = 20;
 var lastStrokeStyle;
@@ -474,7 +475,12 @@ function drawHoverIndicator(x, y, fillColor) {
     y = xy[1]
   }
   ctx.globalAlpha = 0.5
-  ctx.fillStyle = fillColor || '#2ECC71'
+  // Adjust hover indicator color based on active line or eraser
+  if (activeTool == 'line' && activeToolOption && rgb2hex(activeToolOption))
+    var activeColor = '#' + rgb2hex(activeToolOption).slice(1, 7)
+  else if (activeTool == 'eraser')
+    var activeColor = '#000000'
+  ctx.fillStyle = fillColor || activeColor || '#2ECC71'
   var gridPixelMultiplier = canvas.width / gridCols
   ctx.fillRect((x * gridPixelMultiplier) - (gridPixelMultiplier / 2), (y * gridPixelMultiplier) - (gridPixelMultiplier / 2), gridPixelMultiplier, gridPixelMultiplier)
 } // drawHoverIndicator(x, y)
