@@ -199,6 +199,7 @@ function makeStation(x, y) {
   }
 
   $('#station-name').val('');
+  $('#station-on-lines').html('');
   $('#station-coordinates-x').val(x);
   $('#station-coordinates-y').val(y);
   var allLines = $('.rail-line');
@@ -275,6 +276,54 @@ function makeStation(x, y) {
   if ($('#tool-station-options').is(':visible')) {
     $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Hide Station Options');
   }
+
+  // Add lines to the "Other lines this station serves" option
+  if (stationOnLines) {
+    $('#station-on-lines').html(stationOnLines);
+
+    var linesToAdd = "";
+
+    for (var z=0; z<allLines.length; z++) {
+      if ((stationLines == allLines[z].id.slice(10, 16) || stationLines.indexOf(allLines[z].id.slice(10,16)) >= 0) || allLines[z].id.slice(10,16) == 'new') {
+        // Looping through all of the lines, if this line is already in the station's lines, don't add it
+        // Don't add the "Add new line" button either
+      } else {
+        linesToAdd += '<button style="background-color: #' + allLines[z].id.slice(10, 16) + '" class="station-add-lines" id="add-line-' + allLines[z].id.slice(10, 16) + '">' + $('#' + allLines[z].id).text() + '</button>';
+      }
+    } // for allLines
+    if (linesToAdd.length > 0) {
+      $('#station-other-lines').html(linesToAdd);
+      // $('#add-other-lines').show()
+      // Bind the event to the .station-add-lines buttons here since they are newly created.
+      $('.station-add-lines').click(function() {
+        if ($(this).parent().attr('id') == 'station-other-lines') {
+          $('#station-on-lines').append($(this));
+          if (Object.keys(temporaryStation).length > 0) {
+            temporaryStation["lines"].push($(this).attr('id').slice(9, 15))
+          } else {
+            activeMap[x][y]["station"]["lines"].push($(this).attr('id').slice(9, 15))
+          } // else (not temporaryStation)
+        } else {
+          // Remove it
+          $('#station-other-lines').append($(this));
+          var color = $(this).attr('id').slice(9, 15)
+          if (Object.keys(temporaryStation).length > 0) {
+            temporaryStation["lines"] = temporaryStation["lines"].filter(function(val) {
+              return val !== color
+            })
+          } else {
+            activeMap[x][y]["station"]["lines"] = activeMap[x][y]["station"]["lines"].filter(function(val) {
+              return val !== color
+            })
+          } // else (not temporaryStation)
+        } // else (remove station line)
+        autoSave(activeMap)
+      }); // .station-add-lines.click()
+    } // if linesToAdd
+    else {
+      $('#add-other-lines').hide()
+    } // not linesToAdd
+  } // if stationOnLines
 
   // Now, there are two indicators for when a station has been placed on a line
   // and zero visual indicators for when a station gets placed on a blank square
