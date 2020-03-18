@@ -278,7 +278,7 @@ class MapSimilarView(TemplateView):
                 .exclude(station_count__lt=this_map_stations_lower_bound) \
                 .exclude(station_count__gt=this_map_stations_upper_bound)
             visible_maps = visible_maps | gallery_maps # merge these querysets
-            visible_maps = visible_maps.prefetch_related('tags').order_by('id')
+            visible_maps = visible_maps.prefetch_related('tags').order_by('id').distinct()
 
             this_map_stations = set(this_map.stations.split(','))
 
