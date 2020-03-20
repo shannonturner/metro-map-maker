@@ -73,6 +73,8 @@ function resizeCanvas(zoomDirection) {
     size = size - step
   } else if (zoomDirection == 'in' && size <= 6400) {
     size = size + step
+  } else if (!Number.isNaN(zoomDirection)) {
+    size = parseInt(zoomDirection)
   }
 
   if (size < 800) {
@@ -82,6 +84,7 @@ function resizeCanvas(zoomDirection) {
     size = 6400
   }
 
+  window.sessionStorage.setItem('zoomLevel', size)
   $('#canvas-container').width(size)
   $('#canvas-container').height(size)
 } // resizeCanvas(zoomDirection)
@@ -166,6 +169,7 @@ function bindRailLineEvents() {
     // Existing Rail Line
     activeTool = 'line';
     activeToolOption = $(this).css('background-color');
+    drawNewHoverIndicator()
     $('#toolbox button').removeClass('btn-primary').addClass('btn-info');
     $('#tool-station-options').hide();
     $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation');
@@ -484,6 +488,22 @@ function drawHoverIndicator(x, y, fillColor) {
   var gridPixelMultiplier = canvas.width / gridCols
   ctx.fillRect((x * gridPixelMultiplier) - (gridPixelMultiplier / 2), (y * gridPixelMultiplier) - (gridPixelMultiplier / 2), gridPixelMultiplier, gridPixelMultiplier)
 } // drawHoverIndicator(x, y)
+
+function drawNewHoverIndicator() {
+  // When changing colors via keyboard shortcuts,
+  // visually indicate the newly selected color
+  var canvas = document.getElementById('hover-canvas')
+  var ctx = canvas.getContext('2d')
+  ctx.save();
+  // Draw mask to buffer
+  ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, canvas.width, canvas.height);
+  // Draw the color only where the mask exists (using source-in)
+  ctx.globalAlpha = 0.75
+  ctx.fillStyle = activeToolOption
+  ctx.globalCompositeOperation = "source-in";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.restore();
+} // drawNewHoverIndicator()
 
 function drawGrid() {
   // Draws the gridlines on the canvas
@@ -1019,6 +1039,11 @@ function autoLoad() {
   setTimeout(function() {
     $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
   }, 1000);
+
+  // Remember the last-used zoomLevel for this session
+  var zoomLevel = window.sessionStorage.getItem('zoomLevel')
+  if (zoomLevel)
+    resizeCanvas(zoomLevel)
 } // autoLoad()
 
 function getMapSize(metroMapObject) {
