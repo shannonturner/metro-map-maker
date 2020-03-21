@@ -1785,7 +1785,14 @@ $(document).ready(function() {
         })
       }
     }).fail(function(data) {
-      $('#tool-save-options').html('<h5 class="text-left bg-warning">Sorry, your map could not be saved right now. Metro Map Maker may be under maintenance. Please try again in a few minutes.</h5>');
+      if (data.status == 400) {
+        var message = 'Sorry, your map could not be saved. Did you flood fill the whole map? Use flood fill with the eraser to erase and try again.'
+      } else if (data.status == 500) {
+        var message = 'Sorry, your map could not be saved right now. This may be a bug, and the admin has been notified.'
+      } else if (data.status >= 502) {
+        var message = 'Sorry, your map could not be saved right now. Metro Map Maker is currently undergoing routine maintenance including bugfixes and upgrades. Please try again in a few minutes.'
+      }
+      $('#tool-save-options').html('<h5 class="text-left bg-warning">' + message + '</h5>');
       $('#tool-save-options').show();
     });
     $('.tooltip').hide();
