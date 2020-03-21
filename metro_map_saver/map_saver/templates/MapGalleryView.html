@@ -50,6 +50,11 @@
       overflow-y: auto;
     }
 
+    .sidebar-active {
+      left: 25% !important;
+      width: 50% !important;
+    }
+
     #diff-pane {
       overflow-y: auto;
     }
@@ -236,6 +241,7 @@
     <div class="diff-sidebar-tools start-hidden">
       <h4>Map A: <input id="diff-map-a" type="text" placeholder="Click 'Diff A' to fill"><input id="diff-map-id-a" type="hidden"></h4>
       <h4>Map B: <input id="diff-map-b" type="text" placeholder="Click 'Diff B' to fill"><input id="diff-map-id-b" type="hidden"></h4>
+      <canvas id='metro-map-visual-diff-canvas-' width="800" height="800" class="img-responsive"></canvas>
       <div id="diff-pane"> </div>
       <div id="diff-discard" class="start-hidden">
         <h4 class="text-center">Maps to Hide from Gallery View</h4>
@@ -654,10 +660,32 @@
 
   } // function galleryDrawThumbnail(metroMap, mapId)
 
-  $(document).ready(function() {
+  function showVisualDiff(mapIdA, mapIdB) {
+    mapDataA = JSON.parse(allMaps[mapIdA])
+    mapDataB = JSON.parse(allMaps[mapIdB])
 
+    // Right now, the ordering of the maps makes a difference
+    // TODO: make the ordering less important
+
+    for (var x in mapDataB) {
+      for (var y in mapDataB[x]) {
+        if (!mapDataA[x]) {}
+        else if (mapDataA[x] && !mapDataA[x][y]) {}
+        else if (JSON.stringify(mapDataA[x][y]) == JSON.stringify(mapDataB[x][y])) {
+          delete mapDataA[x][y];
+        }
+      } // for y
+    } // for x
+
+    var canvas = document.getElementById('metro-map-visual-diff-canvas-');
+    galleryExportToCanvas(mapDataA, '', 'visual-diff');
+  } // showVisualDiff(mapA, mapB)
+
+  $(document).ready(function() {
+    allMaps = {}
     {% for map in saved_maps %}
-      mapData = {% autoescape off %}'{{ map.mapdata }}';{% endautoescape %}
+      allMaps["{{ map.id }}"] = {% autoescape off %}'{{ map.mapdata }}';{% endautoescape %}
+      mapData = allMaps["{{ map.id }}"]
       try {
         mapData = JSON.parse(mapData);
         galleryGetMapSize(mapData);
@@ -679,8 +707,10 @@
     $('#diff-sidebar-expand-contract').click(function() {
       if ($(".diff-sidebar-tools").is(':visible')) {
         $('.diff-sidebar-tools').hide();
+        $('#diff-sidebar').removeClass('sidebar-active')
       } else {
         $('.diff-sidebar-tools').show();
+        $('#diff-sidebar').addClass('sidebar-active')
       }
     });
 
@@ -704,6 +734,7 @@
       }
 
       if ($('#diff-map-a').val().length > 0 && $('#diff-map-b').val().length > 0) {
+        showVisualDiff($('#diff-map-id-a').val(), $('#diff-map-id-b').val())
         $.get('/admin/diff/' + $('#diff-map-a').val() + '/' + $('#diff-map-b').val()).done(function(data) {
           $('#diff-pane').html(data);
         });
