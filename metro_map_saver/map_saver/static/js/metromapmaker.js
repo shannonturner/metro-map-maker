@@ -412,11 +412,11 @@ function bindGridSquareMouseover(event) {
   // $('#title').text([event.pageX, event.pageY, getCanvasXY(event.pageX, event.pageY)]) // useful when debugging
   if (!mouseIsDown && !$('#tool-flood-fill').prop('checked')) {
     drawHoverIndicator(event.pageX, event.pageY)
-  } else if (!mouseIsDown && activeToolOption && $('#tool-flood-fill').prop('checked')) {
+  } else if (!mouseIsDown && (activeToolOption || activeTool == 'eraser') && $('#tool-flood-fill').prop('checked')) {
     xy = getCanvasXY(event.pageX, event.pageY)
     hoverX = xy[0]
     hoverY = xy[1]
-    floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), activeToolOption, true)
+    floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), activeToolOption || '#ffffff', true)
   }
   if (mouseIsDown && (activeTool == 'line' || activeTool == 'eraser')) {
     dragX = event.pageX
