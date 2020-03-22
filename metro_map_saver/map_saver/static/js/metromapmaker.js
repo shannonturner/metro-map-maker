@@ -410,8 +410,13 @@ function bindGridSquareEvents(event) {
 
 function bindGridSquareMouseover(event) {
   // $('#title').text([event.pageX, event.pageY, getCanvasXY(event.pageX, event.pageY)]) // useful when debugging
-  if (!mouseIsDown) {
+  if (!mouseIsDown && !$('#tool-flood-fill').prop('checked')) {
     drawHoverIndicator(event.pageX, event.pageY)
+  } else if (!mouseIsDown && activeToolOption && $('#tool-flood-fill').prop('checked')) {
+    xy = getCanvasXY(event.pageX, event.pageY)
+    hoverX = xy[0]
+    hoverY = xy[1]
+    floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), activeToolOption, true)
   }
   if (mouseIsDown && (activeTool == 'line' || activeTool == 'eraser')) {
     dragX = event.pageX
@@ -466,7 +471,7 @@ function bindGridSquareMousedown(event) {
 
 } // function bindGridSquareMousedown()
 
-function drawHoverIndicator(x, y, fillColor) {
+function drawHoverIndicator(x, y, fillColor, opacity) {
   // Displays a hover indicator on the hover canvas at x,y
   var canvas = document.getElementById('hover-canvas')
   var ctx = canvas.getContext('2d')
@@ -478,7 +483,7 @@ function drawHoverIndicator(x, y, fillColor) {
     x = xy[0]
     y = xy[1]
   }
-  ctx.globalAlpha = 0.5
+  ctx.globalAlpha = opacity || 0.5
   // Adjust hover indicator color based on active line or eraser
   if (activeTool == 'line' && activeToolOption && rgb2hex(activeToolOption))
     var activeColor = '#' + rgb2hex(activeToolOption).slice(1, 7)
@@ -1290,7 +1295,7 @@ function getCanvasXY(pageX, pageY) {
   return [x, y]
 } // getCanvasXY(pageX, pageY)
 
-function floodFill(x, y, initialColor, replacementColor) {
+function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
   // Note: The largest performance bottleneck is actually in
   //  drawing all the points when dealing with large areas
   // TODO: Right now, this doesn't floodFill along diagonals,
@@ -1305,6 +1310,14 @@ function floodFill(x, y, initialColor, replacementColor) {
   var x1 = false
   var spanAbove = spanBelow = 0;
   var coords = [x, y]
+  var ignoreCoords = {}
+
+  if (hoverIndicator) {
+    var canvas = document.getElementById('hover-canvas')
+    var ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+  }
+
   while (coords.length > 0)
   {
     y = coords.pop()
@@ -1316,7 +1329,16 @@ function floodFill(x, y, initialColor, replacementColor) {
     spanAbove = spanBelow = 0;
     while(x1 < gridCols && getActiveLine(x1, y, activeMap) == initialColor)
     {
-      updateMapObject(x1, y, "line", replacementColor);
+      if (hoverIndicator) {
+        if (ignoreCoords && ignoreCoords[x1] && ignoreCoords[x1][y])
+          break
+        if (!ignoreCoords.hasOwnProperty(x1))
+          ignoreCoords[x1] = {}
+        drawHoverIndicator(x1, y, replacementColor, 0.5)
+        ignoreCoords[x1][y] = true
+      } else {
+        updateMapObject(x1, y, "line", replacementColor);
+      }
       if(!spanAbove && y > 0 && getActiveLine(x1, y-1, activeMap) == initialColor)
       {
         coords.push(x1, y - 1);
