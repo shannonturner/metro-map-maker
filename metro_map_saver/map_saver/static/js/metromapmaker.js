@@ -12,6 +12,8 @@ var dragX = false;
 var dragY = false;
 var clickX = false;
 var clickY = false;
+var hoverX = false;
+var hoverY = false;
 var temporaryStation = {};
 var pngUrl = false;
 var mapHistory = []; // A list of the last several map objects
@@ -169,7 +171,11 @@ function bindRailLineEvents() {
     // Existing Rail Line
     activeTool = 'line';
     activeToolOption = $(this).css('background-color');
-    drawNewHoverIndicator()
+    if ($('#tool-flood-fill').prop('checked')) {
+      floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), activeToolOption, true)
+    } else {
+      drawNewHoverIndicator()
+    }
     $('#toolbox button').removeClass('btn-primary').addClass('btn-info');
     $('#tool-station-options').hide();
     $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation');
@@ -410,13 +416,17 @@ function bindGridSquareEvents(event) {
 
 function bindGridSquareMouseover(event) {
   // $('#title').text([event.pageX, event.pageY, getCanvasXY(event.pageX, event.pageY)]) // useful when debugging
+  xy = getCanvasXY(event.pageX, event.pageY)
+  hoverX = xy[0]
+  hoverY = xy[1]
   if (!mouseIsDown && !$('#tool-flood-fill').prop('checked')) {
     drawHoverIndicator(event.pageX, event.pageY)
   } else if (!mouseIsDown && (activeToolOption || activeTool == 'eraser') && $('#tool-flood-fill').prop('checked')) {
-    xy = getCanvasXY(event.pageX, event.pageY)
-    hoverX = xy[0]
-    hoverY = xy[1]
-    floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), activeToolOption || '#ffffff', true)
+    if (activeTool == 'line' && activeToolOption)
+      indicatorColor = activeToolOption
+    else
+      indicatorColor = '#ffffff'
+    floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), indicatorColor, true)
   }
   if (mouseIsDown && (activeTool == 'line' || activeTool == 'eraser')) {
     dragX = event.pageX
@@ -487,8 +497,10 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
   // Adjust hover indicator color based on active line or eraser
   if (activeTool == 'line' && activeToolOption && rgb2hex(activeToolOption))
     var activeColor = '#' + rgb2hex(activeToolOption).slice(1, 7)
-  else if (activeTool == 'eraser')
+  else if (activeTool == 'eraser' && !getActiveLine(x, y, activeMap))
     var activeColor = '#000000'
+  else if (activeTool == 'eraser')
+    var activeColor = '#ffffff'
   ctx.fillStyle = fillColor || activeColor || '#2ECC71'
   var gridPixelMultiplier = canvas.width / gridCols
   ctx.fillRect((x * gridPixelMultiplier) - (gridPixelMultiplier / 2), (y * gridPixelMultiplier) - (gridPixelMultiplier / 2), gridPixelMultiplier, gridPixelMultiplier)
@@ -1300,11 +1312,10 @@ function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
   //  drawing all the points when dealing with large areas
   // TODO: Right now, this doesn't floodFill along diagonals,
   //  but I also don't want it to bleed beyond the diagonals
-
-
-  // TODO: How can I use this also for flood fill hover indicator?
-
   if (initialColor == replacementColor)
+    return
+
+  if (!x || !y)
     return
 
   var x1 = false
@@ -1498,11 +1509,29 @@ function setFloodFillUI() {
     $('#tool-eraser').html('<i class="fa fa-eraser" aria-hidden="true"></i> Flood Fill <b><u>E</u></b>raser')
     $('#tool-eraser-options').html("<b>Flood fill is ON</b>")
     $('#tool-eraser-options').show()
+    if ((activeTool == 'line' && activeToolOption) || activeTool == 'eraser') {
+      if (activeTool == 'line' && activeToolOption)
+        indicatorColor = activeToolOption
+      else
+        indicatorColor = '#ffffff'
+      floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), indicatorColor, true)
+    }
   } else {
     $('#tool-eraser').html('<i class="fa fa-eraser" aria-hidden="true"></i> <b><u>E</u></b>raser')
     $('#tool-eraser-options').text('')
     $('#tool-eraser-options').hide()
+    var canvas = document.getElementById('hover-canvas')
+    var ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if ((activeTool == 'line' && activeToolOption) || activeTool == 'eraser') {
+      if (activeTool == 'line' && activeToolOption)
+        indicatorColor = activeToolOption
+      else
+        indicatorColor = '#ffffff'
+      drawHoverIndicator(hoverX, hoverY, indicatorColor)
+    }
   }
+
 } // setFloodFillUI()
 
 $(document).ready(function() {
@@ -1661,6 +1690,7 @@ $(document).ready(function() {
     $('#tool-station-options').hide();
     $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation');
     $('.tooltip').hide();
+    setFloodFillUI()
   }); // #tool-eraser.click()
   $('#tool-grid').click(function() {
     if ($('canvas#grid-canvas').hasClass('hide-gridlines')) {
