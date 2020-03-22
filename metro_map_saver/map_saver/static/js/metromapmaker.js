@@ -1291,27 +1291,54 @@ function getCanvasXY(pageX, pageY) {
 } // getCanvasXY(pageX, pageY)
 
 function floodFill(x, y, initialColor, replacementColor) {
-  // TODO: Scanline would be faster than recursion, though recursion isn't that bad
-  // The largest bottleneck is actually in drawing all the points when dealing with large areas
+  // Note: The largest performance bottleneck is actually in
+  //  drawing all the points when dealing with large areas
   // TODO: Right now, this doesn't floodFill along diagonals,
   //  but I also don't want it to bleed beyond the diagonals
+
+
+  // TODO: How can I use this also for flood fill hover indicator?
+
   if (initialColor == replacementColor)
     return
 
-  if (getActiveLine(x, y, activeMap) != initialColor)
-    return
-
-  // updateMapObject & drawCanvas is significantly faster than makeLine
-  updateMapObject(x, y, "line", replacementColor);
-  if (x > 0)
-    floodFill(x-1, y, initialColor, replacementColor)
-  if (y > 0)
-    floodFill(x, y-1, initialColor, replacementColor)
-  if (x < gridRows)
-    floodFill(x+1, y, initialColor, replacementColor)
-  if (y < gridCols)
-    floodFill(x, y+1, initialColor, replacementColor)
-} // floodFill(x, y, color)
+  var x1 = false
+  var spanAbove = spanBelow = 0;
+  var coords = [x, y]
+  while (coords.length > 0)
+  {
+    y = coords.pop()
+    x = coords.pop()
+    x1 = x;
+    while(x1 >= 0 && getActiveLine(x1, y, activeMap) == initialColor)
+      x1--;
+    x1++;
+    spanAbove = spanBelow = 0;
+    while(x1 < gridCols && getActiveLine(x1, y, activeMap) == initialColor)
+    {
+      updateMapObject(x1, y, "line", replacementColor);
+      if(!spanAbove && y > 0 && getActiveLine(x1, y-1, activeMap) == initialColor)
+      {
+        coords.push(x1, y - 1);
+        spanAbove = 1;
+      }
+      else if(spanAbove && y > 0 && getActiveLine(x1, y-1, activeMap) != initialColor)
+      {
+        spanAbove = 0;
+      }
+      if(!spanBelow && y < gridRows - 1 && getActiveLine(x1, y+1, activeMap) == initialColor)
+      {
+        coords.push(x1, y + 1);
+        spanBelow = 1;
+      }
+      else if(spanBelow && y < gridRows - 1 && getActiveLine(x1, y+1, activeMap) != initialColor)
+      {
+        spanBelow = 0;
+      }
+      x1++;
+    } // while x1
+  } // while coords
+} // floodFill() (scanline implementation)
 
 function combineCanvases() {
   // Combine all the separate canvases onto the main canvas so you can save the image
