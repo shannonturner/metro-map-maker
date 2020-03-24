@@ -1561,7 +1561,8 @@ $(document).ready(function() {
     // If on mobile, set initial tooltip direction
     if (window.innerWidth <= 768) {
       $('.has-tooltip').each(function() {
-        $(this).data('bs.tooltip').options.placement = 'top'
+        if ($(this).data('bs.tooltip'))
+          $(this).data('bs.tooltip').options.placement = 'top'
       })
     }
   })
@@ -1714,7 +1715,8 @@ $(document).ready(function() {
     $('#controls').css("left", 5)
     $('#controls').css("right", "unset")
     $('.has-tooltip').each(function() {
-      $(this).data('bs.tooltip').options.placement = 'right'
+      if ($(this).data('bs.tooltip'))
+        $(this).data('bs.tooltip').options.placement = 'right'
     })
     $(this).hide()
     $('#snap-controls-right').show()
@@ -1723,7 +1725,8 @@ $(document).ready(function() {
     $('#controls').css("right", 5)
     $('#controls').css("left", "unset")
     $('.has-tooltip').each(function() {
-      $(this).data('bs.tooltip').options.placement = 'left'
+      if ($(this).data('bs.tooltip'))
+        $(this).data('bs.tooltip').options.placement = 'left'
     })
     $(this).hide()
     $('#snap-controls-left').show()
