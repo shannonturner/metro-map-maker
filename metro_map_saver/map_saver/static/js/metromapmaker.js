@@ -998,6 +998,8 @@ function undo() {
     return // mapHistory.length is < 1
   }
   if (previousMap) {
+    // Remove all rail lines, they'll be replaced on loadMapFromObject()
+    $('.rail-line').remove();
     loadMapFromObject(previousMap)
     getMapSize(previousMap)
     drawCanvas(previousMap)
@@ -1148,15 +1150,12 @@ function loadMapFromObject(metroMapObject, update) {
     } // else (if there are no lines in the global)
 
     var numLines = 1;
-    var tooltipPlacement = 'left'
-    if (window.innerWidth < 768)
-      tooltipPlacement = 'top'
     for (var line in metroMapObject['global']['lines']) {
       if (metroMapObject['global']['lines'].hasOwnProperty(line) && document.getElementById('rail-line-' + line) === null) {
           if (numLines < 10) {
-            keyboardShortcut = ' data-toggle="tooltip" data-placement="' + tooltipPlacement + '" title="Keyboard shortcut: ' + numLines + '"'
+            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: ' + numLines + '"'
           } else if (numLines == 10) {
-            keyboardShortcut = ' data-toggle="tooltip" data-placement="' + tooltipPlacement + '" title="Keyboard shortcut: 0"'
+            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: 0"'
           } else {
             keyboardShortcut = ''
           }
@@ -1168,6 +1167,7 @@ function loadMapFromObject(metroMapObject, update) {
     $(function () {
       $('[data-toggle="tooltip"]').tooltip({"container": "body"});
       bindRailLineEvents();
+      resetRailLineTooltips()
       drawCanvas(metroMapObject);
       if ($('.visible-xs').is(':visible')) {
         $('#canvas-container').removeClass('hidden-xs');
@@ -2018,7 +2018,6 @@ $(document).ready(function() {
     // Repopulate the Edit Rail Lines dropdown menu, in case it's open
     $('#tool-lines-to-change').html('<option>Edit which rail line?</option>')
     for (var line in activeMap["global"]["lines"]) {
-      console.log("adding line: " + line)
       $('#tool-lines-to-change').append('<option value="' + line + '">' + activeMap["global"]["lines"][line]["displayName"] + '</option>')
     }
   }); // $('#create-new-rail-line').click()
