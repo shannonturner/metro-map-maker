@@ -1495,7 +1495,7 @@ function resetRailLineTooltips() {
     } else if (numLines == 10) {
       keyboardShortcut = 'Keyboard shortcut: 0'
     } else {
-      break
+      keyboardShortcut = '' // remove old tooltips
     }
     $('#rail-line-' + line).attr('title', keyboardShortcut).tooltip('fixTitle')
   } // for a in allLines
