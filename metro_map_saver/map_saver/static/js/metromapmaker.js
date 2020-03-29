@@ -1502,6 +1502,18 @@ function resetRailLineTooltips() {
   resetTooltipOrientation()
 } // resetRailLineTooltips
 
+function showGrid() {
+  $('canvas#grid-canvas').removeClass('hide-gridlines');
+  $('canvas#grid-canvas').css("opacity", 1);
+  $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> <b><u>H</u></b>ide grid');
+}
+
+function hideGrid() {
+  $('canvas#grid-canvas').addClass('hide-gridlines');
+  $('canvas#grid-canvas').css("opacity", 0);
+  $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> S<b><u>h</u></b>ow grid');
+}
+
 function setFloodFillUI() {
   // Show appropriate eraser warnings when flood fill is set
   if ($('#tool-flood-fill').prop('checked')) {
@@ -1699,15 +1711,10 @@ $(document).ready(function() {
     setFloodFillUI()
   }); // #tool-eraser.click()
   $('#tool-grid').click(function() {
-    if ($('canvas#grid-canvas').hasClass('hide-gridlines')) {
-      $('canvas#grid-canvas').removeClass('hide-gridlines');
-      $('canvas#grid-canvas').css("opacity", 1);
-      $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> <b><u>H</u></b>ide grid');
-    } else {
-      $('canvas#grid-canvas').addClass('hide-gridlines');
-      $('canvas#grid-canvas').css("opacity", 0);
-      $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> S<b><u>h</u></b>ow grid');
-    }
+    if ($('canvas#grid-canvas').hasClass('hide-gridlines'))
+      showGrid()
+    else
+      hideGrid()
     $('.tooltip').hide()
   }); // #tool-grid.click() (Toggle grid visibility)
   $('#tool-zoom-in').click(function() {
@@ -1965,6 +1972,7 @@ $(document).ready(function() {
       $(this).html(resizeButtonLabel);
     })
     
+    showGrid() // If the grid was hidden, show it or the page looks blank
     $('.tooltip').hide();
   }); // #tool-clear-map.click()
 
