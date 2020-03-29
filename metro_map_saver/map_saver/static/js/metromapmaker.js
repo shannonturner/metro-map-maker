@@ -1926,10 +1926,6 @@ $(document).ready(function() {
       $('#tool-export-canvas').html('<i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image');
       $(this).attr('title', "Download your map to share with friends").tooltip('fixTitle').tooltip('show');
     }
-    // Hide the changed tooltip after a moment
-    setTimeout(function() {
-      $('.tooltip').hide();
-    }, 1500);
   }); // #tool-export-canvas.click()
   $('#tool-clear-map').click(function() {
     gridRows = 80, gridCols = 80;
