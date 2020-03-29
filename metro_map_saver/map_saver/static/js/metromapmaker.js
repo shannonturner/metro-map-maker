@@ -1473,7 +1473,7 @@ function resetTooltipOrientation() {
   tooltipOrientation = ''
   if (window.innerWidth <= 768)
     tooltipOrientation = 'top'
-  else if ($('#snap-controls-left').is(':hidden'))
+  else if (!$('#snap-controls-right').is(':hidden'))
     tooltipOrientation = 'right'
   else
     tooltipOrientation = 'left'
