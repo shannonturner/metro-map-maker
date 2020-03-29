@@ -1540,6 +1540,12 @@ $(document).ready(function() {
   document.getElementById('canvas-container').addEventListener('mousemove', throttle(bindGridSquareMouseover, 5), false);
   document.getElementById('canvas-container').addEventListener('mouseup', bindGridSquareMouseup, false);
   window.addEventListener('resize', unfreezeMapControls);
+  window.addEventListener('scroll', function() {
+    $('.tooltip').hide()
+  })
+  $('.has-tooltip').on('mouseout', function() {
+    $('.tooltip').hide()
+  })
 
   // Bind to the mousedown and mouseup events so we can implement dragging easily
   mouseIsDown = false;
