@@ -1470,18 +1470,17 @@ function throttle(callback, interval) {
 } // throttle()
 
 function resetTooltipOrientation() {
-  if (window.innerWidth <= 768) {
-    // Set tooltip direction
-    $('.has-tooltip').each(function() {
-      if ($(this).data('bs.tooltip'))
-        $(this).data('bs.tooltip').options.placement = 'top'
-    })
-  } else {
-    $('.has-tooltip').each(function() {
-      if ($(this).data('bs.tooltip'))
-        $(this).data('bs.tooltip').options.placement = 'left'
-    })
-  }
+  tooltipOrientation = ''
+  if (window.innerWidth <= 768)
+    tooltipOrientation = 'top'
+  else if ($('#snap-controls-left').is(':hidden'))
+    tooltipOrientation = 'right'
+  else
+    tooltipOrientation = 'left'
+  $('.has-tooltip').each(function() {
+    if ($(this).data('bs.tooltip'))
+      $(this).data('bs.tooltip').options.placement = tooltipOrientation
+  })
 } // resetTooltipOrientation()
 
 function resetRailLineTooltips() {
