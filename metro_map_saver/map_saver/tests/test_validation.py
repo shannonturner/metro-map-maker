@@ -574,3 +574,21 @@ class ValidateMap(TestCase):
         validate_metro_map(metro_map)
         response = self._post_metromap(metro_map).strip()
         self.assertTrue(len(response), 73)
+
+    def test_valid_map_html_color_name_fragments(self):
+
+        """ Confirm that an otherwise-valid map
+            that uses HTML color names in the globals instead of hex values
+            will still be accepted
+        """
+
+        # Truncated from an assortment of actual failed maps from the logs
+        metro_maps = [
+            json.dumps({"50":{},"51":{"190":{"line":"008800","station":{"name":"Cloverdale","orientation":"180","lines":["reen"]}}},"global":{"lines":{"002366":{"displayName":"Line 3 Ontario"},"f81894":{"displayName":"Line 7 Jane"},"reen":{"displayName":"Line 2 Bloor-Danforth"},"ellow":{"displayName":"Line 1 Yonge-University"},"urple":{"displayName":"Line 4 Sheppard"},"range":{"displayName":"Line 5 Eglinton"},"rey":{"displayName":"Line 6 Finch West"},"urquoi":{"displayName":"Line 8 Don Mills"}}}}),
+        ]
+
+        for metro_map in metro_maps:
+            validate_metro_map(metro_map)
+            response = self._post_metromap(metro_map).strip()
+            # 73 = 8 character urlhash + comma + 64 char naming token
+            self.assertTrue(len(response), 73)
