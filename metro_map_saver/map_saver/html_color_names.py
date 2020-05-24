@@ -8,6 +8,8 @@
 
 # Below is a list of those html color name fragments, and what color code they're associated with
 
+# If I see any other errors come through, it's easy enough to just add them to the dict below.
+
 html_color_name_fragments = {
     "ink": "ffc0cb",
     "ightpi": "ffb6c1",
@@ -24,6 +26,7 @@ html_color_name_fragments = {
     "irebri": "b22222",
     "arkred": "8b0000",
     "ed": "ff0000",
+    "carlet": "ff2400",
     "ranger": "ff4500",
     "omato": "ff6347",
     "oral": "ff7f50",
