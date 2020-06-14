@@ -564,6 +564,25 @@ class AdminHomeView(TemplateView):
     def get(self, request, **kwargs):
         return super().get(request, **kwargs)
 
+    @method_decorator(staff_member_required)
+    def post(self, request, **kwargs):
+        if not request.user.is_superuser:
+            raise PermissionDenied
+
+        action = request.POST.get('action')
+        if action == 'mass_hide':
+            group = request.POST.get('group', '').replace("'", '"')
+            group = json.loads(group)
+            maps = SavedMap.objects.filter(
+                gallery_visible=True,
+                tags__exact=None,
+                **group,
+            )
+            maps.update(gallery_visible=False)
+
+        # Return empty response for success
+        return render(request, 'MapDataView.html', {})
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -616,6 +635,7 @@ class AdminHomeView(TemplateView):
                     PER_PAGE,
                     urllib.parse.urlencode(filters)
                 ),
+                'filters': filters,
             } for group, filters in filter_groups.items()
         }
 
