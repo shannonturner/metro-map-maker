@@ -873,6 +873,14 @@ function drawStation(ctx, x, y, metroMap) {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(45 * (Math.PI/ 180));
     ctx.fillText(activeStation, xOffset, yOffset);
+  } else if (metroMap[x][y]["station"]["orientation"] == '-90') {
+    ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
+    ctx.rotate(-90 * (Math.PI/ 180));
+    ctx.fillText(activeStation, -1 * textSize - xOffset, yOffset);
+  } else if (metroMap[x][y]["station"]["orientation"] == '90') {
+    ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
+    ctx.rotate(-90 * (Math.PI/ 180));
+    ctx.fillText(activeStation, xOffset, yOffset);
   } else if (metroMap[x][y]["station"]["orientation"] == '135') {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(-45 * (Math.PI/ 180));
@@ -2133,7 +2141,7 @@ $(document).ready(function() {
     var x = $('#station-coordinates-x').val();
     var y = $('#station-coordinates-y').val();
 
-    const ALLOWED_ORIENTATIONS = ['0', '45', '-45', '135', '-135', '180'];
+    const ALLOWED_ORIENTATIONS = ['0', '45', '-45', '90', '-90', '135', '-135', '180'];
 
     if (x >= 0 && y >= 0) {
       if ($(this).val() == '0') {
