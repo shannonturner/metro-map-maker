@@ -122,7 +122,7 @@ WSGI_APPLICATION = 'metro_map_saver.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'ENGINE': 'django.db.backends.mysql',
         'NAME': 'metromapmaker',
         'USER': 'metromapmaker',
         'PASSWORD': 'metromapmaker',
@@ -177,10 +177,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
-if DEBUG:
-    STATIC_ROOT = '/Users/shannon/Dropbox/github/metro-map-maker/static/'
-elif not DEBUG:
-    STATIC_ROOT = '/home/sturner/webapps/metromapmaker_static/'
+STATIC_ROOT = '/home/shannonturner/metromapmaker.com/public/static/'
 
 # URL to use when referring to static files located in STATIC_ROOT.
 STATIC_URL = '/static/'
