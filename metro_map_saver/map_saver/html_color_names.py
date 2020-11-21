@@ -19,6 +19,7 @@ html_color_name_fragments = {
     "ediumv": "c71585",
     "ightsa": "ffa07a",
     "almon": "fa8072",
+    "ark gr": "a9a9a9",
     "arksal": "e9967a",
     "ightco": "f08080",
     "ndianr": "cd5c5c",
