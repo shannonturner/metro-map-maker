@@ -21,7 +21,7 @@ class SavedMap(models.Model):
     """ Saves map data and its corresponding urlhash together so that maps can be easily shared
     """
 
-    urlhash = models.CharField(max_length=64)
+    urlhash = models.CharField(max_length=8, db_index=True)
     mapdata = models.TextField()
     # gallery_visible: should this be shown in the default view of the Admin Gallery?
     gallery_visible = models.BooleanField(default=True, db_index=True)
