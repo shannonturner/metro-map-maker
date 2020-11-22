@@ -534,19 +534,19 @@ class MapDataView(TemplateView):
             urlhash = hex64(hashlib.sha256(str(mapdata).encode('utf-8')).hexdigest()[:12])
             try:
                 # Doesn't override the saved map if it already exists.
-                saved_map = SavedMap.objects.get(urlhash=urlhash)
+                saved_map = SavedMap.objects.only('urlhash').get(urlhash=urlhash)
+                context['saved_map'] = f'{urlhash},'
             except ObjectDoesNotExist:
                 saved_map = SavedMap.objects.create(**{
                     'urlhash': urlhash,
                     'mapdata': json.dumps(mapdata),
                     'naming_token': hashlib.sha256('{0}'.format(random.randint(1, 100000)).encode('utf-8')).hexdigest(),
                     })
+                context['saved_map'] = f'{saved_map.urlhash},{saved_map.naming_token}'
             except MultipleObjectsReturned:
                 # This should never happen, but it happened once
                 # Perhaps this was due to a race condition?
-                saved_map = SavedMap.objects.filter(urlhash=urlhash)[0]
-
-            context['saved_map'] = f'{saved_map.urlhash},{saved_map.naming_token}'
+                context['saved_map'] = f'{urlhash},'
 
         return render(request, 'MapDataView.html', context)
 
