@@ -242,9 +242,7 @@
 
 </div> <!-- #main-container -->
 
-  <script src="https://code.jquery.com/jquery-3.4.1.min.js"
-  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-  crossorigin="anonymous"></script>
+  <script src='{% static "js/jquery-3.4.1.min.js" %}'></script>
   {% if saved_map %}
   <script>
     var savedMapData = {% autoescape off %}'{{ saved_map.mapdata }}'{% endautoescape %}
