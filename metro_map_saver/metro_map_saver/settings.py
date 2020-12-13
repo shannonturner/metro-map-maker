@@ -128,6 +128,10 @@ DATABASES = {
         'PASSWORD': 'metromapmaker',
         'HOST': 'localhost',
         'PORT': '5432',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'use_unicode': True,
+        },
     }
 }
 
