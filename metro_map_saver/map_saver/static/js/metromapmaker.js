@@ -693,6 +693,10 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
   // Draw the stations separately, or they will be painted over by the lines themselves.
   var canvas = document.getElementById('metro-map-stations-canvas');
   var ctx = canvas.getContext('2d', {alpha: true});
+  gridPixelMultiplier = canvas.width / gridCols; // 20
+  var fontSize = 20;
+  if (gridPixelMultiplier > 20)
+    fontSize = gridPixelMultiplier
   ctx.font = '700 ' + fontSize + 'px sans-serif';
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1176,7 +1180,6 @@ function loadMapFromObject(metroMapObject, update) {
       $('[data-toggle="tooltip"]').tooltip({"container": "body"});
       bindRailLineEvents();
       resetRailLineTooltips()
-      drawCanvas(metroMapObject);
       if ($('.visible-xs').is(':visible')) {
         $('#canvas-container').removeClass('hidden-xs');
         $('#tool-export-canvas').click();
