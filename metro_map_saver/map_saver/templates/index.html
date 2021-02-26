@@ -102,7 +102,7 @@
     <div id="toolbox">
 
       <button id="tool-line" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Draw a rail line on the grid (Keyboard shortcut: D)"><i class="fa fa-pencil" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> <b><u>D</u></b>raw Rail Line</button>
-      <div id="tool-line-options" class="start-hidden">
+      <div id="tool-line-options" class="start-hidden" style="display: none;">
         <button id="rail-line-bd1038" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 1">Red Line</button>
         <button id="rail-line-df8600" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 2">Orange Line</button>
         <button id="rail-line-f0ce15" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 3">Yellow Line</button>
@@ -152,7 +152,7 @@
       </div>
       
       <button id="tool-station" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Place a station on an existing rail line, or select an existing station (Keyboard shortcut: S)"><i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation</button>
-      <div id="tool-station-options" class="text-left start-hidden">
+      <div id="tool-station-options" class="text-left start-hidden" style="display: none;">
         <h4>Station Name</h4>
         <input id="station-coordinates-x" type="hidden">
         <input id="station-coordinates-y" type="hidden">
@@ -181,7 +181,7 @@
       <div id="tool-eraser-options" class="text-center bg-danger start-hidden"></div>
       <button id="tool-download-image" class="btn btn-info has-tooltip hidden-xs" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
       <button id="tool-export-canvas" class="btn btn-info has-tooltip visible-xs" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
-      <div id="export-canvas-help" class="text-left start-hidden">
+      <div id="export-canvas-help" class="text-left start-hidden" style="display: none;">
         <h5><b>Tap and hold the map to save as an image, or right click the map and click "Save Image As".</b></h5>
         <h5>Or click "Edit map" to continue editing your map.</h5>
         <h5>Happy with your map? Be sure to click Save &amp; Share map and it might be <a href="https://metromapmaker.com/gallery" rel="noopener" target="_blank">featured in the gallery</a>!</h5>
@@ -197,10 +197,10 @@
         <button id="tool-zoom-out" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: -"><i class="fa fa-search-minus" aria-hidden="true"></i> Zoom -</button>
         </div>
       </div>
-      <button id="snap-controls-left" class="btn btn-info has-tooltip start-hidden" data-toggle="tooltip" data-placement="left" title="Move all controls to the left side of the screen"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Snap controls to left</button>
-      <button id="snap-controls-right" class="btn btn-info has-tooltip start-hidden" data-toggle="tooltip" data-placement="left" title="Move all controls to the right side of the screen"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Snap controls to right</button>
+      <button id="snap-controls-left" class="btn btn-info has-tooltip start-hidden" data-toggle="tooltip" data-placement="left" title="Move all controls to the left side of the screen" style="display: none;"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Snap controls to left</button>
+      <button id="snap-controls-right" class="btn btn-info has-tooltip start-hidden" data-toggle="tooltip" data-placement="left" title="Move all controls to the right side of the screen" style="display: none;"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Snap controls to right</button>
       <button id="tool-move-all" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Recenter your Metro map (Keyboard shortcuts: Arrow keys)"><i class="fa fa-arrows" aria-hidden="true"></i> Move map</button>
-      <div id="tool-move-options" class="text-left start-hidden">
+      <div id="tool-move-options" class="text-left start-hidden" style="display: none;">
         <h5>Be careful! If you move your map out of bounds, you'll lose your work.</h5>
         <button id="tool-move-up" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Up arrow"><i class="fa fa-chevron-circle-up" aria-hidden="true"></i> Move everything up</button>
         <button id="tool-move-left" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Left arrow"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Move everything left</button>
@@ -208,7 +208,7 @@
         <button id="tool-move-down" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Down arrow"><i class="fa fa-chevron-circle-down" aria-hidden="true"></i> Move everything down</button>
       </div>
       <button id="tool-resize-all" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Resize the grid, allowing you to make larger maps"><i class="fa fa-expand" aria-hidden="true"></i> Resize grid</button>
-      <div id="tool-resize-options" class="text-left start-hidden">
+      <div id="tool-resize-options" class="text-left start-hidden" style="display: none;">
         <h5>Be careful! If your map is large and you resize it to be smaller, you'll lose your work. <b>Use Control+Z to undo.</b></h5>
         <button id="tool-resize-80" class="btn btn-info resize-grid">Standard (80x80)</button>
         <button id="tool-resize-120" class="btn btn-info resize-grid">Large (120x120)</button>
@@ -251,7 +251,7 @@
     {% if saved_map_name %}window.sessionStorage.setItem('userGivenMapName', "{{ saved_map_name }}"){% endif %}
   </script>
   {% endif %}
-  <script src='{% static "js/metromapmaker.js" %}?version=20200615'></script>
+  <script src='{% static "js/metromapmaker.js" %}?version=20210225'></script>
   <script src='{% static "js/tooltips.min.js" %}' defer=""></script>
 
   </body>
