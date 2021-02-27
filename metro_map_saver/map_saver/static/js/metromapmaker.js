@@ -1048,6 +1048,7 @@ function autoLoad() {
     savedMapData = JSON.parse(window.localStorage.getItem('metroMap'));
     getMapSize(savedMapData);
     loadMapFromObject(savedMapData);
+    drawCanvas(savedMapData)
   } else {
     // If no map URLParameter and no locally stored map, default to the WMATA map
     // I think this would be more intuitive than the blank slate,
@@ -1063,6 +1064,7 @@ function autoLoad() {
       } else {
         getMapSize(savedMapData);
         loadMapFromObject(JSON.parse(savedMapData));
+        drawCanvas(JSON.parse(savedMapData))
       }
     });
   }
