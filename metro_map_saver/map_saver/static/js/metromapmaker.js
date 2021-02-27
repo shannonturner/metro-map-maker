@@ -1636,11 +1636,11 @@ $(document).ready(function() {
       $('#tool-grid').click()
     else if (event.which == 83) // S
       $('#tool-station').click()
-    else if (event.which == 37) { // left arrow
+    else if (event.which == 37 && !event.metaKey) { // left arrow, except for "go back"
       event.preventDefault(); moveMap('left')
     } else if (event.which == 38) { // up arrow
       event.preventDefault(); moveMap('up')
-    } else if (event.which == 39) { // right arrow
+    } else if (event.which == 39 && !event.metaKey) { // right arrow, except for "go forward"
       event.preventDefault(); moveMap('right')
     } else if (event.which == 40) {// down arrow
       event.preventDefault(); moveMap('down')
