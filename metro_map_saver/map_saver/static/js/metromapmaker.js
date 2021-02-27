@@ -2195,7 +2195,7 @@ $(document).ready(function() {
     drawCanvas(activeMap, true)
     drawIndicator(x, y);
   }); // $('#station-transfer').click()
-  document.getElementById('loading').remove()
+  $('#loading').remove()
 }); // document.ready()
 
 // Cheat codes / Advanced map manipulations
