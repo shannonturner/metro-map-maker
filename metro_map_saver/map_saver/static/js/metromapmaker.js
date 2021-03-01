@@ -1034,7 +1034,7 @@ function autoLoad() {
 
   // Load from the savedMapData injected into the index.html template
   if (typeof savedMapData !== 'undefined') {
-    activeMap = JSON.parse(savedMapData)
+    activeMap = savedMapData
     getMapSize(activeMap)
     loadMapFromObject(activeMap)
     setTimeout(function() {

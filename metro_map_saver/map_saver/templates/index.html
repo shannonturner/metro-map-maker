@@ -248,7 +248,7 @@
   crossorigin="anonymous"></script>
   {% if saved_map %}
   <script>
-    var savedMapData = {% autoescape off %}'{{ saved_map.mapdata }}'{% endautoescape %}
+    var savedMapData = {% autoescape off %}{{ saved_map.mapdata }}{% endautoescape %}
     {% if saved_map_name %}window.sessionStorage.setItem('userGivenMapName', "{{ saved_map_name }}"){% endif %}
   </script>
   {% endif %}
