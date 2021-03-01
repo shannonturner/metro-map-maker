@@ -1078,6 +1078,7 @@ function autoLoad() {
   if (zoomLevel)
     resizeCanvas(zoomLevel)
 } // autoLoad()
+autoLoad();
 
 function getMapSize(metroMapObject) {
   // Sets gridRows and gridCols based on how far to the right map features have been placed
@@ -1574,8 +1575,6 @@ $(document).ready(function() {
 
   // Bind to the mousedown and mouseup events so we can implement dragging easily
   mouseIsDown = false;
-
-  autoLoad();
 
   $('.start-hidden').each(function() {
     $(this).hide();
