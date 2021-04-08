@@ -1,4 +1,4 @@
-django==2.2.13
+django==2.2.20
 django-debug-toolbar==1.11
 django-taggit==0.24.0
 python-memcached==1.59
