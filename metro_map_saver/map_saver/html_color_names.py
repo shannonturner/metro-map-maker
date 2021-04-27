@@ -143,6 +143,7 @@ html_color_name_fragments = {
     "owderb": "b0e0e6",
     "ightbl": "add8e6",
     "kyblue": "87ceeb",
+    "ky blu": "87ceeb",
     "ightsk": "87cefa",
     "eepsky": "00bfff",
     "odgerb": "1e90ff",
