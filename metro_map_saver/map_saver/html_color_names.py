@@ -113,6 +113,7 @@ html_color_name_fragments = {
     "ellowg": "9acd32",
     "imegre": "32cd32",
     "ime": "00ff00",
+    "eon Re": "ff0000",
     "awngre": "7cfc00",
     "hartre": "7fff00",
     "reenye": "adff2f",
