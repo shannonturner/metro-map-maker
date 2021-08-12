@@ -20,6 +20,7 @@ html_color_name_fragments = {
     "ightsa": "ffa07a",
     "almon": "fa8072",
     "ark gr": "a9a9a9",
+    "ark bl": "00008b",
     "arksal": "e9967a",
     "ightco": "f08080",
     "ndianr": "cd5c5c",
