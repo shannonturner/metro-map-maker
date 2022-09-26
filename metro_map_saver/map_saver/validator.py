@@ -143,7 +143,7 @@ def validate_metro_map(metro_map):
 
     # Allow HTML color names to be used, but convert them to hex values
     metro_map['global']['lines'] = {
-        html_color_name_fragments.get(line) or line: data
+        html_color_name_fragments.get(line.strip()) or line: data
         for line, data in
         metro_map['global']['lines'].items()
     }
@@ -151,7 +151,13 @@ def validate_metro_map(metro_map):
     for global_line in metro_map['global']['lines'].keys():
         assert is_hex(global_line), "[VALIDATIONFAILED] 05 global_line {0} FAILED is_hex() {0} is not a valid color: {0} is not a valid rail line color.".format(global_line)
         assert len(global_line) == 6, "[VALIDATIONFAILED] 06 global_line {0} IS NOT 6 CHARACTERS: The color {0} must be 6 characters long.".format(global_line)
-        assert 1 <= len(metro_map['global']['lines'][global_line].get('displayName', '')) < 256, "[VALIDATIONFAILED] 07 displayName BAD SIZE: Rail line names must be between 1 and 255 characters long (spaces are okay)."
+        # Transformations to the display name could result in a non-unique display name, but it doesn't actually matter.
+        display_name = metro_map['global']['lines'][global_line].get('displayName', 'Rail Line')
+        if len(display_name) < 1:
+            metro_map['global']['lines'][global_line]['displayName'] = 'Rail Line'
+        elif len(display_name) > 255:
+            metro_map['global']['lines'][global_line]['displayName'] = display_name[:255]
+        assert 1 <= len(metro_map['global']['lines'][global_line].get('displayName', 'Rail Line')) < 256, "[VALIDATIONFAILED] 07 displayName BAD SIZE: Rail line names must be between 1 and 255 characters long (spaces are okay)."
         valid_lines.append(global_line)
         validated_metro_map['global']['lines'][global_line] = {
             'displayName': sanitize_string(metro_map['global']['lines'][global_line]['displayName'])
