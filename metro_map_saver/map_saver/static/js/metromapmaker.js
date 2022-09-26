@@ -1647,7 +1647,8 @@ $(document).ready(function() {
       $('#tool-zoom-out').click()
     else if (event.which == 187 || event.key == '=') // plus / equal sign
       $('#tool-zoom-in').click()
-    else if (event.which >= 48 && event.which <= 57) { // 0-9
+    else if (!event.metaKey && !event.ctrlKey && event.which >= 48 && event.which <= 57) {
+      // 0-9, except when switching tabs (Control)
       // Draw rail colors in order of appearance, 1-10 (0 is 10)
       var railKey = parseInt(event.which) - 49
       if (railKey == -1)
