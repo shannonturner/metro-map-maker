@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from django.apps import AppConfig
 
 
 class MapSaverConfig(AppConfig):
     name = 'map_saver'
+    default_auto_field = 'django.db.models.BigAutoField'
