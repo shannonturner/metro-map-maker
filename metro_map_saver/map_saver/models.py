@@ -32,7 +32,7 @@ class SavedMap(models.Model):
     thumbnail = models.TextField(blank=True, default='')
     stations = models.TextField(blank=True, default='')
     station_count = models.IntegerField(default=-1)
-    created_at = models.DateField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     # Create a token that can be used for creators to be able to name their maps
     # but subsequent visitors to that map will not be able to rename it
