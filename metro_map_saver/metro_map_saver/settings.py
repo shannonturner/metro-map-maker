@@ -64,7 +64,8 @@ MAILER_LIST = ADMINS
 
 ALLOWED_HOSTS = [
     'metromapmaker.com',
-    'www.metromapmaker.com'
+    'www.metromapmaker.com',
+    'staging.metromapmaker.com',
 ]
 
 # Application definition
@@ -80,6 +81,7 @@ INSTALLED_APPS = [
     'taggit',
     'citysuggester',
     'moderate',
+    'summary',
     'debug_toolbar',
 ]
 
