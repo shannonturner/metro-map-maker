@@ -22,6 +22,7 @@ from django.views.decorators.cache import cache_page, never_cache
 
 import map_saver.views
 import moderate.views
+import summary.views
 
 urlpatterns = [
     # Main page; only caches for 15 minutes so you don't have to wait a full day for static asset updates
@@ -34,6 +35,14 @@ urlpatterns = [
     path('save/', map_saver.views.MapDataView.as_view(), name='save_map'),
     path('load/<slug:urlhash>', map_saver.views.MapDataView.as_view(), name='load_map'),
     path('name/', map_saver.views.CreatorNameMapView.as_view(), name='name_map'),
+
+    # Stats, using summary for performance
+    path('calendar/<int:year>/', summary.views.MapsPerYearView.as_view(), name='calendar-year'),
+    path('calendar/<int:year>/<int:month>/', summary.views.MapsPerMonthView.as_view(month_format='%m'), name='calendar-month'),
+    path('calendar/<int:year>/week/<int:week>/', summary.views.MapsPerWeekView.as_view(year_format='%G', week_format='%V'), name='calendar-week'),
+
+    # TODO: Maps per Day should show the maps themselves, not the summary
+    path('calendar/<int:year>/<int:month>/<int:day>/', summary.views.MapsPerDayView.as_view(month_format='%m'), name='calendar-day'),
 
     # Admin and Moderation
     path('admin/', admin.site.urls),

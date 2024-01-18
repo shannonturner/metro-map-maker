@@ -1,0 +1,30 @@
+table.map-calendar tbody tr:nth-child(1), table.map-calendar tbody tr:nth-child(2) {
+    height: 2rem;
+}
+th.map-calendar-month {
+    font-size: 150%; font-weight: 400; margin: 1rem 0;
+}
+.map-calendar-event {
+    border-radius: 0.5rem;
+}
+
+.map-calendar-day {
+    width: 10rem;
+    height: 12rem;
+    border: 1px solid;
+    vertical-align: top;
+    padding: 0.5rem;
+}
+
+.map-calendar-day-mark {
+    width: 20%;
+    text-align: center;
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
+    margin: -0.5rem 0 0 -0.5rem;
+}
+
+.map-calendar-data {
+    text-align: center;
+    font-size: 150%;
+}

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+
+{% load static %}
+
+<html lang="en-us">
+<head>
+<title>{% block title %}Metro Map Maker{% endblock title %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' %}?version=20210225">
+    <link rel="stylesheet" href="{% static 'css/mmm-pages.css' %}?version=202401">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+    <script src="/static/admin/js/vendor/jquery/jquery.min.js"></script>
+
+    {% block extrastyle %}{% endblock extrastyle %}
+    {% block extrahead %}{% endblock extrahead %}
+
+    {% block metatags %}
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="Build the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
+
+        {% if saved_map and saved_map.name and not saved_map.naming_token %}
+        <meta property="og:title" content="{{ saved_map.name }} - Metro Map Maker">
+        {% else %}
+        <meta property="og:title" content="Metro Map Maker">
+        {% endif %}
+
+        <meta property="og:site_name" content="Metro Map Maker">
+        <meta property="og:url" content="https://metromapmaker.com{% if saved_map %}/?map={{ saved_map.urlhash }}{% endif %}">
+        <meta property="og:type" content="website">
+        <meta property="og:description" content="Build the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
+
+        {% if saved_map %}
+        <meta property="og:image" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
+        {% endif %}
+        <meta property="og:image" content="https://metromapmaker.com/static/assets/metromapmaker.png?version=2">
+
+        <meta name="twitter:card" content="summary_large_image">
+        <meta name="twitter:site" content="https://metromapmaker.com">
+        <meta name="twitter:creator" content="@svthmc">
+        <meta name="twitter:title" content="Metro Map Maker">
+        <meta name="twitter:description" content="Build the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
+        <meta name="twitter:image:src" content="https://metromapmaker.com/static/assets/metromapmaker.png?version=2">
+        {% if saved_map %}
+            <meta name="twitter:image:src" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
+        {% endif %}
+    {% endblock metatags %}
+
+    <link rel="icon" href="{% static 'assets/favicon.ico' %}?version=2">
+
+</head>
+
+<body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock bodyclass %}"
+  data-admin-utc-offset="{% now "Z" %}">
+
+<div class="d-flex flex-nowrap">
+
+    {% if not is_popup %}
+        {% block header %}{% endblock header %}
+
+        {% block nav-breadcrumbs %}
+          <nav aria-label="Breadcrumbs">
+            <ol class="breadcrumb justify-content-start {% block breadcrumb-classes %}styling-{{ styling_class }}{% endblock breadcrumb-classes %}">
+            {% block breadcrumbs %}{% endblock breadcrumbs %}
+            {% block breadcrumbs_end %}{% endblock breadcrumbs_end %}
+            </ol>
+          </nav>
+        {% endblock nav-breadcrumbs %}
+    {% endif %}
+    
+      <div id="content-start" class="content container-fluid" tabindex="-1">
+        {% block messages %}
+          {% if messages %}
+            <ul class="messagelist">
+                {% for message in messages %}
+                    <li{% if message.tags %} class="alert alert-{{ message.tags }}{% if 'error' in message.tags %} alert-danger{% endif %}"{% endif %}>{{ message|capfirst }}</li>
+                {% endfor %}
+            </ul>
+          {% endif %}
+        {% endblock messages %}
+
+        <div id="content">
+            {% block pretitle %}{% endblock pretitle %}
+
+            {% block content_subtitle %}
+                {% if subtitle %}<h2 id="content_subtitle">{{ subtitle }}</h2>{% endif %}
+            {% endblock content_subtitle %}
+
+            {% block content_description %}{% endblock content_description %}
+
+            {% block content %}
+                {% block object-tools %}{% endblock object-tools %}
+                {{ content }}
+            {% endblock content %}
+
+            {% block sidebar %}{% endblock sidebar %}
+        </div>
+
+        {% block footer %}<div id="footer"></div>{% endblock footer %}
+      </div>
+    </div>
+
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+</body>
+</html>
