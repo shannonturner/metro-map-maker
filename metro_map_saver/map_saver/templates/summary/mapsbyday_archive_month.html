@@ -2,7 +2,7 @@
 
 {% block content %}
 
-    <h3 class="visible-xs">{{ maps.0.day|date:"F Y" }} ({{ maps_count }} maps)</h3>
+    <h3 class="visible-xs">{{ month|date:"F Y" }} ({{ maps_count }} maps)</h3>
 
     <div id="calendar-controls">
         {% if previous_month %}

@@ -120,12 +120,37 @@ class MapsByDateMixin:
                 else:
                     adjusted_maps.append(maps_original.pop(0))
             maps = adjusted_maps
+        elif isinstance(self, WeekArchiveView) and maps.count() < 7:
+            # Some weeks don't have a map every day, so adjust it.
+            maps_original = [m for m in maps]
+            days_with_maps = [m.day.day for m in maps_original]
 
-        for index, m in enumerate(maps):
-            maps_by_day[index + 1] = {
-                'count': getattr(m, 'maps', 0),
-                'date': getattr(m, 'day', None),
-            } # TODO: doesn't work well for week mode
+            adjusted_maps = []
+            for day in self.days_this_week:
+                if day not in days_with_maps:
+                    adjusted_maps.append(None)
+                else:
+                    adjusted_maps.append(maps_original.pop(0))
+            maps = adjusted_maps
+
+        if isinstance(self, MonthArchiveView):
+            for index, m in enumerate(maps):
+                maps_by_day[index + 1] = {
+                    'count': getattr(m, 'maps', 0),
+                    'date': getattr(m, 'day', None),
+                }
+        elif isinstance(self, WeekArchiveView):
+            for index, m in enumerate(maps):
+                which_day = getattr(m, 'day', None)
+                if which_day:
+                    which_day = which_day.day
+                else:
+                    which_day = index + 1
+                maps_by_day[which_day] = {
+                    'count': getattr(m, 'maps', 0),
+                    'date': getattr(m, 'day', None),
+                }
+
         return maps_by_day
 
 
@@ -163,7 +188,30 @@ class MapsPerMonthView(MapsByDateMixin, MonthArchiveView):
         return context
 
 class MapsPerWeekView(MapsByDateMixin, WeekArchiveView):
-    pass
+    week_format = '%V'
+
+    def get_context_data(self, *args, **kwargs):
+        year = kwargs['week'].year
+        month = kwargs['week'].month
+        week = int(kwargs['week'].strftime('%V'))
+
+        monday_of_week = datetime.datetime.strptime(f'{year}-{week}-1', '%G-%V-%u')
+        days_wanted = []
+        for offset in range(0, 7):
+            day = monday_of_week + datetime.timedelta(days=offset)
+            days_wanted.append((day.day, day.weekday()))
+
+        self.days_this_week = [d[0] for d in days_wanted]
+
+        context = super().get_context_data(*args, **kwargs)
+        context['calendar'].this_week_only = week
+        context['calendar'] = context['calendar'].weekly_calendar(
+            year,
+            month,
+            days_wanted,
+        )
+
+        return context
 
 class MapsPerDayView(MapsByDateMixin, DayArchiveView):
     pass
