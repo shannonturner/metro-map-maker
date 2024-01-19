@@ -2,12 +2,12 @@ from django import template
 
 register = template.Library()
 
-@register.simple_tag()
-def map_count_by_month(counts_by_month, month):
+@register.filter()
+def access_list(value, arg):
 
-    """ Django seems confused that I want to use 
-        the forloop.counter to access the value of a list,        
-        and |slice is giving me more than one result
+    """ Django's built-in |slice doesn't give a single result
+        because it's assumed you'd use dot accessors,
+        but those won't work for variables.
     """
 
-    return f'{counts_by_month.get(month, 0):,}'
+    return value[arg]

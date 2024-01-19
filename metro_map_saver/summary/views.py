@@ -175,16 +175,22 @@ class MapsPerYearView(MapsByDateMixin, YearArchiveView):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
-        context['map_count_by_month'] = {m: 0 for m in range(1, 13)}
+        months = {m: 0 for m in range(1, 13)}
         for maps_by_day in context['maps']:
-            context['map_count_by_month'][maps_by_day.day.month] += maps_by_day.maps
-        # context['map_count_by_month'] = [v for v in context['map_count_by_month'].values()]
+            months[maps_by_day.day.month] += maps_by_day.maps
 
-        # Otherwise months without any maps will display erroneous counts
-        context['map_count_by_month'] = {k: v for k, v in context['map_count_by_month'].items() if v > 0}
-        # raise ValueError(f"AAAAAA {context['map_count_by_month']}")
+        year = kwargs['year'].year
 
-        context['map_count_this_year'] = sum(context['map_count_by_month'].values())
+        # I'd rather use a dictionary for map_count_by_month as it's more straightforward,
+        #   but I need to be able to group by month with regroup,
+        #   and need to be able to use forloop.counter0 (I'd prefer .grouper|date:'n')
+        #   to access the correct month for map_count_by_month.
+        # This also has the side effect of needing a separate variable for the URLs
+        # Otherwise months without any maps will lead to others displaying erroneous sums
+        context['month_header_links'] = [datetime.date(year, k, 1) for k, v in months.items() if v > 0]
+        context['map_count_by_month'] = [v for v in months.values() if v > 0]
+
+        context['map_count_this_year'] = sum(context['map_count_by_month'])
 
         return context
 
