@@ -169,7 +169,24 @@ class MapsByDateMixin:
         return context
 
 class MapsPerYearView(MapsByDateMixin, YearArchiveView):
-    pass
+    # Since it's not actually the maps, only the MapsByDay objects, this is fine
+    make_object_list = True
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        context['map_count_by_month'] = {m: 0 for m in range(1, 13)}
+        for maps_by_day in context['maps']:
+            context['map_count_by_month'][maps_by_day.day.month] += maps_by_day.maps
+        # context['map_count_by_month'] = [v for v in context['map_count_by_month'].values()]
+
+        # Otherwise months without any maps will display erroneous counts
+        context['map_count_by_month'] = {k: v for k, v in context['map_count_by_month'].items() if v > 0}
+        # raise ValueError(f"AAAAAA {context['map_count_by_month']}")
+
+        context['map_count_this_year'] = sum(context['map_count_by_month'].values())
+
+        return context
 
 class MapsPerMonthView(MapsByDateMixin, MonthArchiveView):
 

@@ -28,3 +28,11 @@ th.map-calendar-month {
     text-align: center;
     font-size: 150%;
 }
+
+.styling-redline {
+    background-color: #bd1038;
+}
+
+.bg-styled {
+    color: white;
+}
