@@ -27,8 +27,8 @@ class MapHTMLCalendar(calendar.HTMLCalendar):
         for default_style in
         calendar.HTMLCalendar.cssclasses
     ]
-    cssclass_month_head = 'map-calendar-month'
-    cssclass_month = 'map-calendar w-100'
+    cssclass_month_head = 'map-calendar-month styling-redline bg-styled p-3'
+    cssclass_month = 'map-calendar w-100 mt-3 mb-3 text-center'
     cssclass_noday = 'noday map-calendar-day'
 
     def formatmonthname(self, theyear, themonth, withyear=True):
@@ -39,7 +39,7 @@ class MapHTMLCalendar(calendar.HTMLCalendar):
         monthname = super().formatmonthname(theyear, themonth, withyear)
 
         return monthname.replace('</th></tr>', f'''
-            ({self.maps_count} maps)</th></tr>
+            ({self.maps_count:,} maps)</th></tr>
         ''')
 
 
