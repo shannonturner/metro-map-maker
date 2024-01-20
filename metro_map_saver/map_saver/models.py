@@ -21,13 +21,13 @@ class SavedMap(models.Model):
     """ Saves map data and its corresponding urlhash together so that maps can be easily shared
     """
 
-    urlhash = models.CharField(max_length=8, db_index=True)
+    urlhash = models.CharField(max_length=8)
     mapdata = models.TextField()
     # gallery_visible: should this be shown in the default view of the Admin Gallery?
-    gallery_visible = models.BooleanField(default=True, db_index=True)
+    gallery_visible = models.BooleanField(default=True)
     # publicly_visible: should this be shown in the publicly-visible gallery?
     #   (using this to improve speed and reduce query complexity)
-    publicly_visible = models.BooleanField(default=False, db_index=True)
+    publicly_visible = models.BooleanField(default=False)
     name = models.CharField(max_length=255, blank=True, default='')
     thumbnail = models.TextField(blank=True, default='')
     stations = models.TextField(blank=True, default='')
@@ -115,6 +115,14 @@ class SavedMap(models.Model):
         super().save(*args, **kwargs)
 
     class Meta:
+
+        indexes = [
+            models.Index(fields=["urlhash"]),
+            models.Index(fields=["gallery_visible"]),
+            models.Index(fields=["publicly_visible"]),
+            models.Index(fields=["created_at"]),
+        ]
+
         permissions = (
             ('hide_map', "Can set a map's gallery_visible to hidden"),
             ('name_map', "Can set a map's name"),
