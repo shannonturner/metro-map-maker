@@ -121,6 +121,7 @@ class SavedMap(models.Model):
             models.Index(fields=["gallery_visible"]),
             models.Index(fields=["publicly_visible"]),
             models.Index(fields=["created_at"]),
+            models.Index(fields=["station_count"]),
         ]
 
         permissions = (
