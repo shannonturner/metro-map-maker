@@ -44,10 +44,6 @@ urlpatterns = [
     # TODO: Maps per Day should show the maps themselves, not the summary
     path('calendar/<int:year>/<int:month>/<int:day>/', summary.views.MapsPerDayView.as_view(month_format='%m'), name='calendar-day'),
 
-    # Admin and Moderation
-    path('admin/', admin.site.urls),
-    path('accounts/login/', auth_views.LoginView.as_view()),
-
     # Admin HQ
     path('admin/home/', never_cache(map_saver.views.AdminHomeView.as_view()), name='admin_home'),
 
@@ -75,6 +71,10 @@ urlpatterns = [
 
     # Thumbnails
     path('admin/thumbnail/<slug:tag>/', map_saver.views.ThumbnailGalleryView.as_view(), name='thumbnail_tag'),
+
+    # Admin and Moderation
+    path('admin/', admin.site.urls),
+    path('accounts/login/', auth_views.LoginView.as_view()),
 ]
 
 if settings.DEBUG:
