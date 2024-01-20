@@ -25,7 +25,7 @@
         {% endif %}
     </div>
 
-    <h3 class="styling-redline bg-styled p-3">{{ year|date:"Y" }} ({{ map_count_this_year|intcomma }} maps)</h3>
+    <h3 class="styling-redline bg-styled p-3 text-center" style="margin-left: -0.75rem; margin-right: -0.75rem;">{{ year|date:"Y" }} ({{ map_count_this_year|intcomma }} maps)</h3>
 
     {% regroup maps by day|date:"F" as maps_by_month %}
 
