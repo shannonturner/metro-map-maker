@@ -172,7 +172,7 @@ def get_shapes_from_points(points_by_color):
             point = points_to_check.pop(0)
             shape = get_connected_points(*point, points_to_check)
             if len(shape) == 1:
-                shapes_by_color[color]['points'].append(shape)
+                shapes_by_color[color]['points'].append(shape[0])
             else:
                 # Ensure that all points in this shape are actually adjacent.
                 # We already know they're connected.
