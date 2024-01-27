@@ -416,6 +416,7 @@ function bindGridSquareEvents(event) {
 
 function bindGridSquareMouseover(event) {
   // $('#title').text([event.pageX, event.pageY, getCanvasXY(event.pageX, event.pageY)]) // useful when debugging
+  // $('#title').text(['DEBUG XY: ' + getCanvasXY(event.pageX, event.pageY)]) // useful when debugging
   xy = getCanvasXY(event.pageX, event.pageY)
   hoverX = xy[0]
   hoverY = xy[1]
