@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+
+{% block content %}
+
+    <div id="calendar-controls" class="mt-3 mb-3">
+        {% if previous_day %}
+            <a href="{% url 'calendar-day' previous_day|date:"Y" previous_day|date:"m" previous_day|date:"d" %}" class="fs-3">
+                <i class="bi bi-arrow-left-circle"></i> {{ previous_day|date:"F j, Y" }}
+            </a>
+        {% endif %}
+
+        {% if previous_day and next_day %}
+            <span class="fs-3">|</span>
+        {% endif %}
+
+        {% if next_day %}
+            <a href="{% url 'calendar-day' next_day|date:"Y" next_day|date:"m" next_day|date:"d" %}" class="fs-3">
+                {{ next_day|date:"F j, Y" }} <i class="bi bi-arrow-right-circle"></i>
+            </a>
+        {% endif %}
+    </div>
+
+    <h3 class="styling-redline bg-styled p-3 text-center" style="margin-left: -0.75rem; margin-right: -0.75rem;">{{ day|date:"F d, Y" }} ({{ maps.count|intcomma }} maps)</h3>
+
+    <div class="row">
+        {% for map in maps %}
+        <div class="col-sm-6 col-md-4 col-xxl-3 mb-3 mt-3"><div class="card h-100 text-center">
+            <div class="card-header styling-{% cycle 'red' 'orange' 'yellow' 'green' 'blue' 'purple' 'silver' %}line">
+                <h3 class="card-title mt-2">
+                    <a class="text-outline bg-styled" href="{% url 'home' %}?map={{ map.urlhash }}">Map #{{ map.id }}: {{ map.urlhash }}</a>
+                </h3>
+            </div>
+            <div class="card-body d-flex flex-column text-center">
+                <a href="{% url 'home' %}?map={{ map.urlhash }}">
+                    {% if map.thumbnail_svg %}
+                        <img src="{{ map.thumbnail_svg.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">
+                    {% else %}
+                        (Thumbnail not available)
+                    {% endif %}
+                </a>
+
+                <a href="{% url 'home' %}?map={{ map.urlhash }}">
+                    {% if map.name %}
+                        <h4>{{ map.name }}</h4>
+                    {% else %}
+                        <h4>(No name)</h4>
+                    {% endif %}
+                </a>
+
+                {# TODO: Add footer for things like tags #}
+                <div class="card-footer">
+                    {# TODO: Rate this map #}
+                </div>
+            </div>
+        </div></div>
+        {% endfor %}
+    </div>
+
+{% endblock content %}

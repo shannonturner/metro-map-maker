@@ -41,8 +41,7 @@ urlpatterns = [
     path('calendar/<int:year>/<int:month>/', summary.views.MapsPerMonthView.as_view(month_format='%m'), name='calendar-month'),
     path('calendar/<int:year>/week/<int:week>/', summary.views.MapsPerWeekView.as_view(year_format='%G', week_format='%V'), name='calendar-week'),
 
-    # TODO: Maps per Day should show the maps themselves, not the summary
-    path('calendar/<int:year>/<int:month>/<int:day>/', summary.views.MapsPerDayView.as_view(month_format='%m'), name='calendar-day'),
+    path('calendar/<int:year>/<int:month>/<int:day>/', map_saver.views.MapsPerDayView.as_view(month_format='%m'), name='calendar-day'),
 
     # Admin HQ
     path('admin/home/', never_cache(map_saver.views.AdminHomeView.as_view()), name='admin_home'),
@@ -78,7 +77,10 @@ urlpatterns = [
 ]
 
 if settings.DEBUG:
+    from django.conf.urls.static import static
     import debug_toolbar
+
     urlpatterns = [
         path('__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns
+    ] + urlpatterns + \
+    static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

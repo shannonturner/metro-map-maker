@@ -10,6 +10,9 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.gzip import gzip_page
 from django.views.decorators.cache import cache_page, never_cache
 from django.conf import settings
+from django.views.generic.dates import (
+    DayArchiveView,
+)
 
 import base64
 import datetime
@@ -810,3 +813,12 @@ class MapsByDateView(TemplateView):
         }
 
         return render(request, 'MapsByDateView.json', context)
+
+class MapsPerDayView(DayArchiveView):
+
+    """ Display the maps created this day
+    """
+
+    queryset = SavedMap.objects.defer('mapdata').all()
+    date_field = 'created_at'
+    context_object_name = 'maps'

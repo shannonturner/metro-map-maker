@@ -1,6 +1,9 @@
 import json
 
+from django.conf import settings
+from django.core.files.base import ContentFile
 from django.db import models
+
 from citysuggester.utils import suggest_city
 from taggit.managers import TaggableManager
 
@@ -16,6 +19,11 @@ EXCLUDED_TAGS = [
     'excluded',
 ]
 
+def get_thumbnail_filepath(instance, original):
+    thousand = instance.pk // 1000
+    filename = f'{instance.urlhash}.svg'
+    return f'thumbnails/{str(thousand)}/{filename}'
+
 class SavedMap(models.Model):
 
     """ Saves map data and its corresponding urlhash together so that maps can be easily shared
@@ -30,6 +38,7 @@ class SavedMap(models.Model):
     publicly_visible = models.BooleanField(default=False)
     name = models.CharField(max_length=255, blank=True, default='')
     thumbnail = models.TextField(blank=True, default='')
+    thumbnail_svg = models.FileField(upload_to=get_thumbnail_filepath, null=True)
     stations = models.TextField(blank=True, default='')
     station_count = models.IntegerField(default=-1)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -55,6 +64,8 @@ class SavedMap(models.Model):
             that must overlap to be considered a match;
             uses utils.MINIMUM_STATION_OVERLAP otherwise
         """
+
+        return False # DEBUG, FOR NOW (TODO: REENABLE)
 
         return suggest_city(set(self.stations.lower().split(',')), overlap)
 
@@ -95,6 +106,29 @@ class SavedMap(models.Model):
             set([tag.slug for tag in self.tags.all()]).intersection(set(PUBLICLY_VISIBLE_TAGS)) \
             and not set([tag.slug for tag in self.tags.all()]).intersection(set(EXCLUDED_TAGS))
         )
+
+    def generate_svg_thumbnail(self):
+
+        from .mapdata_optimizer import (
+            sort_points_by_color,
+            get_shapes_from_points,
+            get_svg_from_shapes_by_color,
+        )
+
+        import time
+        t0 = time.time()
+
+        points_by_color, map_size = sort_points_by_color(self.mapdata)
+        shapes_by_color = get_shapes_from_points(points_by_color)
+        svg = get_svg_from_shapes_by_color(shapes_by_color, map_size)
+
+        svg_file = ContentFile(svg, name=f"{self.urlhash}.svg")
+        self.thumbnail_svg = svg_file
+        self.save()
+
+        t1 = time.time()
+
+        return f'Wrote thumbnail for #{self.pk}: {self.thumbnail_svg.path} ({self.thumbnail_svg.size:,} bytes in {t1 - t0:.2f}s)'
 
     def __str__(self):
         return self.urlhash

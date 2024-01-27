@@ -188,3 +188,6 @@ STATIC_ROOT = '/home/shannonturner/metromapmaker.com/public/static/'
 
 # URL to use when referring to static files located in STATIC_ROOT.
 STATIC_URL = '/static/'
+
+MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = 'media/'
