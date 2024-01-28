@@ -1,10 +1,10 @@
 import json
 
 from django.template import Context, Template
+from PIL import Image, ImageDraw
 
 from .validator import VALID_XY
 
-# TODO: Shouldn't always be 240/240, but instead should flex based on proper size
 SVG_TEMPLATE = Template('''
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ canvas_size|default:80 }} {{ canvas_size|default:80 }}">
 {% spaceless %}
@@ -42,7 +42,8 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
     map_size = 80
     allowed_sizes = {
         'classic': {
-            1: [80, 120, 160, 200, 240],
+            # Order matters
+            1: [240, 200, 160, 120, 80],
         }
     }
     allowed_sizes = allowed_sizes[map_type][data_version]
@@ -161,6 +162,11 @@ def get_shapes_from_points(points_by_color):
             and singleton points; though could make this smarter
             by identifying other types of shapes,
             especially squares and similar.
+
+        TODO: I could optimize this significantly, and reduce the size of SVGs a fair bit
+            if I could collapse sets of points into a single straight line.
+
+            For example: 1,1 1,2 1,3 1,4 1,5 could be written as 1,1 1,5
     """
 
     shapes_by_color = {}
@@ -199,11 +205,6 @@ def get_shapes_from_points(points_by_color):
                         # Try to get a horizontally, vertically,
                         #   or diagonally adjacent line
                         adjacent = get_adjacent_point(pt, shape)
-
-                        # LEAVING OFF, J25 8AM:
-                        # "1,61 2,60 1,62 1,63 3,60
-                        # NOTE THAT THESE POINTS ARE NOT ACTUALLY ADJACENT -- 2, 60 IS NOT ADJACENT TO 1, 62.
-                        # WHAT GIVES?
 
                         if adjacent:
                             shape.remove(adjacent)
@@ -264,53 +265,35 @@ def get_svg_from_shapes_by_color(shapes_by_color, map_size, stations=False):
 
     return SVG_TEMPLATE.render(Context(context))
 
-def test_make_svg():
-    from map_saver.models import SavedMap
-    m = SavedMap.objects.get(urlhash='QMEGk9gq')
-    from map_saver.mapdata_optimizer import (
-        sort_points_by_color,
-        get_shapes_from_points,
-        get_svg_from_shapes_by_color,
-    )
-    points_by_color = sort_points_by_color(m.mapdata)
-    shapes_by_color = get_shapes_from_points(points_by_color)
-    svg = get_svg_from_shapes_by_color(shapes_by_color)
-    print(svg)
-    with open('/Users/shannon/Downloads/mmm-test-t-a1.svg', 'w') as svgfile:
-        svgfile.write(svg)
-    return 'yay'
+def draw_png_from_shapes_by_color(shapes_by_color, urlhash, map_size, filename, stations=False):
 
-""" J24, GETTING VERY CLOSE!
-from map_saver.models import SavedMap
-m = SavedMap.objects.get(urlhash='QMEGk9gq')
-from map_saver.mapdata_optimizer import (
-    sort_points_by_color,
-    get_shapes_from_points,
-    get_svg_from_shapes_by_color,
-)
-points_by_color = sort_points_by_color(m.mapdata)
-shapes_by_color = get_shapes_from_points(points_by_color)
-svg = get_svg_from_shapes_by_color(shapes_by_color)
-print(svg)
-with open('/Users/shannon/Downloads/mmm-test-t-a1.svg', 'w') as svgfile:
-    svgfile.write(svg)
+    """ For some maps, the PNG may be a smaller filesize.
 
-from map_saver.mapdata_optimizer import test_make_svg; test_make_svg()
+        TODO: Add support for social sharing image generation since Opengraph doesn't
+            support SVG
+            ^ this really means TODO: Add stations & text
+    """
 
-from map_saver.mapdata_optimizer import SVG_TEMPLATE, Context
-"""
+    line_size = 240 // map_size
 
-# def annotate_counts(lst):
+    if stations:
+        canvas_size = 1200
+    else:
+        # Thumbnail
+        canvas_size = 240
 
-#     """ Given a list, return a dict of coords by counts.
+    with Image.new('RGBA', (canvas_size, canvas_size), (0, 0, 0, 0)) as img:
 
-#         This can be useful because 
-#     """
+        draw = ImageDraw.Draw(img)
 
-# if line_color in color_map.values():
-#     # Allow bidirectional lookup
-#     color_key = color_map[line_color]
-# else:
-#     color_key = (len(color_map) / 2) + 1
-#     color_map[color_key] = line_color
-#     color_map[line_color] = color_key
+        for color in shapes_by_color:
+            for line in shapes_by_color[color]['lines']:
+                line = [(x * line_size, y * line_size) for x, y in line]
+                draw.line(line, fill='#' + color, width=line_size, joint='curve')
+            for point in shapes_by_color[color]['points']:
+                circle = list(point)
+                circle.append(point[0] + (1 * line_size)) # x1
+                circle.append(point[1] + (1 * line_size)) # y1
+                draw.ellipse(circle, fill='#' + color, width=1)
+
+        img.save(filename, 'PNG')

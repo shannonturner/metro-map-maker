@@ -1,11 +1,13 @@
-import json
-
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.db import models
 
 from citysuggester.utils import suggest_city
 from taggit.managers import TaggableManager
+
+import json
+import time
+
 
 PUBLICLY_VISIBLE_TAGS = [
     'real',
@@ -21,7 +23,13 @@ EXCLUDED_TAGS = [
 
 def get_thumbnail_filepath(instance, original):
     thousand = instance.pk // 1000
-    filename = f'{instance.urlhash}.svg'
+    if original.endswith('svg'):
+        ftype = 'svg'
+    elif original.endswith('png'):
+        ftype = 'png'
+    else:
+        raise NotImplementedError('Invalid filetype')
+    filename = f'{instance.urlhash}.{ftype}'
     return f'thumbnails/{str(thousand)}/{filename}'
 
 class SavedMap(models.Model):
@@ -39,6 +47,7 @@ class SavedMap(models.Model):
     name = models.CharField(max_length=255, blank=True, default='')
     thumbnail = models.TextField(blank=True, default='')
     thumbnail_svg = models.FileField(upload_to=get_thumbnail_filepath, null=True)
+    thumbnail_png = models.FileField(upload_to=get_thumbnail_filepath, null=True)
     stations = models.TextField(blank=True, default='')
     station_count = models.IntegerField(default=-1)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -107,28 +116,33 @@ class SavedMap(models.Model):
             and not set([tag.slug for tag in self.tags.all()]).intersection(set(EXCLUDED_TAGS))
         )
 
-    def generate_svg_thumbnail(self):
+    def generate_thumbnails(self):
 
         from .mapdata_optimizer import (
             sort_points_by_color,
             get_shapes_from_points,
+            draw_png_from_shapes_by_color,
             get_svg_from_shapes_by_color,
         )
 
-        import time
         t0 = time.time()
 
         points_by_color, map_size = sort_points_by_color(self.mapdata)
         shapes_by_color = get_shapes_from_points(points_by_color)
-        svg = get_svg_from_shapes_by_color(shapes_by_color, map_size)
 
+        svg = get_svg_from_shapes_by_color(shapes_by_color, map_size)
         svg_file = ContentFile(svg, name=f"{self.urlhash}.svg")
         self.thumbnail_svg = svg_file
+
+        png_filename = settings.MEDIA_ROOT / get_thumbnail_filepath(self, f'{self.urlhash}.png')
+        png = draw_png_from_shapes_by_color(shapes_by_color, self.urlhash, map_size, png_filename, stations=False)
+        self.thumbnail_png = get_thumbnail_filepath(self, f'{self.urlhash}.png')
+
         self.save()
 
         t1 = time.time()
 
-        return f'Wrote thumbnail for #{self.pk} ({self.created_at.date()}): {self.thumbnail_svg.path} ({self.thumbnail_svg.size:,} bytes in {t1 - t0:.2f}s)'
+        return f'Wrote thumbnails for #{self.pk} ({self.created_at.date()}): {self.thumbnail_svg.path} ({self.thumbnail_svg.size:,} bytes in {t1 - t0:.2f}s)'
 
     def __str__(self):
         return self.urlhash

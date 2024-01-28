@@ -45,7 +45,7 @@ class Command(BaseCommand):
 
         for mmap in needs_thumbnails[:limit]:
             try:
-                self.stdout.write(mmap.generate_svg_thumbnail())
+                self.stdout.write(mmap.generate_thumbnails())
             except json.decoder.JSONDecodeError as exc:
                 self.stdout.write(f'[ERROR] Failed to generate thumbnail for #{mmap.id} ({mmap.urlhash}): JSONDecodeError: {exc}')
                 errors.append(mmap.urlhash)
