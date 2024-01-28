@@ -310,6 +310,7 @@ def get_svg_from_shapes_by_color(shapes_by_color, map_size, stations=False):
 
     context = {
         'shapes_by_color': shapes_by_color,
+        'canvas_size': map_size,
     }
 
     return SVG_TEMPLATE.render(Context(context))
