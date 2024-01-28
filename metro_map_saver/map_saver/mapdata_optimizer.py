@@ -291,9 +291,11 @@ def draw_png_from_shapes_by_color(shapes_by_color, urlhash, map_size, filename, 
                 line = [(x * line_size, y * line_size) for x, y in line]
                 draw.line(line, fill='#' + color, width=line_size, joint='curve')
             for point in shapes_by_color[color]['points']:
-                circle = list(point)
-                circle.append(point[0] + (1 * line_size)) # x1
-                circle.append(point[1] + (1 * line_size)) # y1
+                circle = [point[0] * line_size, point[1] * line_size]
+                circle.extend([
+                    (point[0] + 1) * line_size, # x1
+                    (point[1] + 1) * line_size, # y1
+                ])
                 draw.ellipse(circle, fill='#' + color, width=1)
 
         img.save(filename, 'PNG')
