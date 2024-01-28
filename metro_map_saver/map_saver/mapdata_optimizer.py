@@ -187,11 +187,6 @@ def get_shapes_from_points(points_by_color):
             and singleton points; though could make this smarter
             by identifying other types of shapes,
             especially squares and similar.
-
-        TODO: I could optimize this significantly, and reduce the size of SVGs a fair bit
-            if I could collapse sets of points into a single straight line.
-
-            For example: 1,1 1,2 1,3 1,4 1,5 could be written as 1,1 1,5
     """
 
     shapes_by_color = {}
@@ -242,7 +237,61 @@ def get_shapes_from_points(points_by_color):
                 lines.append(reduce_straight_line(current_line))
                 shapes_by_color[color]['lines'].extend(lines)
 
+    # If the start/end of one line overlaps with another,
+    #   add those points
+    line_endings = []
+    for color in shapes_by_color:
+        for line in shapes_by_color[color]['lines']:
+            line_endings.append(line[0])
+            line_endings.append(line[-1])
+
+        for index, line in enumerate(shapes_by_color[color]['lines']):
+            line_start = line[0]
+            line_end = line[-1]
+
+            for connect_to in line_endings:
+                if line_start == connect_to:
+                    continue
+                elif line_end == connect_to:
+                    continue
+
+                if is_adjacent(line_start, connect_to):
+                    shapes_by_color[color]['lines'][index].insert(0, connect_to)
+
+                if is_adjacent(line_end, connect_to):
+                    shapes_by_color[color]['lines'][index].append(connect_to)
+
+                # It's adjacent with itself, like a diamond
+                if is_adjacent(line_start, line_end):
+                    shapes_by_color[color]['lines'][index].append(line_start)
+
     return shapes_by_color
+
+def is_adjacent(point1, point2):
+
+    """ Helper function to check whether
+            point1 is adjcaent to point2
+    """
+
+    dx = abs(point1[0] - point2[0])
+    dy = abs(point1[1] - point2[1])
+
+    if dx == 0 and dy == 1:
+        # If the x-coordinate hasn't changed,
+        #   but the y-coordinate is off by 1,
+        #   this is a vertical line
+        return point2
+
+    if dx == 1 and dy == 0:
+        # If the x-coordinate is off by 1,
+        #   but the y-coordinate hasn't changed,
+        #   this is a horizontal line
+        return point2
+
+    if dx == 1 and dy == 1:
+        # If both x and y are off by 1,
+        #   this is a diagonal line
+        return point2
 
 def get_adjacent_point(pt, all_points):
 
@@ -253,24 +302,7 @@ def get_adjacent_point(pt, all_points):
     """
 
     for point in all_points:
-        dx = abs(pt[0] - point[0])
-        dy = abs(pt[1] - point[1])
-
-        if dx == 0 and dy == 1:
-            # If the x-coordinate hasn't changed,
-            #   but the y-coordinate is off by 1,
-            #   this is a vertical line
-            return point
-
-        if dx == 1 and dy == 0:
-            # If the x-coordinate is off by 1,
-            #   but the y-coordinate hasn't changed,
-            #   this is a horizontal line
-            return point
-
-        if dx == 1 and dy == 1:
-            # If both x and y are off by 1,
-            #   this is a diagonal line 
+        if is_adjacent(pt, point):
             return point
 
 def reduce_straight_line(line):
@@ -329,9 +361,6 @@ def get_svg_from_shapes_by_color(shapes_by_color, map_size, stations=False):
         If stations=True, draw stations;
             otherwise omit them (nicer for thumbnails)
     """
-
-    # TODO: Stations
-    # TODO: Sizing and other 
 
     context = {
         'shapes_by_color': shapes_by_color,
