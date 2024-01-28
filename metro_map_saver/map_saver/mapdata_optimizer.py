@@ -8,6 +8,10 @@ from .validator import VALID_XY
 SVG_TEMPLATE = Template('''
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ canvas_size|default:80 }} {{ canvas_size|default:80 }}">
 {% spaceless %}
+{% load metromap_utils %}
+{% if stations %}
+    <style>text { font: 1px Helvetica; font-weight: 600; white-space: pre; }</style>
+{% endif %}
     {% for color, shapes in shapes_by_color.items %}
         {% for line in shapes.lines %}
             <polyline points="{% for coords in line %}{{ coords.0 }},{{ coords.1 }} {% endfor %}" stroke="#{{ color }}" stroke-width="{{ line_size|default:1 }}" fill="none" stroke-linecap="round" stroke-linejoin="round" />
@@ -16,9 +20,18 @@ SVG_TEMPLATE = Template('''
             <circle cx="{{ point.0 }}" cy="{{ point.1 }}" r="{{ point.size|default:1 }}" fill="#{{ color }}" />
         {% endfor %}
     {% endfor %}
+    {% for station in stations %}
+        {% if station.transfer %}
+            <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r="1.2" fill="#000" />
+            <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r=".9" fill="#fff" />
+        {% endif %}
+        <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r=".6" fill="#000" />
+        <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r=".3" fill="#fff" />
+        {% station_text station %}
+    {% endfor %}
 {% endspaceless %}
 </svg>
-''') # TODO: Add Stations!
+''')
 
 def sort_points_by_color(mapdata, map_type='classic', data_version=1):
 
@@ -38,6 +51,7 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
 
     color_map = {}
     points_by_color = {}
+    stations = []
     highest_seen = 0
     map_size = 80
     allowed_sizes = {
@@ -68,6 +82,17 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
                         'xy': [],
                     }
 
+                station = mapdata[str(x)][y].get('station')
+                if station:
+                    station_data = {
+                        'name': station.get('name', ''),
+                        'lines': station.get('lines', []),
+                        'transfer': station.get('transfer', 0),
+                        'orientation': station.get('orientation', 0),
+                        'xy': (int(x), y),
+                    }
+                    stations.append(station_data)
+
                 # Add the points
                 x = int(x)
                 y = int(y)
@@ -89,7 +114,7 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
     elif map_type == 'classic' and data_version == 2:
         raise NotImplementedError('TODO')
 
-    return points_by_color, map_size
+    return points_by_color, stations, map_size
 
 def get_connected_points(x, y, points, connected=None, checked=None, check_next=None):
 
@@ -311,6 +336,7 @@ def get_svg_from_shapes_by_color(shapes_by_color, map_size, stations=False):
     context = {
         'shapes_by_color': shapes_by_color,
         'canvas_size': map_size,
+        'stations': stations or [],
     }
 
     return SVG_TEMPLATE.render(Context(context))

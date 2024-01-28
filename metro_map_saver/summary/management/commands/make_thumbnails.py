@@ -12,6 +12,14 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
+            '-p',
+            '--pk',
+            type=int,
+            dest='pk',
+            default=0,
+            help='(Re-)Calculate thumbnails for maps starting with this PK.',
+        )
+        parser.add_argument(
             '-l',
             '--limit',
             type=int,
@@ -30,11 +38,16 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         urlhash = kwargs['urlhash']
+        pk = kwargs['pk']
         if urlhash:
             # This will let me re-generate
             needs_thumbnails = SavedMap.objects.filter(urlhash=urlhash)
             limit = 1
             self.stdout.write(f"Generating thumbnail for {urlhash}.")
+        elif pk:
+            needs_thumbnails = SavedMap.objects.filter(pk__gte=pk).order_by('pk')
+            limit = kwargs['limit']
+            self.stdout.write(f"Re-generating thumbnails for {limit} maps starting with PK {pk}.")
         else:
             needs_thumbnails = SavedMap.objects.filter(thumbnail_svg=None).order_by('pk')
             limit = kwargs['limit']

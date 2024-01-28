@@ -32,6 +32,17 @@ def get_thumbnail_filepath(instance, original):
     filename = f'{instance.urlhash}.{ftype}'
     return f'thumbnails/{str(thousand)}/{filename}'
 
+def get_image_filepath(instance, original):
+    thousand = instance.pk // 1000
+    if original.endswith('svg'):
+        ftype = 'svg'
+    elif original.endswith('png'):
+        ftype = 'png'
+    else:
+        raise NotImplementedError('Invalid filetype')
+    filename = f'{instance.urlhash}.{ftype}'
+    return f'images/{str(thousand)}/{filename}'
+
 class SavedMap(models.Model):
 
     """ Saves map data and its corresponding urlhash together so that maps can be easily shared
@@ -48,6 +59,8 @@ class SavedMap(models.Model):
     thumbnail = models.TextField(blank=True, default='')
     thumbnail_svg = models.FileField(upload_to=get_thumbnail_filepath, null=True)
     thumbnail_png = models.FileField(upload_to=get_thumbnail_filepath, null=True)
+    svg = models.FileField(upload_to=get_image_filepath, null=True)
+    png = models.FileField(upload_to=get_image_filepath, null=True)
     stations = models.TextField(blank=True, default='')
     station_count = models.IntegerField(default=-1)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -127,17 +140,21 @@ class SavedMap(models.Model):
 
         t0 = time.time()
 
-        points_by_color, map_size = sort_points_by_color(self.mapdata)
+        points_by_color, stations, map_size = sort_points_by_color(self.mapdata)
         shapes_by_color = get_shapes_from_points(points_by_color)
 
-        svg = get_svg_from_shapes_by_color(shapes_by_color, map_size)
-        svg_file = ContentFile(svg, name=f"{self.urlhash}.svg")
-        self.thumbnail_svg = svg_file
+        thumbnail_svg = get_svg_from_shapes_by_color(shapes_by_color, map_size)
+        thumbnail_svg_file = ContentFile(thumbnail_svg, name=f"t{self.urlhash}.svg")
+        self.thumbnail_svg = thumbnail_svg_file
         self.save()
+
+        svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, stations)
+        svg_file = ContentFile(svg, name=f"{self.urlhash}.svg")
+        self.svg = svg_file
 
         png_filename = settings.MEDIA_ROOT / get_thumbnail_filepath(self, f'{self.urlhash}.png')
         png = draw_png_from_shapes_by_color(shapes_by_color, self.urlhash, map_size, png_filename, stations=False)
-        self.thumbnail_png = get_thumbnail_filepath(self, f'{self.urlhash}.png')
+        self.thumbnail_png = get_thumbnail_filepath(self, f't{self.urlhash}.png')
         self.save()
 
         t1 = time.time()
