@@ -214,7 +214,7 @@ def get_shapes_from_points(points_by_color):
                             lines.append(current_line)
                             current_line = []
 
-                lines.append(current_line)
+                lines.append(reduce_straight_line(current_line))
                 shapes_by_color[color]['lines'].extend(lines)
 
     return shapes_by_color
@@ -247,6 +247,55 @@ def get_adjacent_point(pt, all_points):
             # If both x and y are off by 1,
             #   this is a diagonal line 
             return point
+
+def reduce_straight_line(line):
+
+    """ Reduce a straight line's xy coordinate pairs
+        to the smallest-possible representation.
+
+        For example: 1,1 1,2 1,3 1,4 1,5 could be written as 1,1 1,5
+    """
+
+    start = line[0]
+    end = line[-1]
+
+    all_x = [x for (x, y) in line]
+    all_y = [y for (x, y) in line]
+
+    if all_x.count(start[0]) == len(line):
+        # x value remains the same for the whole line (vertical)
+        return [start, end]
+    elif all_y.count(start[1]) == len(line):
+        # y value remains the same for the whole line (horizontal)
+        return [start, end]
+
+    consecutive = {
+        'SE': 1,
+        'NE': 1,
+        'NW': 1,
+        'SW': 1,
+    }
+    for index, xy in enumerate(line):
+        x, y = xy
+        if index == len(line) - 1:
+            continue
+        if x == (line[index + 1][0] + 1) and y == (line[index + 1][1] + 1):
+            consecutive['SE'] += 1
+        if x == (line[index + 1][0] + 1) and y == (line[index + 1][1] - 1):
+            consecutive['NE'] += 1
+        if x == (line[index + 1][0] - 1) and y == (line[index + 1][1] - 1):
+            consecutive['NW'] += 1
+        if x == (line[index + 1][0] - 1) and y == (line[index + 1][1] + 1):
+            consecutive['SW'] += 1
+
+    for direction in consecutive:
+        if consecutive[direction] == len(line):
+            return [start, end]
+
+    # TODO: More complex line shapes with partial horizontal/vertical/diagonals
+
+    # Can't be reduced further
+    return line
 
 def get_svg_from_shapes_by_color(shapes_by_color, map_size, stations=False):
 
