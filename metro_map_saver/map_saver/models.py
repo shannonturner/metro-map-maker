@@ -129,7 +129,11 @@ class SavedMap(models.Model):
             and not set([tag.slug for tag in self.tags.all()]).intersection(set(EXCLUDED_TAGS))
         )
 
-    def generate_thumbnails(self):
+    def generate_images(self):
+
+        """ Generates full-size images and thumbnails
+                (PNG and SVG for both)
+        """
 
         from .mapdata_optimizer import (
             sort_points_by_color,
@@ -153,7 +157,7 @@ class SavedMap(models.Model):
         self.svg = svg_file
 
         png_filename = settings.MEDIA_ROOT / get_thumbnail_filepath(self, f'{self.urlhash}.png')
-        png = draw_png_from_shapes_by_color(shapes_by_color, self.urlhash, map_size, png_filename, stations=False)
+        thumbnail_png = draw_png_from_shapes_by_color(shapes_by_color, self.urlhash, map_size, png_filename, stations=False)
         self.thumbnail_png = get_thumbnail_filepath(self, f't{self.urlhash}.png')
         self.save()
 

@@ -6,7 +6,7 @@ import time
 
 class Command(BaseCommand):
     help = """
-        Run on a regular schedule to generate thumbnails
+        Run on a regular schedule to generate images and thumbnails
             for maps that don't have them yet.
     """
 
@@ -17,7 +17,7 @@ class Command(BaseCommand):
             type=int,
             dest='pk',
             default=0,
-            help='(Re-)Calculate thumbnails for maps starting with this PK.',
+            help='(Re-)Calculate images and thumbnails for maps starting with this PK.',
         )
         parser.add_argument(
             '-l',
@@ -25,7 +25,7 @@ class Command(BaseCommand):
             type=int,
             dest='limit',
             default=100,
-            help='Calculate thumbnails for this many maps',
+            help='Calculate images and thumbnails for this many maps',
         )
         parser.add_argument(
             '-u',
@@ -33,7 +33,7 @@ class Command(BaseCommand):
             type=str,
             dest='urlhash',
             default=False,
-            help='Calculate thumbnail for only one map in particular.',
+            help='Calculate images and thumbnails for only one map in particular.',
         )
 
     def handle(self, *args, **kwargs):
@@ -43,30 +43,30 @@ class Command(BaseCommand):
             # This will let me re-generate
             needs_thumbnails = SavedMap.objects.filter(urlhash=urlhash)
             limit = 1
-            self.stdout.write(f"Generating thumbnail for {urlhash}.")
+            self.stdout.write(f"Generating images and thumbnails for {urlhash}.")
         elif pk:
             needs_thumbnails = SavedMap.objects.filter(pk__gte=pk).order_by('pk')
             limit = kwargs['limit']
-            self.stdout.write(f"Re-generating thumbnails for {limit} maps starting with PK {pk}.")
+            self.stdout.write(f"Re-generating images and thumbnails for {limit} maps starting with PK {pk}.")
         else:
             needs_thumbnails = SavedMap.objects.filter(thumbnail_svg=None).order_by('pk')
             limit = kwargs['limit']
-            self.stdout.write(f"Found {needs_thumbnails.count()} maps that need thumbnails, limiting to {limit} for now.")
+            self.stdout.write(f"Found {needs_thumbnails.count()} maps that need images and thumbnails, limiting to {limit} for now.")
 
         t0 = time.time()
         errors = []
 
         for mmap in needs_thumbnails[:limit]:
             try:
-                self.stdout.write(mmap.generate_thumbnails())
+                self.stdout.write(mmap.generate_images())
             except json.decoder.JSONDecodeError as exc:
-                self.stdout.write(f'[ERROR] Failed to generate thumbnail for #{mmap.id} ({mmap.urlhash}): JSONDecodeError: {exc}')
+                self.stdout.write(f'[ERROR] Failed to generate images and thumbnails for #{mmap.id} ({mmap.urlhash}): JSONDecodeError: {exc}')
                 errors.append(mmap.urlhash)
             except Exception as exc:
-                self.stdout.write(f'[ERROR] Failed to generate thumbnail for #{mmap.id} ({mmap.urlhash}): Exception: {exc}')
+                self.stdout.write(f'[ERROR] Failed to generate images and thumbnails for #{mmap.id} ({mmap.urlhash}): Exception: {exc}')
                 errors.append(mmap.urlhash)
 
         t1 = time.time()
-        self.stdout.write(f'Made {limit} thumbnails in {t1 - t0:.2f}s')
+        self.stdout.write(f'Made {limit} images and thumbnails in {t1 - t0:.2f}s')
         if errors:
-            self.stdout.write(f'Failed to generate thumbnails for {len(errors)} maps: {errors}')
+            self.stdout.write(f'Failed to generate images and thumbnails for {len(errors)} maps: {errors}')

@@ -239,6 +239,9 @@ def get_shapes_from_points(points_by_color):
 
     # If the start/end of one line overlaps with another,
     #   add those points
+    # TODO: Note: this isn't perfect, and misses when one line's start
+    #   intersects with another line's middle (see PyKsuUAq)
+    #   and that will be harder to fix if I'm calling reduce_straight_line() above
     line_endings = []
     for color in shapes_by_color:
         for line in shapes_by_color[color]['lines']:
