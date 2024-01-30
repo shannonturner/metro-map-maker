@@ -234,13 +234,13 @@ def get_shapes_from_points(points_by_color):
                             lines.append(current_line)
                             current_line = []
 
-                lines.append(reduce_straight_line(current_line))
+                lines.append(current_line)
                 shapes_by_color[color]['lines'].extend(lines)
 
-    # If the start/end of one line overlaps with another,
+    # If one line overlaps with another,
     #   add those points
     # TODO: Note: this isn't perfect, and misses when one line's start
-    #   intersects with another line's middle (see PyKsuUAq)
+    #   intersects with another line's middle (see PyKsuUAq, 6VZ7tG6S)
     #   and that will be harder to fix if I'm calling reduce_straight_line() above
     # 40,24 shouldnt appear 6x at the end but does thx to this
     for color in shapes_by_color:
@@ -271,6 +271,11 @@ def get_shapes_from_points(points_by_color):
                 # It's adjacent with itself, like a diamond
                 if is_adjacent(line_start, line_end):
                     shapes_by_color[color]['lines'][index].append(line_start)
+
+    # Reduce straight lines at the end so we don't impede other connections
+    for color in shapes_by_color:
+        for index, line in enumerate(shapes_by_color[color]['lines']):
+            shapes_by_color[color]['lines'][index] = reduce_straight_line(line)
 
     return shapes_by_color
 
