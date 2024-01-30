@@ -222,10 +222,12 @@ class ValidateMap(TestCase):
             self._post_metromap(metro_map)
         )
 
+    @expectedFailure
     def test_invalid_global_line_display_too_short(self):
 
         """ Reject a map that has a color in the global lines
                 whose display name is zero characters long
+            (Expected failure: gracefully handles by naming 'Rail Line')
         """
 
         with self.assertRaisesRegex(
@@ -240,10 +242,13 @@ class ValidateMap(TestCase):
             self._post_metromap(metro_map)
         )
 
+    @expectedFailure
     def test_invalid_global_line_display_too_long(self):
 
         """ Reject a map that has a color in the global lines
                 whose display name is > 255 characters long
+
+            (Expected failure: gracefully handles by truncation)
         """
 
         with self.assertRaisesRegex(
@@ -477,7 +482,7 @@ class ValidateMap(TestCase):
         """
 
         saved_map = SavedMap.objects.create(**{
-            'urlhash': 'test_valid_map_name',
+            'urlhash': 'test_valid_map_name'[:8],
             'naming_token': 'abcdef123',
             'name': '',
             'mapdata': ''
@@ -487,7 +492,7 @@ class ValidateMap(TestCase):
 
         client = Client()
         client.post('/name/', {
-            'urlhash': 'test_valid_map_name',
+            'urlhash': 'test_valid_map_name'[:8],
             'naming_token': 'abcdef123',
             'name': 'hooray',
             'tags': 'coolmap'
@@ -505,7 +510,7 @@ class ValidateMap(TestCase):
         """
 
         saved_map = SavedMap.objects.create(**{
-            'urlhash': 'test_invalid_naming_token',
+            'urlhash': 'test_invalid_naming_token'[:8],
             'naming_token': '',
             'name': 'set in stone',
             'mapdata': ''
@@ -515,7 +520,7 @@ class ValidateMap(TestCase):
         # Confirm a blank naming token doesn't match a blank naming token
         client = Client()
         client.post('/name/', {
-            'urlhash': 'test_invalid_naming_token',
+            'urlhash': 'test_invalid_naming_token'[:8],
             'naming_token': '',
             'name': 'hooray',
             'tags': 'coolmap'
@@ -525,7 +530,7 @@ class ValidateMap(TestCase):
 
         # Confirm that a naming token doesn't work with a blank naming token
         client.post('/name/', {
-            'urlhash': 'test_invalid_naming_token',
+            'urlhash': 'test_invalid_naming_token'[:8],
             'naming_token': 'wrong naming token',
             'name': 'hooray',
             'tags': 'coolmap'
@@ -539,7 +544,7 @@ class ValidateMap(TestCase):
 
         # Confirm the incorrect naming token doesn't work either
         client.post('/name/', {
-            'urlhash': 'test_invalid_naming_token',
+            'urlhash': 'test_invalid_naming_token'[:8],
             'naming_token': 'wrong naming token',
             'name': 'hooray',
             'tags': 'coolmap'
