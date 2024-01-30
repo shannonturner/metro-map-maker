@@ -242,9 +242,12 @@ def get_shapes_from_points(points_by_color):
     # TODO: Note: this isn't perfect, and misses when one line's start
     #   intersects with another line's middle (see PyKsuUAq)
     #   and that will be harder to fix if I'm calling reduce_straight_line() above
-    line_endings = []
+    # 40,24 shouldnt appear 6x at the end but does thx to this
     for color in shapes_by_color:
+        line_endings = []
+
         for line in shapes_by_color[color]['lines']:
+
             line_endings.append(line[0])
             line_endings.append(line[-1])
 
@@ -253,6 +256,7 @@ def get_shapes_from_points(points_by_color):
             line_end = line[-1]
 
             for connect_to in line_endings:
+
                 if line_start == connect_to:
                     continue
                 elif line_end == connect_to:
@@ -386,6 +390,7 @@ def draw_png_from_shapes_by_color(shapes_by_color, urlhash, map_size, filename, 
 
     if stations:
         canvas_size = 1200
+        line_size = line_size * 5
     else:
         # Thumbnail
         canvas_size = 240
