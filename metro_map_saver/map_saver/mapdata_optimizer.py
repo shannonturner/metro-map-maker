@@ -411,4 +411,44 @@ def draw_png_from_shapes_by_color(shapes_by_color, urlhash, map_size, filename, 
                 ])
                 draw.ellipse(circle, fill='#' + color, width=1)
 
+        if stations:
+            for station in stations:
+                x, y = station['xy']
+                x = int(x)
+                y = int(y)
+                circle = [(x - 0.5) * line_size, (y - 0.5) * line_size]
+                circle.extend([
+                    (x + 0.5) * line_size,
+                    (y + 0.5) * line_size,
+                ])
+                if station['transfer']:
+                    # TODO" this doesnt show up
+                    # draw.ellipse(circle, fill='#000', width=1.2 * line_size)
+                    # draw.ellipse(circle, fill='#fff', width=.9 * line_size)
+                    draw.ellipse(circle, fill='#fff', outline='#000', width=round(line_size / 2.5))
+                # This has a few problems --- the circle is off-center
+                # and the black circle outline isn't bold enough
+                # Also, width cant be a float
+                # draw.ellipse(circle, fill='#000', width=.6 * line_size)
+                draw.ellipse(circle, fill='#fff', outline='#000', width=round(line_size / 5))
+                # draw.arc(circle, start=0, end=360, fill='#000', width=round(1.2 * line_size))
+
+                # draw.arc(circle, start=0, end=360, fill=)
+
+                # ImageDraw.arc(xy, start, end, fill=None, width=0)[source]
+                # ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true);
+
+                # TODO: Station text
+                # https://pillow.readthedocs.io/en/stable/reference/ImageDraw.html#PIL.ImageDraw.ImageDraw.text
+
+                """
+                {% if station.transfer %}
+                    <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r="1.2" fill="#000" />
+                    <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r=".9" fill="#fff" />
+                {% endif %}
+                <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r=".6" fill="#000" />
+                <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r=".3" fill="#fff" />
+                {% station_text station %}
+                """
+
         img.save(filename, 'PNG')
