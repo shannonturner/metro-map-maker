@@ -49,14 +49,16 @@ class SavedMap(models.Model):
     """
 
     urlhash = models.CharField(max_length=8)
-    mapdata = models.TextField()
+    mapdata = models.TextField() # Consider: Delete after migration to v2 representation
+    # v2+ representation of map data
+    data = models.JSONField(default=dict)
     # gallery_visible: should this be shown in the default view of the Admin Gallery?
     gallery_visible = models.BooleanField(default=True)
     # publicly_visible: should this be shown in the publicly-visible gallery?
     #   (using this to improve speed and reduce query complexity)
     publicly_visible = models.BooleanField(default=False)
     name = models.CharField(max_length=255, blank=True, default='')
-    thumbnail = models.TextField(blank=True, default='')
+    thumbnail = models.TextField(blank=True, default='') # Consider: Delete after thumbnail files generation migration
     thumbnail_svg = models.FileField(upload_to=get_thumbnail_filepath, null=True)
     thumbnail_png = models.FileField(upload_to=get_thumbnail_filepath, null=True)
     svg = models.FileField(upload_to=get_image_filepath, null=True)
@@ -168,7 +170,7 @@ class SavedMap(models.Model):
 
         t1 = time.time()
 
-        return f'Wrote thumbnails for #{self.pk} ({self.created_at.date()}): {self.thumbnail_svg.path} ({self.thumbnail_svg.size:,} bytes in {t1 - t0:.2f}s)'
+        return f'Wrote images for #{self.pk} ({self.created_at.date()}): {self.thumbnail_svg.path} ({self.thumbnail_svg.size:,} bytes in {t1 - t0:.2f}s)'
 
     def __str__(self):
         return self.urlhash
