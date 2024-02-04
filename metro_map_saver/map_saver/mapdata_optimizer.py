@@ -1,3 +1,4 @@
+import itertools
 import json
 
 from django.template import Context, Template
@@ -7,7 +8,7 @@ from .validator import VALID_XY
 
 SVG_TEMPLATE = Template('''
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ canvas_size|default:80 }} {{ canvas_size|default:80 }}">
-{% spaceless %}
+{#{% spaceless %}#} {# DEBUG #}
 {% load metromap_utils %}
 {% if stations %}
     <style>text { font: 1px Helvetica; font-weight: 600; white-space: pre; }</style>
@@ -19,6 +20,9 @@ SVG_TEMPLATE = Template('''
         {% for point in shapes.points %}
             <circle cx="{{ point.0 }}" cy="{{ point.1 }}" r="{{ point.size|default:1 }}" fill="#{{ color }}" />
         {% endfor %}
+        {% for square in shapes.square_interior_points %}
+            <rect x="{{ square.0.0|add:-0.5 }}" y="{{ square.0.1|add:0.5 }}" width="{{ square|length|square_root|add:2 }}" height="{{ square|length|square_root|add:2 }}" fill="#{{ color }}" />
+        {% endfor %}
     {% endfor %}
     {% for station in stations %}
         {% if station.transfer %}
@@ -29,9 +33,12 @@ SVG_TEMPLATE = Template('''
         <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r=".3" fill="#fff" />
         {% station_text station %}
     {% endfor %}
-{% endspaceless %}
+{#{% endspaceless %}#}
 </svg>
 ''')
+
+# Largest square worth checking with find_squares()
+LARGEST_SQUARE = 6
 
 def sort_points_by_color(mapdata, map_type='classic', data_version=1):
 
@@ -77,8 +84,8 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
 
                 if line_color not in points_by_color:
                     points_by_color[line_color] = {
-                        # 'x': [],
-                        # 'y': [],
+                        'x': [],
+                        'y': [],
                         'xy': [],
                     }
 
@@ -102,10 +109,8 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
                 if y > highest_seen:
                     highest_seen = y
 
-                # TODO: Consider: Might be interesting optimization I can do with X alone or Y alone,
-                #   worth holding this idea for later
-                # points_by_color[line_color]['x'].append(x)
-                # points_by_color[line_color]['y'].append(y)
+                points_by_color[line_color]['x'].append(x)
+                points_by_color[line_color]['y'].append(y)
                 points_by_color[line_color]['xy'].append((x, y))
 
         for size in allowed_sizes:
@@ -137,14 +142,14 @@ def get_connected_points(x, y, points, connected=None, checked=None, check_next=
         check_next = []
 
     to_check = {
+        'S': (x, y + 1),
+        'N': (x, y - 1),
+        'E': (x + 1, y),
+        'W': (x - 1, y),
         'SE': (x + 1, y + 1),
         'NE': (x + 1, y - 1),
         'SW': (x - 1, y + 1),
         'NW': (x - 1, y - 1),
-        'E': (x + 1, y),
-        'W': (x - 1, y),
-        'N': (x, y - 1),
-        'S': (x, y + 1),
     }
 
     for direction, coords in to_check.items():
@@ -192,8 +197,39 @@ def get_shapes_from_points(points_by_color):
     shapes_by_color = {}
 
     for color in points_by_color:
-        points_to_check = points_by_color[color]['xy']
-        shapes_by_color[color] = {'lines': [], 'points': []}
+        points_to_check = sorted(points_by_color[color]['xy'])
+
+        shapes_by_color[color] = {
+            'lines': [],
+            'points': [],
+            'all_lines': [], # NOT IN USE, YET -- TODO
+            'square_interior_points': [],
+        }
+
+        pbc = {k: list(v) for k, v in points_by_color[color].items()}
+        for sq_size in range(LARGEST_SQUARE, 2, -1):
+            exterior, interior = find_squares(pbc, sq_size)
+            if exterior and interior:
+                for outline in exterior:
+                    shapes_by_color[color]['lines'].append(outline)
+                    shapes_by_color[color]['all_lines'].append(outline)
+
+                for square in interior:
+                    shapes_by_color[color]['square_interior_points'].append(sorted(square))
+
+                for pt in itertools.chain(*interior):
+
+                    points_to_check.remove(pt)
+                    pbc['xy'].remove(pt)
+                    pbc['x'].remove(pt[0])
+                    pbc['y'].remove(pt[1])
+
+                for pt in itertools.chain(*exterior):
+                    points_to_check.remove(pt)
+                    pbc['xy'].remove(pt)
+                    pbc['x'].remove(pt[0])
+                    pbc['y'].remove(pt[1])
+
         while points_to_check:
             point = points_to_check.pop(0)
             shape = get_connected_points(*point, points_to_check)
@@ -236,12 +272,12 @@ def get_shapes_from_points(points_by_color):
 
                 lines.append(current_line)
                 shapes_by_color[color]['lines'].extend(lines)
+                shapes_by_color[color]['all_lines'].extend(lines)
 
     # If one line overlaps with another,
     #   add those points
     # TODO: Note: this isn't perfect, and misses when one line's start
     #   intersects with another line's middle (see PyKsuUAq, 6VZ7tG6S)
-    #   and that will be harder to fix if I'm calling reduce_straight_line() above
     # 40,24 shouldnt appear 6x at the end but does thx to this
     for color in shapes_by_color:
         line_endings = []
@@ -394,8 +430,8 @@ def draw_png_from_shapes_by_color(shapes_by_color, urlhash, map_size, filename, 
     line_size = 240 // map_size
 
     if stations:
-        canvas_size = 1200
-        line_size = line_size * 5
+        canvas_size = 1920
+        line_size = line_size * 8
     else:
         # Thumbnail
         canvas_size = 240
@@ -457,3 +493,77 @@ def draw_png_from_shapes_by_color(shapes_by_color, urlhash, map_size, filename, 
                 """
 
         img.save(filename, 'PNG')
+
+def find_squares(points_this_color, width=5):
+
+    """ Must be called before get_connected_points, because this is meant to
+        prevent recursion depth problems on maps with a lot of "terrain"
+
+        Returns two lists:
+            a list of the outlining points of each square
+            a list of the interior points of each square
+
+        Can call mulitple times to get ever-smaller (n-2) squares, for example:
+            width=5 gets a 5x5 square with a 3x3 interior
+            width=4 gets a 4x4 square with a 2x2 interior
+            width=3 gets a 3x3 square with a 1x1 interior
+    """
+
+    ptc_x = points_this_color['x']
+    counts_x = {x: ptc_x.count(x) for x in set(ptc_x)}
+    counts_x = {x: count for x, count in counts_x.items() if count >= width}
+
+    # Trivially, there aren't enough points to form a square of this size
+    if not counts_x:
+        return [], []
+
+    # Repeat for y
+    ptc_y = points_this_color['y']
+    counts_y = {y: ptc_y.count(y) for y in set(ptc_y)}
+    counts_y = {y: count for y, count in counts_y.items() if count >= width}
+
+    if not counts_y:
+        return [], []
+
+    # Excluding trivials was the easy part.
+    ptc_xy = points_this_color['xy']
+    potentials = sorted([
+        xy for xy in ptc_xy
+        if xy[0] in counts_x and xy[1] in counts_y
+    ])
+
+    # Last trivial check
+    if len(potentials) < width * width:
+        return [], []
+
+    squares_ext = []
+    squares_int = []
+
+    while potentials:
+        xy = potentials[0]
+
+        needed_for_square_exterior = []
+        needed_for_square_interior = []
+        for x in range(width):
+            for y in range(width):
+                if x in (0, width - 1) or y in (0, width - 1):
+                    needed_for_square_exterior.append((xy[0] + x, xy[1] + y))
+                else:
+                    needed_for_square_interior.append((xy[0] + x, xy[1] + y))
+
+        exterior = all([pt in potentials for pt in needed_for_square_exterior])
+        interior = all([pt in potentials for pt in needed_for_square_interior])
+
+        if exterior and interior:
+            squares_ext.append(needed_for_square_exterior)
+            squares_int.append(needed_for_square_interior)
+            for pt in needed_for_square_exterior:
+                potentials.remove(pt)
+            for pt in needed_for_square_interior:
+                potentials.remove(pt)
+        else:
+            potentials.remove(xy)
+
+    return squares_ext, squares_int
+
+
