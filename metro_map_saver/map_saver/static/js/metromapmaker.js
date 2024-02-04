@@ -19,6 +19,9 @@ var pngUrl = false;
 var mapHistory = []; // A list of the last several map objects
 var maxUndoHistory = 25;
 var currentlyClickingAndDragging = false;
+var mapStationStyle = 'wmata'
+var mapLineWidth = 1;
+var mapStationStyle = 'rect-center'
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -742,6 +745,8 @@ function drawPoint(ctx, x, y, metroMap, erasedLine) {
 
   ctx.beginPath();
 
+  ctx.lineWidth = mapLineWidth * gridPixelMultiplier;
+
   if (!lastStrokeStyle || lastStrokeStyle != activeLine) {
     // Making state changes to the canvas is expensive
     // So only change it if there is no lastStrokeStyle,
@@ -810,8 +815,12 @@ function drawPoint(ctx, x, y, metroMap, erasedLine) {
     } else {
       ctx.fillStyle = '#' + activeLine;
     }
-    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
-    ctx.fill();
+    if (mapStationStyle == 'rect-center') {
+      ctx.fillRect((x - 0.5) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, gridPixelMultiplier, gridPixelMultiplier)
+    } else {
+      ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
+      ctx.fill();
+    }
   } else {
     // Doing one stroke at the end once all the lines are known
     //  rather than several strokes will improve performance
@@ -829,36 +838,22 @@ function drawStation(ctx, x, y, metroMap) {
     return; // If it's not a station, I can end here.
   }
 
-  if (isTransferStation) {
-    // Outer circle
-    ctx.fillStyle = '#000000';
-    ctx.beginPath();
-    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * 1.2, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.fill();
-
-    // Inner circle
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.fill();
+  if (!mapStationStyle || mapStationStyle == 'wmata') {
+    drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation)
+  } else if (mapStationStyle == 'rect-center') {
+    drawStyledStation_rectCenter(ctx, x, y, metroMap, isTransferStation)
+  } else if (mapStationStyle == 'circles-lg') {
+    drawCircleStation(ctx, x, y, metroMap, 0.3, gridPixelMultiplier / 2)
+  } else if (mapStationStyle == 'circles-md') {
+    drawCircleStation(ctx, x, y, metroMap, 0.25, gridPixelMultiplier / 4)
+  } else if (mapStationStyle == 'circles-sm') {
+    drawCircleStation(ctx, x, y, metroMap, 0.2, gridPixelMultiplier / 8)
   }
 
-  // Outer circle
-  ctx.fillStyle = '#000000';
-  ctx.beginPath();
-  ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true);
-  ctx.closePath();
-  ctx.fill();
+  drawStationName(ctx, x, y, metroMap, isTransferStation)
+} // drawStation(ctx, x, y, metroMap)
 
-  // Inner circle
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true);
-  ctx.closePath();
-  ctx.fill();
-
+function drawStationName(ctx, x, y, metroMap, isTransferStation) {
   // Write the station name
   ctx.fillStyle = '#000000';
   ctx.save();
@@ -911,7 +906,96 @@ function drawStation(ctx, x, y, metroMap) {
   } // else (of if station orientation is -45)
 
   ctx.restore();
-} // drawStation(ctx, x, y, metroMap)
+}
+
+function drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation) {
+  if (isTransferStation) {
+    // Outer circle
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * 1.2, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fill();
+
+    // Inner circle
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Outer circle
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true);
+  ctx.closePath();
+  ctx.fill();
+
+  // Inner circle
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true);
+  ctx.closePath();
+  ctx.fill();
+
+}
+
+function drawStyledStation_rectCenter(ctx, x, y, metroMap, isTransferStation) {
+  lineColor = '#' + getActiveLine(x, y, metroMap)
+  lineDirection = getLineDirection(x, y, metroMap)["direction"]
+
+  if (mapLineWidth >= 0.5) {
+    ctx.strokeStyle = '#000000'
+    ctx.fillStyle = '#ffffff'
+  } else {
+    ctx.strokeStyle = lineColor
+    ctx.fillStyle = lineColor
+  }
+
+  if (isTransferStation || lineDirection == 'singleton') {
+    rectSize = gridPixelMultiplier
+  } else {
+    rectSize = gridPixelMultiplier / 2
+  }
+
+  function drawDiagonalRectStation(orientation) {
+    ctx.save()
+    ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier)
+    ctx.rotate(orientation);
+    ctx.strokeRect(-0.25 * gridPixelMultiplier, -0.5 * gridPixelMultiplier, rectSize, gridPixelMultiplier)
+    ctx.fillRect(-0.25 * gridPixelMultiplier, -0.5 * gridPixelMultiplier, rectSize, gridPixelMultiplier)
+    ctx.restore()
+  }
+
+  ctx.lineWidth = gridPixelMultiplier / 4
+    if (lineDirection == 'horizontal') {
+      ctx.strokeRect((x - 0.25) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, rectSize, gridPixelMultiplier)
+      ctx.fillRect((x - 0.25) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, rectSize, gridPixelMultiplier)
+    } else if (lineDirection == 'vertical') {
+      ctx.strokeRect((x - 0.5) * gridPixelMultiplier, (y - 0.25) * gridPixelMultiplier, gridPixelMultiplier, rectSize)
+      ctx.fillRect((x - 0.5) * gridPixelMultiplier, (y - 0.25) * gridPixelMultiplier, gridPixelMultiplier, rectSize)
+    } else if (lineDirection == 'diagonal-ne') {
+      drawDiagonalRectStation(Math.PI / -4)
+    } else if (lineDirection == 'diagonal-se') {
+      drawDiagonalRectStation(Math.PI / 4)
+    }
+}
+
+function drawCircleStation(ctx, x, y, metroMap, stationCircleSize, lineWidth) {
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * stationCircleSize, 0, Math.PI * 2, true);
+  ctx.closePath();
+  ctx.lineWidth = lineWidth
+  ctx.strokeStyle = '#' + getActiveLine(x, y, metroMap)
+  ctx.stroke()
+  ctx.fill();
+}
+
+function drawStyledStation_ovals(ctx, x, y, metroMap, isTransferStation) {
+  // TODO: Ovals for multi-connecting stations
+}
 
 function drawIndicator(x, y) {
   // Place a temporary station marker on the canvas;
@@ -2119,6 +2203,24 @@ $(document).ready(function() {
     resetRailLineTooltips()
   }) // #save-rail-line-edits.click()
 
+  $('#tool-map-style').on('click', function() {
+    $('#tool-map-style-options').toggle()
+  })
+
+  $('.map-style-line').on('click', function() {
+    if ($(this).attr('id') == 'tool-map-style-line-750') {
+      mapLineWidth = 0.75
+    } else {
+      mapLineWidth = 1 / parseInt($(this).data('line-width-divisor'))
+    }
+    drawCanvas()
+  })
+
+  $('.map-style-station').on('click', function() {
+    mapStationStyle = $(this).data('station-style')
+    drawCanvas()
+  })
+
   $('#station-name').change(function() {
     // While I was using HTML element IDs for station names,
     //  I needed to remove all characters that weren't suitable for IDs
@@ -2222,6 +2324,80 @@ function getSurroundingLine(x, y, metroMap) {
   }
   return false;
 } // getSurroundingLine(x, y, metroMap)
+
+function setAllStationOrientations() {
+  // TODO: Set all station orientations to a certain direction
+}
+
+function getLineDirection(x, y, metroMap) {
+  // Returns which direction this line is going in,
+  // to help draw the positioning of new-style stations
+  x = parseInt(x)
+  y = parseInt(y)
+
+  origin = getActiveLine(x, y, metroMap)
+  NW = getActiveLine(x-1, y-1, metroMap)
+  NE = getActiveLine(x+1, y-1, metroMap)
+  SW = getActiveLine(x-1, y+1, metroMap)
+  SE = getActiveLine(x+1, y+1, metroMap)
+  N = getActiveLine(x, y-1, metroMap)
+  E = getActiveLine(x+1, y, metroMap)
+  S = getActiveLine(x, y+1, metroMap)
+  W = getActiveLine(x-1, y, metroMap)
+
+  info = {
+    "direction": false,
+    "endcap": false
+  }
+
+  if (!origin) {
+    return info
+  }
+
+  if (origin == W && W == E) {
+    info['direction'] = 'horizontal'
+  } else if (origin == N && N == S) {
+    info['direction'] = 'vertical'
+  } else if (origin == NW && NW == SE) {
+    info['direction'] = 'diagonal-se'
+  } else if (origin == SW && SW == NE) {
+    info['direction'] = 'diagonal-ne'
+  } else if (origin == W || origin == E) {
+    info['direction'] = 'horizontal'
+    info['endcap'] = true
+  } else if (origin == N || origin == S) {
+    info['direction'] = 'vertical'
+    info['endcap'] = true
+  } else if (origin == NW || origin == SE) {
+    info['direction'] = 'diagonal-se'
+    info['endcap'] = true
+  } else if (origin == SW || origin == NE) {
+    info['direction'] = 'diagonal-ne'
+    info['endcap'] = true
+  } else {
+    info['direction'] = 'singleton'
+  }
+
+  return info
+}
+
+function getConnectedStation(x, y, metroMap) {
+  // TODO: RECURSIVELY FIND CONNECTING STATIONS ALONG ONE AXIS SO I COULD
+  // DRAW ONE LARGE OVAL STATION
+  x = parseInt(x)
+  y = parseInt(y)
+
+  origin = getActiveLine(x, y, metroMap)
+  NW = getActiveLine(x-1, y-1, metroMap)
+  NE = getActiveLine(x+1, y-1, metroMap)
+  SW = getActiveLine(x-1, y+1, metroMap)
+  SE = getActiveLine(x+1, y+1, metroMap)
+  N = getActiveLine(x, y-1, metroMap)
+  E = getActiveLine(x+1, y, metroMap)
+  S = getActiveLine(x, y+1, metroMap)
+  W = getActiveLine(x-1, y, metroMap)
+
+}
 
 function stretchMap(metroMapObject) {
   // Stretch out a map

@@ -219,6 +219,21 @@
           <button id="tool-resize-stretch" class="btn btn-info has-tooltip stretch-grid" data-toggle="tooltip" data-placement="left" title="Increase the available space between stations so you can add more stations in between.">Stretch Map</button>
         </div>
       </div>
+      <button id="tool-map-style" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Change Style of Lines and Stations">Change Map Style</button>
+      <div id="tool-map-style-options" class="text-left start-hidden">
+        <h5>Map Line Size</h5>
+          <button id="tool-map-style-line-classic" class="btn btn-info map-style-line" data-line-width-divisor="1">Metro (Classic)</button>
+          <button id="tool-map-style-line-750" class="btn btn-info map-style-line" data-line-width-divisor="">75%</button>
+          <button id="tool-map-style-line-500" class="btn btn-info map-style-line" data-line-width-divisor="2">50%</button>
+          <button id="tool-map-style-line-250" class="btn btn-info map-style-line" data-line-width-divisor="4">25%</button>
+          <button id="tool-map-style-line-125" class="btn btn-info map-style-line" data-line-width-divisor="8">12.5%</button>
+        <h5>Station Shape</h5>
+          <button id="tool-map-style-station-classic" class="btn btn-info map-style-station" data-station-style="wmata">Metro (Classic)</button>
+          <button id="tool-map-style-station-rect" class="btn btn-info map-style-station" data-station-style="rect-center">Rectangles</button>
+          <button id="tool-map-style-station-circles-lg" class="btn btn-info map-style-station" data-station-style="circles-lg">Circles (Large)</button>
+          <button id="tool-map-style-station-circles-md" class="btn btn-info map-style-station" data-station-style="circles-md">Circles (Medium)</button>
+          <button id="tool-map-style-station-circles-sm" class="btn btn-info map-style-station" data-station-style="circles-sm">Circles (Small)</button>
+      </div>
 
       <hr>
       <button id="tool-clear-map" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Be careful: this will delete your map"><i class="fa fa-trash-o" aria-hidden="true"></i> Clear map</button>
