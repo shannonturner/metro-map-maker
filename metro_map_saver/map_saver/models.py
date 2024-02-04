@@ -152,11 +152,11 @@ class SavedMap(models.Model):
         thumbnail_svg = get_svg_from_shapes_by_color(shapes_by_color, map_size)
         thumbnail_svg_file = ContentFile(thumbnail_svg, name=f"t{self.urlhash}.svg")
         self.thumbnail_svg = thumbnail_svg_file
-        self.save()
 
         svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, stations)
         svg_file = ContentFile(svg, name=f"{self.urlhash}.svg")
         self.svg = svg_file
+        self.save()
 
         png_thumbnail = settings.MEDIA_ROOT / get_thumbnail_filepath(self, f'{self.urlhash}.png')
         thumbnail_png = draw_png_from_shapes_by_color(shapes_by_color, self.urlhash, map_size, png_thumbnail, stations=False)
