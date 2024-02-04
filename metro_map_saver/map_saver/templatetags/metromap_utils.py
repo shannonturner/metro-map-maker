@@ -2,6 +2,8 @@ from django import template
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
+from math import sqrt
+
 register = template.Library()
 
 @register.simple_tag
@@ -71,3 +73,8 @@ def station_text(station):
         name,
         mark_safe('</text>'),
     )
+
+
+@register.filter
+def square_root(value):
+    return sqrt(value)
