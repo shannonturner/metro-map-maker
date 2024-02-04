@@ -21,7 +21,7 @@ var maxUndoHistory = 25;
 var currentlyClickingAndDragging = false;
 var mapStationStyle = 'wmata'
 var mapLineWidth = 1;
-var mapStationStyle = 'rect-center'
+var mapStationStyle = 'wmata'
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -911,34 +911,12 @@ function drawStationName(ctx, x, y, metroMap, isTransferStation) {
 function drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation) {
   if (isTransferStation) {
     // Outer circle
-    ctx.fillStyle = '#000000';
-    ctx.beginPath();
-    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * 1.2, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.fill();
-
-    // Inner circle
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.fill();
+    drawCircleStation(ctx, x, y, metroMap, 1.2, 0, '#000000', 0, true)
+    drawCircleStation(ctx, x, y, metroMap, 0.9, 0, '#ffffff', 0, true)
   }
 
-  // Outer circle
-  ctx.fillStyle = '#000000';
-  ctx.beginPath();
-  ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true);
-  ctx.closePath();
-  ctx.fill();
-
-  // Inner circle
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true);
-  ctx.closePath();
-  ctx.fill();
-
+  drawCircleStation(ctx, x, y, metroMap, 0.6, 0, '#000000', 0, true)
+  drawCircleStation(ctx, x, y, metroMap, 0.3, 0, '#ffffff', 0, true)
 }
 
 function drawStyledStation_rectCenter(ctx, x, y, metroMap, isTransferStation) {
@@ -982,14 +960,16 @@ function drawStyledStation_rectCenter(ctx, x, y, metroMap, isTransferStation) {
     }
 }
 
-function drawCircleStation(ctx, x, y, metroMap, stationCircleSize, lineWidth) {
-  ctx.fillStyle = '#ffffff';
+function drawCircleStation(ctx, x, y, metroMap, stationCircleSize, lineWidth, fillStyle, strokeStyle, skipStroke) {
+  ctx.fillStyle = fillStyle || '#ffffff';
   ctx.beginPath();
   ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * stationCircleSize, 0, Math.PI * 2, true);
   ctx.closePath();
-  ctx.lineWidth = lineWidth
-  ctx.strokeStyle = '#' + getActiveLine(x, y, metroMap)
-  ctx.stroke()
+  if (!skipStroke) {
+    ctx.lineWidth = lineWidth
+    ctx.strokeStyle = strokeStyle || '#' + getActiveLine(x, y, metroMap)
+    ctx.stroke()
+  }
   ctx.fill();
 }
 
@@ -1014,33 +994,11 @@ function drawIndicator(x, y) {
 
   if (temporaryStation["transfer"] || (activeMap[x][y]["station"] && activeMap[x][y]["station"]["transfer"])) {
     // Outer circle
-    ctx.fillStyle = '#000000';
-    ctx.beginPath();
-    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * 1.2, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.fill();
-
-    // Inner circle
-    ctx.fillStyle = '#00ff00';
-    ctx.beginPath();
-    ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.fill();
+    drawCircleStation(ctx, x, y, activeMap, 1.2, 0, '#000000', 0, true)
+    drawCircleStation(ctx, x, y, activeMap, 0.9, 0, '#00ff00', 0, true)
   }
-
-  // Outer circle
-  ctx.fillStyle = '#000000';
-  ctx.beginPath();
-  ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true);
-  ctx.closePath();
-  ctx.fill();
-
-  // Inner circle
-  ctx.fillStyle = '#00ff00'; // Bright green
-  ctx.beginPath();
-  ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .3, 0, Math.PI * 2, true);
-  ctx.closePath();
-  ctx.fill();
+  drawCircleStation(ctx, x, y, activeMap, 0.6, 0, '#000000', 0, true)
+  drawCircleStation(ctx, x, y, activeMap, 0.3, 0, '#00ff00', 0, true)
 } // drawIndicator(x, y)
 
 function rgb2hex(rgb) {
