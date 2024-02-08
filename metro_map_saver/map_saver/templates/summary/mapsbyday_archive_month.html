@@ -2,25 +2,30 @@
 
 {% load humanize %}
 
-{% block content %}
-
-    <div id="calendar-controls" class="mt-3 mb-3">
+{% block breadcrumbs %}
+    {{ block.super }}
         {% if previous_month %}
-            <a href="{% url 'calendar-month' previous_month|date:"Y" previous_month|date:"m" %}" class="fs-3">
-                <i class="bi bi-arrow-left-circle"></i> {{ previous_month|date:"F Y" }}
-            </a>
+            <li class="navbar-text nav-item">
+                <a href="{% url 'calendar-month' previous_month|date:"Y" previous_month|date:"m" %}" class="nav-link">
+                    <i class="bi bi-arrow-left-circle"></i> {{ previous_month|date:"F Y" }}
+                </a>
+            </li>
         {% endif %}
 
         {% if previous_month and next_month %}
-            <span class="fs-3">|</span>
+            <span class="fs-3 navbar-text nav-item">|</span>
         {% endif %}
 
         {% if next_month %}
-            <a href="{% url 'calendar-month' next_month|date:"Y" next_month|date:"m" %}" class="fs-3">
-                {{ next_month|date:"F Y" }} <i class="bi bi-arrow-right-circle"></i>
-            </a>
+            <li class="navbar-text nav-item">
+                <a href="{% url 'calendar-month' next_month|date:"Y" next_month|date:"m" %}" class="nav-link">
+                    {{ next_month|date:"F Y" }} <i class="bi bi-arrow-right-circle"></i>
+                </a>
+            </li>
         {% endif %}
-    </div>
+{% endblock breadcrumbs %}
+
+{% block content %}
 
     <h3 class="visible-xs styling-redline bg-styled p-3">{{ month|date:"F Y" }} ({{ maps_count|intcomma }} maps)</h3>
 

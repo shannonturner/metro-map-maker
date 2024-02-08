@@ -2,25 +2,37 @@
 
 {% load humanize %}
 
-{% block content %}
+{% block breadcrumbs %}
 
-    <div id="calendar-controls" class="mt-3 mb-3">
-        {% if previous_day %}
-            <a href="{% url 'calendar-day' previous_day|date:"Y" previous_day|date:"m" previous_day|date:"d" %}" class="fs-3">
+    {{ block.super }}
+
+    <li class="navbar-text nav-item">
+        <a href="{% url 'calendar-week' day|date:'Y' day|date:'W' %}" class="nav-link">Maps this Week</a>
+    </li>
+
+    {% if previous_day %}
+        <li class="navbar-text nav-item">
+            <a href="{% url 'calendar-day' previous_day|date:'Y' previous_day|date:'m' previous_day|date:'d' %}" class="nav-link">
                 <i class="bi bi-arrow-left-circle"></i> {{ previous_day|date:"F j, Y" }}
             </a>
-        {% endif %}
+        </li>
+    {% endif %}
 
-        {% if previous_day and next_day %}
-            <span class="fs-3">|</span>
-        {% endif %}
+    {% if previous_day and next_day %}
+        <span class="navbar-text nav-item">|</span>
+    {% endif %}
 
-        {% if next_day %}
-            <a href="{% url 'calendar-day' next_day|date:"Y" next_day|date:"m" next_day|date:"d" %}" class="fs-3">
+    {% if next_day %}
+        <li class="navbar-text nav-item">
+            <a href="{% url 'calendar-day' next_day|date:'Y' next_day|date:'m' next_day|date:'d' %}" class="nav-link">
                 {{ next_day|date:"F j, Y" }} <i class="bi bi-arrow-right-circle"></i>
             </a>
-        {% endif %}
-    </div>
+        </li>
+    {% endif %}
+
+{% endblock breadcrumbs %}
+
+{% block content %}
 
     <h3 class="styling-redline bg-styled p-3 text-center" style="margin-left: -0.75rem; margin-right: -0.75rem;">{{ day|date:"F d, Y" }} ({{ maps.count|intcomma }} maps)</h3>
 

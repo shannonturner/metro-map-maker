@@ -62,17 +62,17 @@
         {% block header %}{% endblock header %}
 
         {% block nav-breadcrumbs %}
-          <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom fixed-top">
+          <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom sticky-top">
             <ol class="breadcrumb justify-content-start {% block breadcrumb-classes %}styling-{{ styling_class }}{% endblock breadcrumb-classes %}">
             {% block breadcrumbs %}
             <li class="nav-item">
-                <a class="nav-link" href="/"><h3 id="title"><span class="M">M</span>etro<span class="M">M</span>ap<span class="M">M</span>aker</h3></a>
+                <a class="navbar-brand nav-link" href="/"><h3 id="title"><span class="M">M</span>etro<span class="M">M</span>ap<span class="M">M</span>aker</h3></a>
             </li>
-            <li class="nav-item">
+            <li class="navbar-text nav-item">
                 <a class="nav-link" href="{% url 'public_gallery' %}">My Favorite Maps</a>
             </li>
             {% if all_years %}
-                <li class="nav-item dropdown">
+                <li class="navbar-text nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                       All Maps by Year
                     </a>
@@ -84,7 +84,7 @@
                 </li>
             {% endif %}
             {% if month_header_links %}
-                <li class="nav-item dropdown">
+                <li class="navbar-text nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         Maps by Month, {{ month_header_links.0|date:"Y"}}
                     </a>
@@ -95,6 +95,7 @@
                             </li>
                         {% endfor %}
                     </ul>
+                </li>
             {% endif %}
             {% endblock breadcrumbs %}
             {% block breadcrumbs_end %}{% endblock breadcrumbs_end %}
@@ -103,7 +104,7 @@
         {% endblock nav-breadcrumbs %}
     {% endif %}
 
-<div class="d-flex flex-nowrap" style="margin-top: 6rem;">
+<div class="d-flex flex-nowrap">
     
       <div id="content-start" class="content container-fluid" tabindex="-1">
         {% block messages %}

@@ -245,14 +245,5 @@ class MapsPerWeekView(MapsByDateMixin, WeekArchiveView):
         self.days_this_week = [d[0] for d in days_wanted]
 
         context = super().get_context_data(*args, **kwargs)
-        context['calendar'].this_week_only = week
-        context['calendar'] = context['calendar'].weekly_calendar(
-            year,
-            month,
-            days_wanted,
-        )
 
         return context
-
-class MapsPerDayView(MapsByDateMixin, DayArchiveView):
-    pass

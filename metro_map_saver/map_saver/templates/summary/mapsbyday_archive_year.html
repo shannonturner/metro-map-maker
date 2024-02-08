@@ -3,27 +3,34 @@
 {% load humanize %}
 {% load summary_utils %}
 
-{% block content %}
+{% block breadcrumbs %}
+    {{ block.super }}
 
-    <a id="top"></a>
-
-    <div id="calendar-controls" class="mt-3 mb-3">
         {% if previous_year %}
-            <a href="{% url 'calendar-year' previous_year|date:"Y" %}" class="fs-3">
-                <i class="bi bi-arrow-left-circle"></i> {{ previous_year|date:"Y" }}
-            </a>
+            <li class="navbar-text nav-item">
+                <a href="{% url 'calendar-year' previous_year|date:"Y" %}" class="nav-link">
+                    <i class="bi bi-arrow-left-circle"></i> {{ previous_year|date:"Y" }}
+                </a>
+            </li>
         {% endif %}
 
         {% if previous_year and next_year %}
-            <span class="fs-3">|</span>
+            <span class="fs-3 navbar-text nav-item">|</span>
         {% endif %}
 
         {% if next_year %}
-            <a href="{% url 'calendar-year' next_year|date:"Y" %}" class="fs-3">
-                {{ next_year|date:"Y" }} <i class="bi bi-arrow-right-circle"></i>
-            </a>
+            <li class="navbar-text nav-item">
+                <a href="{% url 'calendar-year' next_year|date:"Y" %}" class="nav-link">
+                    {{ next_year|date:"Y" }} <i class="bi bi-arrow-right-circle"></i>
+                </a>
+            </li>
         {% endif %}
     </div>
+{% endblock breadcrumbs %}
+
+{% block content %}
+
+    <a id="top"></a>
 
     <h3 class="styling-redline bg-styled p-3 text-center" style="margin-left: -0.75rem; margin-right: -0.75rem;">{{ year|date:"Y" }} ({{ map_count_this_year|intcomma }} maps)</h3>
 
