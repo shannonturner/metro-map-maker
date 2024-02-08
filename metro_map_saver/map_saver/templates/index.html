@@ -38,7 +38,6 @@
 
     <link rel="icon" href="{% static 'assets/favicon.ico' %}?version=2">
     <link rel="stylesheet" href="{% static 'css/metromapmaker.css' %}?version=20210225">
-    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 
   </head>
 
@@ -90,39 +89,23 @@
     <canvas id='grid-canvas' width="1600" height="1600"></canvas>
     <canvas id="hover-canvas" width="1600" height="1600"></canvas>
     <a id="metro-map-image-download-link" class="start-hidden" rel="noopener" starget="_blank"></a>
-    <img id="metro-map-image" class="img-responsive start-hidden" alt="">
+    <img id="metro-map-image" class="img-responsive" alt="">
   </div>
 
   <h5 id="mobile-compatibility-warning" class="visible-xs">This works best on desktop; some features may not work correctly on your mobile device.</h5>
-  <button id="try-on-mobile" class="btn btn-info visible-xs">Edit this map on mobile anyway</button>
+  <button id="try-on-mobile" class="styled styling-red visible-xs">Edit this map on mobile anyway</button>
 
   <div id="controls" class="col-md-3 col-lg-2 text-left hidden-xs">
     <h3 id="title"><span class="M">M</span>etro<span class="M">M</span>ap<span class="M">M</span>aker</h3>
 
     <div id="toolbox">
 
-      <button id="tool-line" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Draw a rail line on the grid (Keyboard shortcut: D)"><i class="fa fa-pencil" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> <b><u>D</u></b>raw Rail Line</button>
+      <button id="tool-line" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Draw a rail line on the grid (Keyboard shortcut: D)">
+          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pencil"/></svg>
+          <span><b><u>D</u></b>raw</span>
+      </button>
       <div id="tool-line-options" class="start-hidden" style="display: none;">
-        <button id="rail-line-bd1038" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 1">Red Line</button>
-        <button id="rail-line-df8600" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 2">Orange Line</button>
-        <button id="rail-line-f0ce15" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 3">Yellow Line</button>
-        <button id="rail-line-00b251" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 4">Green Line</button>
-        <button id="rail-line-0896d7" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 5">Blue Line</button>
-        <button id="rail-line-662c90" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 6">Purple Line</button>
-        <button id="rail-line-a2a2a2" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 7">Silver Line</button>
-        <button id="rail-line-000000" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 8">Logo</button>
-        <button id="rail-line-79bde9" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 9">Rivers</button>
-        <button id="rail-line-cfe4a7" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 0">Parks</button>
-        <button id="rail-line-new" class="btn">+ Add New Line</button>
-        <div id="tool-new-line-options" class="text-left start-hidden">
-          <h4 id="tool-new-line-errors" class="bg-danger"></h4>
-          <h4>Color of this line</h4>
-          <input id="new-rail-line-color" type="color">
 
-          <h4>Name of this line</h4>
-          <input id="new-rail-line-name" autocomplete="off" type="text" placeholder="Blue Line" maxlength="100">
-          <button id="create-new-rail-line" class="btn btn-success">Save this new line</button>
-        </div>
         <div id="straight-line-assist-options" class="mmm-help-setting">
           <input id="straight-line-assist" type="checkbox" checked="true">
           <label for="straight-line-assist" class="mmm-help-setting has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: G">
@@ -135,108 +118,239 @@
             Flood fill instead of draw. Use Control+Z to undo.
           </label>
         </div>
-        <hr>
-        <button id="rail-line-change" class="btn"><i class="fa fa-pencil" aria-hidden="true"></i> Edit colors &amp; names</button>
-        <div id="tool-change-line-options" class="text-left start-hidden">
-          <select id="tool-lines-to-change">
-              <option>Edit which rail line?</option>
-          </select>
-          <h4>Color of this line</h4>
-          <input id="change-line-color" type="color">
-          <h4>Name of this line</h4>
-          <input id="change-line-name" autocomplete="off" type="text" maxlength="100">
-          <h5 id="cant-save-rail-line-edits" class="bg-warning"></h5>
-          <button id="save-rail-line-edits" class="btn btn-success">Save edits to this line</button>
+
+        <!-- <fieldset> -->
+          <!-- TODO -- THIS DOES NOTHING BECAUSE THESE DONT ACTUALLY EXIST; THE JS DESTROYS AND RECREATES ALLA THHIS -->
+          <!-- <legend>Rail Lines</legend> -->
+          <button id="rail-line-bd1038" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 1">Red Line</button>
+          <button id="rail-line-df8600" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 2">Orange Line</button>
+          <button id="rail-line-f0ce15" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 3">Yellow Line</button>
+          <button id="rail-line-00b251" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 4">Green Line</button>
+          <button id="rail-line-0896d7" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 5">Blue Line</button>
+          <button id="rail-line-662c90" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 6">Purple Line</button>
+          <button id="rail-line-a2a2a2" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 7">Silver Line</button>
+          <button id="rail-line-000000" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 8">Logo</button>
+          <button id="rail-line-79bde9" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 9">Rivers</button>
+          <button id="rail-line-cfe4a7" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 0">Parks</button>
+        <!-- </fieldset> -->
+
+        <button id="rail-line-new" class="styled styling-redline width-100">
+          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#plus-circle"/></svg>
+          <span>Add New Line</span>
+        </button>
+        <div id="tool-new-line-options" class="text-left">
+          <fieldset>
+            <legend>Add New Rail Line</legend>
+            <label for="new-rail-line-color">Color of this line</label>
+            <input id="new-rail-line-color" type="color">
+
+            <label for="new-rail-line-name">Name of this line</label>
+            <input id="new-rail-line-name" autocomplete="off" type="text" placeholder="Blue Line" maxlength="100">
+
+            <p id="tool-new-line-errors" class="bg-danger"></p>
+            <button id="create-new-rail-line" class="styled styling-redline width-100">Save this new line</button>
+          </fieldset>
         </div>
-        <button id="rail-line-delete" class="btn">- Delete Unused Lines</button>
+
+        <button id="rail-line-change" class="styled styling-redline width-100">
+          <span>Edit colors &amp; names</span>
+        </button>
+        <div id="tool-change-line-options" class="text-left">
+          <fieldset>
+            <legend>Edit Rail Line</legend>
+            <select id="tool-lines-to-change">
+              <option>Edit which rail line?</option>
+            </select>
+            <label for="change-line-color" style="display: none;">Color of this line</label>
+            <input id="change-line-color" type="color">
+            
+            <label for="change-line-name" style="display: none;">Name of this line</label>
+            <input id="change-line-name" autocomplete="off" type="text" maxlength="100">
+            <p id="cant-save-rail-line-edits" class="bg-danger"></p>
+            <button id="save-rail-line-edits" class="styled styling-redline width-100">Save edits to this line</button>
+          </fieldset>
+        </div>
+        <button id="rail-line-delete" class="styled styling-silverline width-100">
+          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#trash"/></svg>
+          <span>Delete Unused Lines</span>
+        </button>
       </div>
       
-      <button id="tool-station" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Place a station on an existing rail line, or select an existing station (Keyboard shortcut: S)"><i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation</button>
-      <div id="tool-station-options" class="text-left start-hidden" style="display: none;">
-        <h4>Station Name</h4>
-        <input id="station-coordinates-x" type="hidden">
-        <input id="station-coordinates-y" type="hidden">
-        <input id="station-name" autocomplete="off" type="text" placeholder="Silver Spring" maxlength="255">
-        <div style="margin: 10px;">
-          <input id="station-transfer" type="checkbox"> <label for="station-transfer">Transfer Station</label>
-        </div>
-        <h4>Station Name Orientation</h4>
-        <h5>In relation to the station marker, where should the name begin?</h5>
-        <select id="station-name-orientation">
-          <option value="0">On the right</option>
-          <option value="180">On the left</option>
-          <option value="-45">Above-right, 45&deg;</option>
-          <option value="45">Below-right, 45&deg;</option>
-          <option value="135">Below-left, 45&deg;</option>
-          <option value="-135">Above-left, 45&deg;</option>
-          <option value="90">Above, 90&deg;</option>
-          <option value="-90">Below, 90&deg;</option>
-        </select>
+      <button id="tool-station" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Place a station on an existing rail line, or select an existing station (Keyboard shortcut: S)">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pin-map"/></svg>
+        <span><b><u>S</u></b>tation</span>
+      </button>
+      <div id="tool-station-options" class="text-left" style="display: none;">
+        <fieldset>
+          <legend>Add / Edit Station</legend>
+          <input id="station-coordinates-x" type="hidden">
+          <input id="station-coordinates-y" type="hidden">
+
+          <label for="station-name">Station Name</label>
+          <input id="station-name" autocomplete="off" type="text" placeholder="Silver Spring" maxlength="255">
+
+          <div>
+            <input id="station-transfer" type="checkbox">
+            <label for="station-transfer">Transfer Station</label>
+          </div>
+
+          <label for="station-name-orientation">Station Name Orientation</label>
+          <select id="station-name-orientation">
+            <option value="0">On the right</option>
+            <option value="180">On the left</option>
+            <option value="-45">Above-right, 45&deg;</option>
+            <option value="45">Below-right, 45&deg;</option>
+            <option value="135">Below-left, 45&deg;</option>
+            <option value="-135">Above-left, 45&deg;</option>
+            <option value="90">Above, 90&deg;</option>
+            <option value="-90">Below, 90&deg;</option>
+          </select>
+
+          <!-- TODO: Station style override -->
+        </fieldset>
+
+        <!-- Consider: Remove this if I'm not going to use it -->
         <h4 id="station-on-lines-title" class="station-rail-lines">This station is on these rail lines:</h4>
         <div id="station-on-lines" class="station-rail-lines"></div>
         <h4 id="add-other-lines" class="station-rail-lines">Add other lines this station serves:</h4>
         <div id="station-other-lines" class="station-rail-lines"></div>
       </div>
-      <button id="tool-eraser" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station (Keyboard shortcut: E)"><i class="fa fa-eraser" aria-hidden="true"></i> <b><u>E</u></b>raser</button>
-      <div id="tool-eraser-options" class="text-center bg-danger start-hidden"></div>
-      <button id="tool-download-image" class="btn btn-info has-tooltip hidden-xs" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
-      <button id="tool-export-canvas" class="btn btn-info has-tooltip visible-xs" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
-      <div id="export-canvas-help" class="text-left start-hidden" style="display: none;">
+
+      <button id="tool-eraser" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station (Keyboard shortcut: E)">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#eraser"/></svg>
+        <span><b><u>E</u></b>raser</span>
+      </button>
+      <div id="tool-eraser-options" class="text-center bg-danger" style="display: none;"></div>
+
+      <button id="tool-map-style" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Change Style of Lines and Stations">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#palette"/></svg>
+        <span>Style</span>
+      </button>
+      <div id="tool-map-style-options" class="text-left" style="display: none;">
+          <fieldset>
+            <legend>Map Line Size</legend>
+            <button id="tool-map-style-line-classic" class="map-style-line styled styling-redline" data-line-width-divisor="1">Metro (Classic)</button>
+            <button id="tool-map-style-line-750" class="map-style-line styled styling-redline" data-line-width-divisor="">75%</button>
+            <button id="tool-map-style-line-500" class="map-style-line styled styling-redline" data-line-width-divisor="2">50%</button>
+            <button id="tool-map-style-line-250" class="map-style-line styled styling-redline" data-line-width-divisor="4">25%</button>
+            <button id="tool-map-style-line-125" class="map-style-line styled styling-redline" data-line-width-divisor="8">12.5%</button>
+          </fieldset>
+          <fieldset>
+            <legend>Station Shape</legend>
+            <button id="tool-map-style-station-classic" class="map-style-station styled styling-redline" data-station-style="wmata">Metro (Classic)</button>
+            <button id="tool-map-style-station-rect" class="map-style-station styled styling-redline" data-station-style="rect-center">Rectangles</button>
+            <button id="tool-map-style-station-circles-lg" class="map-style-station styled styling-redline" data-station-style="circles-lg">Circles (Large)</button>
+            <button id="tool-map-style-station-circles-md" class="map-style-station styled styling-redline" data-station-style="circles-md">Circles (Medium)</button>
+            <button id="tool-map-style-station-circles-sm" class="map-style-station styled styling-redline" data-station-style="circles-sm">Circles (Small)</button>    
+          </fieldset>
+      </div>
+
+      <button id="tool-move-all" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Recenter your Metro map (Keyboard shortcuts: Arrow keys)">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-move"/></svg>
+        <span style="font-size: 75%">Move map</span>
+      </button>
+      <div id="tool-move-options" class="text-left" style="display: none;">
+        <fieldset>
+          <legend>Move Map</legend>
+          <h5>Be careful! If you move your map out of bounds, you'll lose your work.</h5>
+          <button id="tool-move-up" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Up arrow">
+            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-up-circle"/></svg> Move everything up</span>
+          </button>
+          <button id="tool-move-left" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Left arrow">
+            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-left-circle"/></svg> Move everything left</span>
+          </button>
+          <button id="tool-move-right" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Right arrow">
+            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-right-circle"/></svg> Move everything right</span>
+          </button>
+          <button id="tool-move-down" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Down arrow">
+            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-down-circle"/></svg> Move everything down</span>
+          </button>
+        </fieldset>
+      </div>
+
+      <button id="tool-resize-all" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Resize the grid, allowing you to make larger maps">
+        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-angle-expand"/></svg>
+        <span>Resize</span>
+      </button>
+      <div id="tool-resize-options" class="text-left" style="display: none;">
+        <fieldset>
+          <legend>Resize Map</legend>
+          <h5>Be careful! If your map is large and you resize it to be smaller, you'll lose your work. <b>Use Control+Z to undo.</b></h5>
+          <button id="tool-resize-80" class="resize-grid styled styling-redline">Standard (80x80)</button>
+          <button id="tool-resize-120" class="resize-grid styled styling-redline">Large (120x120)</button>
+          <button id="tool-resize-160" class="resize-grid styled styling-redline">Extra Large (160x160)</button>
+          <button id="tool-resize-200" class="resize-grid styled styling-redline">XXL (200x200)</button>
+          <button id="tool-resize-240" class="resize-grid styled styling-redline">XXXL (240x240)</button>
+          <div id="tool-resize-stretch-options" class="start-hidden">
+            <button id="tool-resize-stretch" class="has-tooltip stretch-grid styled styling-redline" data-toggle="tooltip" data-placement="left" title="Increase the available space between stations so you can add more stations in between.">Stretch Map</button>
+          </div>
+        </fieldset>
+      </div>
+
+      <!-- TODO: This is nice, but I may also want to link to SVG -->
+      <button id="tool-download-image" class="width-100 has-tooltip hidden-xs styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
+        <span>Download</span>
+      </button>
+      <button id="tool-export-canvas" class="width-100 has-tooltip visible-xs styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
+        <span>Download</span>
+      </button>
+
+      <div id="export-canvas-help" class="text-left" style="display: none;">
         <h5><b>Tap and hold the map to save as an image, or right click the map and click "Save Image As".</b></h5>
         <h5>Or click "Edit map" to continue editing your map.</h5>
         <h5>Happy with your map? Be sure to click Save &amp; Share map and it might be <a href="https://metromapmaker.com/gallery" rel="noopener" target="_blank">featured in the gallery</a>!</h5>
       </div>
-      <button id="tool-save-map" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Create a unique, shareable URL for your map"><i class="fa fa-share" aria-hidden="true"></i> Save &amp; Share map</button>
-      <div id="tool-save-options" class="text-left start-hidden"></div>
-      <button id="tool-grid" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Just hides the grid but you can still edit the map; to download your map click Download as image (Keyboard shortcut: H)"><i class="fa fa-table" aria-hidden="true"></i> <b><u>H</u></b>ide grid</button>
-      <div id="tool-zoom-controls" class="row">
-        <div class="col-xs-6" id="zoom-in-container">
-        <button id="tool-zoom-in" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: +"><i class="fa fa-search-plus" aria-hidden="true"></i> Zoom +</button>
-        </div>
-        <div class="col-xs-6" id="zoom-out-container">
-        <button id="tool-zoom-out" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: -"><i class="fa fa-search-minus" aria-hidden="true"></i> Zoom -</button>
-        </div>
-      </div>
-      <button id="snap-controls-left" class="btn btn-info has-tooltip start-hidden" data-toggle="tooltip" data-placement="left" title="Move all controls to the left side of the screen" style="display: none;"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Snap controls to left</button>
-      <button id="snap-controls-right" class="btn btn-info has-tooltip start-hidden" data-toggle="tooltip" data-placement="left" title="Move all controls to the right side of the screen" style="display: none;"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Snap controls to right</button>
-      <button id="tool-move-all" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Recenter your Metro map (Keyboard shortcuts: Arrow keys)"><i class="fa fa-arrows" aria-hidden="true"></i> Move map</button>
-      <div id="tool-move-options" class="text-left start-hidden" style="display: none;">
-        <h5>Be careful! If you move your map out of bounds, you'll lose your work.</h5>
-        <button id="tool-move-up" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Up arrow"><i class="fa fa-chevron-circle-up" aria-hidden="true"></i> Move everything up</button>
-        <button id="tool-move-left" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Left arrow"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Move everything left</button>
-        <button id="tool-move-right" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Right arrow"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Move everything right</button>
-        <button id="tool-move-down" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Down arrow"><i class="fa fa-chevron-circle-down" aria-hidden="true"></i> Move everything down</button>
-      </div>
-      <button id="tool-resize-all" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Resize the grid, allowing you to make larger maps"><i class="fa fa-expand" aria-hidden="true"></i> Resize grid</button>
-      <div id="tool-resize-options" class="text-left start-hidden" style="display: none;">
-        <h5>Be careful! If your map is large and you resize it to be smaller, you'll lose your work. <b>Use Control+Z to undo.</b></h5>
-        <button id="tool-resize-80" class="btn btn-info resize-grid">Standard (80x80)</button>
-        <button id="tool-resize-120" class="btn btn-info resize-grid">Large (120x120)</button>
-        <button id="tool-resize-160" class="btn btn-info resize-grid">Extra Large (160x160)</button>
-        <button id="tool-resize-200" class="btn btn-info resize-grid">XXL (200x200)</button>
-        <button id="tool-resize-240" class="btn btn-info resize-grid">XXXL (240x240)</button>
-        <div id="tool-resize-stretch-options" class="start-hidden">
-          <button id="tool-resize-stretch" class="btn btn-info has-tooltip stretch-grid" data-toggle="tooltip" data-placement="left" title="Increase the available space between stations so you can add more stations in between.">Stretch Map</button>
-        </div>
-      </div>
-      <button id="tool-map-style" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Change Style of Lines and Stations">Change Map Style</button>
-      <div id="tool-map-style-options" class="text-left start-hidden">
-        <h5>Map Line Size</h5>
-          <button id="tool-map-style-line-classic" class="btn btn-info map-style-line" data-line-width-divisor="1">Metro (Classic)</button>
-          <button id="tool-map-style-line-750" class="btn btn-info map-style-line" data-line-width-divisor="">75%</button>
-          <button id="tool-map-style-line-500" class="btn btn-info map-style-line" data-line-width-divisor="2">50%</button>
-          <button id="tool-map-style-line-250" class="btn btn-info map-style-line" data-line-width-divisor="4">25%</button>
-          <button id="tool-map-style-line-125" class="btn btn-info map-style-line" data-line-width-divisor="8">12.5%</button>
-        <h5>Station Shape</h5>
-          <button id="tool-map-style-station-classic" class="btn btn-info map-style-station" data-station-style="wmata">Metro (Classic)</button>
-          <button id="tool-map-style-station-rect" class="btn btn-info map-style-station" data-station-style="rect-center">Rectangles</button>
-          <button id="tool-map-style-station-circles-lg" class="btn btn-info map-style-station" data-station-style="circles-lg">Circles (Large)</button>
-          <button id="tool-map-style-station-circles-md" class="btn btn-info map-style-station" data-station-style="circles-md">Circles (Medium)</button>
-          <button id="tool-map-style-station-circles-sm" class="btn btn-info map-style-station" data-station-style="circles-sm">Circles (Small)</button>
-      </div>
 
-      <hr>
-      <button id="tool-clear-map" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Be careful: this will delete your map"><i class="fa fa-trash-o" aria-hidden="true"></i> Clear map</button>
+      <button id="tool-save-map" class="width-100 has-tooltip styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Create a unique, shareable URL for your map">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#save"/></svg>
+        <span>Save &amp; Share</span>
+      </button>
+      <div id="tool-save-options" class="text-left"></div>
+
+      <button id="tool-grid" class="has-tooltip styled styling-greenline width-100" data-toggle="tooltip" data-placement="left" title="Just hides the grid but you can still edit the map; to download your map click Download as image (Keyboard shortcut: H)">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#grid"/></svg>
+        <span><b><u>H</u></b>ide grid</span>
+      </button>
+
+      <button id="tool-zoom-in" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: +">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#zoom-in"/></svg>
+        <span>Zoom +</span>
+      </button>
+      <button id="tool-zoom-out" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: -">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#zoom-out"/></svg>
+        <span>Zoom -</span>
+      </button>
+
+      <button id="snap-controls-left" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move all controls to the left side of the screen" style="display: none;">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-left-circle"/></svg>
+        <span>Snap controls to left</span>
+      </button>
+      <button id="snap-controls-right" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move all controls to the right side of the screen" style="display: none;">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-right-circle"/></svg>
+        <span>Snap controls to right</span>
+      </button>
+
+      <button id="controls-collapse-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Collapse menu and only show icons">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-collapse-vertical"/></svg>
+        <span>Collapse</span>
+      </button>
+
+      <button id="controls-expand-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Expand Menu" style="display: none;">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-expand-vertical"/></svg>
+      </button>
+
+      <button id="controls-dock-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move controls to top, right, bottom, or left of screen">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pencil"/></svg> <!-- TODO: diff icon -->
+        <span>Dock</span> <!-- TODO: this should replace "snap controls to left" and cycle between top,right,bottom,left (clockwise) -->
+      </button>
+
+      <button id="tool-clear-map" class="has-tooltip styled styling-silverline width-100" data-toggle="tooltip" data-placement="left" title="Be careful: this will delete your map">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#trash"/></svg>
+        <span>Clear map</span>
+      </button>
+
       <hr>
       <div id="autosave-indicator"></div>
 
@@ -257,9 +371,7 @@
 
 </div> <!-- #main-container -->
 
-  <script src="https://code.jquery.com/jquery-3.4.1.min.js"
-  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-  crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
   {% if saved_map %}
   <script>
     var savedMapData = {% autoescape off %}{{ saved_map.mapdata }}{% endautoescape %}

@@ -51,7 +51,7 @@ function resizeGrid(size) {
   drawGrid()
   snapCanvasToGrid() 
   lastStrokeStyle = undefined; // Prevent odd problem where snapping canvas to grid would cause lines to paint with an undefined color (singletons were unaffected)
-
+  // TODO: Set styling to "active"
   $('.resize-grid').removeClass('btn-primary');
   $('.resize-grid').addClass('btn-info');
   $('#tool-resize-' + size).removeClass('btn-info');
@@ -181,7 +181,7 @@ function bindRailLineEvents() {
     }
     $('#toolbox button').removeClass('btn-primary').addClass('btn-info');
     $('#tool-station-options').hide();
-    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation');
+    // TODO: tool active indicator
   });  
 } // bindRailLineEvents()
 
@@ -206,7 +206,9 @@ function makeStation(x, y) {
   if (!getActiveLine(x, y, activeMap)) {
     // Only expand the #tool-station-options if it's actually on a line
     $('#tool-station-options').hide();
-    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation');
+    // SVT IT IS HERE
+    $('#tool-station').removeClass('width-100')
+    // TODO: tool active indicator
     drawCanvas(activeMap, true) // clear any stale station indicators
     return
   }
@@ -216,6 +218,7 @@ function makeStation(x, y) {
   $('#station-coordinates-x').val(x);
   $('#station-coordinates-y').val(y);
   var allLines = $('.rail-line');
+  $('#tool-station').addClass('width-100')
 
   if (!activeMap[x][y]["station"]) {
     // Create a new station
@@ -287,7 +290,7 @@ function makeStation(x, y) {
 
   // Make the station options button collapsible
   if ($('#tool-station-options').is(':visible')) {
-    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Hide Station Options');
+    // TODO: tool active indicator
   }
 
   // Add lines to the "Other lines this station serves" option
@@ -1217,7 +1220,7 @@ function loadMapFromObject(metroMapObject, update) {
           } else {
             keyboardShortcut = ''
           }
-          $('#rail-line-new').before('<button id="rail-line-' + line + '" class="rail-line btn-info has-tooltip" style="background-color: #' + line + ';"' + keyboardShortcut + '>' + metroMapObject['global']['lines'][line]['displayName'] + '</button>');
+          $('#rail-line-new').before('<button id="rail-line-' + line + '" class="rail-line has-tooltip" style="background-color: #' + line + ';"' + keyboardShortcut + '>' + metroMapObject['global']['lines'][line]['displayName'] + '</button>');
           numLines++;
       }
     }
@@ -1562,19 +1565,21 @@ function resetRailLineTooltips() {
 function showGrid() {
   $('canvas#grid-canvas').removeClass('hide-gridlines');
   $('canvas#grid-canvas').css("opacity", 1);
-  $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> <b><u>H</u></b>ide grid');
+  $('#tool-grid span').html('<b><u>H</u></b>ide grid');
 }
 
 function hideGrid() {
   $('canvas#grid-canvas').addClass('hide-gridlines');
   $('canvas#grid-canvas').css("opacity", 0);
-  $('#tool-grid').html('<i class="fa fa-table" aria-hidden="true"></i> S<b><u>h</u></b>ow grid');
+  $('#tool-grid span').html('S<b><u>h</u></b>ow grid');
 }
 
 function setFloodFillUI() {
   // Show appropriate eraser warnings when flood fill is set
   if ($('#tool-flood-fill').prop('checked')) {
-    $('#tool-eraser').html('<i class="fa fa-eraser" aria-hidden="true"></i> Flood Fill <b><u>E</u></b>raser')
+    // TODO: Flood fill eraser indicator
+    // TODO: tool active indicator
+
     $('#tool-eraser-options').html("<b>Flood fill is ON</b>")
     $('#tool-eraser-options').show()
     if ((activeTool == 'line' && activeToolOption) || activeTool == 'eraser') {
@@ -1585,7 +1590,8 @@ function setFloodFillUI() {
       floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), indicatorColor, true)
     }
   } else {
-    $('#tool-eraser').html('<i class="fa fa-eraser" aria-hidden="true"></i> <b><u>E</u></b>raser')
+    $('#tool-eraser span').html('<b><u>E</u></b>raser')
+    // TODO: tool active indicator
     $('#tool-eraser-options').text('')
     $('#tool-eraser-options').hide()
     var canvas = document.getElementById('hover-canvas')
@@ -1705,9 +1711,8 @@ $(document).ready(function() {
   activeTool = 'look';
 
   $('#toolbox button').click(function() {
-    $('#toolbox button').removeClass('btn-primary').addClass('btn-info');
-    $(this).removeClass('btn-info');
-    $(this).addClass('btn-primary')
+    $('#toolbox button').removeClass('btn-active');
+    $(this).addClass('btn-active')
   })
 
   // Toolbox
@@ -1716,10 +1721,10 @@ $(document).ready(function() {
     if ($('#tool-line-options').is(':visible')) {
       $('#tool-line-options').hide();
       $('#tool-new-line-options').hide();
-      $('#tool-line').html('<i class="fa fa-pencil" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> <b><u>D</u></b>raw Rail Line');
+      $(this).removeClass('width-100')
     } else {
       $('#tool-line-options').show();
-      $('#tool-line').html('<i class="fa fa-subway" aria-hidden="true"></i> Hi<b><u>d</u></b>e Rail Line options');
+      $(this).addClass('width-100')
     }
     $('.tooltip').hide();
   }); // #tool-line.click() (Show rail lines you can paint)
@@ -1758,14 +1763,13 @@ $(document).ready(function() {
     activeTool = 'station';
     if ($('#tool-station-options').is(':visible')) {
       $('#tool-station-options').hide();
-      $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation');
+      $(this).removeClass('width-100')
     }
     $('.tooltip').hide();
   }); // #tool-station.click()
   $('#tool-eraser').click(function() {
     activeTool = 'eraser';
     $('#tool-station-options').hide();
-    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation');
     $('.tooltip').hide();
     setFloodFillUI()
   }); // #tool-eraser.click()
@@ -1805,10 +1809,12 @@ $(document).ready(function() {
   $('#tool-resize-all').click(function() {
     if ($('#tool-resize-options').is(':visible')) {
       $('#tool-resize-options').hide();
-      $('#tool-resize-all').html('<i class="fa fa-expand" aria-hidden="true"></i> Resize grid');
+      $(this).removeClass('width-100')
+      // TODO: tool active indicator
     } else {
       $('#tool-resize-options').show();
-      $('#tool-resize-all').html('<i class="fa fa-expand" aria-hidden="true"></i> Hide Resize options');
+      $(this).addClass('width-100')
+      // TODO: tool active indicator
       if (isMapStretchable()) {
         $('#tool-resize-stretch-options').show()
         $('#tool-resize-stretch').text('Stretch map to ' + gridRows * 2 + 'x' + gridCols * 2)
@@ -1835,10 +1841,12 @@ $(document).ready(function() {
   $('#tool-move-all').click(function() {
     if ($('#tool-move-options').is(':visible')) {
       $('#tool-move-options').hide();
-      $('#tool-move-all').html('<i class="fa fa-arrows" aria-hidden="true"></i> Move map')
+      $(this).removeClass('width-100')
+      // TODO: tool active indicator
     } else {
       $('#tool-move-options').show();
-      $('#tool-move-all').html('<i class="fa fa-arrows" aria-hidden="true"></i> Hide Move options')
+      $(this).addClass('width-100')
+      // TODO: tool active indicator
     }
     $('.tooltip').hide();
   }); // #tool-move-all.click()
@@ -1870,10 +1878,11 @@ $(document).ready(function() {
         data = data.split(',');
         var urlhash = data[0].replace(/\s/g,'');
         var namingToken = data[1].replace(/\s/g,'');
-        var toolSaveOptions = '<button id="hide-save-share-url" class="btn btn-info">Hide sharing explanation</button><h5 style="overflow-x: hidden;" class="text-left">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="/?map=' + urlhash + '" target="_blank">https://metromapmaker.com/?map=' + urlhash + '</a></h5> <h5 class="text-left">You can then share this URL with a friend - and they can remix your map without you losing your original! If you make changes to this map, click Save and Share again to get a new URL.</h5>';
+        var toolSaveOptions = '<button id="hide-save-share-url" class="styling-greenline">Hide sharing explanation</button><h5 style="overflow-x: hidden;" class="text-left">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="/?map=' + urlhash + '" target="_blank">https://metromapmaker.com/?map=' + urlhash + '</a></h5> <h5 class="text-left">You can then share this URL with a friend - and they can remix your map without you losing your original! If you make changes to this map, click Save and Share again to get a new URL.</h5>';
+        // TODO: SVT ACTUALLY CHANGE URL LOCATION HREF HERE
         if (namingToken) {
           // Only show the naming form if the map could actually be renamed.
-          toolSaveOptions += '<form id="name-map" class="text-left"><input type="hidden" name="urlhash" value="' + urlhash + '"><input id="naming-token" type="hidden" name="naming_token" value="' + namingToken + '"><label for="name">Where is this a map of?</label><input id="user-given-map-name" type="text" name="name"><select id="user-given-map-tags" name="tags"><option value="">What kind of map is this?</option><option value="real">This is a real metro system</option><option value="speculative">This is a real place, but a fantasy map</option><option value="unknown">This is an imaginary place</option></select></form><button id="name-this-map" class="btn btn-warning btn-success">Name this map</button>'
+          toolSaveOptions += '<form id="name-map" class="text-left"><input type="hidden" name="urlhash" value="' + urlhash + '"><input id="naming-token" type="hidden" name="naming_token" value="' + namingToken + '"><label for="name">Where is this a map of?</label><input id="user-given-map-name" type="text" name="name"><select id="user-given-map-tags" name="tags"><option value="">What kind of map is this?</option><option value="real">This is a real metro system</option><option value="speculative">This is a real place, but a fantasy map</option><option value="unknown">This is an imaginary place</option></select></form><button id="name-this-map" class="styling-blueline">Name this map</button>'
         }
         var userGivenMapName = window.sessionStorage.getItem('userGivenMapName')
         var userGivenMapTags = window.sessionStorage.getItem('userGivenMapTags')
@@ -1899,7 +1908,7 @@ $(document).ready(function() {
           $('#name-this-map').show()
           $(this).hide()
           $('#name-this-map').removeClass();
-          $('#name-this-map').addClass('btn btn-warning btn-success');
+          $('#name-this-map').addClass('styling-blueline');
           $('#name-this-map').text('Name this map')
         })
         $('#name-this-map').click(function(e) {
@@ -1918,7 +1927,7 @@ $(document).ready(function() {
 
           $.post('/name/', formData, function() {
             $('#name-map').hide();
-            $('#name-this-map').removeClass('btn-warning');
+            $('#name-this-map').removeClass('btn-warning'); // TODO: S4D: Is this really necessary anymore? 
             $('#name-this-map').text('Thanks!')
             setTimeout(function() {
               $('#name-this-map').hide();
@@ -1965,7 +1974,7 @@ $(document).ready(function() {
     // On mobile, you need to tap and hold on the canvas to save the image
     drawCanvas(activeMap);
     $('#tool-station-options').hide();
-    $('#tool-station').html('<i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation');
+    // TODO: tool active indicator
 
     $('.tooltip').hide();
     if ($('#grid-canvas').is(':visible')) {
@@ -2037,10 +2046,10 @@ $(document).ready(function() {
 
   $('#rail-line-new').click(function() {
     if ($('#tool-new-line-options').is(':visible')) {
-      $(this).text('+ Add New Line')
+      $(this).children('span').text('Add New Line')
       $('#tool-new-line-options').hide()
     } else {
-      $(this).text('Hide Add Line options')
+      $(this).children('span').text('Hide Add Line options')
       $('#tool-new-line-options').show()
     }
   }) // #rail-line-new.click() (expand tool-new-line-options)
@@ -2073,7 +2082,7 @@ $(document).ready(function() {
       $('#tool-new-line-errors').text('Too many rail lines! Delete your unused ones before creating new ones.');
     } else {
       $('#tool-new-line-errors').text('');
-      $('#rail-line-new').before('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line btn-info has-tooltip" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');
+      $('#rail-line-new').before('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line has-tooltip" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');
       activeMap['global'] = new Object();
       activeMap['global']['lines'] = new Object();
       $('.rail-line').each(function() {
@@ -2098,17 +2107,18 @@ $(document).ready(function() {
   $('#rail-line-change').click(function() {
     // Expand the options
     if ($('#tool-change-line-options').is(':visible')) {
-      $(this).html('<i class="fa fa-pencil" aria-hidden="true"></i> Edit colors &amp; names')
+      $(this).children('span').html('Edit colors &amp; names')
       $('#tool-change-line-options').hide()
     } else {
-      $(this).text('Close Edit Line options')
+      $(this).children('span').text('Close Edit Line options')
       $('#tool-change-line-options').show()
     }
 
     $('#tool-lines-to-change').html('<option>Edit which rail line?</option>')
     $('#change-line-name').hide()
     $('#change-line-color').hide()
-    $('#tool-change-line-options h4').hide()
+    $('#tool-change-line-options label').hide()
+    $('#tool-change-line-options p').text('')
 
     // Now populate the select dropdown
     for (var line in activeMap["global"]["lines"]) {
@@ -2116,16 +2126,16 @@ $(document).ready(function() {
     }
   }) // #rail-line-change.click()
 
-  $('#tool-lines-to-change').change(function() {
+  $('#tool-lines-to-change').on('change', function() {
+    $('#tool-change-line-options label').show()
     // Set the name and color
     if ($('#tool-lines-to-change option:selected').text() != 'Edit which rail line?') {
       $('#change-line-name').show()
       $('#change-line-color').show()
-      $('#tool-change-line-options h4').show()
       $('#change-line-name').val($('#tool-lines-to-change option:selected').text())
       $('#change-line-color').val('#' + $(this).val())
     } else {
-      $('#tool-change-line-options h4').hide()
+      $('#tool-change-line-options p').text('')
       $('#change-line-name').hide()
       $('#change-line-color').hide()
     }
@@ -2492,6 +2502,7 @@ $('#try-on-mobile').click(function() {
 
   if ($('#tool-line').prop('disabled')) {
     $('#tool-export-canvas').click()
+    // TODO: Set styling to "active"
     $('#tool-export-canvas').removeClass('btn-primary')
     $('#tool-export-canvas').addClass('btn-info')
   }
