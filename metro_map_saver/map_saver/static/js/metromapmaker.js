@@ -174,12 +174,17 @@ function bindRailLineEvents() {
     // Existing Rail Line
     activeTool = 'line';
     activeToolOption = $(this).css('background-color');
+    $('#tool-line').addClass('draw-rail-line')
+    $('#tool-line').attr('style', 'background-color: ' + activeToolOption)
     if ($('#tool-flood-fill').prop('checked')) {
       floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), activeToolOption, true)
+      $('#tool-line-icon-pencil').hide()
+      $('#tool-line-icon-paint-bucket').show()
     } else {
       drawNewHoverIndicator()
+      $('#tool-line-icon-pencil').show()
+      $('#tool-line-icon-paint-bucket').hide()
     }
-    $('#toolbox button').removeClass('btn-primary').addClass('btn-info');
     $('#tool-station-options').hide();
     // TODO: tool active indicator
   });  
@@ -1580,8 +1585,18 @@ function setFloodFillUI() {
     // TODO: Flood fill eraser indicator
     // TODO: tool active indicator
 
-    $('#tool-eraser-options').html("<b>Flood fill is ON</b>")
-    $('#tool-eraser-options').show()
+    $('#tool-line-icon-pencil').hide()
+    $('#tool-line-caption-draw').hide()
+
+    $('#tool-line-icon-paint-bucket').show()
+    $('#tool-line-caption-fill').show()
+
+    $('#tool-eraser-icon-eraser').hide()
+    $('#tool-eraser-caption-eraser').hide()
+
+    $('#tool-eraser-icon-paint-bucket').show()
+    $('#tool-eraser-caption-fill').show()
+
     if ((activeTool == 'line' && activeToolOption) || activeTool == 'eraser') {
       if (activeTool == 'line' && activeToolOption)
         indicatorColor = activeToolOption
@@ -1590,9 +1605,18 @@ function setFloodFillUI() {
       floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), indicatorColor, true)
     }
   } else {
-    $('#tool-eraser span').html('<b><u>E</u></b>raser')
-    // TODO: tool active indicator
-    $('#tool-eraser-options').text('')
+    $('#tool-line-icon-pencil').show()
+    $('#tool-line-caption-draw').show()
+
+    $('#tool-line-icon-paint-bucket').hide()
+    $('#tool-line-caption-fill').hide()
+
+    $('#tool-eraser-icon-eraser').show()
+    $('#tool-eraser-caption-eraser').show()
+
+    $('#tool-eraser-icon-paint-bucket').hide()
+    $('#tool-eraser-caption-fill').hide()
+
     $('#tool-eraser-options').hide()
     var canvas = document.getElementById('hover-canvas')
     var ctx = canvas.getContext('2d')
@@ -1710,13 +1734,18 @@ $(document).ready(function() {
 
   activeTool = 'look';
 
-  $('#toolbox button').click(function() {
-    $('#toolbox button').removeClass('btn-active');
-    $(this).addClass('btn-active')
+  $('#toolbox button:not(.rail-line)').click(function() {
+    $('.active').removeClass('active')
+    $(this).addClass('active')
   })
 
   // Toolbox
   $('#tool-line').click(function() {
+    $('.active').removeClass('active')
+    $('#tool-line').addClass('active')
+    if ($(this).hasClass('draw-rail-line')) {
+      activeTool = 'line'
+    }
     // Expand Rail line options
     if ($('#tool-line-options').is(':visible')) {
       $('#tool-line-options').hide();
@@ -1761,6 +1790,8 @@ $(document).ready(function() {
   }); // #rail-line-delete.click() (Delete unused lines)
   $('#tool-station').click(function() {
     activeTool = 'station';
+    $('.active').removeClass('active')
+    $('#tool-station').addClass('active')
     if ($('#tool-station-options').is(':visible')) {
       $('#tool-station-options').hide();
       $(this).removeClass('width-100')
@@ -1769,6 +1800,8 @@ $(document).ready(function() {
   }); // #tool-station.click()
   $('#tool-eraser').click(function() {
     activeTool = 'eraser';
+    $('.active').removeClass('active')
+    $('#tool-eraser').addClass('active')
     $('#tool-station-options').hide();
     $('.tooltip').hide();
     setFloodFillUI()

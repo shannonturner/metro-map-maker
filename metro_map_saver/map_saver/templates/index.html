@@ -101,8 +101,11 @@
     <div id="toolbox">
 
       <button id="tool-line" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Draw a rail line on the grid (Keyboard shortcut: D)">
-          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pencil"/></svg>
-          <span><b><u>D</u></b>raw</span>
+          <svg id="tool-line-icon-pencil" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pencil"/></svg>
+          <span id="tool-line-caption-draw"><b><u>D</u></b>raw</span>
+
+          <svg id="tool-line-icon-paint-bucket" width="16" height="16" style="display: none;"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#paint-bucket"/></svg>
+          <span id="tool-line-caption-fill" style="display: none;"><b><u>F</u></b>ill</span>
       </button>
       <div id="tool-line-options" class="start-hidden" style="display: none;">
 
@@ -138,7 +141,7 @@
           <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#plus-circle"/></svg>
           <span>Add New Line</span>
         </button>
-        <div id="tool-new-line-options" class="text-left">
+        <div id="tool-new-line-options" class="text-left" style="display: none">
           <fieldset>
             <legend>Add New Rail Line</legend>
             <label for="new-rail-line-color">Color of this line</label>
@@ -155,7 +158,7 @@
         <button id="rail-line-change" class="styled styling-redline width-100">
           <span>Edit colors &amp; names</span>
         </button>
-        <div id="tool-change-line-options" class="text-left">
+        <div id="tool-change-line-options" class="text-left" style="display: none;">
           <fieldset>
             <legend>Edit Rail Line</legend>
             <select id="tool-lines-to-change">
@@ -175,7 +178,7 @@
           <span>Delete Unused Lines</span>
         </button>
       </div>
-      
+
       <button id="tool-station" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Place a station on an existing rail line, or select an existing station (Keyboard shortcut: S)">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pin-map"/></svg>
         <span><b><u>S</u></b>tation</span>
@@ -217,10 +220,12 @@
       </div>
 
       <button id="tool-eraser" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station (Keyboard shortcut: E)">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#eraser"/></svg>
-        <span><b><u>E</u></b>raser</span>
+        <svg id="tool-eraser-icon-eraser" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#eraser"/></svg>
+        <span id="tool-eraser-caption-eraser"><b><u>E</u></b>raser</span>
+
+        <svg id="tool-eraser-icon-paint-bucket" width="16" height="16" style="display: none;"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#paint-bucket"/></svg>
+        <span id="tool-eraser-caption-fill" style="font-size: 80%; display: none;">Eraser Fill</span>
       </button>
-      <div id="tool-eraser-options" class="text-center bg-danger" style="display: none;"></div>
 
       <button id="tool-map-style" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Change Style of Lines and Stations">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#palette"/></svg>

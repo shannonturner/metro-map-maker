@@ -44,6 +44,13 @@ button {
   justify-content: center;
 }
 
+button#tool-line.active.draw-rail-line,
+button#tool-line.active.draw-rail-line:hover,
+button#tool-line.active.draw-rail-line:active {
+  color: #fff;
+  border-color: rgba(51, 51, 51, .4);
+}
+
 #toolbox button svg, #toolbox button span { margin: auto; }
 
 #toolbox button.width-100 { width: 100%; }
