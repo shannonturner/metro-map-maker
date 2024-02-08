@@ -1734,9 +1734,13 @@ $(document).ready(function() {
 
   activeTool = 'look';
 
-  $('#toolbox button:not(.rail-line)').click(function() {
+  $('#toolbox button:not(.rail-line)').on('click', function() {
     $('.active').removeClass('active')
     $(this).addClass('active')
+  })
+  $('#toolbox button.rail-line').on('click', function() {
+    $('.active').removeClass('active')
+    $('#tool-line').addClass('active')
   })
 
   // Toolbox
