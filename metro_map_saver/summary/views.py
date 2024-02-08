@@ -167,7 +167,24 @@ class MapsByDateMixin:
         context['maps_count'] = html_calendar.maps_count
         context['calendar'] = html_calendar
 
+        FIRST_YEAR = 2017
+        context['all_years'] = range(datetime.datetime.now().year, (FIRST_YEAR - 1), -1)
+
         return context
+
+    def get_month(self):
+        try:
+            month = super().get_month()
+        except Http404:
+            month = datetime.datetime.now().strftime(self.get_month_format())
+        return month
+
+    def get_year(self):
+        try:
+            year = super().get_year()
+        except Http404:
+            year = datetime.datetime.now().strftime(self.get_year_format())
+        return year
 
 class MapsPerYearView(MapsByDateMixin, YearArchiveView):
     # Since it's not actually the maps, only the MapsByDay objects, this is fine
@@ -210,22 +227,6 @@ class MapsPerMonthView(MapsByDateMixin, MonthArchiveView):
         )
 
         return context
-
-    def get_month(self):
-        try:
-            month = super().get_month()
-        except Http404:
-            month = datetime.datetime.now().strftime(self.get_month_format())
-
-        return month
-
-    def get_year(self):
-        try:
-            year = super().get_year()
-        except Http404:
-            year = datetime.datetime.now().strftime(self.get_year_format())
-
-        return year
 
 class MapsPerWeekView(MapsByDateMixin, WeekArchiveView):
     week_format = '%V'

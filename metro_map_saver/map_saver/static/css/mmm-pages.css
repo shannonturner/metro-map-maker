@@ -61,3 +61,13 @@ th.map-calendar-month {
     text-shadow: -1px -1px 0 #333, 1px -1px 0 #333, -1px 1px 0 #333, 1px 1px 0 #333;
     letter-spacing: 0.125rem;
 }
+
+.nav-item {
+    line-height: 3.5rem;
+    margin: 0 0.5rem;
+    font-size: 1.5rem;
+}
+
+.nav-item li {
+    font-size: 1.5rem;
+}

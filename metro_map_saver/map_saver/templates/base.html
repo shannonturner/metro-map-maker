@@ -58,20 +58,52 @@
 <body class="{% if is_popup %}popup {% endif %}{% block bodyclass %}{% endblock bodyclass %}"
   data-admin-utc-offset="{% now "Z" %}">
 
-<div class="d-flex flex-nowrap">
-
     {% if not is_popup %}
         {% block header %}{% endblock header %}
 
         {% block nav-breadcrumbs %}
-          <nav aria-label="Breadcrumbs">
+          <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom fixed-top">
             <ol class="breadcrumb justify-content-start {% block breadcrumb-classes %}styling-{{ styling_class }}{% endblock breadcrumb-classes %}">
-            {% block breadcrumbs %}{% endblock breadcrumbs %}
+            {% block breadcrumbs %}
+            <li class="nav-item">
+                <a class="nav-link" href="/"><h3 id="title"><span class="M">M</span>etro<span class="M">M</span>ap<span class="M">M</span>aker</h3></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'public_gallery' %}">My Favorite Maps</a>
+            </li>
+            {% if all_years %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      All Maps by Year
+                    </a>
+                    <ul class="dropdown-menu">
+                        {% for year in all_years %}
+                            <li><a class="dropdown-item" href="{% url 'calendar-year' year %}">{{ year }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </li>
+            {% endif %}
+            {% if month_header_links %}
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Maps by Month, {{ month_header_links.0|date:"Y"}}
+                    </a>
+                    <ul class="dropdown-menu">
+                        {% for month in month_header_links %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'calendar-month' month|date:'Y' month|date:'m' %}">{{ month|date:"F Y" }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+            {% endif %}
+            {% endblock breadcrumbs %}
             {% block breadcrumbs_end %}{% endblock breadcrumbs_end %}
             </ol>
           </nav>
         {% endblock nav-breadcrumbs %}
     {% endif %}
+
+<div class="d-flex flex-nowrap" style="margin-top: 6rem;">
     
       <div id="content-start" class="content container-fluid" tabindex="-1">
         {% block messages %}

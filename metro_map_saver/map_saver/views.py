@@ -84,6 +84,11 @@ class PublicGalleryView(TemplateView):
 
     @method_decorator(gzip_page)
     def get(self, request, **kwargs):
+        return super().get(request, **kwargs)
+
+    def get_context_data(self, *args, **kwargs):
+
+        context = super().get_context_data(*args, **kwargs)
 
         tags = [
             'favorite',
@@ -96,10 +101,15 @@ class PublicGalleryView(TemplateView):
         thumbnails = SavedMap.objects.filter(publicly_visible=True) \
             .values('thumbnail', 'name', 'urlhash')
 
-        context = {tag:thumbnails.filter(tags__slug=tag).order_by('name') for tag in tags}
+        for tag in tags:
+            context[tag] = thumbnails.filter(tags__slug=tag).order_by('name')
         context['favorite'] = context['favorite'].order_by('?')[:8]
 
-        return render(request, self.template_name, context)
+        from summary.models import MapsByDay
+        mbd = MapsByDay.objects.all()
+        context['map_count'] = sum(m.maps for m in mbd)
+
+        return context
 
 class ThumbnailGalleryView(TemplateView):
 
@@ -822,3 +832,11 @@ class MapsPerDayView(DayArchiveView):
     queryset = SavedMap.objects.defer('mapdata').all()
     date_field = 'created_at'
     context_object_name = 'maps'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        FIRST_YEAR = 2017
+        context['all_years'] = range(datetime.datetime.now().year, (FIRST_YEAR - 1), -1)
+
+        return context
