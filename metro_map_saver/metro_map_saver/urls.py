@@ -37,6 +37,7 @@ urlpatterns = [
     path('name/', map_saver.views.CreatorNameMapView.as_view(), name='name_map'),
 
     # Stats, using summary for performance
+    path('calendar/', summary.views.MapsPerMonthView.as_view(month_format='%m'), name='calendar'),
     path('calendar/<int:year>/', summary.views.MapsPerYearView.as_view(), name='calendar-year'),
     path('calendar/<int:year>/<int:month>/', summary.views.MapsPerMonthView.as_view(month_format='%m'), name='calendar-month'),
     path('calendar/<int:year>/week/<int:week>/', summary.views.MapsPerWeekView.as_view(year_format='%G', week_format='%V'), name='calendar-week'),

@@ -1,3 +1,4 @@
+from django.http import Http404
 from django.shortcuts import render, reverse
 from django.views.generic.dates import (
     YearArchiveView,
@@ -209,6 +210,22 @@ class MapsPerMonthView(MapsByDateMixin, MonthArchiveView):
         )
 
         return context
+
+    def get_month(self):
+        try:
+            month = super().get_month()
+        except Http404:
+            month = datetime.datetime.now().strftime(self.get_month_format())
+
+        return month
+
+    def get_year(self):
+        try:
+            year = super().get_year()
+        except Http404:
+            year = datetime.datetime.now().strftime(self.get_year_format())
+
+        return year
 
 class MapsPerWeekView(MapsByDateMixin, WeekArchiveView):
     week_format = '%V'

@@ -1044,9 +1044,11 @@ function autoSave(metroMap) {
     metroMap = JSON.stringify(metroMap);
   }
   window.localStorage.setItem('metroMap', metroMap);
-  $('#autosave-indicator').html('<i class="fa fa-spinner fa-spin" aria-hidden="true"></i> Saving ...');
+  $('#autosave-indicator').text('Saving locally ...'); // TODO: Add spinner
+  $('#title').hide()
   setTimeout(function() {
-    $('#autosave-indicator').html('');
+    $('#autosave-indicator').text('');
+    $('#title').show()
   }, 1500)
 } // autoSave(metroMap)
 
