@@ -70,7 +70,7 @@ button.styling-greenline {
   background-color: #00b251;
 }
 button.styling-greenline:hover {
-  background-color: rgba(0, 178,81, .7)
+  background-color: rgba(0, 178,81, .7);
   border-color: rgba(0, 178,81, .4);
 }
 
