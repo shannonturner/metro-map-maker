@@ -167,6 +167,23 @@ function getStationLines(x, y) {
   return activeMap[x][y]["station"]["lines"]
 } // getStationLines(x, y)
 
+function determineDarkOrLightContrast(hexcolor) {
+  // Given a hexcolor, return an appropriate light-or-dark
+  // contrasting color
+
+  total = 0
+  rgb = [...hexcolor.matchAll(/(\d+)/g)]
+  for (var c=0;c<rgb.length;c++) {
+    total += parseInt(rgb[c][0])
+  }
+  if (total < (127 * 3)) {
+    // This is a dark color, so use white to contrast
+    return '#ffffff'
+  } else {
+    return '#000000'
+  }
+}
+
 function bindRailLineEvents() {
   // Bind the events to all of the .rail-lines
   // Needs to be done whenever a new rail line is created and on page load
@@ -175,7 +192,10 @@ function bindRailLineEvents() {
     activeTool = 'line';
     activeToolOption = $(this).css('background-color');
     $('#tool-line').addClass('draw-rail-line')
-    $('#tool-line').attr('style', 'background-color: ' + activeToolOption)
+    $('#tool-line').css({
+      "background-color": activeToolOption,
+      "color": determineDarkOrLightContrast(activeToolOption)
+    })
     if ($('#tool-flood-fill').prop('checked')) {
       floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), activeToolOption, true)
       $('#tool-line-icon-pencil').hide()
