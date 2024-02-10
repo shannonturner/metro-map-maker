@@ -67,8 +67,9 @@
 
                 <div class="card-footer d-flex justify-content-evenly">
                     <a href="{% url 'home' %}?map={{ map.urlhash }}"><i class="bi bi-tools"></i> Remix</a>
-                    <a href="#TODO"><i class="bi bi-heart"></i> Rate</a>
                     {% if map.svg %}
+                        {# Only show Rate link if you'll be able to see the full SVG #}
+                        <a href="{% url 'rate' map.urlhash %}"><i class="bi bi-heart"></i> Rate</a>
                         <a href="{{ map.svg.url }}"><i class="bi bi-download"></i><i class="bi bi-file-earmark-image"></i> SVG (Print Quality)</a>
                     {% endif %}
                     {% if map.png %}

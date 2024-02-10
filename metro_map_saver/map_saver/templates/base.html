@@ -73,6 +73,9 @@
             <li class="navbar-text nav-item">
                 <a class="nav-link" href="{% url 'public_gallery' %}">My Favorite Maps</a>
             </li>
+            <li class="navbar-text nav-item">
+                <a href="{% url 'calendar' %}" class="nav-link">All Maps by Date</a>
+            </li>
             {% if all_years %}
                 <li class="navbar-text nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -100,7 +103,11 @@
                 </li>
             {% endif %}
             {% endblock breadcrumbs %}
-            {% block breadcrumbs_end %}{% endblock breadcrumbs_end %}
+            {% block breadcrumbs_end %}
+                <li class="navbar-text nav-item">
+                    <a href="{% url 'random' %}"><button class="btn bg-styled styling-blueline"><i class="bi bi-shuffle"></i> Random Map</button></a>
+                </li>
+            {% endblock breadcrumbs_end %}
             </ol>
           </nav>
         {% endblock nav-breadcrumbs %}

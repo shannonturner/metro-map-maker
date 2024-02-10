@@ -863,3 +863,23 @@ class SameDayView(ListView):
             created_at__gte=this_map.created_at.date(),
             created_at__lt=this_map.created_at.date() + datetime.timedelta(days=1),
         )
+
+class RateMapView(DetailView):
+    model = SavedMap
+    context_object_name = 'map'
+    slug_field = 'urlhash'
+    slug_url_kwarg = 'urlhash'
+    template_name = 'map_saver/savedmap_rate.html'
+
+class RandomMapView(DetailView):
+    model = SavedMap
+    context_object_name = 'map'
+    template_name = 'map_saver/savedmap_rate.html'
+
+    @method_decorator(never_cache)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_object(self, *args, **kwargs):
+        pks = SavedMap.objects.all().values_list('pk', flat=True)
+        return SavedMap.objects.get(pk=random.choice(pks))

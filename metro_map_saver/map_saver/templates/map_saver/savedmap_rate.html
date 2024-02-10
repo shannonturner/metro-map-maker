@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+
+{% block breadcrumbs %}
+
+    {{ block.super }}
+
+    <li class="navbar-text nav-item">
+        <a href="{% url 'calendar-day' map.created_at|date:'Y' map.created_at|date:'m' map.created_at|date:'d' %}" class="nav-link">Browse more maps from this date</a>
+    </li>
+
+    <!-- TODO/N2H: Add "Similar Maps" -->
+
+{% endblock breadcrumbs %}
+
+{% block content %}
+
+    <div class="container-fluid">
+
+        <h3 class="card-title mt-2 p-3 styling-redline text-center">
+            <a class="text-outline bg-styled" href="{% url 'home' %}?map={{ map.urlhash }}">Map #{{ map.id }}: {{ map.urlhash }} ({{ map.created_at|date:'F j, Y' }})</a>
+        </h3>
+        <div class="d-flex justify-content-evenly align-items-center m-3">
+            {% if map.svg %}
+                {# Only show rating button if you can actually look at the map #}
+                {% include "map_saver/rate.html" %}
+            {% endif %}
+
+            <a href="{% url 'home' %}?map={{ map.urlhash }}"><i class="bi bi-tools"></i> Remix this map</a>
+        </div>
+
+        <div class="m-3">
+            {% if map.svg %}
+                <img src="{{ map.svg.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}">
+            {% else %}
+                Thumbnail not available, but you can <a href="{% url 'home' %}?map={{ map.urlhash }}">remix this map</a>.
+            {% endif %}
+        </div>
+    </div>
+
+{% endblock content %}
