@@ -454,10 +454,14 @@ function bindGridSquareMouseover(event) {
   if (!mouseIsDown && !$('#tool-flood-fill').prop('checked')) {
     drawHoverIndicator(event.pageX, event.pageY)
   } else if (!mouseIsDown && (activeToolOption || activeTool == 'eraser') && $('#tool-flood-fill').prop('checked')) {
-    if (activeTool == 'line' && activeToolOption)
+    if (activeTool == 'line' && activeToolOption) {
       indicatorColor = activeToolOption
-    else
+    } else if (activeTool != 'line' && activeTool != 'eraser') {
+      drawHoverIndicator(event.pageX, event.pageY);
+      return
+    } else {
       indicatorColor = '#ffffff'
+    }
     floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), indicatorColor, true)
   }
   if (mouseIsDown && (activeTool == 'line' || activeTool == 'eraser')) {
