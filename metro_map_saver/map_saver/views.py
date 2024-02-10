@@ -1,8 +1,11 @@
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, PermissionDenied
 from django.db.models import Count
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.views.generic.base import TemplateView
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import FormView
+from django.views.generic.list import ListView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
@@ -30,6 +33,7 @@ from taggit.models import Tag
 
 from moderate.models import ActivityLog
 from citysuggester.models import TravelSystem
+from .forms import RateForm
 from .models import SavedMap
 from .validator import is_hex, sanitize_string, validate_metro_map, hex64
 
@@ -840,3 +844,22 @@ class MapsPerDayView(DayArchiveView):
         context['all_years'] = range(datetime.datetime.now().year, (FIRST_YEAR - 1), -1)
 
         return context
+
+class SameDayView(ListView):
+
+    """ Show all maps created on the same day as a given URLhash,
+            which can be especially useful for finding prior versions of the same map
+    """
+
+    model = SavedMap
+    context_object_name = 'maps'
+
+    def get_queryset(self):
+        urlhash = self.request.path_info.split('/')[-1]
+        this_map = get_object_or_404(SavedMap, urlhash=urlhash)
+
+        # I'd use __date here, but then SQL won't use the index on created_at
+        return super().get_queryset().filter(
+            created_at__gte=this_map.created_at.date(),
+            created_at__lt=this_map.created_at.date() + datetime.timedelta(days=1),
+        )

@@ -44,6 +44,8 @@ urlpatterns = [
 
     path('calendar/<int:year>/<int:month>/<int:day>/', map_saver.views.MapsPerDayView.as_view(month_format='%m'), name='calendar-day'),
 
+    path('sameday/<slug:urlhash>', map_saver.views.SameDayView.as_view(), name='sameday'),
+
     # Admin HQ
     path('admin/home/', never_cache(map_saver.views.AdminHomeView.as_view()), name='admin_home'),
 
