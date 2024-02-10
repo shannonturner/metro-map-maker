@@ -103,10 +103,10 @@
 
       <button id="tool-line" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Draw a rail line on the grid (Keyboard shortcut: D)">
           <svg id="tool-line-icon-pencil" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pencil"/></svg>
-          <span id="tool-line-caption-draw"><b><u>D</u></b>raw</span>
+          <span id="tool-line-caption-draw" class="button-label"><b><u>D</u></b>raw</span>
 
           <svg id="tool-line-icon-paint-bucket" width="16" height="16" style="display: none;"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#paint-bucket"/></svg>
-          <span id="tool-line-caption-fill" style="display: none;"><b><u>F</u></b>ill</span>
+          <span id="tool-line-caption-fill" class="button-label" style="display: none;"><b><u>F</u></b>ill</span>
       </button>
       <div id="tool-line-options" class="start-hidden" style="display: none;">
 
@@ -176,13 +176,13 @@
         </div>
         <button id="rail-line-delete" class="styled styling-silverline width-100">
           <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#trash"/></svg>
-          <span>Delete Unused Lines</span>
+          <span class="button-label">Delete Unused Lines</span>
         </button>
       </div>
 
       <button id="tool-station" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Place a station on an existing rail line, or select an existing station (Keyboard shortcut: S)">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pin-map"/></svg>
-        <span><b><u>S</u></b>tation</span>
+        <span class="button-label"><b><u>S</u></b>tation</span>
       </button>
       <div id="tool-station-options" class="text-left" style="display: none;">
         <fieldset>
@@ -222,15 +222,15 @@
 
       <button id="tool-eraser" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station (Keyboard shortcut: E)">
         <svg id="tool-eraser-icon-eraser" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#eraser"/></svg>
-        <span id="tool-eraser-caption-eraser"><b><u>E</u></b>raser</span>
+        <span id="tool-eraser-caption-eraser" class="button-label"><b><u>E</u></b>raser</span>
 
         <svg id="tool-eraser-icon-paint-bucket" width="16" height="16" style="display: none;"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#paint-bucket"/></svg>
-        <span id="tool-eraser-caption-fill" style="font-size: 80%; display: none;">Eraser Fill</span>
+        <span id="tool-eraser-caption-fill" class="button-label" style="font-size: 80%; display: none;">Eraser Fill</span>
       </button>
 
       <button id="tool-map-style" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Change Style of Lines and Stations">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#palette"/></svg>
-        <span>Style</span>
+        <span class="button-label">Style</span>
       </button>
       <div id="tool-map-style-options" class="text-left" style="display: none;">
           <fieldset>
@@ -253,7 +253,7 @@
 
       <button id="tool-move-all" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Recenter your Metro map (Keyboard shortcuts: Arrow keys)">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-move"/></svg>
-        <span style="font-size: 75%">Move map</span>
+        <span class="button-label" style="font-size: 75%">Move map</span>
       </button>
       <div id="tool-move-options" class="text-left" style="display: none;">
         <fieldset>
@@ -276,7 +276,7 @@
 
       <button id="tool-resize-all" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Resize the grid, allowing you to make larger maps">
         <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-angle-expand"/></svg>
-        <span>Resize</span>
+        <span class="button-label">Resize</span>
       </button>
       <div id="tool-resize-options" class="text-left" style="display: none;">
         <fieldset>
@@ -296,11 +296,11 @@
       <!-- TODO: This is nice, but I may also want to link to SVG -->
       <button id="tool-download-image" class="width-100 has-tooltip hidden-xs styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
-        <span>Download</span>
+        <span class="button-label">Download</span>
       </button>
       <button id="tool-export-canvas" class="width-100 has-tooltip visible-xs styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
-        <span>Download</span>
+        <span class="button-label">Download</span>
       </button>
 
       <div id="export-canvas-help" class="text-left" style="display: none;">
@@ -311,67 +311,70 @@
 
       <button id="tool-save-map" class="width-100 has-tooltip styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Create a unique, shareable URL for your map">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#save"/></svg>
-        <span>Save &amp; Share</span>
+        <span class="button-label">Save &amp; Share</span>
       </button>
       <div id="tool-save-options" class="text-left"></div>
 
       <button id="tool-grid" class="has-tooltip styled styling-greenline width-100" data-toggle="tooltip" data-placement="left" title="Just hides the grid but you can still edit the map; to download your map click Download as image (Keyboard shortcut: H)">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#grid"/></svg>
-        <span><b><u>H</u></b>ide grid</span>
+        <span class="button-label"><b><u>H</u></b>ide grid</span>
       </button>
 
       <button id="tool-zoom-in" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: +">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#zoom-in"/></svg>
-        <span>Zoom +</span>
+        <span class="button-label">Zoom +</span>
       </button>
       <button id="tool-zoom-out" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: -">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#zoom-out"/></svg>
-        <span>Zoom -</span>
+        <span class="button-label">Zoom -</span>
       </button>
 
-      <button id="snap-controls-left" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move all controls to the left side of the screen" style="display: none;">
+      <button id="snap-controls-left" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move all controls to the left side of the screen (Keyboard shortcut: [)">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-left-circle"/></svg>
-        <span>Snap controls to left</span>
+        <span class="button-label" style="font-size: 80%;">Move controls</span>
       </button>
-      <button id="snap-controls-right" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move all controls to the right side of the screen" style="display: none;">
+      <button id="snap-controls-right" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move all controls to the right side of the screen (Keyboard shortcut: ])" style="display: none;">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-right-circle"/></svg>
-        <span>Snap controls to right</span>
+        <span class="button-label" style="font-size: 80%;">Move controls</span>
       </button>
 
-      <button id="controls-collapse-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Collapse menu and only show icons">
+      <button id="controls-collapse-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Collapse menu and only show icons (Keyboard shortcut: C)">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-collapse-vertical"/></svg>
-        <span>Collapse</span>
+        <span class="button-label">Collapse</span>
       </button>
 
-      <button id="controls-expand-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Expand Menu" style="display: none;">
+      <button id="controls-expand-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Expand Menu (Keyboard shortcut: X)" style="display: none;">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-expand-vertical"/></svg>
       </button>
 
+      {% comment %}
+      Hide for now, consider revisiting later
       <button id="controls-dock-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move controls to top, right, bottom, or left of screen">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#window-desktop"/></svg>
-        <span>Dock</span> <!-- TODO: this should replace "snap controls to left" and cycle between top,right,bottom,left (clockwise) -->
+        <span class="button-label">Dock</span> <!-- TODO: this should replace "snap controls to left" and cycle between top,right,bottom,left (clockwise) -->
       </button>
+      {% endcomment %}
 
       <button id="tool-clear-map" class="has-tooltip styled styling-silverline width-100" data-toggle="tooltip" data-placement="left" title="Be careful: this will delete your map">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#trash"/></svg>
-        <span>Clear map</span>
+        <span class="button-label">Clear map</span>
       </button>
 
     </div> <!-- #toolbox -->
 
       <div id="remix">
         <fieldset>
-          <legend>Browse & Remix Maps</legend>
+          <legend>Browse & Remix</legend>
             <a href="{% url 'public_gallery' %}" class="width-100">
               <button id="tool-clear-map" class="has-tooltip styled styling-blueline width-100" data-toggle="tooltip" data-placement="left" title="These are some of my favorite maps made by visitors like you">
                 <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#postage-heart"/></svg>
-                <span>My Favorites</span>
+                <span class="button-label">My Favorites</span>
               </button>
             </a>
             <a href="{% url 'calendar' %}" class="width-100">
               <button id="tool-clear-map" class="has-tooltip styled styling-blueline width-100" data-toggle="tooltip" data-placement="left" title="All Metro Maps ever made by visitors like you">
                 <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#calendar-date"/></svg>
-                <span>All Maps by Date</span>
+                <span class="button-label">All Maps by Date</span>
               </button>
             </a>
         </fieldset>

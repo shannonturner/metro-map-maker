@@ -22,6 +22,7 @@ var currentlyClickingAndDragging = false;
 var mapStationStyle = 'wmata'
 var mapLineWidth = 1;
 var mapStationStyle = 'wmata'
+var menuIsCollapsed = false
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -192,10 +193,12 @@ function bindRailLineEvents() {
     activeTool = 'line';
     activeToolOption = $(this).css('background-color');
     $('#tool-line').addClass('draw-rail-line')
-    $('#tool-line').css({
-      "background-color": activeToolOption,
-      "color": determineDarkOrLightContrast(activeToolOption)
-    })
+    if (activeToolOption) {
+      $('#tool-line').css({
+        "background-color": activeToolOption,
+        "color": determineDarkOrLightContrast(activeToolOption)
+      })
+    }
     if ($('#tool-flood-fill').prop('checked')) {
       floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), activeToolOption, true)
       $('#tool-line-icon-pencil').hide()
@@ -206,7 +209,6 @@ function bindRailLineEvents() {
       $('#tool-line-icon-paint-bucket').hide()
     }
     $('#tool-station-options').hide();
-    // TODO: tool active indicator
   });  
 } // bindRailLineEvents()
 
@@ -231,9 +233,7 @@ function makeStation(x, y) {
   if (!getActiveLine(x, y, activeMap)) {
     // Only expand the #tool-station-options if it's actually on a line
     $('#tool-station-options').hide();
-    // SVT IT IS HERE
     $('#tool-station').removeClass('width-100')
-    // TODO: tool active indicator
     drawCanvas(activeMap, true) // clear any stale station indicators
     return
   }
@@ -1064,12 +1064,14 @@ function autoSave(metroMap) {
     metroMap = JSON.stringify(metroMap);
   }
   window.localStorage.setItem('metroMap', metroMap);
-  $('#autosave-indicator').text('Saving locally ...'); // TODO: Add spinner
-  $('#title').hide()
-  setTimeout(function() {
-    $('#autosave-indicator').text('');
-    $('#title').show()
-  }, 1500)
+  if (!menuIsCollapsed) {
+    $('#autosave-indicator').text('Saving locally ...'); // TODO: Add spinner
+    $('#title').hide()
+    setTimeout(function() {
+      $('#autosave-indicator').text('');
+      $('#title').show()
+    }, 1500)
+  }
 } // autoSave(metroMap)
 
 function undo() {
@@ -1604,20 +1606,20 @@ function hideGrid() {
 function setFloodFillUI() {
   // Show appropriate eraser warnings when flood fill is set
   if ($('#tool-flood-fill').prop('checked')) {
-    // TODO: Flood fill eraser indicator
-    // TODO: tool active indicator
 
     $('#tool-line-icon-pencil').hide()
     $('#tool-line-caption-draw').hide()
 
     $('#tool-line-icon-paint-bucket').show()
-    $('#tool-line-caption-fill').show()
+    $('#tool-eraser-icon-paint-bucket').show()
 
     $('#tool-eraser-icon-eraser').hide()
     $('#tool-eraser-caption-eraser').hide()
 
-    $('#tool-eraser-icon-paint-bucket').show()
-    $('#tool-eraser-caption-fill').show()
+    if (!menuIsCollapsed) {
+      $('#tool-line-caption-fill').show()
+      $('#tool-eraser-caption-fill').show()
+    }
 
     if ((activeTool == 'line' && activeToolOption) || activeTool == 'eraser') {
       if (activeTool == 'line' && activeToolOption)
@@ -1628,13 +1630,15 @@ function setFloodFillUI() {
     }
   } else {
     $('#tool-line-icon-pencil').show()
-    $('#tool-line-caption-draw').show()
+    $('#tool-eraser-icon-eraser').show()
 
     $('#tool-line-icon-paint-bucket').hide()
     $('#tool-line-caption-fill').hide()
 
-    $('#tool-eraser-icon-eraser').show()
-    $('#tool-eraser-caption-eraser').show()
+    if (!menuIsCollapsed) {
+      $('#tool-line-caption-draw').show()
+      $('#tool-eraser-caption-eraser').show()
+    }
 
     $('#tool-eraser-icon-paint-bucket').hide()
     $('#tool-eraser-caption-fill').hide()
@@ -1718,6 +1722,8 @@ $(document).ready(function() {
       // If Control+Z is pressed
       undo();
     }
+    else if (event.which == 67) // C
+      $('#controls-collapse-menu').trigger('click')
     else if (event.which == 68) // D
       $('#tool-line').click()
     else if (event.which == 69) // E
@@ -1739,6 +1745,8 @@ $(document).ready(function() {
       $('#tool-grid').click()
     else if (event.which == 83) // S
       $('#tool-station').click()
+    else if (event.which == 88) // X
+      $('#controls-expand-menu').trigger('click')
     else if (event.which == 37 && !event.metaKey) { // left arrow, except for "go back"
       event.preventDefault(); moveMap('left')
     } else if (event.which == 38) { // up arrow
@@ -1751,6 +1759,11 @@ $(document).ready(function() {
       $('#tool-zoom-out').click()
     else if (event.which == 187 || event.key == '=') // plus / equal sign
       $('#tool-zoom-in').click()
+    else if (event.which == 219) { // [
+      $('#snap-controls-left').trigger('click')
+    } else if (event.which == 221) { // ]
+      $('#snap-controls-right').trigger('click')
+    }
     else if (!event.metaKey && !event.ctrlKey && event.which >= 48 && event.which <= 57) {
       // 0-9, except when switching tabs (Control)
       // Draw rail colors in order of appearance, 1-10 (0 is 10)
@@ -1768,6 +1781,13 @@ $(document).ready(function() {
   $('#toolbox button:not(.rail-line)').on('click', function() {
     $('.active').removeClass('active')
     $(this).addClass('active')
+    if (activeTool == 'line') {
+      $('#tool-line').addClass('active')
+    } else if (activeTool == 'eraser') {
+      $('#tool-eraser').addClass('active')
+    } else if (activeTool == 'station') {
+      $('#tool-station').addClass('active')
+    }
   })
   $('#toolbox button.rail-line').on('click', function() {
     $('.active').removeClass('active')
@@ -1775,11 +1795,16 @@ $(document).ready(function() {
   })
 
   // Toolbox
-  $('#tool-line').click(function() {
+  $('#tool-line').on('click', function() {
     $('.active').removeClass('active')
     $('#tool-line').addClass('active')
-    if ($(this).hasClass('draw-rail-line')) {
+    if ($(this).hasClass('draw-rail-line') && activeToolOption) {
       activeTool = 'line'
+      $(this).css({"background-color": activeToolOption})
+    } else if (activeTool == 'eraser' && activeToolOption) {
+      activeTool = 'line'
+    } else if (activeTool == 'eraser') {
+      activeTool = 'look'
     }
     // Expand Rail line options
     if ($('#tool-line-options').is(':visible')) {
@@ -1833,12 +1858,20 @@ $(document).ready(function() {
     }
     $('.tooltip').hide();
   }); // #tool-station.click()
-  $('#tool-eraser').click(function() {
+  $('#tool-eraser').on('click', function() {
     activeTool = 'eraser';
     $('.active').removeClass('active')
     $('#tool-eraser').addClass('active')
     $('#tool-station-options').hide();
     $('.tooltip').hide();
+    $('#tool-line').attr('style', '')
+    if (!$('#tool-line-options').is(':visible')) {
+      $('#tool-line').removeClass('width-100')
+    }
+    $('#tool-station').attr('style', '')
+    if (!$('#tool-station-options').is(':visible')) {
+      $('#tool-station').removeClass('width-100')
+    }
     setFloodFillUI()
   }); // #tool-eraser.click()
   $('#tool-grid').click(function() {
@@ -1943,6 +1976,10 @@ $(document).ready(function() {
         console.log("[WARN] Problem was: " + data)
         $('#tool-save-options').show();
       } else {
+        if (menuIsCollapsed) {
+          $('#controls-expand-menu').trigger('click')
+        }
+
         data = data.split(',');
         var urlhash = data[0].replace(/\s/g,'');
         var namingToken = data[1].replace(/\s/g,'');
@@ -2586,6 +2623,63 @@ $('#try-on-mobile').click(function() {
 
   drawCanvas();
 });
+
+function collapseToolbox() {
+  // When collapsed, the toolbox is pretty small -- too small really to be able to read
+  //  any of the buttons like Move, Resize, or Style.
+  // So when collapsed, hide those altogether.
+
+  if (menuIsCollapsed) { return }
+  menuIsCollapsed = true
+  $('#controls').addClass('collapsed')
+
+  $('#toolbox button span.button-label').hide()
+  $('#title, #remix, #credits, #rail-line-new, #rail-line-change, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-move-options, #tool-resize-all, #tool-resize-options, #tool-map-style, #tool-map-style-options').hide()
+  $('#controls-collapse-menu').hide()
+  $('#tool-line-caption-draw').hide()
+  $('#tool-eraser-caption-eraser').hide()
+  $('#tool-line-caption-fill').hide()
+  $('#tool-eraser-caption-fill').hide()
+
+  $('#controls-expand-menu').show()
+}
+
+function expandToolbox() {
+  if (!menuIsCollapsed) { return }
+  menuIsCollapsed = false
+  $('#controls').removeClass('collapsed')
+
+  var activeColor = $('#tool-line').attr('style')
+  if (activeColor) {
+    $('#tool-line').attr('style', activeColor)
+  }
+
+  // Remember whether it's on the left side of the screen
+  if ($('#controls').attr('style') && $('#controls').attr('style').indexOf("left: 5px") > -1) {
+    $('#snap-controls-left').hide()
+  } else {
+    $('#snap-controls-right').hide()
+  }
+
+  $('#toolbox button span.button-label').show()
+  $('#title, #remix, #credits, #rail-line-new, #rail-line-change, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-resize-all, #tool-map-style').show()
+
+  $('#tool-move-all, #tool-resize-all').removeClass('width-100')
+
+  if ($('#tool-flood-fill').prop('checked')) {
+    $('#tool-line-caption-draw').hide()
+    $('#tool-eraser-caption-eraser').hide()
+  } else {
+    $('#tool-line-caption-fill').hide()
+    $('#tool-eraser-caption-fill').hide()
+  }
+
+  $('#controls-collapse-menu').show()
+  $('#controls-expand-menu').hide()
+}
+
+$('#controls-collapse-menu').on('click', collapseToolbox)
+$('#controls-expand-menu').on('click', expandToolbox)
 
 function unfreezeMapControls() {
   // If #tool-export-canvas (screen size: xs) was clicked,
