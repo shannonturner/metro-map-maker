@@ -52,11 +52,6 @@ function resizeGrid(size) {
   drawGrid()
   snapCanvasToGrid() 
   lastStrokeStyle = undefined; // Prevent odd problem where snapping canvas to grid would cause lines to paint with an undefined color (singletons were unaffected)
-  // TODO: Set styling to "active"
-  $('.resize-grid').removeClass('btn-primary');
-  $('.resize-grid').addClass('btn-info');
-  $('#tool-resize-' + size).removeClass('btn-info');
-  $('#tool-resize-' + size).addClass('btn-primary');
 
   drawCanvas(activeMap)
 } // resizeGrid(size)
@@ -68,12 +63,6 @@ function resizeCanvas(zoomDirection) {
   var size = $('#canvas-container').width()
 
   step = gridCols
-
-  // Check to see if there is overlap between the controls and the grid,
-  //  if so, offer the option to move the toolbox
-  if (isToolboxOverlappingCanvasContainer() && $('#snap-controls-left').is(':hidden') && $('#snap-controls-right').is(':hidden')) {
-    $('#snap-controls-left').show()
-  } 
 
   if (zoomDirection == 'out' && size >= 800) {
     size = size - step
@@ -94,19 +83,6 @@ function resizeCanvas(zoomDirection) {
   $('#canvas-container').width(size)
   $('#canvas-container').height(size)
 } // resizeCanvas(zoomDirection)
-
-function isToolboxOverlappingCanvasContainer() {
-  // Is the toolbox overlapping the canvas-container?
-
-  var canvasRect = document.getElementById('canvas-container').getBoundingClientRect()
-  var toolboxRect = document.getElementById('controls').getBoundingClientRect()
-
-  if (toolboxRect.left > (canvasRect.left + canvasRect.width)) {
-    return false
-  } else {
-    return true
-  }
-}
 
 function snapCanvasToGrid() {
   // Whenever the pixel width or height of the grid changes,
@@ -312,11 +288,6 @@ function makeStation(x, y) {
       }
     } // edit named station
   } // else (edit existing station)
-
-  // Make the station options button collapsible
-  if ($('#tool-station-options').is(':visible')) {
-    // TODO: tool active indicator
-  }
 
   // Add lines to the "Other lines this station serves" option
   if (stationOnLines) {
@@ -1688,10 +1659,6 @@ $(document).ready(function() {
   // Bind to the mousedown and mouseup events so we can implement dragging easily
   mouseIsDown = false;
 
-  $('.start-hidden').each(function() {
-    $(this).hide();
-  })
-
   // Disable right-click on the grid/hover canvases (but not on the map canvas/image)
   document.getElementById('grid-canvas').addEventListener('contextmenu', disableRightClick);
   document.getElementById('hover-canvas').addEventListener('contextmenu', disableRightClick);
@@ -1947,11 +1914,9 @@ $(document).ready(function() {
     if ($('#tool-move-options').is(':visible')) {
       $('#tool-move-options').hide();
       $(this).removeClass('width-100')
-      // TODO: tool active indicator
     } else {
       $('#tool-move-options').show();
       $(this).addClass('width-100')
-      // TODO: tool active indicator
     }
     $('.tooltip').hide();
   }); // #tool-move-all.click()
@@ -2036,7 +2001,6 @@ $(document).ready(function() {
 
           $.post('/name/', formData, function() {
             $('#name-map').hide();
-            $('#name-this-map').removeClass('btn-warning'); // TODO: S4D: Is this really necessary anymore? 
             $('#name-this-map').text('Thanks!')
             setTimeout(function() {
               $('#name-this-map').hide();
@@ -2083,7 +2047,6 @@ $(document).ready(function() {
     // On mobile, you need to tap and hold on the canvas to save the image
     drawCanvas(activeMap);
     $('#tool-station-options').hide();
-    // TODO: tool active indicator
 
     $('.tooltip').hide();
     if ($('#grid-canvas').is(':visible')) {
@@ -2299,14 +2262,6 @@ $(document).ready(function() {
   })
 
   $('#station-name').change(function() {
-    // While I was using HTML element IDs for station names,
-    //  I needed to remove all characters that weren't suitable for IDs
-    //  from a station's name and convert spaces to underscores
-    // Now that it's all a JSON object, I have more flexibility in
-    //  how a station can be named
-    // Remove characters that are invalid for an HTML element ID
-    // $(this).val($(this).val().replace(/[^A-Za-z0-9\- ]/g, ''));
-
     $(this).val($(this).val().replaceAll('"', '').replaceAll("'", '').replaceAll('<', '').replaceAll('>', '').replaceAll('&', '').replaceAll('/', '').replaceAll('_', ' ').replaceAll('\\\\', '').replaceAll('%', ''))
 
     var x = $('#station-coordinates-x').val();
@@ -2528,42 +2483,6 @@ function stretchMap(metroMapObject) {
   return newMapObject;
 } // stretchMap(metroMapObject)
 
-function combineMap(urlhash) {
-  // Add the map at the urlhash to the existing map.
-  // Existing map must not be overwritten by the new map.
-  // I expect this will mostly be used to bring terrain into an existing map
-  // but this will only work for maps that are exactly aligned, or they will look a bit silly
-  $.get('/load/' + urlhash).done(function (savedMapData) {
-    savedMapData = savedMapData.replaceAll(" u&#39;", "'").replaceAll("{u&#39;", '{"').replaceAll("\\[u&#39;", '["').replaceAll('&#39;', '"').replaceAll("'", '"').replaceAll('\\\\x', '&#x');
-    if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
-      console.log("[WARN] Can't combine that map!");
-    } else {
-      savedMapData = JSON.parse(savedMapData)
-
-      for (var x in savedMapData) {
-        for (var y in savedMapData[x]) {
-          if (!activeMap[x]) {
-            activeMap[x] = {y: savedMapData[x][y]}
-          } else if (activeMap[x] && !activeMap[x][y]) {
-            activeMap[x][y] = savedMapData[x][y]
-          }
-        } // for y
-      } // for x
-
-      // Must also add the globals, otherwise the map probably won't be saveable
-      for (var line in savedMapData["global"]["lines"]) {
-        if (!activeMap["global"]["lines"][line]) {
-          activeMap["global"]["lines"][line] = savedMapData["global"]["lines"][line]
-        }
-      }
-
-      getMapSize(activeMap);
-      loadMapFromObject(activeMap); // Must load not with update in order to update the map lines
-      drawCanvas(activeMap);
-    }
-  });
-} // combineMap(urlhash)
-
 function replaceColors(color1, color2) {
     // Replaces all instances of color1 with color2.
     // Expects objects with keys name and color
@@ -2611,9 +2530,6 @@ $('#try-on-mobile').click(function() {
 
   if ($('#tool-line').prop('disabled')) {
     $('#tool-export-canvas').click()
-    // TODO: Set styling to "active"
-    $('#tool-export-canvas').removeClass('btn-primary')
-    $('#tool-export-canvas').addClass('btn-info')
   }
   $('#grid-canvas').show();
   $('#hover-canvas').show();
@@ -2695,13 +2611,3 @@ function unfreezeMapControls() {
   }
   resetTooltipOrientation()
 }
-
-function resizeCanvasesForPrinting(size) {
-  // Cheat Code: Resize #metro-map-canvas and #metro-map-stations-canvas so they can be used for printing
-  if (!size) size = 6400
-  $('#metro-map-canvas').attr('width', size)
-  $('#metro-map-canvas').attr('height', size)
-  $('#metro-map-stations-canvas').attr('width', size)
-  $('#metro-map-stations-canvas').attr('height', size)
-  drawCanvas()
-} // resizeCanvasesForPrinting

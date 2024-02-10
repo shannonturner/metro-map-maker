@@ -88,7 +88,7 @@
     <canvas id='metro-map-stations-canvas' width="1600" height="1600"></canvas>
     <canvas id='grid-canvas' width="1600" height="1600"></canvas>
     <canvas id="hover-canvas" width="1600" height="1600"></canvas>
-    <a id="metro-map-image-download-link" class="start-hidden" rel="noopener" starget="_blank"></a>
+    <a id="metro-map-image-download-link" rel="noopener" starget="_blank"></a>
     <img id="metro-map-image" class="img-responsive" alt="">
   </div>
 
@@ -108,7 +108,7 @@
           <svg id="tool-line-icon-paint-bucket" width="16" height="16" style="display: none;"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#paint-bucket"/></svg>
           <span id="tool-line-caption-fill" class="button-label" style="display: none;"><b><u>F</u></b>ill</span>
       </button>
-      <div id="tool-line-options" class="start-hidden" style="display: none;">
+      <div id="tool-line-options" style="display: none;">
 
         <div id="straight-line-assist-options" class="mmm-help-setting">
           <input id="straight-line-assist" type="checkbox" checked="true">
@@ -287,7 +287,7 @@
           <button id="tool-resize-160" class="resize-grid styled styling-redline">Extra Large (160x160)</button>
           <button id="tool-resize-200" class="resize-grid styled styling-redline">XXL (200x200)</button>
           <button id="tool-resize-240" class="resize-grid styled styling-redline">XXXL (240x240)</button>
-          <div id="tool-resize-stretch-options" class="start-hidden">
+          <div id="tool-resize-stretch-options">
             <button id="tool-resize-stretch" class="has-tooltip stretch-grid styled styling-redline" data-toggle="tooltip" data-placement="left" title="Increase the available space between stations so you can add more stations in between.">Stretch Map</button>
           </div>
         </fieldset>
@@ -396,8 +396,9 @@
     {% if saved_map_name %}window.sessionStorage.setItem('userGivenMapName', "{{ saved_map_name }}"){% endif %}
   </script>
   {% endif %}
-  <script src='{% static "js/metromapmaker.js" %}?version=20220925'></script>
-  <script src='{% static "js/tooltips.min.js" %}' defer=""></script>
+  <script src='{% static "js/metromapmaker.js" %}?version=20220925' async></script>
+  <script src='{% static "js/tooltips.min.js" %}' defer="defer"></script>
+  <script src='{% static "js/mmm-cheatcodes.js" %}' defer="defer"></script>
 
   </body>
 </html>
