@@ -194,6 +194,13 @@ class SavedMap(models.Model):
             self.suggested_city_overlap = suggested_city[0][1]
         super().save(*args, **kwargs)
 
+    DEFER_FIELDS = (
+        'mapdata',
+        'data',
+        'thumbnail',
+        'stations',
+    )
+
     class Meta:
 
         indexes = [

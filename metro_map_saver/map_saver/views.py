@@ -834,7 +834,7 @@ class MapsPerDayView(DayArchiveView):
     """ Display the maps created this day
     """
 
-    queryset = SavedMap.objects.defer('mapdata').all()
+    queryset = SavedMap.objects.defer(*SavedMap.DEFER_FIELDS).all()
     date_field = 'created_at'
     context_object_name = 'maps'
 
@@ -860,7 +860,7 @@ class SameDayView(ListView):
         this_map = get_object_or_404(SavedMap, urlhash=urlhash)
 
         # I'd use __date here, but then SQL won't use the index on created_at
-        return super().get_queryset().filter(
+        return super().get_queryset().defer(*SavedMap.DEFER_FIELDS).filter(
             created_at__gte=this_map.created_at.date(),
             created_at__lt=this_map.created_at.date() + datetime.timedelta(days=1),
         )
@@ -906,3 +906,20 @@ class RandomMapView(RateMapView):
     def get_object(self, *args, **kwargs):
         pks = SavedMap.objects.all().values_list('pk', flat=True)
         return SavedMap.objects.get(pk=random.choice(pks))
+
+
+class HighestRatedMapsView(ListView):
+    model = SavedMap
+    paginate_by = 100
+    context_object_name = 'maps'
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(
+            likes__gt=0,
+        ).defer(*SavedMap.DEFER_FIELDS).order_by('-likes')
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['showing_best'] = True
+        return context

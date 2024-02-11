@@ -47,6 +47,7 @@ urlpatterns = [
     path('rate/<slug:urlhash>', map_saver.views.RateMapView.as_view(), name='rate'),
     path('random/', map_saver.views.RandomMapView.as_view(), name='random'),
     path('sameday/<slug:urlhash>', map_saver.views.SameDayView.as_view(), name='sameday'),
+    path('best/', map_saver.views.HighestRatedMapsView.as_view(), name='best'),
 
     # Admin HQ
     path('admin/home/', never_cache(map_saver.views.AdminHomeView.as_view()), name='admin_home'),

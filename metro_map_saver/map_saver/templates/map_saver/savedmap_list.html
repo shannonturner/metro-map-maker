@@ -12,16 +12,57 @@
 
 {% block content %}
 
+    {% if showing_best %}
+        <h3 class="card-title mt-2 p-3 bg-styled styling-redline text-center">
+            Highest-Rated Maps
+        </h3>
+        <div class="pagination d-flex align-items-center justify-content-evenly m-2">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">
+                        <button class="btn bg-styled styling-blueline fs-5 m-2">
+                            <i class="bi bi-skip-backward"></i>First
+                        </button>
+                    </a>
+                    <a href="?page={{ page_obj.previous_page_number }}">
+                        <button class="btn bg-styled styling-blueline fs-5 m-2">
+                            <i class="bi bi-rewind"></i> Previous
+                        </button>
+                    </a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">
+                        <button class="btn bg-styled styling-blueline fs-5 m-2">
+                            <i class="bi bi-fast-forward"></i> Next
+                        </button>
+                    </a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">
+                        <button class="btn bg-styled styling-blueline fs-5 m-2">
+                            <i class="bi bi-skip-forward"></i> Last
+                        </button>
+                    </a>
+                {% endif %}
+            </span>
+        </div>
+    {% endif %}
+
     <div class="row">
         {% for map in maps %}
 
-        {% ifchanged map.created_at.date %}
+        {% if not showing_best %}
+            {% ifchanged map.created_at.date %}
 
-            <h3 class="card-title mt-2 p-3 styling-redline text-center">
-                <a class="text-outline bg-styled" href="{% url 'calendar-day' map.created_at|date:'Y' map.created_at|date:'m' map.created_at|date:'j' %}">Maps created on {{ map.created_at|date:"F j, Y" }}</a>
-            </h3>
+                <h3 class="card-title mt-2 p-3 styling-redline text-center">
+                    <a class="text-outline bg-styled" href="{% url 'calendar-day' map.created_at|date:'Y' map.created_at|date:'m' map.created_at|date:'j' %}">Maps created on {{ map.created_at|date:"F j, Y" }}</a>
+                </h3>
 
-        {% endifchanged %}
+            {% endifchanged %}
+        {% endif %}
 
         <div class="col-sm-6 col-md-4 col-xxl-3 mb-3 mt-3"><div class="card h-100 text-center">
             <div class="card-header styling-{% cycle 'red' 'orange' 'yellow' 'green' 'blue' 'purple' 'silver' %}line">
@@ -52,7 +93,7 @@
 
                 <div class="card-footer d-flex justify-content-evenly">
                     <a href="{% url 'home' %}?map={{ map.urlhash }}"><i class="bi bi-tools"></i> Remix</a>
-                    <a href="{% url 'rate' map.urlhash %}"><i class="bi bi-heart"></i> Rate</a>
+                    <a href="{% url 'rate' map.urlhash %}"><i class="bi bi-heart"></i> {% if map.likes %}{{ map.likes }}{% else %}Rate{% endif %}</a>
                     {% if map.svg %}
                         <a href="{{ map.svg.url }}"><i class="bi bi-download"></i><i class="bi bi-file-earmark-image"></i> SVG (Print Quality)</a>
                     {% endif %}
