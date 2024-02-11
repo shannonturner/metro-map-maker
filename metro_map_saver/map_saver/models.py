@@ -67,6 +67,9 @@ class SavedMap(models.Model):
     station_count = models.IntegerField(default=-1)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    likes = models.IntegerField(default=0)
+    dislikes = models.IntegerField(default=0)
+
     # Create a token that can be used for creators to be able to name their maps
     # but subsequent visitors to that map will not be able to rename it
     naming_token = models.CharField(max_length=64, blank=True, default='')
@@ -176,6 +179,7 @@ class SavedMap(models.Model):
         return self.urlhash
 
     def save(self, *args, **kwargs):
+        # TODO: Clean this up
         self.stations = self._get_stations()
         self.station_count = self._station_count()
         self.name = self.name.strip()
@@ -198,6 +202,8 @@ class SavedMap(models.Model):
             models.Index(fields=["publicly_visible"]),
             models.Index(fields=["created_at"]),
             models.Index(fields=["station_count"]),
+            models.Index(fields=["likes"]),
+            models.Index(fields=["dislikes"]),
         ]
 
         permissions = (

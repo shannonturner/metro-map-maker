@@ -1,7 +1,8 @@
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, PermissionDenied
-from django.db.models import Count
-from django.shortcuts import render, get_object_or_404
+from django.db.models import Count, F
+from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse_lazy
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
@@ -864,14 +865,36 @@ class SameDayView(ListView):
             created_at__lt=this_map.created_at.date() + datetime.timedelta(days=1),
         )
 
-class RateMapView(DetailView):
+class RateMapView(FormView, DetailView):
     model = SavedMap
     context_object_name = 'map'
     slug_field = 'urlhash'
     slug_url_kwarg = 'urlhash'
     template_name = 'map_saver/savedmap_rate.html'
 
-class RandomMapView(DetailView):
+    form_class = RateForm
+    success_url = reverse_lazy('random')
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object, map=self.object)
+        context['form_like'] = self.form_class(dict(urlhash=self.object.urlhash, choice='likes'))
+        context['form_dislike'] = self.form_class(dict(urlhash=self.object.urlhash, choice='dislikes'))
+        return self.render_to_response(context)
+
+    def form_valid(self, form):
+        try:
+            urlhash = form.cleaned_data['urlhash']
+            choice = form.cleaned_data['choice']
+            assert choice in ('likes', 'dislikes')
+            mmap = SavedMap.objects.filter(urlhash=urlhash)
+        except Exception as exc:
+            pass
+        else:
+            mmap.update(**{choice: F(choice) + 1})
+        return super().form_valid(form)
+
+class RandomMapView(RateMapView):
     model = SavedMap
     context_object_name = 'map'
     template_name = 'map_saver/savedmap_rate.html'

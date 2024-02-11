@@ -23,9 +23,32 @@
         </h3>
         <div class="d-flex justify-content-evenly align-items-center m-3">
             {% if map.svg %}
-                {# Only show rating button if you can actually look at the map #}
-                {% include "map_saver/rate.html" %}
+                {# TODO: Only show rating button if you can actually look at the map #}
             {% endif %}
+
+            <form action="{% url 'rate' map.urlhash %}" method="post">
+                {% csrf_token %}
+                {{ form_like }}
+                <button type="submit" class="styling-redline w-100">
+                    {% if map.likes %}
+                        <i class="bi bi-heart"></i> {{ map.likes|intcomma }} Likes
+                    {% else %}
+                        <i class="bi bi-heart"></i> Like
+                    {% endif %}
+                </button>
+            </form>
+
+            <form action="{% url 'rate' map.urlhash %}" method="post">
+                {% csrf_token %}
+                {{ form_dislike }}
+                <button type="submit" class="styling-silverline w-100">
+                    {% if map.dislikes %}
+                        <i class="bi bi-x-circle"></i> {{ map.dislikes|intcomma }} Dislikes
+                    {% else %}
+                        <i class="bi bi-x-circle"></i> Dislike
+                    {% endif %}
+                </button>
+            </form>
 
             <a href="{% url 'home' %}?map={{ map.urlhash }}"><i class="bi bi-tools"></i> Remix this map</a>
         </div>
