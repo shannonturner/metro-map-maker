@@ -23,34 +23,38 @@
         </h3>
         <div class="d-flex justify-content-evenly align-items-center m-3">
             {% if map.svg %}
-                {# TODO: Only show rating button if you can actually look at the map #}
+
+                <form action="{% url 'rate' map.urlhash %}" method="post">
+                    <input type="hidden" name="csrfmiddlewaretoken" class="csrf_token">
+                    {{ form_like }}
+                    <button type="submit" class="btn bg-styled styling-redline w-100 fs-4">
+                        {% if map.likes %}
+                            <i class="bi bi-heart"></i> {{ map.likes|intcomma }} Likes
+                        {% else %}
+                            <i class="bi bi-heart"></i> Like
+                        {% endif %}
+                    </button>
+                </form>
+
+                <form action="{% url 'rate' map.urlhash %}" method="post">
+                    <input type="hidden" name="csrfmiddlewaretoken" class="csrf_token">
+                    {{ form_dislike }}
+                    <button type="submit" class="btn bg-styled styling-silverline w-100 fs-4">
+                        {% if map.dislikes %}
+                            <i class="bi bi-x-circle"></i> {{ map.dislikes|intcomma }} Dislikes
+                        {% else %}
+                            <i class="bi bi-x-circle"></i> Dislike
+                        {% endif %}
+                    </button>
+                </form>
+
             {% endif %}
 
-            <form action="{% url 'rate' map.urlhash %}" method="post">
-                {% csrf_token %}
-                {{ form_like }}
-                <button type="submit" class="styling-redline w-100">
-                    {% if map.likes %}
-                        <i class="bi bi-heart"></i> {{ map.likes|intcomma }} Likes
-                    {% else %}
-                        <i class="bi bi-heart"></i> Like
-                    {% endif %}
+            <a href="{% url 'home' %}?map={{ map.urlhash }}">
+                <button class="btn bg-styled styling-blueline fs-4">
+                    <i class="bi bi-tools"></i> Remix this map
                 </button>
-            </form>
-
-            <form action="{% url 'rate' map.urlhash %}" method="post">
-                {% csrf_token %}
-                {{ form_dislike }}
-                <button type="submit" class="styling-silverline w-100">
-                    {% if map.dislikes %}
-                        <i class="bi bi-x-circle"></i> {{ map.dislikes|intcomma }} Dislikes
-                    {% else %}
-                        <i class="bi bi-x-circle"></i> Dislike
-                    {% endif %}
-                </button>
-            </form>
-
-            <a href="{% url 'home' %}?map={{ map.urlhash }}"><i class="bi bi-tools"></i> Remix this map</a>
+            </a>
         </div>
 
         <div class="m-3">
@@ -61,5 +65,11 @@
             {% endif %}
         </div>
     </div>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('.csrf_token').val(csrftoken)
+        })
+    </script>
 
 {% endblock content %}

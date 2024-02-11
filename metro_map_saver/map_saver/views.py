@@ -877,6 +877,7 @@ class RateMapView(FormView, DetailView):
     form_class = RateForm
     success_url = reverse_lazy('random')
 
+    @method_decorator(ensure_csrf_cookie)
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object, map=self.object)
@@ -902,6 +903,7 @@ class RandomMapView(RateMapView):
     template_name = 'map_saver/savedmap_rate.html'
 
     @method_decorator(never_cache)
+    @method_decorator(ensure_csrf_cookie)
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
