@@ -391,10 +391,32 @@
 
   <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
   {% if saved_map %}
-  <script>
-    var savedMapData = {% autoescape off %}{{ saved_map.mapdata }}{% endautoescape %}
-    {% if saved_map_name %}window.sessionStorage.setItem('userGivenMapName', "{{ saved_map_name }}"){% endif %}
-  </script>
+
+    {% if savedmap.data %}
+      {{ saved_map.mapdata|json_script:"mapdata_v2" }}
+      <script type="text/javascript">
+        var savedMapData =  document.getElementById('mapdata_v2').textContent
+        savedMapData = JSON.parse(JSON.parse(savedMapData)) // TODO: probably wont have to parse twice in v2 data model, confirm
+        var mapDataVersion = 2
+      </script>
+    {% else %}
+      {{ saved_map.mapdata|json_script:"mapdata_v1" }}
+      <script type="text/javascript">
+        // So nice we have to JSON.parse() twice :-/
+        var savedMapData =  document.getElementById('mapdata_v1').textContent
+        savedMapData = JSON.parse(JSON.parse(savedMapData))
+        var mapDataVersion = 1
+      </script>
+    {% endif %}
+
+    {% if saved_map_name %}
+      {{ saved_map_name|json_script:"saved_map_name" }}
+      <script type="text/javascript">
+        var userGivenMapName = document.getElementById('saved_map_name').textContent
+        window.sessionStorage.setItem('userGivenMapName', JSON.parse(userGivenMapName))
+      </script>
+    {% endif %}
+
   {% endif %}
   <script src='{% static "js/metromapmaker.js" %}?version=20220925' async></script>
   <script src='{% static "js/tooltips.min.js" %}' defer="defer"></script>
