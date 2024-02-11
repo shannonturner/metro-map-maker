@@ -3,6 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, 
 from django.db.models import Count, F
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
@@ -45,6 +46,7 @@ class HomeView(TemplateView):
     template_name = 'index.html'
 
     @method_decorator(gzip_page)
+    @method_decorator(ensure_csrf_cookie)
     def get(self, request, **kwargs):
         if not request.GET.get('map'):
             # Only show favorite thumbnails if we're NOT loading a specific map,

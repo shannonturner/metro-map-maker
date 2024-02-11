@@ -1934,8 +1934,10 @@ $(document).ready(function() {
     var savedMap = JSON.stringify(activeMap);
     autoSave(savedMap);
     var saveMapURL = '/save/';
+    csrftoken = getCookie('csrftoken');
     $.post( saveMapURL, {
-      'metroMap': savedMap
+      'metroMap': savedMap,
+      'csrfmiddlewaretoken': csrftoken
     }).done(function(data) {
       if (data.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
         $('#tool-save-options').html('<h5 class="bg-danger">Sorry, there was a problem saving your map: ' + data.slice(9) + '</h5>');
@@ -1995,6 +1997,9 @@ $(document).ready(function() {
           // Using sessionStorage instead of localStorage means that this will only survive for the current session and will expire upon browser close
           window.sessionStorage.setItem('userGivenMapName', $('#user-given-map-name').val())
           window.sessionStorage.setItem('userGivenMapTags', $('#user-given-map-tags').val())
+
+          csrftoken = getCookie('csrftoken');
+          formData['csrfmiddlewaretoken'] = csrftoken
 
           $.post('/name/', formData, function() {
             $('#name-map').hide();
