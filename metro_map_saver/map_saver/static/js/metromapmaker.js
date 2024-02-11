@@ -1652,9 +1652,6 @@ $(document).ready(function() {
   window.addEventListener('scroll', function() {
     $('.tooltip').hide()
   })
-  // $('.has-tooltip').on('mouseout', function() {
-  //   $('.tooltip').hide()
-  // })
 
   // Bind to the mousedown and mouseup events so we can implement dragging easily
   mouseIsDown = false;
