@@ -24,6 +24,8 @@ var mapLineWidth = 1;
 var mapStationStyle = 'wmata'
 var menuIsCollapsed = false
 
+const ALLOWED_ORIENTATIONS = ['0', '45', '-45', '90', '-90', '135', '-135', '180'];
+
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
     return target.replace(new RegExp(search, 'g'), replacement);
@@ -2283,8 +2285,6 @@ $(document).ready(function() {
     var x = $('#station-coordinates-x').val();
     var y = $('#station-coordinates-y').val();
 
-    const ALLOWED_ORIENTATIONS = ['0', '45', '-45', '90', '-90', '135', '-135', '180'];
-
     if (x >= 0 && y >= 0) {
       if ($(this).val() == '0') {
         if (Object.keys(temporaryStation).length > 0) {
@@ -2359,9 +2359,32 @@ function getSurroundingLine(x, y, metroMap) {
   return false;
 } // getSurroundingLine(x, y, metroMap)
 
-function setAllStationOrientations() {
-  // TODO: Set all station orientations to a certain direction
+function setAllStationOrientations(metroMap, orientation) {
+  // Set all station orientations to a certain direction
+
+  if (ALLOWED_ORIENTATIONS.indexOf(orientation) == -1)
+    return
+
+  for (var x in metroMap) {
+    for (var y in metroMap[x]) {
+      x = parseInt(x);
+      y = parseInt(y);
+      if (!Number.isInteger(x) || !Number.isInteger(y))
+        continue
+      if (Object.keys(metroMap[x][y]).indexOf('station') == -1)
+        continue
+      metroMap[x][y]["station"]["orientation"] = orientation
+    }
+  }
 }
+$('#set-all-station-name-orientation').on('click', function() {
+  var orientation = $('#set-all-station-name-orientation-choice').val()
+  setAllStationOrientations(activeMap, orientation)
+  drawCanvas()
+  setTimeout(function() {
+    $('#set-all-station-name-orientation').removeClass('active')
+  }, 500)
+})
 
 function getLineDirection(x, y, metroMap) {
   // Returns which direction this line is going in,

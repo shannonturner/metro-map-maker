@@ -249,6 +249,22 @@
             <button id="tool-map-style-station-circles-md" class="map-style-station styled styling-redline" data-station-style="circles-md">Circles (Medium)</button>
             <button id="tool-map-style-station-circles-sm" class="map-style-station styled styling-redline" data-station-style="circles-sm">Circles (Small)</button>    
           </fieldset>
+          <fieldset>
+            <legend>Station Orientations</legend>
+            <h5>Changes label orientation for ALL stations at once.</h5>
+            <label for="set-all-station-name-orientation-choice">Orientation</label>
+            <select id="set-all-station-name-orientation-choice">
+              <option value="0">On the right</option>
+              <option value="180">On the left</option>
+              <option value="-45">Above-right, 45&deg;</option>
+              <option value="45">Below-right, 45&deg;</option>
+              <option value="135">Below-left, 45&deg;</option>
+              <option value="-135">Above-left, 45&deg;</option>
+              <option value="90">Above, 90&deg;</option>
+              <option value="-90">Below, 90&deg;</option>
+            </select>
+            <button id="set-all-station-name-orientation" class="styled styling-redline width-100">Set orientations</button>
+          </fieldset>
       </div>
 
       <button id="tool-move-all" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Recenter your Metro map (Keyboard shortcuts: Arrow keys)">
