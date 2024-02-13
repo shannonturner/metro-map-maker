@@ -918,18 +918,21 @@ function drawStationName(ctx, x, y, metroMap, isTransferStation) {
   ctx.restore();
 }
 
-function drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation) {
+function drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation, outerColor, innerColor) {
+  if (!outerColor) { outerColor = '#000000' }
+  if (!innerColor) { innerColor = '#ffffff' }
+
   if (isTransferStation) {
     // Outer circle
-    drawCircleStation(ctx, x, y, metroMap, 1.2, 0, '#000000', 0, true)
-    drawCircleStation(ctx, x, y, metroMap, 0.9, 0, '#ffffff', 0, true)
+    drawCircleStation(ctx, x, y, metroMap, 1.2, 0, outerColor, 0, true)
+    drawCircleStation(ctx, x, y, metroMap, 0.9, 0, innerColor, 0, true)
   }
 
-  drawCircleStation(ctx, x, y, metroMap, 0.6, 0, '#000000', 0, true)
-  drawCircleStation(ctx, x, y, metroMap, 0.3, 0, '#ffffff', 0, true)
+  drawCircleStation(ctx, x, y, metroMap, 0.6, 0, outerColor, 0, true)
+  drawCircleStation(ctx, x, y, metroMap, 0.3, 0, innerColor, 0, true)
 }
 
-function drawStyledStation_rectCenter(ctx, x, y, metroMap, isTransferStation) {
+function drawStyledStation_rectCenter(ctx, x, y, metroMap, isTransferStation, strokeColor, fillColor) {
   lineColor = '#' + getActiveLine(x, y, metroMap)
   lineDirection = getLineDirection(x, y, metroMap)["direction"]
 
@@ -940,6 +943,10 @@ function drawStyledStation_rectCenter(ctx, x, y, metroMap, isTransferStation) {
     ctx.strokeStyle = lineColor
     ctx.fillStyle = lineColor
   }
+
+  // Override useful for drawing station indicators
+  if (strokeColor) { ctx.strokeStyle = strokeColor }
+  if (fillColor) { ctx.fillStyle = fillColor }
 
   if (isTransferStation || lineDirection == 'singleton') {
     rectSize = gridPixelMultiplier
@@ -1002,15 +1009,28 @@ function drawIndicator(x, y) {
     return
   }
 
-  // TODO: When station style is different from classic,
-  //  I should show a different indicator
-  if (temporaryStation["transfer"] || (activeMap[x][y]["station"] && activeMap[x][y]["station"]["transfer"])) {
-    // Outer circle
-    drawCircleStation(ctx, x, y, activeMap, 1.2, 0, '#000000', 0, true)
-    drawCircleStation(ctx, x, y, activeMap, 0.9, 0, '#00ff00', 0, true)
+  // TODO: Could refactor this further and subsume it into drawStation
+  var thisStationStyle = mapStationStyle
+  if (temporaryStation["style"]) {
+    thisStationStyle = temporaryStation["style"]
+  } else if (activeMap[x][y]["station"] && activeMap[x][y]["station"]["style"]) {
+    thisStationStyle = activeMap[x][y]["station"]["style"]
   }
-  drawCircleStation(ctx, x, y, activeMap, 0.6, 0, '#000000', 0, true)
-  drawCircleStation(ctx, x, y, activeMap, 0.3, 0, '#00ff00', 0, true)
+
+  var isTransferStation = temporaryStation["transfer"] || (activeMap[x][y]["station"] && activeMap[x][y]["station"]["transfer"])
+
+  if (!thisStationStyle || thisStationStyle == 'wmata') {
+    drawStyledStation_WMATA(ctx, x, y, activeMap, isTransferStation, '#000000', '#00ff00')
+  } else if (thisStationStyle == 'rect-center') {
+    drawStyledStation_rectCenter(ctx, x, y, activeMap, isTransferStation, '#000000', '#00ff00')
+  } else if (thisStationStyle == 'circles-lg') {
+    drawCircleStation(ctx, x, y, activeMap, 0.3, gridPixelMultiplier / 2, '#00ff00', '#000000')
+  } else if (thisStationStyle == 'circles-md') {
+    drawCircleStation(ctx, x, y, activeMap, 0.25, gridPixelMultiplier / 4, '#00ff00', '#000000')
+  } else if (thisStationStyle == 'circles-sm') {
+    drawCircleStation(ctx, x, y, activeMap, 0.2, gridPixelMultiplier / 8, '#00ff00', '#000000')
+  }
+
 } // drawIndicator(x, y)
 
 function rgb2hex(rgb) {
