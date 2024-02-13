@@ -210,7 +210,15 @@
             <option value="-90">Below, 90&deg;</option>
           </select>
 
-          <!-- TODO: Station style override -->
+          <label for="station-style">Station Name Orientation</label>
+          <select id="station-style">
+            <option value="">(Use Default)</option>
+            <option value="wmata">Metro (Classic)</option>
+            <option value="rect-center">Squares</option>
+            <option value="circles-lg">Circles (Large)</option>
+            <option value="circles-md">Circles (Medium)</option>
+            <option value="circles-sm">Circles (Small)</option>
+          </select>
         </fieldset>
 
         <!-- Consider: Remove this if I'm not going to use it -->
@@ -244,10 +252,11 @@
           <fieldset>
             <legend>Station Shape</legend>
             <button id="tool-map-style-station-classic" class="map-style-station styled styling-redline" data-station-style="wmata">Metro (Classic)</button>
-            <button id="tool-map-style-station-rect" class="map-style-station styled styling-redline" data-station-style="rect-center">Rectangles</button>
+            <button id="tool-map-style-station-rect" class="map-style-station styled styling-redline" data-station-style="rect-center">Squares</button>
             <button id="tool-map-style-station-circles-lg" class="map-style-station styled styling-redline" data-station-style="circles-lg">Circles (Large)</button>
             <button id="tool-map-style-station-circles-md" class="map-style-station styled styling-redline" data-station-style="circles-md">Circles (Medium)</button>
-            <button id="tool-map-style-station-circles-sm" class="map-style-station styled styling-redline" data-station-style="circles-sm">Circles (Small)</button>    
+            <button id="tool-map-style-station-circles-sm" class="map-style-station styled styling-redline" data-station-style="circles-sm">Circles (Small)</button>
+            <button id="reset-all-station-styles" class="styled styling-redline width-100">Reset to default</button>
           </fieldset>
           <fieldset>
             <legend>Station Orientations</legend>

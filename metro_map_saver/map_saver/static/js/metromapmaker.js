@@ -19,12 +19,12 @@ var pngUrl = false;
 var mapHistory = []; // A list of the last several map objects
 var maxUndoHistory = 25;
 var currentlyClickingAndDragging = false;
-var mapStationStyle = 'wmata'
 var mapLineWidth = 1;
 var mapStationStyle = 'wmata'
 var menuIsCollapsed = false
 
 const ALLOWED_ORIENTATIONS = ['0', '45', '-45', '90', '-90', '135', '-135', '180'];
+const ALLOWED_STYLES = ['wmata', 'rect-center', 'circles-lg', 'circles-md', 'circles-sm']
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -238,6 +238,7 @@ function makeStation(x, y) {
     } else {
       document.getElementById('station-name-orientation').value = '0';
     }
+    document.getElementById('station-style').value = ''
 
     // Pre-populate the station with the line it sits on
     activeLine = getActiveLine(x, y, activeMap);
@@ -280,6 +281,8 @@ function makeStation(x, y) {
 
       // Select the correct orientation too.
       document.getElementById('station-name-orientation').value = activeMap[x][y]["station"]["orientation"];
+
+      document.getElementById('station-style').value = activeMap[x][y]["station"]["style"] || ''
 
       var stationOnLines = "";
       var stationLines = getStationLines(x, y);
@@ -843,15 +846,17 @@ function drawStation(ctx, x, y, metroMap) {
     return; // If it's not a station, I can end here.
   }
 
-  if (!mapStationStyle || mapStationStyle == 'wmata') {
+  var thisStationStyle = metroMap[x][y]["station"]["style"] || mapStationStyle
+
+  if (!thisStationStyle || thisStationStyle == 'wmata') {
     drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation)
-  } else if (mapStationStyle == 'rect-center') {
+  } else if (thisStationStyle == 'rect-center') {
     drawStyledStation_rectCenter(ctx, x, y, metroMap, isTransferStation)
-  } else if (mapStationStyle == 'circles-lg') {
+  } else if (thisStationStyle == 'circles-lg') {
     drawCircleStation(ctx, x, y, metroMap, 0.3, gridPixelMultiplier / 2)
-  } else if (mapStationStyle == 'circles-md') {
+  } else if (thisStationStyle == 'circles-md') {
     drawCircleStation(ctx, x, y, metroMap, 0.25, gridPixelMultiplier / 4)
-  } else if (mapStationStyle == 'circles-sm') {
+  } else if (thisStationStyle == 'circles-sm') {
     drawCircleStation(ctx, x, y, metroMap, 0.2, gridPixelMultiplier / 8)
   }
 
@@ -997,6 +1002,8 @@ function drawIndicator(x, y) {
     return
   }
 
+  // TODO: When station style is different from classic,
+  //  I should show a different indicator
   if (temporaryStation["transfer"] || (activeMap[x][y]["station"] && activeMap[x][y]["station"]["transfer"])) {
     // Outer circle
     drawCircleStation(ctx, x, y, activeMap, 1.2, 0, '#000000', 0, true)
@@ -2309,6 +2316,28 @@ $(document).ready(function() {
     drawIndicator(x, y);
   }); // $('#station-name-orientation').change()
 
+  $('#station-style').on('change', function() {
+    var x = $('#station-coordinates-x').val()
+    var y = $('#station-coordinates-y').val()
+
+    if (x >= 0 && y >= 0) {
+      if (ALLOWED_STYLES.indexOf($(this).val()) >= 0) {
+        if (Object.keys(temporaryStation).length > 0) {
+          temporaryStation["style"] = $(this).val()
+        } else {
+          activeMap[x][y]["station"]["style"] = $(this).val()
+        } // else (not temporaryStation)
+      } // else if ALLOWED_STYLES
+    } // if x >= 0 && y >= 0
+
+    window.localStorage.setItem('metroMapStationStyle', $(this).val());
+    if (Object.keys(temporaryStation).length == 0) {
+      autoSave(activeMap);
+    }
+    drawCanvas(activeMap, true);
+    drawIndicator(x, y);
+  }); // $('#station-name-orientation').change()
+
   $('#station-transfer').click(function() {
     var x = $('#station-coordinates-x').val();
     var y = $('#station-coordinates-y').val();
@@ -2383,6 +2412,29 @@ $('#set-all-station-name-orientation').on('click', function() {
   drawCanvas()
   setTimeout(function() {
     $('#set-all-station-name-orientation').removeClass('active')
+  }, 500)
+})
+
+function resetAllStationStyles(metroMap) {
+  for (var x in metroMap) {
+    for (var y in metroMap[x]) {
+      x = parseInt(x);
+      y = parseInt(y);
+      if (!Number.isInteger(x) || !Number.isInteger(y))
+        continue
+      if (Object.keys(metroMap[x][y]).indexOf('station') == -1)
+        continue
+      if (Object.keys(metroMap[x][y]['station']).indexOf('style') == -1)
+        continue
+      delete metroMap[x][y]["station"]["style"]
+    }
+  }
+}
+$('#reset-all-station-styles').on('click', function() {
+  resetAllStationStyles(activeMap)
+  drawCanvas()
+  setTimeout(function() {
+    $('#reset-all-station-styles').removeClass('active')
   }, 500)
 })
 
