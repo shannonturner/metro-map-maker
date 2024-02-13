@@ -124,6 +124,18 @@ function snapCanvasToGrid() {
 function getActiveLine(x, y, metroMap) {
   // Given an x, y coordinate pair, return the hex code for the line you're on.
   // Use this to retrieve the line for a given point on a map.
+  if (metroMap && metroMap["data_version"] == 2 && metroMap["map_type"] == 'classic' && metroMap["lines"]) {
+    const coordExists = (coord) => (coord[0] == x && coord[1] == y)
+    for (var line in metroMap["lines"]) {
+      for (var line in metroMap["lines"]) {
+        if (metroMap["lines"][line].some(coordExists)) {
+          return line
+        }
+      }
+    }
+    return undefined
+  }
+
   if (metroMap && metroMap[x] && metroMap[x][y] && metroMap[x][y]["line"]) {
     return metroMap[x][y]["line"];
   } 
@@ -132,7 +144,28 @@ function getActiveLine(x, y, metroMap) {
     return undefined;
   }
   return false;
-} // getActiveLine(x, y)
+} // getActiveLine(x, y, metroMap)
+
+function getStation(x, y, metroMap) {
+  // Given an x, y coordinate pair, return the station object
+  if (metroMap && metroMap["data_version"] == 2 && metroMap["map_type"] == 'classic' && metroMap["stations"]) {
+    for (var station in metroMap["stations"]) {
+      if (station["xy"][0] == x && station["xy"][1] == y) {
+        return station
+      }
+    }
+    return undefined
+  }
+
+  if (metroMap && metroMap[x] && metroMap[x][y] && metroMap[x][y]["station"]) {
+    return metroMap[x][y]["station"]
+  }
+  else if (metroMap) {
+    // metroMap was passed through but there was nothing at that x,y coordinate
+    return undefined
+  }
+  return false
+} // getStation(x, y, metroMap)
 
 function moveLineStroke(ctx, x, y, lineToX, lineToY) {
   // Used by drawPoint() to draw lines at specific points
@@ -141,9 +174,9 @@ function moveLineStroke(ctx, x, y, lineToX, lineToY) {
   singleton = false;
 } // moveLineStroke(ctx, x, y, lineToX, lineToY)
 
-function getStationLines(x, y) {
+function getStationLines(x, y, metroMap) {
   // Given an x, y coordinate pair, return the hex codes for the lines this station services.
-  return activeMap[x][y]["station"]["lines"]
+  return getStation(x, y, metroMap)["lines"]
 } // getStationLines(x, y)
 
 function determineDarkOrLightContrast(hexcolor) {
@@ -223,7 +256,7 @@ function makeStation(x, y) {
   var allLines = $('.rail-line');
   $('#tool-station').addClass('width-100')
 
-  if (!activeMap[x][y]["station"]) {
+  if (!getStation(x, y, activeMap)) {
     // Create a new station
     temporaryStation = {
       "name": ""
@@ -267,25 +300,25 @@ function makeStation(x, y) {
   } // if (create new station)
   else {
     // Already has a station, so clicking again shouldn't clear the existing station but should allow you to rename it and assign lines
-    if (activeMap[x][y]["station"]["name"]) {
+    if (getStation(x, y, activeMap)["name"]) {
       // This station already has a name, show it in the textfield
-      var stationName = activeMap[x][y]["station"]["name"].replaceAll('_', ' ');
+      var stationName = getStation(x, y, activeMap)["name"].replaceAll('_', ' ');
       $('#station-name').val(stationName);
 
       // Pre-check the box if this is a transfer station
-      if (activeMap[x][y]["station"]["transfer"]) {
+      if (getStation(x, y, activeMap)["transfer"]) {
         $('#station-transfer').prop('checked', true);
       } else {
         $('#station-transfer').prop('checked', false);
       }
 
       // Select the correct orientation too.
-      document.getElementById('station-name-orientation').value = activeMap[x][y]["station"]["orientation"];
+      document.getElementById('station-name-orientation').value = getStation(x, y, activeMap)["orientation"];
 
-      document.getElementById('station-style').value = activeMap[x][y]["station"]["style"] || ''
+      document.getElementById('station-style').value = getStation(x, y, activeMap)["style"] || ''
 
       var stationOnLines = "";
-      var stationLines = getStationLines(x, y);
+      var stationLines = getStationLines(x, y, activeMap);
       for (var z=0; z<stationLines.length; z++) {
         if (stationLines[z]) {
           stationOnLines += "<button style='background-color: #" + stationLines[z] + "' class='station-add-lines' id='add-line-" + stationLines[z] + "'>" + $('#rail-line-' + stationLines[z]).text() + "</button>";
@@ -318,7 +351,7 @@ function makeStation(x, y) {
           if (Object.keys(temporaryStation).length > 0) {
             temporaryStation["lines"].push($(this).attr('id').slice(9, 15))
           } else {
-            activeMap[x][y]["station"]["lines"].push($(this).attr('id').slice(9, 15))
+            getStation(x, y, activeMap)["lines"].push($(this).attr('id').slice(9, 15))
           } // else (not temporaryStation)
         } else {
           // Remove it
@@ -329,7 +362,7 @@ function makeStation(x, y) {
               return val !== color
             })
           } else {
-            activeMap[x][y]["station"]["lines"] = activeMap[x][y]["station"]["lines"].filter(function(val) {
+            getStation(x, y, activeMap)["lines"] = getStation(x, y, activeMap)["lines"].filter(function(val) {
               return val !== color
             })
           } // else (not temporaryStation)
@@ -403,7 +436,7 @@ function bindGridSquareEvents(event) {
     // I need to check for the old line and station
     // BEFORE actually doing the erase operations
     erasedLine = getActiveLine(x, y, activeMap);
-    if (activeMap && activeMap[x] && activeMap[x][y] && activeMap[x][y]["station"]) {
+    if (getStation(x, y, activeMap)) {
       var redrawStations = true;
     } else {
       var redrawStations = false;
@@ -839,14 +872,14 @@ function drawPoint(ctx, x, y, metroMap, erasedLine) {
 } // drawPoint(ctx, x, y, metroMap)
 
 function drawStation(ctx, x, y, metroMap) {
-  var isStation = metroMap[x][y]["station"];
-  if (isStation) {
-    var isTransferStation = metroMap[x][y]["station"]["transfer"];
+  var station = getStation(x, y, metroMap)
+  if (station) {
+    var isTransferStation = station["transfer"];
   } else {
     return; // If it's not a station, I can end here.
   }
 
-  var thisStationStyle = metroMap[x][y]["station"]["style"] || mapStationStyle
+  var thisStationStyle = station["style"] || mapStationStyle
 
   if (!thisStationStyle || thisStationStyle == 'wmata') {
     drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation)
@@ -867,51 +900,53 @@ function drawStationName(ctx, x, y, metroMap, isTransferStation) {
   // Write the station name
   ctx.fillStyle = '#000000';
   ctx.save();
-  var activeStation = metroMap[x][y]["station"]["name"].replaceAll('_', ' ');
-  var textSize = ctx.measureText(activeStation).width;
+  var station = getStation(x, y, metroMap)
+  var stationName = station["name"].replaceAll('_', ' ')
+  var orientation = station["orientation"]
+  var textSize = ctx.measureText(stationName).width;
   if (isTransferStation)
     xOffset = gridPixelMultiplier * 1.5
   else
     xOffset = gridPixelMultiplier * .75
   yOffset = gridPixelMultiplier * .25
   // Rotate the canvas if specified in the station name orientation
-  if (metroMap[x][y]["station"]["orientation"] == '-45') {
+  if (orientation == '-45') {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(-45 * (Math.PI/ 180));
-    ctx.fillText(activeStation, xOffset, yOffset);
-  } else if (metroMap[x][y]["station"]["orientation"] == '45') {
+    ctx.fillText(stationName, xOffset, yOffset);
+  } else if (orientation == '45') {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(45 * (Math.PI/ 180));
-    ctx.fillText(activeStation, xOffset, yOffset);
-  } else if (metroMap[x][y]["station"]["orientation"] == '-90') {
+    ctx.fillText(stationName, xOffset, yOffset);
+  } else if (orientation == '-90') {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(-90 * (Math.PI/ 180));
-    ctx.fillText(activeStation, -1 * textSize - xOffset, yOffset);
-  } else if (metroMap[x][y]["station"]["orientation"] == '90') {
+    ctx.fillText(stationName, -1 * textSize - xOffset, yOffset);
+  } else if (orientation == '90') {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(-90 * (Math.PI/ 180));
-    ctx.fillText(activeStation, xOffset, yOffset);
-  } else if (metroMap[x][y]["station"]["orientation"] == '135') {
+    ctx.fillText(stationName, xOffset, yOffset);
+  } else if (orientation == '135') {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(-45 * (Math.PI/ 180));
-    ctx.fillText(activeStation, -1 * textSize - xOffset, yOffset);
-  } else if (metroMap[x][y]["station"]["orientation"] == '-135') {
+    ctx.fillText(stationName, -1 * textSize - xOffset, yOffset);
+  } else if (orientation == '-135') {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(45 * (Math.PI/ 180));
-    ctx.fillText(activeStation, -1 * textSize - xOffset, yOffset);
-  } else if (metroMap[x][y]["station"]["orientation"] == '180') {
+    ctx.fillText(stationName, -1 * textSize - xOffset, yOffset);
+  } else if (orientation == '180') {
     // When drawing on the left, this isn't very different from drawing on the right
     //      with no rotation, except that we include the measured text width
     if (isTransferStation) {
-      ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier * 1.5) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+      ctx.fillText(stationName, (x * gridPixelMultiplier) - (gridPixelMultiplier * 1.5) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
     } else {
-      ctx.fillText(activeStation, (x * gridPixelMultiplier) - (gridPixelMultiplier) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+      ctx.fillText(stationName, (x * gridPixelMultiplier) - (gridPixelMultiplier) - textSize, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
     }
   } else  {
     if (isTransferStation) {
-      ctx.fillText(activeStation, (x * gridPixelMultiplier) + (gridPixelMultiplier * 1.5), (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+      ctx.fillText(stationName, (x * gridPixelMultiplier) + (gridPixelMultiplier * 1.5), (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
     } else {
-      ctx.fillText(activeStation, (x * gridPixelMultiplier) + gridPixelMultiplier, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
+      ctx.fillText(stationName, (x * gridPixelMultiplier) + gridPixelMultiplier, (y * gridPixelMultiplier) + gridPixelMultiplier / 4);
     }
   } // else (of if station orientation is -45)
 
@@ -1009,15 +1044,17 @@ function drawIndicator(x, y) {
     return
   }
 
+  var permStation = getStation(x, y, activeMap)
+
   // TODO: Could refactor this further and subsume it into drawStation
   var thisStationStyle = mapStationStyle
   if (temporaryStation["style"]) {
     thisStationStyle = temporaryStation["style"]
-  } else if (activeMap[x][y]["station"] && activeMap[x][y]["station"]["style"]) {
-    thisStationStyle = activeMap[x][y]["station"]["style"]
+  } else if (permStation && permStation["style"]) {
+    thisStationStyle = permStation["style"]
   }
 
-  var isTransferStation = temporaryStation["transfer"] || (activeMap[x][y]["station"] && activeMap[x][y]["station"]["transfer"])
+  var isTransferStation = temporaryStation["transfer"] || (permStation && permStation["transfer"])
 
   if (!thisStationStyle || thisStationStyle == 'wmata') {
     drawStyledStation_WMATA(ctx, x, y, activeMap, isTransferStation, '#000000', '#00ff00')
