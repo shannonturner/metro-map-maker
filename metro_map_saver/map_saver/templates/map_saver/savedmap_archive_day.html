@@ -34,7 +34,16 @@
 
 {% block content %}
 
-    <h3 class="styling-redline bg-styled p-3 text-center" style="margin-left: -0.75rem; margin-right: -0.75rem;">{{ day|date:"F d, Y" }} ({{ maps.count|intcomma }} maps)</h3>
+    <h3 class="styling-redline bg-styled p-3 text-center" style="margin-left: -0.75rem; margin-right: -0.75rem;">
+        {{ day|date:"F d, Y" }}
+        {% if page_obj.has_previous or page_obj.has_next %}
+            ({{ maps.count|intcomma }} of {{ page_obj.paginator.count|intcomma }} maps)
+        {% else %}
+            ({{ maps.count|intcomma }} maps)
+        {% endif %}
+    </h3>
+
+    {% include "pagination.html" %}
 
     <div class="row">
         {% for map in maps %}
@@ -80,5 +89,9 @@
         </div></div>
         {% endfor %}
     </div>
+
+    <hr>
+
+    {% include "pagination.html" %}
 
 {% endblock content %}

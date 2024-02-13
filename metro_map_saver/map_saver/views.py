@@ -838,6 +838,7 @@ class MapsPerDayView(DayArchiveView):
 
     queryset = SavedMap.objects.defer(*SavedMap.DEFER_FIELDS).all()
     date_field = 'created_at'
+    paginate_by = 50
     context_object_name = 'maps'
 
     def get_context_data(self, *args, **kwargs):
