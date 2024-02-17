@@ -38,8 +38,14 @@ class Command(BaseCommand):
 
         for mbd in maps_by_day:
             self.stdout.write(f"{mbd['day']}:\t{mbd['day__count']}")
-            MapsByDay.objects.update_or_create(
-                day=mbd['day'],
-                maps=mbd['day__count'],
-            )
-
+            mbd_obj = MapsByDay.objects.filter(day=mbd['day'])
+            if mbd_obj:
+                assert mbd_obj.count() == 1
+                mbd_obj = mbd_obj.last()
+                mbd_obj.maps = mbd['day__count']
+                mbd_obj.save()
+            else:
+                mbd_obj = MapsByDay.objects.create(
+                    day=mbd['day'],
+                    maps=mbd['day__count'],
+                )

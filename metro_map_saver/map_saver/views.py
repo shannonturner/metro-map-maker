@@ -847,6 +847,9 @@ class MapsPerDayView(DayArchiveView):
         FIRST_YEAR = 2017
         context['all_years'] = range(datetime.datetime.now().year, (FIRST_YEAR - 1), -1)
 
+        if context['day'] < datetime.date(2018, 9, 13):
+            context['date_estimate_disclaimer'] = True
+
         return context
 
 class SameDayView(ListView):

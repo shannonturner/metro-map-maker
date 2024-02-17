@@ -45,6 +45,21 @@
 
     {% include "pagination.html" %}
 
+    {% if date_estimate_disclaimer %}
+        <div class="alert alert-info" role="alert">
+            <p>
+              Although Metro Map Maker officially launched in September 2017,
+              I didn't include a <code>created_at</code> field on maps until September 13, 2018.
+            </p>
+            <p>
+                I made efforts to determine how many maps had been created by those dates based on historical records, but they're only estimates based on the known number of maps on a certain date.
+            </p>
+            <p>
+                For example, there were 606 maps created by April 11, 2018 (218 days since launch), so I divided those 606 maps roughly evenly across all 218 days.
+            </p>
+        </div>
+    {% endif %}
+
     <div class="row">
         {% for map in maps %}
         <div class="col-sm-6 col-md-4 col-xxl-3 mb-3 mt-3"><div class="card h-100 text-center">
