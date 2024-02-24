@@ -134,6 +134,96 @@ class SavedMap(models.Model):
             and not set([tag.slug for tag in self.tags.all()]).intersection(set(EXCLUDED_TAGS))
         )
 
+    def convert_mapdata_v1_to_v2(self):
+
+        """ Convert mapdata (classic) from v1 to v2
+        """
+
+        from .mapdata_optimizer import sort_points_by_color
+
+        try:
+            mapdata = json.loads(self.mapdata)
+        except json.decoder.JSONDecodeError as exc:
+            raise
+
+        if mapdata['global'].get('map_type') or mapdata['global'].get('data_version'):
+            # Neither of these keys are present in v1
+            raise ValueError('This map is not data_version v1; cannot convert to v2')
+
+        # Note that sort_points_by_color is NOT the reduced set of points, which is good here
+        points_by_color, stations, map_size = sort_points_by_color(mapdata, map_type='classic', data_version=1)
+
+        mapdata_v2 = {
+            'global': {
+                'map_type': 'classic',
+                'data_version': 2,
+                'map_size': map_size,
+                'lines': mapdata['global']['lines'],
+            },
+            'stations': stations,
+            'points_by_color': points_by_color,
+        }
+
+        # Think I'm going to drop this feature after all; it's more clutter than helpful
+        for index, station in enumerate(mapdata_v2['stations']):
+            mapdata_v2['stations'][index].pop('lines', None)
+
+        self.data = mapdata_v2
+        self.save()
+
+    def data_optimized_for_js_performance(self):
+
+        """ sort_points_by_color is a good midway point between being optimized for
+                data size / SVG generation (Python)
+                loading speed (Javascript performance)
+
+            For instance, having 
+                mapdata_v2['points_by_color'][color]['x'] and
+                mapdata_v2['points_by_color'][color]['y']
+
+                in the Javascript is not useful, but can be very useful when drawing an SVG
+                    to minimize the number of points in a polyline and determining squares
+
+            On the other end,
+                mapdata_v2['points_by_color'][color]['xy'] being a list of 2-tuple coordinate points
+                    is a very info-dense, non-lossy representation of the data,
+                    but in Javascript is VERY slow to look up whether a given point is adjacent
+                    to a known point.
+
+                The fastest lookup I've tested is still checking map[x] && map[x][y].
+
+            Similarly, for SVGs it's fine that stations is a list of dicts,
+                but doing a lookup on a list isn't great. Again, use [x] && [x][y] pattern.
+        """
+
+        if not self.data:
+            return False
+
+        mapdata_v2 = self.data
+
+        for color in mapdata_v2['points_by_color']:
+            mapdata_v2['points_by_color'][color].pop('x', None)
+            mapdata_v2['points_by_color'][color].pop('y', None)
+
+            mapdata_v2['points_by_color'][color]['xys'] = {}
+            for xy in mapdata_v2['points_by_color'][color]['xy']:
+                x, y = xy
+                if x not in mapdata_v2['points_by_color'][color]['xys']:
+                    mapdata_v2['points_by_color'][color]['xys'][x] = {}
+                mapdata_v2['points_by_color'][color]['xys'][x][y] = 1
+            del mapdata_v2['points_by_color'][color]['xy']
+
+        stations = {}
+        for station in mapdata_v2['stations']:
+            x, y = station['xy']
+            if not stations.get(x):
+                stations[x] = {}
+            stations[x][y] = station
+            stations[x][y].pop('xy')
+        mapdata_v2['stations'] = stations
+
+        return mapdata_v2
+
     def generate_images(self):
 
         """ Generates full-size images and thumbnails

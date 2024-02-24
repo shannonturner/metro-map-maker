@@ -65,6 +65,7 @@ class Command(BaseCommand):
             except Exception as exc:
                 self.stdout.write(f'[ERROR] Failed to generate images and thumbnails for #{mmap.id} ({mmap.urlhash}): Exception: {exc}')
                 errors.append(mmap.urlhash)
+                raise # DEBUG; TODO -- REMOVE
 
         t1 = time.time()
         self.stdout.write(f'Made {limit} images and thumbnails in {t1 - t0:.2f}s')

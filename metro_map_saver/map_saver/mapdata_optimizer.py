@@ -54,7 +54,8 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
                 }
     """
 
-    mapdata = json.loads(mapdata)
+    if not isinstance(mapdata, dict):
+        mapdata = json.loads(mapdata)
 
     color_map = {}
     points_by_color = {}
@@ -96,7 +97,7 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
                         'lines': station.get('lines', []),
                         'transfer': station.get('transfer', 0),
                         'orientation': station.get('orientation', 0),
-                        'xy': (int(x), y),
+                        'xy': (int(x), int(y)),
                     }
                     stations.append(station_data)
 
@@ -225,13 +226,16 @@ def get_shapes_from_points(points_by_color):
                     pbc['y'].remove(pt[1])
 
                 for pt in itertools.chain(*exterior):
-                    points_to_check.remove(pt)
+                    points_to_check.remove(pt) # LEAVIGN OFF: I THOUGHT I DIDNT WAMT THIS HERE BUT IT ACTUALLY WORKS FINE
                     pbc['xy'].remove(pt)
                     pbc['x'].remove(pt[0])
                     pbc['y'].remove(pt[1])
 
         while points_to_check:
+            print(f'33333 len(points_to_check): {len(points_to_check)}')
+            # print(f'44444 points_to_check: {points_to_check}')
             point = points_to_check.pop(0)
+            print(f'AAAAAA I am point: {point}')
             shape = get_connected_points(*point, points_to_check)
             if len(shape) == 1:
                 shapes_by_color[color]['points'].append(shape[0])
@@ -273,6 +277,13 @@ def get_shapes_from_points(points_by_color):
                 lines.append(current_line)
                 shapes_by_color[color]['lines'].extend(lines)
                 shapes_by_color[color]['all_lines'].extend(lines)
+
+    # TODO: for this color, get all points not in this line
+    #   ...
+    # for color in shapes_by_color:
+    #     for index, line in enumerate(shapes_by_color[color]['lines']):
+    #         for point in line:
+    #             if point 
 
     # If one line overlaps with another,
     #   add those points

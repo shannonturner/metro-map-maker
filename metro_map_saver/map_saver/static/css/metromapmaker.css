@@ -42,9 +42,18 @@ input[type=checkbox]{margin:4px 0 0;margin-top:1px\9;line-height:normal}
   row-gap: 0.5rem;
 }
 
+#toolbox {
+  column-gap: 1.5rem;
+}
+
 #controls:not(.collapsed) button:not(.width-100):not(.rail-line) {
   width: 45%;
   height: 6rem;
+}
+
+#controls:not(.collapsed) #toolbox > button:not(.rail-line) {
+  height: 6rem;
+  flex-grow: 1;
 }
 
 #controls.collapsed #title {
@@ -127,7 +136,7 @@ button.styling-silverline:hover {
   border-color: rgba(162, 162, 162, .4);
 }
 
-button.styling-redline:active, button.styling-redline.active {
+button.styling-redline:active, button.styling-redline.active, button.styled.active-mapstyle {
   color: #bd1038;
   border-color: rgba(189, 16, 56, .4);
 }
@@ -145,7 +154,7 @@ button.styling-silverline:active, button.styling-silverline.active {
   border-color: rgba(162, 162, 162, .4);
 }
 
-button.styled:active, button.styled.active {
+button.styled:active, button.styled.active, button.styled.active-mapstyle {
   background-color: #fff;
 }
 
@@ -223,6 +232,7 @@ div.mmm-help-setting {
   top: 0;
   left: 0;
   overflow: scroll;
+  cursor: crosshair;
 }
 
 #metro-map-stations-canvas {

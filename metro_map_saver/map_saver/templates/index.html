@@ -82,12 +82,12 @@
     </div>
   </div>
 
-  <div id="canvas-container" class="col-md-9 col-lg-10">
+  <div id="canvas-container" class="col-md-9 col-lg-10" style="width: {{ canvas_size|default:1600 }}px; height: {{ canvas_size|default:1600 }}px;">
     <div id="loading"></div>
-    <canvas id='metro-map-canvas' width="1600" height="1600"></canvas>
-    <canvas id='metro-map-stations-canvas' width="1600" height="1600"></canvas>
-    <canvas id='grid-canvas' width="1600" height="1600"></canvas>
-    <canvas id="hover-canvas" width="1600" height="1600"></canvas>
+    <canvas id='metro-map-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
+    <canvas id='metro-map-stations-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
+    <canvas id='grid-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
+    <canvas id="hover-canvas" width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
     <a id="metro-map-image-download-link" rel="noopener" starget="_blank"></a>
     <img id="metro-map-image" class="img-responsive" alt="">
   </div>
@@ -210,49 +210,46 @@
             <option value="-90">Below, 90&deg;</option>
           </select>
 
-          <label for="station-style">Station Name Orientation</label>
+          <label for="station-style">Style</label>
           <select id="station-style">
             <option value="">(Use Default)</option>
             <option value="wmata">Metro (Classic)</option>
-            <option value="rect-center">Squares</option>
+            <option value="rect">Rectangles</option>
+            <option value="rect-round">Round Rectangles</option>
             <option value="circles-lg">Circles (Large)</option>
             <option value="circles-md">Circles (Medium)</option>
             <option value="circles-sm">Circles (Small)</option>
           </select>
         </fieldset>
-
-        <!-- Consider: Remove this if I'm not going to use it -->
-        <h4 id="station-on-lines-title" class="station-rail-lines">This station is on these rail lines:</h4>
-        <div id="station-on-lines" class="station-rail-lines"></div>
-        <h4 id="add-other-lines" class="station-rail-lines">Add other lines this station serves:</h4>
-        <div id="station-other-lines" class="station-rail-lines"></div>
       </div>
 
       <button id="tool-eraser" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station (Keyboard shortcut: E)">
         <svg id="tool-eraser-icon-eraser" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#eraser"/></svg>
-        <span id="tool-eraser-caption-eraser" class="button-label"><b><u>E</u></b>raser</span>
+        <span id="tool-eraser-caption-eraser" class="button-label"><b><u>E</u></b>rase</span>
 
         <svg id="tool-eraser-icon-paint-bucket" width="16" height="16" style="display: none;"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#paint-bucket"/></svg>
         <span id="tool-eraser-caption-fill" class="button-label" style="font-size: 80%; display: none;">Eraser Fill</span>
       </button>
 
-      <button id="tool-map-style" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Change Style of Lines and Stations">
+      <button id="tool-map-style" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Change Style of Lines and Stations (Keyboard shortcut: Y)">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#palette"/></svg>
         <span class="button-label">Style</span>
       </button>
       <div id="tool-map-style-options" class="text-left" style="display: none;">
           <fieldset>
             <legend>Map Line Size</legend>
-            <button id="tool-map-style-line-classic" class="map-style-line styled styling-redline" data-line-width-divisor="1">Metro (Classic)</button>
-            <button id="tool-map-style-line-750" class="map-style-line styled styling-redline" data-line-width-divisor="">75%</button>
-            <button id="tool-map-style-line-500" class="map-style-line styled styling-redline" data-line-width-divisor="2">50%</button>
-            <button id="tool-map-style-line-250" class="map-style-line styled styling-redline" data-line-width-divisor="4">25%</button>
-            <button id="tool-map-style-line-125" class="map-style-line styled styling-redline" data-line-width-divisor="8">12.5%</button>
+            <button id="tool-map-style-line-classic" class="map-style-line styled styling-redline width-100" data-line-width-divisor="1">Metro (Classic)</button>
+            <button id="tool-map-style-line-750" class="map-style-line styled styling-redline width-100" data-line-width-divisor="">75%</button>
+            <button id="tool-map-style-line-500" class="map-style-line styled styling-redline width-100" data-line-width-divisor="2">50%</button>
+            <button id="tool-map-style-line-250" class="map-style-line styled styling-redline width-100" data-line-width-divisor="4">25%</button>
+            <button id="tool-map-style-line-125" class="map-style-line styled styling-redline width-100" data-line-width-divisor="8">12.5%</button>
           </fieldset>
           <fieldset>
             <legend>Station Shape</legend>
+            <h5>Change the shape of all stations that don't have a specific shape.</h5>
             <button id="tool-map-style-station-classic" class="map-style-station styled styling-redline" data-station-style="wmata">Metro (Classic)</button>
-            <button id="tool-map-style-station-rect" class="map-style-station styled styling-redline" data-station-style="rect-center">Squares</button>
+            <button id="tool-map-style-station-rect" class="map-style-station styled styling-redline" data-station-style="rect">Rect.</button>
+            <button id="tool-map-style-station-rect-round" class="map-style-station styled styling-redline" data-station-style="rect-round">Round Rect.</button>
             <button id="tool-map-style-station-circles-lg" class="map-style-station styled styling-redline" data-station-style="circles-lg">Circles (Large)</button>
             <button id="tool-map-style-station-circles-md" class="map-style-station styled styling-redline" data-station-style="circles-md">Circles (Medium)</button>
             <button id="tool-map-style-station-circles-sm" class="map-style-station styled styling-redline" data-station-style="circles-sm">Circles (Small)</button>
@@ -283,7 +280,7 @@
       <div id="tool-move-options" class="text-left" style="display: none;">
         <fieldset>
           <legend>Move Map</legend>
-          <h5>Be careful! If you move your map out of bounds, you'll lose your work.</h5>
+          <h5 id="tool-move-v1-warning" style="display: none;">Be careful! If you move your map out of bounds, you'll lose your work. (In the next version of Metro Map Maker, you'll be prevented from going out of bounds.)</h5> <!-- "In the next version" is a bit of a misnomer, but hard to communicate which data model you're on since I'm trying hard to keep everything backwards-compatible -->
           <button id="tool-move-up" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Up arrow">
             <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-up-circle"/></svg> Move everything up</span>
           </button>
@@ -307,11 +304,11 @@
         <fieldset>
           <legend>Resize Map</legend>
           <h5>Be careful! If your map is large and you resize it to be smaller, you'll lose your work. <b>Use Control+Z to undo.</b></h5>
-          <button id="tool-resize-80" class="resize-grid styled styling-redline">Standard (80x80)</button>
-          <button id="tool-resize-120" class="resize-grid styled styling-redline">Large (120x120)</button>
-          <button id="tool-resize-160" class="resize-grid styled styling-redline">Extra Large (160x160)</button>
-          <button id="tool-resize-200" class="resize-grid styled styling-redline">XXL (200x200)</button>
-          <button id="tool-resize-240" class="resize-grid styled styling-redline">XXXL (240x240)</button>
+          <button id="tool-resize-80" class="resize-grid styled styling-redline">Small (80x80)</button>
+          <button id="tool-resize-120" class="resize-grid styled styling-redline">Medium (120x120)</button>
+          <button id="tool-resize-160" class="resize-grid styled styling-redline">Large (160x160)</button>
+          <button id="tool-resize-200" class="resize-grid styled styling-redline">XL (200x200)</button>
+          <button id="tool-resize-240" class="resize-grid styled styling-redline">XXL (240x240)</button>
           <div id="tool-resize-stretch-options">
             <button id="tool-resize-stretch" class="has-tooltip stretch-grid styled styling-redline" data-toggle="tooltip" data-placement="left" title="Increase the available space between stations so you can add more stations in between.">Stretch Map</button>
           </div>
@@ -338,7 +335,7 @@
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#save"/></svg>
         <span class="button-label">Save &amp; Share</span>
       </button>
-      <div id="tool-save-options" class="text-left"></div>
+      <div id="tool-save-options" class="text-left" style="display: none;"></div>
 
       <button id="tool-grid" class="has-tooltip styled styling-greenline width-100" data-toggle="tooltip" data-placement="left" title="Just hides the grid but you can still edit the map; to download your map click Download as image (Keyboard shortcut: H)">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#grid"/></svg>
@@ -417,14 +414,14 @@
   <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
   {% if saved_map %}
 
-    {% if savedmap.data %}
-      {{ saved_map.mapdata|json_script:"mapdata_v2" }}
+    {% if saved_map.data %}
+      {{ saved_map.data_optimized_for_js_performance|json_script:"mapdata_v2" }}
       <script type="text/javascript">
         var savedMapData =  document.getElementById('mapdata_v2').textContent
-        savedMapData = JSON.parse(JSON.parse(savedMapData)) // TODO: probably wont have to parse twice in v2 data model, confirm
+        savedMapData = JSON.parse(savedMapData)
         var mapDataVersion = 2
       </script>
-    {% else %}
+    {% elif saved_map.mapdata %}
       {{ saved_map.mapdata|json_script:"mapdata_v1" }}
       <script type="text/javascript">
         // So nice we have to JSON.parse() twice :-/

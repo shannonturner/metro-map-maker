@@ -81,6 +81,10 @@ class HomeView(TemplateView):
                         context["saved_map_name"] = saved_map.name.rsplit(" (unknown)")[0]
                     else:
                         context["saved_map_name"] = saved_map.name
+                try:
+                    context['canvas_size'] = saved_map['global']['map_size'] * 20
+                except Exception:
+                    context['canvas_size'] = 1600
 
         return render(request, self.template_name, context)
 
