@@ -1078,11 +1078,6 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     ctx.fillStyle = lineColor
   }
 
-  if (x == 18 && y == 58) {
-    // I'm guessing what's happening here is that these are being flagged as interior and getting skipped
-    debugger;
-  }
-
   if (connectedStations === true) {
     // Not eligible for connecting, draw as normal
     width = gridPixelMultiplier / 2
@@ -1106,12 +1101,12 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
       // Line is going NE, station should be drawn SE
       // XXX: At one point this was diagonal-se and it worked,
       // then I made a lot of changes and now diagonal-se is wrong
-      // lineDirection = 'diagonal-se' // yes, diagonal-se
+      // Seems odd to me that both this and the next case use diagonal-ne
       lineDirection = 'diagonal-ne'
       width = gridPixelMultiplier
     } else if (dx > 0 && dy < 0) {
       // Line is going SE, station should be drawn NE
-      lineDirection = 'diagonal-ne' // yes, diagonal-ne
+      lineDirection = 'diagonal-ne'
       height = gridPixelMultiplier
     }
   } else if (!connectedStations && !isIndicator) {
@@ -1123,7 +1118,6 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     // and draw as normal
     if (lineDirection == 'singleton') {
       // Keep original width
-
     } else if (!isTransferStation) {
       width = gridPixelMultiplier / 2
     }
@@ -1145,7 +1139,7 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     }
   }
 
-  function drawDiagonalRectStation(orientation) {
+  function drawDiagonalRectStation(offset, orientation) {
     ctx.save()
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier)
     ctx.rotate(orientation)
@@ -1154,12 +1148,11 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     } else if (drawAsConnected && height > width) {
       height += gridPixelMultiplier
     }
-    rectArgs = [-0.5 * gridPixelMultiplier, -0.5 * gridPixelMultiplier, width, height]
     if (radius) {
-      primitiveRoundRect(ctx, ...rectArgs, radius)
+      primitiveRoundRect(ctx, ...offset, width, height, radius)
     } else {
-      ctx.strokeRect(...rectArgs)
-      ctx.fillRect(...rectArgs)
+      ctx.strokeRect(...offset, width, height)
+      ctx.fillRect(...offset, width, height)
     }
     ctx.restore()
   }
@@ -1199,23 +1192,19 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     rectArgs = [(x - 0.5) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, width, height]
   } else if (lineDirection == 'vertical' && !drawAsConnected) {
     rectArgs = [(x - 0.5) * gridPixelMultiplier, (y - 0.25) * gridPixelMultiplier, height, width]
-  } else if (lineDirection == 'diagonal-ne') {
-    drawDiagonalRectStation(Math.PI / -4)
+  } else if (lineDirection == 'diagonal-ne' && (drawAsConnected || isTransferStation)) {
+    drawDiagonalRectStation([-0.5 * gridPixelMultiplier, -0.5 * gridPixelMultiplier], Math.PI / -4)
     return
-  } else if (lineDirection == 'diagonal-se') {
-    drawDiagonalRectStation(Math.PI / 4)
+  } else if (lineDirection == 'diagonal-ne' && !drawAsConnected) {
+    drawDiagonalRectStation([-0.25 * gridPixelMultiplier, -0.5 * gridPixelMultiplier], Math.PI / -4)
+    return
+  } else if (lineDirection == 'diagonal-se' && (drawAsConnected || isTransferStation)) {
+    drawDiagonalRectStation([-0.5 * gridPixelMultiplier, -0.5 * gridPixelMultiplier], Math.PI / 4)
+    return
+  } else if (lineDirection == 'diagonal-se' && !drawAsConnected) {
+    drawDiagonalRectStation([-0.25 * gridPixelMultiplier, -0.5 * gridPixelMultiplier], Math.PI / 4)
     return
   }
-
-  // if (x > 108) {
-  // if (typeof connectedStations == 'object') {
-  //   console.log(`xy: ${x},${y}; wh: ${width},${height} xf: ${isTransferStation} ld: ${lineDirection} ra: ${rectArgs} cs: ${JSON.stringify(connectedStations)} dac: ${drawAsConnected}`)
-  // } else {
-    // console.log(`xy: ${x},${y}; wh: ${width},${height} xf: ${isTransferStation} ld: ${lineDirection} ra: ${rectArgs} cs: ${connectedStations} dac: ${drawAsConnected}`)
-  // }
-  // }
-  // xy: 15,57; wh: 20,60 xf: 0 ld: vertical ra: 290,1130,20,60
-  // 15,57; wh: 20,20 xf: 1 ld: horizontal ra: 290,1130,20,20
 
   if (radius) {
     // Unfortunately, performance on three separate calls
@@ -2981,6 +2970,22 @@ function getConnectedStations(x, y, metroMap) {
   // Finds connecting stations along a SINGLE direction,
   //  to aid in drawing one continuous station from multiple stations.
   // If applicable, returns a set of starting and ending x,y coordinates
+
+  // Known issue:
+  // If you have several stations set up along multiple directions, for example:
+  // SSSS
+  // S <---------
+  // S <---------
+  //    Then the stations with arrows won't be drawn.
+  // This is because the upper-leftmost station
+  //  identifies its longest connection left to right (4) and not up to down (3)
+  // The stations below have their longest connection up to down (3),
+  // but are considered "interior" to the upper-leftmost,
+  // and the stations aren't drawn to avoid overpainting.
+  // Fixing this would add a lot of complexity to a function that's already a lag on performance,
+  //  and in truth it's a weird use case.
+  // Workaround: If you want the arrowed stations to appear, use other station shapes for them.
+
   x = parseInt(x)
   y = parseInt(y)
 
