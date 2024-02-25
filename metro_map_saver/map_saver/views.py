@@ -3,7 +3,7 @@ from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, 
 from django.db.models import Count, F
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.generic.base import TemplateView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import FormView
@@ -355,6 +355,7 @@ class MapSimilarView(TemplateView):
 
 class CreatorNameMapView(TemplateView):
 
+    # @method_decorator(csrf_exempt) # Break glass in case of CSRF failure
     def post(self, request, **kwargs):
 
         """ Allow creators to name / "tag" their maps
@@ -541,6 +542,7 @@ class MapDataView(TemplateView):
 
         return render(request, 'MapDataView.html', context)
 
+    # @method_decorator(csrf_exempt) # Break glass in case of CSRF failure
     @method_decorator(never_cache)
     def post(self, request, **kwargs):
         mapdata = request.POST.get('metroMap')
