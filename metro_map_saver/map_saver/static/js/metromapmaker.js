@@ -942,11 +942,11 @@ function drawStation(ctx, x, y, metroMap, skipText) {
   if (!thisStationStyle || thisStationStyle == 'wmata') {
     drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation)
   } else if (thisStationStyle == 'circles-lg') {
-    drawCircleStation(ctx, x, y, metroMap, 0.3, gridPixelMultiplier / 2)
+    drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.3, gridPixelMultiplier / 2)
   } else if (thisStationStyle == 'circles-md') {
-    drawCircleStation(ctx, x, y, metroMap, 0.25, gridPixelMultiplier / 4)
+    drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.25, gridPixelMultiplier / 4)
   } else if (thisStationStyle == 'circles-sm') {
-    drawCircleStation(ctx, x, y, metroMap, 0.2, gridPixelMultiplier / 8)
+    drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.2, gridPixelMultiplier / 8)
   } else if (thisStationStyle == 'rect') {
     drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, 0, 0)
   } else if (thisStationStyle == 'rect-round') {
@@ -1024,15 +1024,22 @@ function drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation, outerCo
 
   if (isTransferStation) {
     // Outer circle
-    drawCircleStation(ctx, x, y, metroMap, 1.2, 0, outerColor, 0, true)
-    drawCircleStation(ctx, x, y, metroMap, 0.9, 0, innerColor, 0, true)
+    drawCircleStation(ctx, x, y, metroMap, isTransferStation, 1.2, 0, outerColor, 0, true)
+    drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.9, 0, innerColor, 0, true)
   }
 
-  drawCircleStation(ctx, x, y, metroMap, 0.6, 0, outerColor, 0, true)
-  drawCircleStation(ctx, x, y, metroMap, 0.3, 0, innerColor, 0, true)
+  drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.6, 0, outerColor, 0, true)
+  drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.3, 0, innerColor, 0, true)
 }
 
-function drawCircleStation(ctx, x, y, metroMap, stationCircleSize, lineWidth, fillStyle, strokeStyle, skipStroke) {
+function drawCircleStation(ctx, x, y, metroMap, isTransferStation, stationCircleSize, lineWidth, fillStyle, strokeStyle, skipStroke) {
+  if (isTransferStation && !fillStyle) {
+    fillStyle = '#' + getActiveLine(x, y, metroMap) // Looks a lot nicer than filled with #000
+  }
+  if (isTransferStation && mapLineWidth > 0.5 && !strokeStyle) {
+    strokeStyle = '#ffffff'
+    lineWidth = gridPixelMultiplier / 2
+  }
   ctx.fillStyle = fillStyle || '#ffffff';
   ctx.beginPath();
   ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * stationCircleSize, 0, Math.PI * 2, true);
@@ -1046,7 +1053,6 @@ function drawCircleStation(ctx, x, y, metroMap, stationCircleSize, lineWidth, fi
 }
 
 function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, strokeColor, fillColor, radius, isIndicator) {
-  // Maintainability: Probably a good candidate for cleaning this up, it's more spaghetti than I'd like
   var lineColor = '#' + getActiveLine(x, y, metroMap)
   var lineDirection = getLineDirection(x, y, metroMap)["direction"]
 
@@ -1055,7 +1061,16 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
   var connectedStations = getConnectedStations(x, y, metroMap)
   var thisStation = getStation(x, y, metroMap)
 
+  var width = gridPixelMultiplier
+  var height = gridPixelMultiplier
+
   if (mapLineWidth >= 0.5 && lineDirection != 'singleton') {
+    // If the lines are thick and this POINT isn't a singleton,
+    //  the rectangles should be black/white so they can be legible
+    ctx.strokeStyle = '#000000'
+    ctx.fillStyle = '#ffffff'
+  } else if (lineDirection == 'singleton' && (mapStationStyle == 'rect-round' || thisStation && thisStation['style'] == 'rect-round')) {
+    // A singleton POINT with a rect-round singleton station looks nice in black/white too.
     ctx.strokeStyle = '#000000'
     ctx.fillStyle = '#ffffff'
   } else {
@@ -1063,81 +1078,54 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     ctx.fillStyle = lineColor
   }
 
-  // Override useful for drawing station indicators
-  if (strokeColor) { ctx.strokeStyle = strokeColor }
-  if (fillColor) { ctx.fillStyle = fillColor }
-
-  if (isIndicator && typeof connectedStations !== 'undefined') {
-    // This is an interior connected station, draw it as a single point.
-    // (The "main" station in a connected station will be drawn as the whole)
-    ctx.strokeStyle = '#000000'
-    ctx.fillStyle = '#00ff00'
+  if (x == 18 && y == 58) {
+    // I'm guessing what's happening here is that these are being flagged as interior and getting skipped
+    debugger;
   }
 
-  if (isTransferStation || lineDirection == 'singleton') {
-    width = gridPixelMultiplier
-    height = gridPixelMultiplier
-    if (mapStationStyle == 'rect-round' || (thisStation && thisStation['style'] == 'rect-round')) {
-      radius = 2
-    } else {
-      radius = false
-    }
-  } else {
-    if (connectedStations === true) {
-      // Not eligible for connecting, draw as normal
-      width = gridPixelMultiplier / 2
-      height = gridPixelMultiplier
-    } else if (thisStation && connectedStations && connectedStations != 'singleton') {
-      // Connect these stations
-      // set rectSize (w, h) based on the x1, y1
-      dx = connectedStations.x1 - connectedStations.x0
-      dy = connectedStations.y1 - connectedStations.y0
-      width = ((dx + 1) * gridPixelMultiplier)
-      height = ((dy + 1) * gridPixelMultiplier)
-      drawAsConnected = true
+  if (connectedStations === true) {
+    // Not eligible for connecting, draw as normal
+    width = gridPixelMultiplier / 2
+  } else if (thisStation && connectedStations && connectedStations != 'singleton' && connectedStations != 'conflicting') {
+    // Connect these stations
+    // set rectSize (w, h) based on the x1, y1
+    dx = connectedStations.x1 - connectedStations.x0
+    dy = connectedStations.y1 - connectedStations.y0
+    width = (Math.abs(dx) + 1) * gridPixelMultiplier
+    height = (Math.abs(dy) + 1) * gridPixelMultiplier
+    drawAsConnected = true
 
-      if (dx > 0 && dy == 0) {
-        // This is a horizontally-connected station,
-        // the colors can't be relied on because
-        // getLineDirection() returns the direction for lines drawn with the same color
-        lineDirection = 'horizontal'
-      } else if (dx == 0 && dy > 0) {
-        lineDirection = 'vertical'
-      } else if (dx > 0 && dy > 0) {
-        // Line is going NE, station should be drawn SE
-        lineDirection = 'diagonal-se' // yes, diagonal-se
-        width = gridPixelMultiplier
-      } else if (dx > 0 && dy < 0) {
-        // Line is going SE, station should be drawn NE
-        lineDirection = 'diagonal-ne' // yes, diagonal-ne
-        height = gridPixelMultiplier
-      }
-    } else if (!connectedStations && !isIndicator) {
-      // Eligible for connecting, but it's an interior station.
-      // Don't draw this station.
-      return
-    } else if (connectedStations == 'singleton') {
-      // Use the width set via lineDirection == 'singleton',
-      // and draw as normal
+    if (dx > 0 && dy == 0) {
+      // This is a horizontally-connected station,
+      // the colors can't be relied on because
+      // getLineDirection() returns the direction for lines drawn with the same color
+      lineDirection = 'horizontal'
+    } else if (dx == 0 && dy > 0) {
+      lineDirection = 'vertical'
+    } else if (dx > 0 && dy > 0) {
+      // Line is going NE, station should be drawn SE
+      // XXX: At one point this was diagonal-se and it worked,
+      // then I made a lot of changes and now diagonal-se is wrong
+      // lineDirection = 'diagonal-se' // yes, diagonal-se
+      lineDirection = 'diagonal-ne'
       width = gridPixelMultiplier
+    } else if (dx > 0 && dy < 0) {
+      // Line is going SE, station should be drawn NE
+      lineDirection = 'diagonal-ne' // yes, diagonal-ne
       height = gridPixelMultiplier
-
-      if (mapStationStyle == 'rect-round' || (thisStation && thisStation['style'] == 'rect-round')) {
-        radius = 2
-      } else {
-        radius = false
-      }
     }
-  } // if xfer/singleton/connectedStations
+  } else if (!connectedStations && !isIndicator) {
+    // Eligible for connecting, but it's an interior station.
+    // Don't draw this station.
+    return
+  } else if (connectedStations == 'singleton') {
+    // Use the width set via lineDirection == 'singleton',
+    // and draw as normal
+    if (lineDirection == 'singleton') {
+      // Keep original width
 
-  if (!thisStation && isIndicator) {
-    // This isn't a station yet
-    width = gridPixelMultiplier
-    height = gridPixelMultiplier
-    if (mapStationStyle == 'rect-round' || (thisStation && thisStation['style'] == 'rect-round')) {
-      radius = 2
-    } else {
-      radius = false
+    } else if (!isTransferStation) {
+      width = gridPixelMultiplier / 2
     }
   }
 
@@ -1147,29 +1135,28 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     ctx.fillStyle = '#ffffff'
   }
 
-  function primitiveRoundRect(x, y, width, height, radius) {
-    // ctx.roundRect exists now but has abysmal performance,
-    //  but this is very performant
-    if (width < 2 * radius) { radius = width / 2 }
-    if (height < 2 * radius) { radius = height / 2 }
-    ctx.beginPath()
-    ctx.moveTo(x + radius, y)
-    ctx.arcTo(x + width, y, x + width, y + height, radius)
-    ctx.arcTo(x + width, y + height, x, y + height, radius)
-    ctx.arcTo(x, y + height, x, y, radius)
-    ctx.arcTo(x, y, x + width, y, radius)
-    ctx.stroke()
-    ctx.fill()
-    ctx.closePath()
+  if (!drawAsConnected || (!thisStation && isIndicator) ) {
+    // If it's not a station yet but it's an indicator,
+    // or if we're not drawing a connected station,
+    if (mapStationStyle == 'rect-round' || (thisStation && thisStation['style'] == 'rect-round')) {
+      radius = 2
+    } else {
+      radius = false
+    }
   }
 
   function drawDiagonalRectStation(orientation) {
     ctx.save()
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier)
     ctx.rotate(orientation)
+    if (drawAsConnected && width > height) {
+      width += gridPixelMultiplier
+    } else if (drawAsConnected && height > width) {
+      height += gridPixelMultiplier
+    }
     rectArgs = [-0.5 * gridPixelMultiplier, -0.5 * gridPixelMultiplier, width, height]
     if (radius) {
-      primitiveRoundRect(...rectArgs, radius)
+      primitiveRoundRect(ctx, ...rectArgs, radius)
     } else {
       ctx.strokeRect(...rectArgs)
       ctx.fillRect(...rectArgs)
@@ -1177,22 +1164,41 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     ctx.restore()
   }
 
-  // SVT: TODO:  Revisit all these parameters, checking for drawAsConnected & not
-  // oh dear I've made this way complicated haven't I
   if (isTransferStation) {
     ctx.lineWidth = gridPixelMultiplier / 2
   } else {
-    ctx.lineWidth = gridPixelMultiplier / 4  
+    ctx.lineWidth = gridPixelMultiplier / 4
   }
+
+  if (isIndicator && connectedStations === false) {
+    // Internal station
+    if (width > height) { width = height }
+    drawAsConnected = true // It's an internal station, draw the indicator in the center.
+  }
+
+  if (connectedStations == 'conflicting') {
+    // There's a station to the N, W, NW, or SW,
+    // but a different station in the other directions as well.
+    // Draw this as a singleton, otherwise it won't get drawn at all.
+    lineDirection = 'singleton'
+    if (width > height) { width = height }
+    drawAsConnected = false
+  }
+
+  // Override useful for drawing station indicators
+  if (strokeColor) { ctx.strokeStyle = strokeColor }
+  if (fillColor) { ctx.fillStyle = fillColor }
   
-  if (isTransferStation || lineDirection == 'singleton') {
+  if (lineDirection == 'singleton' || (!thisStation && isIndicator && (lineDirection == 'horizontal' || lineDirection == 'vertical'))) {
     rectArgs = [(x - 0.5) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, width, height]
-  } else if (lineDirection == 'horizontal') {
+  } else if (lineDirection == 'horizontal' && (drawAsConnected || isTransferStation)) {
     rectArgs = [(x - 0.5) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, width, height]
-  } else if (lineDirection == 'vertical' && drawAsConnected) {
+  } else if (lineDirection == 'horizontal' && !drawAsConnected) {
+    rectArgs = [(x - 0.25) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, width, height]
+  } else if (lineDirection == 'vertical' && (drawAsConnected || isTransferStation)) {
     rectArgs = [(x - 0.5) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, width, height]
   } else if (lineDirection == 'vertical' && !drawAsConnected) {
-    rectArgs = [(x - 0.5) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, height, height]
+    rectArgs = [(x - 0.5) * gridPixelMultiplier, (y - 0.25) * gridPixelMultiplier, height, width]
   } else if (lineDirection == 'diagonal-ne') {
     drawDiagonalRectStation(Math.PI / -4)
     return
@@ -1201,6 +1207,16 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     return
   }
 
+  // if (x > 108) {
+  // if (typeof connectedStations == 'object') {
+  //   console.log(`xy: ${x},${y}; wh: ${width},${height} xf: ${isTransferStation} ld: ${lineDirection} ra: ${rectArgs} cs: ${JSON.stringify(connectedStations)} dac: ${drawAsConnected}`)
+  // } else {
+    // console.log(`xy: ${x},${y}; wh: ${width},${height} xf: ${isTransferStation} ld: ${lineDirection} ra: ${rectArgs} cs: ${connectedStations} dac: ${drawAsConnected}`)
+  // }
+  // }
+  // xy: 15,57; wh: 20,60 xf: 0 ld: vertical ra: 290,1130,20,60
+  // 15,57; wh: 20,20 xf: 1 ld: horizontal ra: 290,1130,20,20
+
   if (radius) {
     // Unfortunately, performance on three separate calls
     //  (.roundRect, .stroke, .fill) is ABYSMAL,
@@ -1208,7 +1224,7 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     // .roundRect() seems new and not-yet optimized,
     //  but .rect() + .stroke() + .fill() suffers from the same issue.
     // Thankfully, assembling it via primitives is very performant
-    primitiveRoundRect(...rectArgs, radius)
+    primitiveRoundRect(ctx, ...rectArgs, radius)
   } else {
     ctx.strokeRect(...rectArgs)
     ctx.fillRect(...rectArgs)
@@ -1216,6 +1232,22 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
 
   return drawAsConnected
 } // drawStyledStation_rectangles
+
+function primitiveRoundRect(ctx, x, y, width, height, radius) {
+  // ctx.roundRect exists now but has abysmal performance,
+  //  but this is very performant
+  if (width < 2 * radius) { radius = width / 2 }
+  if (height < 2 * radius) { radius = height / 2 }
+  ctx.beginPath()
+  ctx.moveTo(x + radius, y)
+  ctx.arcTo(x + width, y, x + width, y + height, radius)
+  ctx.arcTo(x + width, y + height, x, y + height, radius)
+  ctx.arcTo(x, y + height, x, y, radius)
+  ctx.arcTo(x, y, x + width, y, radius)
+  ctx.stroke()
+  ctx.fill()
+  ctx.closePath()
+}
 
 function drawIndicator(x, y) {
   // Place a temporary station marker on the canvas;
@@ -1247,11 +1279,11 @@ function drawIndicator(x, y) {
   if (!thisStationStyle || thisStationStyle == 'wmata') {
     drawStyledStation_WMATA(ctx, x, y, activeMap, isTransferStation, '#000000', '#00ff00')
   } else if (thisStationStyle == 'circles-lg') {
-    drawCircleStation(ctx, x, y, activeMap, 0.3, gridPixelMultiplier / 2, '#00ff00', '#000000')
+    drawCircleStation(ctx, x, y, activeMap, isTransferStation, 0.3, gridPixelMultiplier / 2, '#00ff00', '#000000')
   } else if (thisStationStyle == 'circles-md') {
-    drawCircleStation(ctx, x, y, activeMap, 0.25, gridPixelMultiplier / 4, '#00ff00', '#000000')
+    drawCircleStation(ctx, x, y, activeMap, isTransferStation, 0.25, gridPixelMultiplier / 4, '#00ff00', '#000000')
   } else if (thisStationStyle == 'circles-sm') {
-    drawCircleStation(ctx, x, y, activeMap, 0.2, gridPixelMultiplier / 8, '#00ff00', '#000000')
+    drawCircleStation(ctx, x, y, activeMap, isTransferStation, 0.2, gridPixelMultiplier / 8, '#00ff00', '#000000')
   } else if (thisStationStyle == 'rect') {
     // For this and rect-round, I don't actually want to draw the one continuous station
     //  even if I could; these all should be individually selectable.
@@ -2989,56 +3021,158 @@ function getConnectedStations(x, y, metroMap) {
     return false
   }
 
-  if (W && shouldUseOvals(W)) { return false }
-  if (N && shouldUseOvals(N)) { return false }
-  if (NW && shouldUseOvals(NW)) { return false }
-  if (SW && shouldUseOvals(SW)) { return false }
-
   // Starting and ending coordinates for this oval station
   var coordinates = {
-    "x0": x,
-    "y0": y
+    "highest": {
+      'E': 0,
+      'S': 0,
+      'SE': 0,
+      'NE': 0
+    },
+    'E': {},
+    'S': {},
+    'N': {},
+    'W': {},
+    'NE': {},
+    'SE': {},
+    'SW': {},
+    'NW': {}
   }
 
-  if (E && shouldUseOvals(E)) {    
-    var xn = x + 1
+  if (E && shouldUseOvals(E)) {
+    var xn = x
     var yn = y
     do {
-      coordinates['x1'] = xn
-      coordinates['y1'] = yn
-      xn = xn + 1
-    } while (E = getStation(xn, yn, metroMap))
-    return coordinates
-  } else if (S && shouldUseOvals(S)) {
-    var xn = x
-    var yn = y + 1
-    do {
-      coordinates['x1'] = xn
-      coordinates['y1'] = yn
-      yn = yn + 1
-    } while (S = getStation(xn, yn, metroMap))
-    return coordinates
-  } else if (NE && shouldUseOvals(NE)) {
-    var xn = x + 1
-    var yn = y - 1
-    do {
-      coordinates['x1'] = xn
-      coordinates['y1'] = yn
-      xn = xn + 1
-      yn = yn - 1
-    } while (NE = getStation(xn, yn, metroMap))
-    return coordinates
-  } else if (SE && shouldUseOvals(SE)) {
-    var xn = x + 1
-    var yn = y + 1
-    do {
-      coordinates['x1'] = xn
-      coordinates['y1'] = yn
-      xn = x + 1
-      yn = yn + 1
-    } while (SE = getStation(xn, yn, metroMap))
-    return coordinates
+      xn += 1
+    } while (getStation(xn, yn, metroMap))
+    coordinates['E'] = {
+      'x1': xn - 1,
+      'y1': yn
+    }
+    coordinates['highest']['E'] = (xn - x) - 1
   }
+  if (S && shouldUseOvals(S)) {
+    var xn = x
+    var yn = y
+    do {
+      yn += 1
+    } while (getStation(xn, yn, metroMap))
+    coordinates['S'] = {
+      'x1': xn,
+      'y1': yn - 1
+    }
+    coordinates['highest']['S'] = (yn - y) - 1
+  }
+  if (NE && shouldUseOvals(NE)) {
+    var xn = x
+    var yn = y
+    do {
+      xn += 1
+      yn -= 1
+    } while (getStation(xn, yn, metroMap))
+    coordinates['NE'] = {
+      'x1': xn - 1,
+      'y1': yn + 1
+    }
+    coordinates['highest']['NE'] = (xn - x) - 1
+  }
+  if (SE && shouldUseOvals(SE)) {
+    var xn = x
+    var yn = y
+    do {
+      xn += 1
+      yn += 1
+    } while (getStation(xn, yn, metroMap))
+    coordinates['SE'] = {
+      'x1': xn - 1,
+      'y1': yn - 1
+    }
+    coordinates['highest']['SE'] = (xn - x) - 1
+  }
+
+  // Next check W, N, NW, SW -- if we find anything here,
+  //  add those totals to E, S, SE, NE and flag that we're internal
+  if (W && shouldUseOvals(W)) {
+    var xn = x
+    var yn = y
+    do {
+      xn -= 1
+    } while (getStation(xn, yn, metroMap))
+    coordinates['W'] = {
+      'x1': xn + 1,
+      'y1': yn
+    }
+    coordinates['E']['internal'] = true
+    coordinates['highest']['E'] += Math.abs(xn - x) - 1
+  }
+  if (N && shouldUseOvals(N)) {
+    var xn = x
+    var yn = y
+    do {
+      yn -= 1
+    } while (getStation(xn, yn, metroMap))
+    coordinates['N'] = {
+      'x1': xn,
+      'y1': yn + 1
+    }
+    coordinates['S']['internal'] = true
+    coordinates['highest']['S'] += Math.abs(yn - y) - 1
+  }
+  if (NW && shouldUseOvals(NW)) {
+    var xn = x
+    var yn = y
+    do {
+      xn -= 1
+      yn -= 1
+    } while (getStation(xn, yn, metroMap))
+    coordinates['NW'] = {
+      'x1': xn + 1,
+      'y1': yn + 1
+    }
+    coordinates['SE']['internal'] = true
+    coordinates['highest']['SE'] += Math.abs(xn - x) - 1
+  }
+  if (SW && shouldUseOvals(SW)) {
+    var xn = x
+    var yn = y
+    do {
+      xn -= 1
+      yn += 1
+    } while (getStation(xn, yn, metroMap))
+    coordinates['SW'] = {
+      'x1': xn + 1,
+      'y1': yn - 1
+    }
+    coordinates['NE']['internal'] = true
+    coordinates['highest']['NE'] += Math.abs(xn - x) - 1
+  }
+
+  var numConnections = Object.values(coordinates['highest']).filter((n) => Number.isNaN(n) !== true)
+  var mostStations = Math.max(...Object.values(numConnections))
+
+  if (numConnections.length == 0) {
+    return false
+  }
+
+  if (numConnections.indexOf(mostStations) != numConnections.lastIndexOf(mostStations)) {
+    // More than one direction has an equal (highest) number of connecting stations
+    return 'conflicting'
+  }
+
+  var longestConnection = Object.keys(coordinates['highest']).filter((n) => Number.isNaN(n) !== true).sort(function(a,b){return coordinates['highest'][a]-coordinates['highest'][b]}).reverse()
+
+  if (longestConnection && longestConnection[0]) {
+    if (coordinates[longestConnection[0]]['internal']) {
+      return false
+    }
+    return {
+      'x0': x,
+      'y0': y,
+      'x1': coordinates[longestConnection[0]]['x1'],
+      'y1': coordinates[longestConnection[0]]['y1']
+    }
+  }
+
   return true // Draw, it's not a connected station
 }
 
