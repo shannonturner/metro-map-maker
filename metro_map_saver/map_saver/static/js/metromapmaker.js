@@ -1143,11 +1143,25 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     ctx.save()
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier)
     ctx.rotate(orientation)
+
+    // Looks great at stationSpans of 2-9 and less good above that
     if (drawAsConnected && width > height) {
-      width += gridPixelMultiplier
+      var stationSpan = (width / gridPixelMultiplier)
+      if (stationSpan < 4)
+        width += (stationSpan * (gridPixelMultiplier / 4))
+      else
+        width += (stationSpan * (gridPixelMultiplier / 3))
     } else if (drawAsConnected && height > width) {
-      height += gridPixelMultiplier
+      var stationSpan = (height / gridPixelMultiplier)
+      if (stationSpan < 4)
+        height += (stationSpan * (gridPixelMultiplier / 4))
+      else
+        height += (stationSpan * (gridPixelMultiplier / 3))
     }
+
+    if (MMMDEBUG && x == $('#station-coordinates-x').val() && y == $('#station-coordinates-y').val())
+      console.log(`stationSpan: ${stationSpan}, w1: ${width} h1: ${height}`)
+
     if (radius) {
       primitiveRoundRect(ctx, ...offset, width, height, radius)
     } else {
@@ -1181,6 +1195,9 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
   // Override useful for drawing station indicators
   if (strokeColor) { ctx.strokeStyle = strokeColor }
   if (fillColor) { ctx.fillStyle = fillColor }
+
+  if (MMMDEBUG && x == $('#station-coordinates-x').val() && y == $('#station-coordinates-y').val())
+      console.log(`xy: ${x},${y}; wh: ${width},${height} xf: ${isTransferStation} ld: ${lineDirection} ra: ${rectArgs} cs: ${connectedStations} dac: ${drawAsConnected}`)
   
   if (lineDirection == 'singleton' || (!thisStation && isIndicator && (lineDirection == 'horizontal' || lineDirection == 'vertical'))) {
     rectArgs = [(x - 0.5) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, width, height]
