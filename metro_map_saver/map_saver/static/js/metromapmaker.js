@@ -1036,7 +1036,7 @@ function drawCircleStation(ctx, x, y, metroMap, isTransferStation, stationCircle
   if (isTransferStation && !fillStyle) {
     fillStyle = '#' + getActiveLine(x, y, metroMap) // Looks a lot nicer than filled with #000
   }
-  if (isTransferStation && mapLineWidth > 0.5 && !strokeStyle) {
+  if (isTransferStation && mapLineWidth >= 0.5 && !strokeStyle) {
     strokeStyle = '#ffffff'
     lineWidth = gridPixelMultiplier / 2
   }
