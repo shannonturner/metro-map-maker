@@ -19,13 +19,12 @@ var mapHistory = []; // A list of the last several map objects
 var maxUndoHistory = 25;
 var currentlyClickingAndDragging = false;
 var mapLineWidth = 1
-var mapStationStyle = 'rect-round'
+var mapStationStyle = 'wmata'
 var menuIsCollapsed = false
 var mapSize = undefined // Not the same as gridRows/gridCols, which is the potential size; this gives the current maximum in either axis
 var adjacentPoints = undefined
 
-mapDataVersion = 2 // DEBUG; TODO: REMOVE THIS
-MMMDEBUG = true
+MMMDEBUG = false
 
 if (typeof mapDataVersion === 'undefined' || mapDataVersion == 1) {
   mapDataVersion = 1
@@ -601,8 +600,6 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
   x = parseInt(x);
   y = parseInt(y);
 
-  // console.log(`in drawArea for ${x},${y}`)
-
   ctx.lineWidth = gridPixelMultiplier * mapLineWidth;
   ctx.lineCap = 'round';
 
@@ -812,7 +809,7 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
     }
   }
   t1 = performance.now();
-  console.log('drawCanvas finished in ' + (t1 - t0) + 'ms')
+  if (MMMDEBUG) { console.log('drawCanvas finished in ' + (t1 - t0) + 'ms') }
 } // drawCanvas(metroMap)
 
 function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth) {
@@ -930,6 +927,7 @@ function drawStation(ctx, x, y, metroMap, skipText) {
   }
 
   var thisStationStyle = station["style"] || mapStationStyle
+  var drawAsConnected = false
 
   if (!thisStationStyle || thisStationStyle == 'wmata') {
     drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation)
@@ -1028,9 +1026,12 @@ function drawCircleStation(ctx, x, y, metroMap, isTransferStation, stationCircle
   if (isTransferStation && !fillStyle) {
     fillStyle = '#' + getActiveLine(x, y, metroMap) // Looks a lot nicer than filled with #000
   }
-  if (isTransferStation && mapLineWidth >= 0.5 && !strokeStyle) {
+  if (!strokeStyle && isTransferStation && mapLineWidth >= 0.5) {
     strokeStyle = '#ffffff'
     lineWidth = gridPixelMultiplier / 2
+  } else if (!strokeStyle && isTransferStation && mapLineWidth < 0.5 && stationCircleSize <= 0.25) {
+    // Make the smallest (circle-md & circle-sm) stations easier to see
+    strokeStyle = '#000000'
   }
   ctx.fillStyle = fillStyle || '#ffffff';
   ctx.beginPath();
@@ -1369,8 +1370,6 @@ function autoLoad() {
   // 2. from a map object saved in localStorage
   // 3. If neither 1 or 2, load a preset map (WMATA)
 
-  snapCanvasToGrid();
-
   // Load from the savedMapData injected into the index.html template
   if (typeof savedMapData !== 'undefined') {
     activeMap = savedMapData
@@ -1393,6 +1392,7 @@ function autoLoad() {
         drawCanvas()
       } else { // Success, load the map
         activeMap = JSON.parse(activeMap)
+        setMapStyle(activeMap)
         mapSize = setMapSize(activeMap, mapDataVersion > 1)
         loadMapFromObject(activeMap)
         setTimeout(function() {
@@ -1408,6 +1408,7 @@ function autoLoad() {
     return
   } // else
 
+  setMapStyle(activeMap)
   mapSize = setMapSize(activeMap, mapDataVersion > 1)
   loadMapFromObject(activeMap)
 
@@ -1503,6 +1504,13 @@ function setMapSize(metroMapObject, getFromGlobal) {
   $('#canvas-container').width(Math.round($('#canvas-container').width() / gridCols) * gridCols)
   $('#canvas-container').height(Math.round($('#canvas-container').width() / gridRows) * gridRows)
 } // setMapSize(metroMapObject)
+
+function setMapStyle(metroMap) {
+  if (metroMap['global'] && metroMap['global']['style']) {
+    mapLineWidth = metroMap['global']['style']['mapLineWidth'] || mapLineWidth
+    mapStationStyle = metroMap['global']['style']['mapStationStyle'] || mapStationStyle
+  }
+} // setMapStyle(metroMap)
 
 function isMapStretchable(size) {
   // Determine if the map is small enough to be stretched
@@ -2696,6 +2704,13 @@ $(document).ready(function() {
     }
     $('.map-style-line.active-mapstyle').removeClass('active-mapstyle')
     $(this).addClass('active-mapstyle')
+    if (activeMap && activeMap['global'] && activeMap['global']['style']) {
+      activeMap['global']['style']['mapLineWidth'] = mapLineWidth
+    } else if (activeMap && activeMap['global']) {
+      activeMap['global']['style'] = {
+        'mapLineWidth': mapLineWidth
+      }
+    }
     drawCanvas()
   })
 
@@ -2704,6 +2719,13 @@ $(document).ready(function() {
     $('.map-style-station.active-mapstyle').removeClass('active-mapstyle')
     $(this).addClass('active-mapstyle')
     $('#reset-all-station-styles').text('Set ALL stations to ' + $(this).text())
+    if (activeMap && activeMap['global'] && activeMap['global']['style']) {
+      activeMap['global']['style']['mapStationStyle'] = mapStationStyle
+    } else if (activeMap && activeMap['global']) {
+      activeMap['global']['style'] = {
+        'mapStationStyle': mapStationStyle
+      }
+    }
     drawCanvas()
   })
 
