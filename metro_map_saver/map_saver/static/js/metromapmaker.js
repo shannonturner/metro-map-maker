@@ -911,14 +911,6 @@ function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth) {
       ctx.fill();
     }
   } else {
-    if (mapStationStyle == 'rect' || (thisStation && thisStation['style'] == 'rect')) {
-      // If this point maybe used to be a singleton, redraw the whole square and repaint
-      // Note: We can't check erasedLine here because the first (erasing) call to drawPoint()
-      //  happens before updateMapObject, so this doesn't know whether it is no longer a singleton or not
-      ctx.fillStyle = '#ffffff'
-      ctx.fillRect((x - 0.5) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, gridPixelMultiplier, gridPixelMultiplier)
-    }
-
     // Doing one stroke at the end once all the lines are known
     //  rather than several strokes will improve performance
     ctx.stroke()
