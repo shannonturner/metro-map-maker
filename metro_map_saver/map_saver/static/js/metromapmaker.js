@@ -2694,6 +2694,12 @@ $(document).ready(function() {
       $('#tool-map-style').removeClass('active')
     }
     $('.tooltip').hide();
+    if (mapLineWidth == 0.75) {
+      $('#tool-map-style-line-750').addClass('active-mapstyle')
+    } else {
+      $('#tool-map-style-line-' + (mapLineWidth * 1000)).addClass('active-mapstyle')
+    }
+    $('#tool-map-style-station-' + mapStationStyle).addClass('active-mapstyle')
   })
 
   $('.map-style-line').on('click', function() {

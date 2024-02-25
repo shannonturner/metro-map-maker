@@ -935,3 +935,7 @@ class HighestRatedMapsView(ListView):
         context = super().get_context_data(**kwargs)
         context['showing_best'] = True
         return context
+
+
+class CreditsView(TemplateView):
+    template_name = 'credits.html'

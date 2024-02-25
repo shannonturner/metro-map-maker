@@ -49,6 +49,8 @@ urlpatterns = [
     path('sameday/<slug:urlhash>', map_saver.views.SameDayView.as_view(), name='sameday'),
     path('best/', map_saver.views.HighestRatedMapsView.as_view(), name='best'),
 
+    path('credits/', map_saver.views.CreditsView.as_view(), name='credits'),
+
     # Admin HQ
     path('admin/home/', never_cache(map_saver.views.AdminHomeView.as_view()), name='admin_home'),
 
