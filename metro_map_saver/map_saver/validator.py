@@ -77,27 +77,24 @@ def html_dom_id_safe(string):
 
     return re.sub('[^A-Za-z0-9\- \_]', '', string)
 
-def validate_metro_map_classic_v2(metro_map):
+def validate_metro_map_v2(metro_map):
 
-    """ Validate the MetroMap object, with a more compact, optimized data representation.
-
-        TODO: CONSIDER: Fall back to using validate_metro_map if v2 isn't present? or does this keep old maps forever in the past
-            ^ I think the way around that is on the first real change to an existing map, add ['global']['data_version'] = 2 at the JS level
-
-        TODO: Convert to using forms.py and have clean_mapdata() call this
+    """ Validate the MetroMap object, with a more compact, optimized data representation
     """
 
-    metro_map = json.loads(metro_map)
+    # TODO: Implement this!
+    # ValidationErrors: Anything that appears before the first colon will be internal-only;
+    #   everything else is user-facing.
+    # It's a dict already!
 
     validated_metro_map = {
         'global': {
-            'lines': {
-
-            },
-            'map_type': 'classic',
+            'lines': {},
             'data_version': 2,
         }
     }
+
+    return validated_metro_map
 
 def validate_metro_map(metro_map):
     
@@ -118,9 +115,6 @@ def validate_metro_map(metro_map):
     #         {"lines":{"bd1038":{"displayName":"Red Line"},"df8600":{"displayName":"Orange Line"},"f0ce15":{"displayName":"Yellow Line"},"00b251":{"displayName":"Green Line"},"0896d7":{"displayName":"Blue Line"},"662c90":{"displayName":"Purple Line"},"a2a2a2":{"displayName":"Silver Line"}}}}
 
     validated_metro_map = {}
-
-    # The map is passed through as a string, which needs to be converted to a dictionary first
-    metro_map = json.loads(metro_map)
 
     # Formatting the assertion strings:
     # Anything that appears before the first colon will be internal-only;

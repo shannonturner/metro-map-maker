@@ -22,7 +22,6 @@ from django.views.generic.dates import (
 import base64
 import datetime
 import difflib
-import hashlib
 import json
 import logging
 import os
@@ -35,7 +34,10 @@ from taggit.models import Tag
 
 from moderate.models import ActivityLog
 from citysuggester.models import TravelSystem
-from .forms import RateForm
+from .forms import (
+    CreateMapForm,
+    RateForm,
+)
 from .models import SavedMap
 from .validator import is_hex, sanitize_string, validate_metro_map, hex64
 
@@ -549,30 +551,41 @@ class MapDataView(TemplateView):
 
         context = {}
 
-        try:
-            mapdata = validate_metro_map(mapdata)
-        except AssertionError as e:
-            # Anything that appears before the first colon will be internal-only;
-            #   everything else is user-facing.
-            context['error'] = '[ERROR] {0}'.format(' '.join(str(e).split(':')[1:]))
-            logger.error('[ERROR] [FAILEDVALIDATION] ({0}); mapdata: {1}'.format(e, mapdata))
-        else:
-            urlhash = hex64(hashlib.sha256(str(mapdata).encode('utf-8')).hexdigest()[:12])
+        form = CreateMapForm({'mapdata': mapdata})
+        if form.is_valid():
+            mapdata = form.cleaned_data['mapdata']
+            urlhash = form.cleaned_data['urlhash']
+            naming_token = form.cleaned_data['naming_token']
+            data_version = form.cleaned_data['data_version']
             try:
                 # Doesn't override the saved map if it already exists.
                 saved_map = SavedMap.objects.only('urlhash').get(urlhash=urlhash)
                 context['saved_map'] = f'{urlhash},'
             except ObjectDoesNotExist:
-                saved_map = SavedMap.objects.create(**{
-                    'urlhash': urlhash,
-                    'mapdata': json.dumps(mapdata),
-                    'naming_token': hashlib.sha256('{0}'.format(random.randint(1, 100000)).encode('utf-8')).hexdigest(),
+                if data_version == 2:
+                    saved_map = SavedMap.objects.create(**{
+                        'urlhash': urlhash,
+                        'data': mapdata,
+                        'naming_token': naming_token,
                     })
-                context['saved_map'] = f'{saved_map.urlhash},{saved_map.naming_token}'
+                else:
+                    saved_map = SavedMap.objects.create(**{
+                        'urlhash': urlhash,
+                        'mapdata': json.dumps(mapdata),
+                        'naming_token': naming_token,
+                    })
+                context['saved_map'] = f'{urlhash},{naming_token}'
             except MultipleObjectsReturned:
                 # This should never happen, but it happened once
                 # Perhaps this was due to a race condition?
                 context['saved_map'] = f'{urlhash},'
+        else:
+            # Anything that appears before the first colon will be internal-only;
+            #   everything else is user-facing.
+            errors = form.errors.get('mapdata', [])
+            errors = '[ERROR] {0}'.format(' '.join(str(errors).split(':')[1:]).split('</')[0])
+            context['error'] = errors
+            logger.error('[ERROR] [FAILEDVALIDATION] ({0}); mapdata: {1}'.format(errors, mapdata))
 
         return render(request, 'MapDataView.html', context)
 

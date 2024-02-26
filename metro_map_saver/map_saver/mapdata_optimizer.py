@@ -8,7 +8,7 @@ from .validator import VALID_XY
 
 SVG_TEMPLATE = Template('''
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ canvas_size|default:80 }} {{ canvas_size|default:80 }}">
-{#{% spaceless %}#} {# DEBUG #}
+{#{% spaceless %}#} {# DEBUG; TODO: UNCOMMENT #}
 {% load metromap_utils %}
 {% if stations %}
     <style>text { font: 1px Helvetica; font-weight: 600; white-space: pre; }</style>
