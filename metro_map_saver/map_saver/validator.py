@@ -1,13 +1,20 @@
 import json
+import logging
 import re
 import unicodedata
 from .html_color_names import html_color_name_fragments
 
-# metro_map = {"0":{"26":{"line":"a2a2a2"}},"1":{"26":{"line":"a2a2a2"}},"2":{"27":{"line":"a2a2a2"}},"3":{"27":{"line":"a2a2a2"}},"4":{"27":{"line":"a2a2a2"}},"6":{"28":{"line":"a2a2a2"}},"7":{"28":{"line":"a2a2a2"}},"9":{"29":{"line":"a2a2a2"}},"10":{"29":{"line":"a2a2a2"}},"11":{"28":{"line":"a2a2a2"},"29":{"line":"a2a2a2"}},"12":{"28":{"line":"a2a2a2"}},"13":{"24":{"line":"df8600"},"28":{"line":"a2a2a2"}},"14":{"25":{"line":"df8600"},"28":{"line":"a2a2a2"}},"15":{"27":{"line":"a2a2a2"}},"16":{"25":{"line":"df8600"},"27":{"line":"a2a2a2"}},"18":{"27":{"line":"a2a2a2"}},"20":{"26":{"line":"df8600"},"27":{"line":"a2a2a2"}},"21":{"27":{"line":"a2a2a2"}},"22":{"27":{"line":"a2a2a2"}},"23":{"27":{"line":"df8600"}},"24":{"28":{"line":"a2a2a2"}},"25":{"29":{"line":"a2a2a2"}},"27":{"28":{"line":"df8600"},"30":{"line":"a2a2a2"}},"29":{"31":{"line":"a2a2a2"}},"31":{"30":{"line":"df8600"},"32":{"line":"a2a2a2"}},"32":{"32":{"line":"a2a2a2"}},"33":{"32":{"line":"a2a2a2"}},"34":{"31":{"line":"df8600"},"32":{"line":"a2a2a2"},"33":{"line":"a2a2a2"}},"35":{"33":{"line":"a2a2a2"}},"37":{"34":{"line":"a2a2a2"}},"38":{"33":{"line":"df8600"},"35":{"line":"a2a2a2"}},"39":{"10":{"line":"bd1038"},"34":{"line":"df8600"},"44":{"line":"0896d7"},"45":{"line":"0896d7"},"46":{"line":"0896d7"},"47":{"line":"0896d7"},"48":{"line":"0896d7"}},"40":{"36":{"line":"a2a2a2"},"37":{"line":"0896d7"},"38":{"line":"0896d7"},"39":{"line":"0896d7"},"40":{"line":"0896d7"},"41":{"line":"0896d7"},"42":{"line":"0896d7"},"43":{"line":"0896d7"},"44":{"line":"0896d7"}},"41":{"14":{"line":"bd1038"},"35":{"line":"df8600"},"37":{"line":"0896d7"},"38":{"line":"f0ce15"},"39":{"line":"f0ce15"},"40":{"line":"f0ce15"},"41":{"line":"f0ce15"},"42":{"line":"f0ce15"},"43":{"line":"f0ce15"},"44":{"line":"f0ce15","station":{"name":"kjjk","lines":["f0ce15"]}},"45":{"line":"f0ce15"},"46":{"line":"f0ce15"},"47":{"line":"f0ce15"},"48":{"line":"f0ce15"},"49":{"line":"f0ce15"}},"42":{"35":{"line":"df8600"},"36":{"line":"0896d7"},"37":{"line":"0896d7"}},"43":{"20":{"line":"bd1038"},"34":{"line":"f0ce15"},"35":{"line":"f0ce15"},"36":{"line":"0896d7"}},"44":{"31":{"line":"f0ce15"},"32":{"line":"f0ce15"},"33":{"line":"f0ce15"},"34":{"line":"00b251"},"35":{"line":"00b251"},"36":{"line":"00b251"},"37":{"line":"00b251"},"38":{"line":"a2a2a2"}},"45":{"25":{"line":"bd1038"},"30":{"line":"f0ce15"},"31":{"line":"f0ce15"},"33":{"line":"00b251"},"34":{"line":"00b251"},"37":{"line":"0896d7"},"38":{"line":"00b251"},"39":{"line":"00b251"}},"46":{"26":{"line":"bd1038"},"30":{"line":"f0ce15"},"32":{"line":"00b251"},"33":{"line":"00b251"},"36":{"line":"df8600"},"37":{"line":"0896d7"},"39":{"line":"00b251"},"40":{"line":"a2a2a2"}},"47":{"28":{"line":"bd1038"},"30":{"line":"f0ce15"},"32":{"line":"00b251"},"37":{"line":"0896d7"},"38":{"line":"0896d7"},"40":{"line":"a2a2a2"},"41":{"line":"00b251"}},"48":{"28":{"line":"bd1038","station":{"name":"suilng_","lines":["bd1038","f0ce15","0896d7"]}},"29":{"line":"bd1038"},"30":{"line":"f0ce15"},"32":{"line":"00b251"},"37":{"line":"df8600"},"38":{"line":"0896d7"},"41":{"line":"a2a2a2"}},"49":{"28":{"line":"bd1038"},"29":{"line":"bd1038"},"30":{"line":"f0ce15"},"32":{"line":"00b251"},"37":{"line":"df8600"},"38":{"line":"0896d7"},"41":{"line":"a2a2a2"}},"50":{"27":{"line":"bd1038"},"28":{"line":"bd1038"},"30":{"line":"f0ce15"},"31":{"line":"00b251"},"32":{"line":"00b251"},"37":{"line":"df8600"},"38":{"line":"df8600"},"39":{"line":"0896d7"},"40":{"line":"a2a2a2"},"42":{"line":"00b251"}},"51":{"25":{"line":"bd1038"},"29":{"line":"f0ce15"},"30":{"line":"00b251"},"31":{"line":"00b251"},"37":{"line":"df8600"},"39":{"line":"a2a2a2"},"42":{"line":"00b251"},"43":{"line":"00b251"}},"52":{"24":{"line":"bd1038"},"28":{"line":"f0ce15"},"29":{"line":"f0ce15"},"30":{"line":"00b251"},"37":{"line":"df8600"},"39":{"line":"0896d7"},"43":{"line":"00b251"},"44":{"line":"00b251"},"45":{"line":"00b251"},"46":{"line":"00b251"}},"53":{"23":{"line":"bd1038"},"24":{"line":"bd1038"},"27":{"line":"f0ce15"},"28":{"line":"f0ce15"},"29":{"line":"00b251","station":{"name":"fyghj","lines":["00b251"]}},"38":{"line":"a2a2a2"},"39":{"line":"0896d7"},"46":{"line":"00b251"}},"54":{"22":{"line":"bd1038"},"23":{"line":"bd1038"},"26":{"line":"f0ce15"},"27":{"line":"f0ce15"},"28":{"line":"00b251"},"29":{"line":"00b251"},"36":{"line":"df8600"},"37":{"line":"df8600"},"38":{"line":"a2a2a2"},"39":{"line":"0896d7"}},"55":{"21":{"line":"bd1038"},"22":{"line":"bd1038"},"25":{"line":"f0ce15"},"26":{"line":"f0ce15"},"27":{"line":"00b251"},"28":{"line":"00b251"},"36":{"line":"df8600"},"39":{"line":"0896d7"},"46":{"line":"00b251"}},"56":{"18":{"line":"bd1038"},"19":{"line":"bd1038"},"20":{"line":"bd1038"},"21":{"line":"bd1038"},"24":{"line":"f0ce15"},"25":{"line":"f0ce15"},"27":{"line":"00b251"},"36":{"line":"a2a2a2"},"39":{"line":"0896d7"},"46":{"line":"00b251"},"47":{"line":"00b251"}},"57":{"13":{"line":"bd1038"},"14":{"line":"bd1038"},"15":{"line":"bd1038"},"16":{"line":"bd1038"},"17":{"line":"bd1038"},"22":{"line":"f0ce15"},"23":{"line":"f0ce15"},"26":{"line":"00b251"},"35":{"line":"df8600"},"39":{"line":"0896d7"},"45":{"line":"00b251"},"46":{"line":"00b251"}},"58":{"8":{"line":"bd1038"},"14":{"line":"bd1038"},"21":{"line":"f0ce15"},"22":{"line":"f0ce15"},"24":{"line":"00b251"},"25":{"line":"00b251"},"35":{"line":"df8600"},"36":{"line":"a2a2a2"},"39":{"line":"0896d7"},"45":{"line":"00b251"}},"59":{"4":{"line":"bd1038"},"5":{"line":"bd1038"},"6":{"line":"bd1038"},"7":{"line":"bd1038"},"8":{"line":"bd1038"},"9":{"line":"bd1038"},"10":{"line":"bd1038"},"11":{"line":"bd1038"},"20":{"line":"f0ce15"},"21":{"line":"f0ce15"},"22":{"line":"00b251"},"23":{"line":"00b251"},"35":{"line":"a2a2a2"},"39":{"line":"0896d7","station":{"name":"79yuhikjn_","lines":["0896d7"]}},"45":{"line":"00b251"}},"60":{"20":{"line":"f0ce15"},"21":{"line":"00b251"},"22":{"line":"00b251"},"34":{"line":"df8600"},"38":{"line":"0896d7"},"44":{"line":"00b251"},"45":{"line":"00b251"}},"61":{"14":{"line":"f0ce15"},"19":{"line":"00b251"},"20":{"line":"00b251"},"35":{"line":"a2a2a2"},"37":{"line":"0896d7"},"43":{"line":"00b251"},"44":{"line":"00b251"}},"62":{"17":{"line":"f0ce15"},"18":{"line":"00b251"},"19":{"line":"00b251"},"34":{"line":"df8600"},"36":{"line":"0896d7"},"37":{"line":"0896d7"},"43":{"line":"00b251"}},"63":{"16":{"line":"f0ce15"},"17":{"line":"00b251"},"18":{"line":"00b251"},"36":{"line":"0896d7"}},"64":{"15":{"line":"f0ce15"},"16":{"line":"00b251"},"17":{"line":"00b251"},"18":{"line":"00b251"},"34":{"line":"df8600"},"35":{"line":"a2a2a2"}},"65":{"14":{"line":"f0ce15"},"15":{"line":"00b251"},"16":{"line":"00b251"},"17":{"line":"00b251"},"33":{"line":"df8600"},"34":{"line":"df8600"},"35":{"line":"0896d7"}},"66":{"12":{"line":"f0ce15"},"13":{"line":"f0ce15"},"14":{"line":"f0ce15"},"15":{"line":"00b251"},"17":{"line":"f0ce15"},"33":{"line":"df8600"},"35":{"line":"a2a2a2"}},"67":{"11":{"line":"f0ce15"},"12":{"line":"f0ce15"},"13":{"line":"f0ce15"},"14":{"line":"00b251"},"17":{"line":"00b251"},"18":{"line":"00b251"},"32":{"line":"df8600"},"35":{"line":"0896d7"}},"68":{"8":{"line":"f0ce15"},"10":{"line":"f0ce15"},"11":{"line":"f0ce15"},"13":{"line":"00b251"},"14":{"line":"00b251"},"31":{"line":"df8600"},"35":{"line":"0896d7"}},"69":{"12":{"line":"00b251"},"13":{"line":"00b251"},"34":{"line":"0896d7"},"35":{"line":"a2a2a2"}},"70":{"30":{"line":"df8600"}},"71":{"29":{"line":"df8600"},"33":{"line":"0896d7"},"35":{"line":"a2a2a2"}},"72":{"32":{"line":"0896d7"},"35":{"line":"a2a2a2"}},"73":{"28":{"line":"df8600"},"32":{"line":"0896d7"},"35":{"line":"a2a2a2"}},"74":{"27":{"line":"df8600"},"32":{"line":"0896d7"}},"75":{"27":{"line":"df8600"},"32":{"line":"0896d7"}},"76":{"26":{"line":"df8600"}},"77":{"26":{"line":"df8600"}},"78":{"25":{"line":"df8600"},"26":{"line":"df8600"}},"global":{"lines":{"bd1038":{"displayName":"Red Line"},"df8600":{"displayName":"Orange Line"},"f0ce15":{"displayName":"Yellow Line"},"00b251":{"displayName":"Green Line"},"0896d7":{"displayName":"Blue Line"},"662c90":{"displayName":"Purple Line"},"a2a2a2":{"displayName":"Silver Line"}}}}
-# mm = """{"0":{"26":{"line":"a2a2a2"}},"1":{"26":{"line":"a2a2a2"}},"2":{"27":{"line":"a2a2a2"}},"3":{"27":{"line":"a2a2a2"}},"4":{"27":{"line":"a2a2a2"}},"6":{"28":{"line":"a2a2a2"}},"7":{"28":{"line":"a2a2a2"}},"9":{"29":{"line":"a2a2a2"}},"10":{"29":{"line":"a2a2a2"}},"11":{"28":{"line":"a2a2a2"},"29":{"line":"a2a2a2"}},"12":{"28":{"line":"a2a2a2"}},"13":{"24":{"line":"df8600"},"28":{"line":"a2a2a2"}},"14":{"25":{"line":"df8600"},"28":{"line":"a2a2a2"}},"15":{"27":{"line":"a2a2a2"}},"16":{"25":{"line":"df8600"},"27":{"line":"a2a2a2"}},"18":{"27":{"line":"a2a2a2"}},"20":{"26":{"line":"df8600"},"27":{"line":"a2a2a2"}},"21":{"27":{"line":"a2a2a2"}},"22":{"27":{"line":"a2a2a2"}},"23":{"27":{"line":"df8600"}},"24":{"28":{"line":"a2a2a2"}},"25":{"29":{"line":"a2a2a2"}},"27":{"28":{"line":"df8600"},"30":{"line":"a2a2a2"}},"29":{"31":{"line":"a2a2a2"}},"31":{"30":{"line":"df8600"},"32":{"line":"a2a2a2"}},"32":{"32":{"line":"a2a2a2"}},"33":{"32":{"line":"a2a2a2"}},"34":{"31":{"line":"df8600"},"32":{"line":"a2a2a2"},"33":{"line":"a2a2a2"}},"35":{"33":{"line":"a2a2a2"}},"37":{"34":{"line":"a2a2a2"}},"38":{"33":{"line":"df8600"},"35":{"line":"a2a2a2"}},"39":{"10":{"line":"bd1038"},"34":{"line":"df8600"},"44":{"line":"0896d7"},"45":{"line":"0896d7"},"46":{"line":"0896d7"},"47":{"line":"0896d7"},"48":{"line":"0896d7"}},"40":{"36":{"line":"a2a2a2"},"37":{"line":"0896d7"},"38":{"line":"0896d7"},"39":{"line":"0896d7"},"40":{"line":"0896d7"},"41":{"line":"0896d7"},"42":{"line":"0896d7"},"43":{"line":"0896d7"},"44":{"line":"0896d7"}},"41":{"14":{"line":"bd1038"},"35":{"line":"df8600"},"37":{"line":"0896d7"},"38":{"line":"f0ce15"},"39":{"line":"f0ce15"},"40":{"line":"f0ce15"},"41":{"line":"f0ce15"},"42":{"line":"f0ce15"},"43":{"line":"f0ce15"},"44":{"line":"f0ce15","station":{"name":"Train a\xe9rien","lines":["f0ce15"]}},"45":{"line":"f0ce15"},"46":{"line":"f0ce15"},"47":{"line":"f0ce15"},"48":{"line":"f0ce15"},"49":{"line":"f0ce15"}},"42":{"35":{"line":"df8600"},"36":{"line":"0896d7"},"37":{"line":"0896d7"}},"43":{"20":{"line":"bd1038"},"34":{"line":"f0ce15"},"35":{"line":"f0ce15"},"36":{"line":"0896d7"}},"44":{"31":{"line":"f0ce15"},"32":{"line":"f0ce15"},"33":{"line":"f0ce15"},"34":{"line":"00b251"},"35":{"line":"00b251"},"36":{"line":"00b251"},"37":{"line":"00b251"},"38":{"line":"a2a2a2"}},"45":{"25":{"line":"bd1038"},"30":{"line":"f0ce15"},"31":{"line":"f0ce15"},"33":{"line":"00b251"},"34":{"line":"00b251"},"37":{"line":"0896d7"},"38":{"line":"00b251"},"39":{"line":"00b251"}},"46":{"26":{"line":"bd1038"},"30":{"line":"f0ce15"},"32":{"line":"00b251"},"33":{"line":"00b251"},"36":{"line":"df8600"},"37":{"line":"0896d7"},"39":{"line":"00b251"},"40":{"line":"a2a2a2"}},"47":{"28":{"line":"bd1038"},"30":{"line":"f0ce15"},"32":{"line":"00b251"},"37":{"line":"0896d7"},"38":{"line":"0896d7"},"40":{"line":"a2a2a2"},"41":{"line":"00b251"}},"48":{"28":{"line":"bd1038","station":{"name":"suilng_","lines":["bd1038","f0ce15","0896d7"]}},"29":{"line":"bd1038"},"30":{"line":"f0ce15"},"32":{"line":"00b251"},"37":{"line":"df8600"},"38":{"line":"0896d7"},"41":{"line":"a2a2a2"}},"49":{"28":{"line":"bd1038"},"29":{"line":"bd1038"},"30":{"line":"f0ce15"},"32":{"line":"00b251"},"37":{"line":"df8600"},"38":{"line":"0896d7"},"41":{"line":"a2a2a2"}},"50":{"27":{"line":"bd1038"},"28":{"line":"bd1038"},"30":{"line":"f0ce15"},"31":{"line":"00b251"},"32":{"line":"00b251"},"37":{"line":"df8600"},"38":{"line":"df8600"},"39":{"line":"0896d7"},"40":{"line":"a2a2a2"},"42":{"line":"00b251"}},"51":{"25":{"line":"bd1038"},"29":{"line":"f0ce15"},"30":{"line":"00b251"},"31":{"line":"00b251"},"37":{"line":"df8600"},"39":{"line":"a2a2a2"},"42":{"line":"00b251"},"43":{"line":"00b251"}},"52":{"24":{"line":"bd1038"},"28":{"line":"f0ce15"},"29":{"line":"f0ce15"},"30":{"line":"00b251"},"37":{"line":"df8600"},"39":{"line":"0896d7"},"43":{"line":"00b251"},"44":{"line":"00b251"},"45":{"line":"00b251"},"46":{"line":"00b251"}},"53":{"23":{"line":"bd1038"},"24":{"line":"bd1038"},"27":{"line":"f0ce15"},"28":{"line":"f0ce15"},"29":{"line":"00b251","station":{"name":"fyghj","lines":["00b251"]}},"38":{"line":"a2a2a2"},"39":{"line":"0896d7"},"46":{"line":"00b251"}},"54":{"22":{"line":"bd1038"},"23":{"line":"bd1038"},"26":{"line":"f0ce15"},"27":{"line":"f0ce15"},"28":{"line":"00b251"},"29":{"line":"00b251"},"36":{"line":"df8600"},"37":{"line":"df8600"},"38":{"line":"a2a2a2"},"39":{"line":"0896d7"}},"55":{"21":{"line":"bd1038"},"22":{"line":"bd1038"},"25":{"line":"f0ce15"},"26":{"line":"f0ce15"},"27":{"line":"00b251"},"28":{"line":"00b251"},"36":{"line":"df8600"},"39":{"line":"0896d7"},"46":{"line":"00b251"}},"56":{"18":{"line":"bd1038"},"19":{"line":"bd1038"},"20":{"line":"bd1038"},"21":{"line":"bd1038"},"24":{"line":"f0ce15"},"25":{"line":"f0ce15"},"27":{"line":"00b251"},"36":{"line":"a2a2a2"},"39":{"line":"0896d7"},"46":{"line":"00b251"},"47":{"line":"00b251"}},"57":{"13":{"line":"bd1038"},"14":{"line":"bd1038"},"15":{"line":"bd1038"},"16":{"line":"bd1038"},"17":{"line":"bd1038"},"22":{"line":"f0ce15"},"23":{"line":"f0ce15"},"26":{"line":"00b251"},"35":{"line":"df8600"},"39":{"line":"0896d7"},"45":{"line":"00b251"},"46":{"line":"00b251"}},"58":{"8":{"line":"bd1038"},"14":{"line":"bd1038"},"21":{"line":"f0ce15"},"22":{"line":"f0ce15"},"24":{"line":"00b251"},"25":{"line":"00b251"},"35":{"line":"df8600"},"36":{"line":"a2a2a2"},"39":{"line":"0896d7"},"45":{"line":"00b251"}},"59":{"4":{"line":"bd1038"},"5":{"line":"bd1038"},"6":{"line":"bd1038"},"7":{"line":"bd1038"},"8":{"line":"bd1038"},"9":{"line":"bd1038"},"10":{"line":"bd1038"},"11":{"line":"bd1038"},"20":{"line":"f0ce15"},"21":{"line":"f0ce15"},"22":{"line":"00b251"},"23":{"line":"00b251"},"35":{"line":"a2a2a2"},"39":{"line":"0896d7","station":{"name":"79yuhikjn_","lines":["0896d7"]}},"45":{"line":"00b251"}},"60":{"20":{"line":"f0ce15"},"21":{"line":"00b251"},"22":{"line":"00b251"},"34":{"line":"df8600"},"38":{"line":"0896d7"},"44":{"line":"00b251"},"45":{"line":"00b251"}},"61":{"14":{"line":"f0ce15"},"19":{"line":"00b251"},"20":{"line":"00b251"},"35":{"line":"a2a2a2"},"37":{"line":"0896d7"},"43":{"line":"00b251"},"44":{"line":"00b251"}},"62":{"17":{"line":"f0ce15"},"18":{"line":"00b251"},"19":{"line":"00b251"},"34":{"line":"df8600"},"36":{"line":"0896d7"},"37":{"line":"0896d7"},"43":{"line":"00b251"}},"63":{"16":{"line":"f0ce15"},"17":{"line":"00b251"},"18":{"line":"00b251"},"36":{"line":"0896d7"}},"64":{"15":{"line":"f0ce15"},"16":{"line":"00b251"},"17":{"line":"00b251"},"18":{"line":"00b251"},"34":{"line":"df8600"},"35":{"line":"a2a2a2"}},"65":{"14":{"line":"f0ce15"},"15":{"line":"00b251"},"16":{"line":"00b251"},"17":{"line":"00b251"},"33":{"line":"df8600"},"34":{"line":"df8600"},"35":{"line":"0896d7"}},"66":{"12":{"line":"f0ce15"},"13":{"line":"f0ce15"},"14":{"line":"f0ce15"},"15":{"line":"00b251"},"17":{"line":"f0ce15"},"33":{"line":"df8600"},"35":{"line":"a2a2a2"}},"67":{"11":{"line":"f0ce15"},"12":{"line":"f0ce15"},"13":{"line":"f0ce15"},"14":{"line":"00b251"},"17":{"line":"00b251"},"18":{"line":"00b251"},"32":{"line":"df8600"},"35":{"line":"0896d7"}},"68":{"8":{"line":"f0ce15"},"10":{"line":"f0ce15"},"11":{"line":"f0ce15"},"13":{"line":"00b251"},"14":{"line":"00b251"},"31":{"line":"df8600"},"35":{"line":"0896d7"}},"69":{"12":{"line":"00b251"},"13":{"line":"00b251"},"34":{"line":"0896d7"},"35":{"line":"a2a2a2"}},"70":{"30":{"line":"df8600"}},"71":{"29":{"line":"df8600"},"33":{"line":"0896d7"},"35":{"line":"a2a2a2"}},"72":{"32":{"line":"0896d7"},"35":{"line":"a2a2a2"}},"73":{"28":{"line":"df8600"},"32":{"line":"0896d7"},"35":{"line":"a2a2a2"}},"74":{"27":{"line":"df8600"},"32":{"line":"0896d7"}},"75":{"27":{"line":"df8600"},"32":{"line":"0896d7"}},"76":{"26":{"line":"df8600"}},"77":{"26":{"line":"df8600"}},"78":{"25":{"line":"df8600"},"26":{"line":"df8600"}},"global":{"lines":{"bd1038":{"displayName":"Red Line"},"df8600":{"displayName":"Orange Line"},"f0ce15":{"displayName":"Yellow Line"},"00b251":{"displayName":"Green Line"},"0896d7":{"displayName":"Blue Line"},"662c90":{"displayName":"Purple Line"},"a2a2a2":{"displayName":"Silver Line"}}}}"""
+from django.forms import ValidationError
+
+
+logger = logging.getLogger(__name__)
 
 MAX_MAP_SIZE = 240
 VALID_XY = [str(x) for x in range(MAX_MAP_SIZE)]
+ALLOWED_MAP_SIZES = [80, 120, 160, 200, 240]
+ALLOWED_LINE_WIDTHS = [1, 0.75, 0.5, 0.25, 0.125]
+ALLOWED_STATION_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm']
+ALLOWED_ORIENTATIONS = ['0', '45', '-45', '90', '-90', '135', '-135', '180']
 
 def is_hex(string):
 
@@ -77,24 +84,220 @@ def html_dom_id_safe(string):
 
     return re.sub('[^A-Za-z0-9\- \_]', '', string)
 
+def get_map_size(highest_xy_seen):
+
+    """ Returns the map size,
+        constrained to ALLOWED_MAP_SIZES
+    """
+
+    for allowed_size in ALLOWED_MAP_SIZES:
+        if highest_xy_seen < allowed_size:
+            return allowed_size
+    return allowed_size[-1]
+
 def validate_metro_map_v2(metro_map):
 
     """ Validate the MetroMap object, with a more compact, optimized data representation
     """
 
-    # TODO: Implement this!
-    # ValidationErrors: Anything that appears before the first colon will be internal-only;
-    #   everything else is user-facing.
-    # It's a dict already!
-
     validated_metro_map = {
         'global': {
-            'lines': {},
             'data_version': 2,
-        }
+            'lines': {},
+            'style': {},
+        },
+        'points_by_color': {},
+        'stations': {},
     }
 
-    return validated_metro_map
+    if not metro_map['points_by_color']:
+        raise ValidationError(f"[VALIDATIONFAILED] 2-01 No points_by_color")
+
+    if not isinstance(metro_map['points_by_color'], dict):
+        raise ValidationError(f"[VALIDATIONFAILED] 2-02 points_by_color must be dict, is: {type(metro_map['points_by_color']).__name__}")
+
+    # Infer missing lines in global from points_by_color
+    # It's not pretty, and the lines could fail to validate for other reasons, but it's graceful.
+    inferred_lines = False
+    if not metro_map.get('global') or not metro_map.get('global', {}).get('lines'):
+        inferred_lines = True
+        metro_map['global'] = {
+            'lines': {
+                color: {'displayName': color}
+                for color in metro_map['points_by_color']
+            }
+        }
+    else:
+        if not isinstance(metro_map['global']['lines'], dict):
+            metro_map['global']['lines'] = {}
+        if set(metro_map['global']['lines'].keys()) != set(metro_map['points_by_color'].keys()):
+            for color in metro_map['points_by_color']:
+                if color in metro_map['global']['lines']:
+                    continue
+                metro_map['global']['lines'][color] = {'displayName': color}
+
+    valid_lines = []
+    # Allow HTML color names to be used, but convert them to hex values
+    metro_map['global']['lines'] = {
+        html_color_name_fragments.get(line.strip()) or line: data
+        for line, data in
+        metro_map['global']['lines'].items()
+    }
+
+    for line in metro_map['global']['lines']:
+        if not is_hex(line):
+            raise ValidationError(f"[VALIDATIONFAILED] 2-03 global line {line} FAILED is_hex() (Inferred: {inferred_lines}) {line} is not a valid color: {line} is not a valid rail line color.")
+        if not len(line) == 6:
+            # We know it's hex by this point, we can fix length
+            if len(line) == 3:
+                line = ''.join([line[0] * 2, line[1] * 2, line[2] * 2])
+            elif len((line * 6)[:6]) < 6:
+                line = (line * 6)[:6]
+            else:
+                line = line[:6]
+
+        # Transformations to the display name could result in a non-unique display name, but it doesn't actually matter.
+        display_name = metro_map['global']['lines'][line].get('displayName', 'Rail Line')
+        if not isinstance(display_name, str) or len(display_name) < 1:
+            display_name = 'Rail Line'
+        elif len(display_name) > 255:
+            display_name = display_name[:255]
+
+        valid_lines.append(line)
+        validated_metro_map['global']['lines'][line] = {
+            'displayName': sanitize_string(display_name)
+        }
+
+    line_width = metro_map['global'].get('style', {}).get('mapLineWidth', 1)
+    if line_width not in ALLOWED_LINE_WIDTHS:
+        line_width = ALLOWED_LINE_WIDTHS[0]
+
+    station_style = metro_map['global'].get('style', {}).get('mapStationStyle', 'wmata')
+    if station_style not in ALLOWED_STATION_STYLES:
+        station_style = ALLOWED_STATION_STYLES[0]
+
+    validated_metro_map['global']['style'] = {
+        'mapLineWidth': line_width,
+        'mapStationStyle': station_style,
+    }
+
+    # Points by Color
+    all_points_seen = [] # Must confirm that stations exist on these points
+    points_skipped = []
+    highest_xy_seen = -1 # Because 0 is a point
+    valid_points_by_color = {}
+    for color in metro_map['points_by_color']:
+        if color not in validated_metro_map['global']['lines']:
+            points_skipped.append(f'Color {color} not in global')
+            continue
+
+        if not metro_map['points_by_color'][color].get('xys'):
+            points_skipped.append(f'MISSING xys for {color}')
+            continue
+        if not isinstance(metro_map['points_by_color'][color]['xys'], dict):
+            points_skipped.append(f'BAD XYS at {color}')
+            continue
+        for x in metro_map['points_by_color'][color]['xys']:
+            if not isinstance(metro_map['points_by_color'][color]['xys'][x], dict):
+                points_skipped.append(f'BAD X at {color}: {x}')
+                continue
+
+            if not x.isdigit():
+                points_skipped.append(f'NONINT X at {color}: {x}')
+                continue
+
+            if int(x) < 0 or int(x) > MAX_MAP_SIZE:
+                points_skipped.append(f'OOB X at {color}: {x}')
+                continue
+
+            for y in metro_map['points_by_color'][color]['xys'][x]:
+
+                if not y.isdigit():
+                    points_skipped.append(f'NONINT Y at {color}: {x},{y}')
+                    continue
+
+                if int(y) < 0 or int(y) > MAX_MAP_SIZE:
+                    points_skipped.append(f'OOB Y at {color}: {x},{y}')
+                    continue
+
+                if (x, y) in all_points_seen:
+                    # Already seen in another color
+                    points_skipped.append(f'SKIPPING {color} POINT {x},{y}, ALREADY SEEN')
+                    continue
+
+                if metro_map['points_by_color'][color]['xys'][x][y] == 1:
+                    all_points_seen.append((x, y))
+
+                    if int(x) > highest_xy_seen:
+                        highest_xy_seen = int(x)
+
+                    if int(y) > highest_xy_seen:
+                        highest_xy_seen = int(y)
+
+                    if not valid_points_by_color.get(color):
+                        valid_points_by_color[color] = {'xys': {}}
+
+                    if not valid_points_by_color[color]['xys'].get(x):
+                        valid_points_by_color[color]['xys'][x] = {}
+
+                    valid_points_by_color[color]['xys'][x][y] = 1
+    validated_metro_map['points_by_color'] = valid_points_by_color
+    if points_skipped:
+        logger.warn(f'Points skipped: {len(points_skipped)} Details: {points_skipped}')
+
+    # Stations
+    stations_skipped = []
+    valid_stations = {}
+    if metro_map.get('stations') and isinstance(metro_map['stations'], dict):
+        for x in metro_map['stations']:
+            if not isinstance(metro_map['stations'][x], dict):
+                stations_skipped.append(f'STA BAD X: {x}')
+                continue
+            for y in metro_map['stations'][x]:
+                if not isinstance(metro_map['stations'][x][y], dict):
+                    stations_skipped.append(f'STA BAD Y: {y}')
+                    continue
+
+                if (x, y) not in all_points_seen:
+                    stations_skipped.append(f'STA BAD POS: {x},{y}')
+                    continue
+
+                station_name = sanitize_string_without_html_entities(metro_map['stations'][x][y].get('name', '_'))
+                if len(station_name) < 1:
+                    station_name = '_'
+                elif len(station_name) > 255:
+                    station_name = station_name[:255]
+
+                station = {'name': station_name}
+
+                station_orientation = metro_map['stations'][x][y].get('orientation', 0)
+                if station_orientation not in ALLOWED_ORIENTATIONS:
+                    station_orientation = ALLOWED_ORIENTATIONS[0]
+                station['orientation'] = station_orientation
+
+                station_style = metro_map['stations'][x][y].get('style')
+                if station_style and station_style in ALLOWED_STATION_STYLES:
+                    station['style'] = station_style
+
+                if metro_map['stations'][x][y].get('transfer'):
+                    station['transfer'] = 1
+
+                # This station is valid, add it
+                if not valid_stations.get(x):
+                    valid_stations[x] = {}
+
+                valid_stations[x][y] = station
+    validated_metro_map['stations'] = valid_stations
+
+    if stations_skipped:
+        logger.warn(f'Stations skipped: {len(stations_skipped)} Details: {stations_skipped}')
+
+    if highest_xy_seen == -1:
+        raise ValidationError(f"[VALIDATIONFAILED] 2-00: This map has no points drawn. If this is in error, please contact the admin.")
+
+    validated_metro_map['global']['map_size'] = get_map_size(highest_xy_seen)
+
+    return validated_metro_map # TODO: delete the commented-out full maps above lol
 
 def validate_metro_map(metro_map):
     

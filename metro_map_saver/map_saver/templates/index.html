@@ -415,7 +415,7 @@
   {% if saved_map %}
 
     {% if saved_map.data %}
-      {{ saved_map.data_optimized_for_js_performance|json_script:"mapdata_v2" }}
+      {{ saved_map.data|json_script:"mapdata_v2" }}
       <script type="text/javascript">
         var savedMapData =  document.getElementById('mapdata_v2').textContent
         savedMapData = JSON.parse(savedMapData)
