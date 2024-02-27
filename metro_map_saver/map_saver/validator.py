@@ -110,11 +110,11 @@ def validate_metro_map_v2(metro_map):
         'stations': {},
     }
 
-    if not metro_map['points_by_color']:
-        raise ValidationError(f"[VALIDATIONFAILED] 2-01 No points_by_color")
+    if not metro_map.get('points_by_color'):
+        raise ValidationError(f"[VALIDATIONFAILED] 2-01: No points_by_color")
 
     if not isinstance(metro_map['points_by_color'], dict):
-        raise ValidationError(f"[VALIDATIONFAILED] 2-02 points_by_color must be dict, is: {type(metro_map['points_by_color']).__name__}")
+        raise ValidationError(f"[VALIDATIONFAILED] 2-02: points_by_color must be dict, is: {type(metro_map['points_by_color']).__name__}")
 
     # Infer missing lines in global from points_by_color
     # It's not pretty, and the lines could fail to validate for other reasons, but it's graceful.
@@ -146,7 +146,7 @@ def validate_metro_map_v2(metro_map):
 
     for line in metro_map['global']['lines']:
         if not is_hex(line):
-            raise ValidationError(f"[VALIDATIONFAILED] 2-03 global line {line} FAILED is_hex() (Inferred: {inferred_lines}) {line} is not a valid color: {line} is not a valid rail line color.")
+            raise ValidationError(f"[VALIDATIONFAILED] 2-03 global line {line.upper()} failed is_hex(){' (Inferred)' if inferred_lines else ''}: {line} is not a valid color.")
         if not len(line) == 6:
             # We know it's hex by this point, we can fix length
             if len(line) == 3:

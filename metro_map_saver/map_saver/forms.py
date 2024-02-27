@@ -38,9 +38,10 @@ class CreateMapForm(forms.Form):
 
     def clean(self):
         data = self.cleaned_data
-        data['urlhash'] = hex64(hashlib.sha256(str(data['mapdata']).encode('utf-8')).hexdigest()[:12])
-        data['naming_token'] = hashlib.sha256('{0}'.format(random.randint(1, 100000)).encode('utf-8')).hexdigest()
-        data['data_version'] = data['mapdata']['global']['data_version'] # convenience
+        if data.get('mapdata'):
+            data['urlhash'] = hex64(hashlib.sha256(str(data['mapdata']).encode('utf-8')).hexdigest()[:12])
+            data['naming_token'] = hashlib.sha256('{0}'.format(random.randint(1, 100000)).encode('utf-8')).hexdigest()
+            data['data_version'] = data['mapdata']['global']['data_version'] # convenience
         return data
 
 class RateForm(forms.Form):

@@ -1,19 +1,14 @@
 import json
 from unittest import expectedFailure
 
+from map_saver.forms import CreateMapForm
 from map_saver.models import SavedMap
 from map_saver.validator import validate_metro_map
 
 from django.test import TestCase, Client
 from django.core.exceptions import ObjectDoesNotExist
 
-class ValidateMap(TestCase):
-
-    fixtures = ['backups/2018/mmm-backup-20181110.json']
-
-    def test_fixtures_loaded(self):
-        self.assertEqual(SavedMap.objects.count(), 3983)
-
+class PostMapDataMixin:
     def _post_metromap(self, metro_map):
 
         """ Posts the metro_map to the /save/ endpoint and returns the response as a string
@@ -25,6 +20,76 @@ class ValidateMap(TestCase):
             {'metroMap': metro_map}
         )
         return response.content.decode('utf-8')
+
+class ValidateMapV2(PostMapDataMixin, TestCase):
+
+    """ Test mapDataVersion v2 validation handling
+    """
+
+    TODO = """
+    VE if not metro_map['points_by_color'] or metro_map['points_by_color'] isn't dict
+    infers lines into global if metro_map['global'] is false
+    infers lines into global if metro_map['global']['lines'] is false
+    infers lines into global if metro_map['global']['lines'] differs from metro_map['points_by_color']
+    invalid (non-hex) inferred lines get bounced later
+    html color name fragments get fixed (this might be already present, check)
+    VE if metro_map['global']['lines'] has an invalid line (non-hex)
+    expand line color that's too short (add -> aadddd, aa -> aaaaaa)
+    truncate line color that's too long
+    (display name checks 1-255 should be fine, but confirm)
+    display name isn't a string
+    metro_map['global']['style']['mapLineWidth']: 1 if not present or not allowed
+    metro_map['global']['style']['mapStationStyle'] = 'wmata' if not present or not allowed
+    harmless skip if:
+        metro_map['points_by_color'][color] missing ['xys'] or ['xys'] isn't dict
+        metro_map['points_by_color'][color][x] isn't dict
+        x isn't int
+        x is OOB
+        y isn't int
+        y is OOB
+        x,y already seen in a different color
+        metro_map['stations'] is false or isn't dict
+        metro_map['stations'][x] isn't dict
+        metro_map['stations'][x][y] isn't dict
+        x,y isn't on a color
+    station name is station name, _,  or truncated to :255
+    metro_map['stations'][x][y]['orientation'] = 0 if not present or not allowed
+    metro_map['stations'][x][y]['style'] if present and allowed; blank otherwise
+    metro_map['stations'][x][y]['transfer'] if present: -> = 1
+    metro_map['global']['map_size'] is correct for highest xy seen
+    VE if map with no points
+    valid case, v2
+    """
+
+    # Minimum necessary to process this as a v2 map
+    v2_minimum = {"global": {"data_version": 2}}
+
+    def test_invalid_maps(self):
+
+        """ Confirm an invalid map will be rejected with a ValidationError.
+        """
+
+        invalid_maps = [
+            {"json": {}, "expected": "2-01: No points_by_color"},
+            {"json": {"points_by_color": []}, "expected": "2-01: No points_by_color"},
+            {"json": {"points_by_color": ["truthy"]}, "expected": "2-02: points_by_color must be dict"},
+            {"json": {"points_by_color": {"000000": {}}}, "expected": "2-00: This map has no points drawn"},
+            {"json": {"points_by_color": {"NOTHEX": {}}}, "expected": "2-03 global line NOTHEX failed is_hex() (Inferred): NOTHEX is not a valid color"},
+        ]
+        for invalid in invalid_maps:
+            invalid['json'].update(self.v2_minimum)
+            form = CreateMapForm({'mapdata': invalid['json']})
+            self.assertFalse(form.is_valid())
+            self.assertIn(invalid['expected'], ';'.join(form.errors['mapdata']))
+
+
+
+class ValidateMap(PostMapDataMixin, TestCase):
+
+    fixtures = ['backups/2018/mmm-backup-20181110.json']
+
+    def test_fixtures_loaded(self):
+        self.assertEqual(SavedMap.objects.count(), 3983)
 
     def test_validator(self):
 
