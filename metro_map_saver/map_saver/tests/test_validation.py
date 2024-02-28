@@ -27,7 +27,6 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
     """
 
     TODO = """
-    html color name fragments get fixed (this might be already present, check)
     (display name checks 1-255 should be fine, but confirm)
     display name isn't a string -> "Rail Line"
     metro_map['global']['style']['mapLineWidth']: 1 if not present or not allowed
@@ -105,6 +104,9 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
             {"json": {"global": {"data_version": 2, "lines": {"a2": {"displayName": "Silver Line"}}}}, "expected": {"a2a2a2": "Silver Line"},},
             {"json": {"global": {"data_version": 2, "lines": {"0": {"displayName": "Black Line"}}}}, "expected": {"000000": "Black Line"},},
             {"json": {"global": {"data_version": 2, "lines": {"a2" * 100: {"displayName": "Silver Line"}}}}, "expected": {"a2a2a2": "Silver Line"},},
+
+            # Can infer from HTML color name fragments
+            {"json": {"global": {"lines": {"reen": {"displayName": "Green"}, "ellow": {"displayName": "Yellow"}, "urple": {"displayName": "Purple"}, "range": {"displayName": "Orange"}, "rey": {"displayName": "Grey"}, "urquoi": {"displayName": "Turquoise"}}}}, "expected": {"008000": "Green", "ffff00": "Yellow", "800080": "Purple", "ffa500": "Orange", "808080": "Grey", "40e0d0": "Turquoise"},},
         ]
 
         for mmap in maps:
