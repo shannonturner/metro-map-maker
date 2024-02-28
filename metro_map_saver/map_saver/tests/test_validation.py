@@ -215,7 +215,7 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
             {"json": {"stations": {"0": {"0": {"name": "", "orientation": "-999"}}}}, "expected": {"name": "_", "orientation": "0"}},
 
             # metro_map['stations'][x][y]['style'] if present and allowed; blank otherwise
-            {"json": {"stations": {"0": {"0": {"style": "invalid"}}}}, "expected": {"name": "_",}},
+            {"json": {"stations": {"0": {"0": {"style": "invalid"}}}}, "expected": {"name": "_",}, "not expected": {"style": "invalid"}},
             {"json": {"stations": {"0": {"0": {"style": "rect"}}}}, "expected": {"name": "_", "style": "rect"}},
 
             # metro_map['stations'][x][y]['transfer'] if present: -> = 1
@@ -231,6 +231,32 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
             mapdata = form.cleaned_data['mapdata']
             for k, v in mmap['expected'].items():
                 self.assertEqual(v, mapdata['stations']["0"]["0"].get(k))
+
+            for k, v in mmap.get('not expected', {}).items():
+                self.assertNotEqual(v, mapdata['stations']["0"]["0"].get(k))
+
+    def test_style_global(self):
+
+        """ Confirm that global styles get validated
+        """
+
+        maps = [
+            # Neither present
+            {'json': {"global": {"data_version": 2}}},
+
+            # Not allowed
+            {'json': {"global": {"data_version": 2, "style": {"mapLineWidth": -1, "mapStationStyle": "invalid"}}}},
+            {'json': {"global": {"data_version": 2, "style": {"mapLineWidth": "invalid", "mapStationStyle": 1}}}},
+        ]
+
+        for mmap in maps:
+            mmap['json'].update(self.valid_minimum)
+            form = CreateMapForm({"mapdata": mmap['json']})
+            self.assertTrue(form.is_valid())
+
+            mapdata = form.cleaned_data['mapdata']
+            self.assertEqual(mapdata['global']['style']['mapLineWidth'], 1)
+            self.assertEqual(mapdata['global']['style']['mapStationStyle'], 'wmata')
 
 
 class ValidateMap(PostMapDataMixin, TestCase):
