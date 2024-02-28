@@ -27,17 +27,11 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
     """
 
     TODO = """
-    VE if not metro_map['points_by_color'] or metro_map['points_by_color'] isn't dict
-    infers lines into global if metro_map['global'] is false
-    infers lines into global if metro_map['global']['lines'] is false
-    infers lines into global if metro_map['global']['lines'] differs from metro_map['points_by_color']
-    invalid (non-hex) inferred lines get bounced later
     html color name fragments get fixed (this might be already present, check)
-    VE if metro_map['global']['lines'] has an invalid line (non-hex)
     expand line color that's too short (add -> aadddd, aa -> aaaaaa)
     truncate line color that's too long
     (display name checks 1-255 should be fine, but confirm)
-    display name isn't a string
+    display name isn't a string -> "Rail Line"
     metro_map['global']['style']['mapLineWidth']: 1 if not present or not allowed
     metro_map['global']['style']['mapStationStyle'] = 'wmata' if not present or not allowed
     harmless skip if:
@@ -57,12 +51,16 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
     metro_map['stations'][x][y]['style'] if present and allowed; blank otherwise
     metro_map['stations'][x][y]['transfer'] if present: -> = 1
     metro_map['global']['map_size'] is correct for highest xy seen
-    VE if map with no points
     valid case, v2
+    v1 gets converted into v2 & It's valid (can get re-validated & comes out the same)
+        ^ v1 needs to also have styles
     """
 
     # Minimum necessary to process this as a v2 map
     v2_minimum = {"global": {"data_version": 2}}
+
+    # To be a VALID map though, it also needs some points
+    valid_minimum = {"points_by_color": {"bd1038": {"xys": {"0": {"0": 1}}}, "00b251": {"xys": {"1": {"1": 1}}}}}
 
     def test_invalid_maps(self):
 
@@ -81,6 +79,39 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
             form = CreateMapForm({'mapdata': invalid['json']})
             self.assertFalse(form.is_valid())
             self.assertIn(invalid['expected'], ';'.join(form.errors['mapdata']))
+
+        # Other invalid maps that have global & shouldn't be clobbered with .update(self.v2_minimum)
+        invalid_maps = [
+            {"json": {"global": {"data_version": 2, "lines": {"NOTHEX": {}}}, "points_by_color": {"000000": {}}}, "expected": "2-03 global line NOTHEX failed is_hex(): NOTHEX is not a valid color"},
+        ]
+        for invalid in invalid_maps:
+            form = CreateMapForm({'mapdata': invalid['json']})
+            self.assertFalse(form.is_valid())
+            self.assertIn(invalid['expected'], ';'.join(form.errors['mapdata']))
+
+    def test_infer_line_colors(self):
+
+        """ Confirm that if metro_map['global']['lines'] is false,
+                we can still recover by inferring these lines from points_by_color
+        """
+
+        maps = [
+            # metro_map['global']['lines'] missing entirely
+            {"json": {"global": {"data_version": 2}}, "expected": {"bd1038": "bd1038", "00b251": "00b251"},},
+
+            # metro_map['global']['lines'] has a line the other doesn't, we expect all three
+            {"json": {"global": {"data_version": 2, "lines": {"0896d7": {"displayName": "Blue Line"}}}}, "expected": {"bd1038": "bd1038", "00b251": "00b251", "0896d7": "Blue Line"},},
+        ]
+
+        for mmap in maps:
+            mmap['json'].update(self.valid_minimum)
+            form = CreateMapForm({"mapdata": mmap['json']})
+            self.assertTrue(form.is_valid())
+
+            mapdata = form.data['mapdata']
+            for expectation, line_name in mmap['expected'].items():
+                self.assertIn(expectation, mapdata['global']['lines'])
+                self.assertEqual(line_name, mapdata['global']['lines'][expectation]['displayName'])
 
 
 
