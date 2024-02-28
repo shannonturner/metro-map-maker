@@ -144,18 +144,24 @@ def validate_metro_map_v2(metro_map):
         metro_map['global']['lines'].items()
     }
 
+    remove_lines = {}
     for line in metro_map['global']['lines']:
         if not is_hex(line):
             raise ValidationError(f"[VALIDATIONFAILED] 2-03 global line {line.upper()} failed is_hex(){' (Inferred)' if inferred_lines else ''}: {line} is not a valid color.")
         if not len(line) == 6:
             # We know it's hex by this point, we can fix length
             if len(line) == 3:
-                line = ''.join([line[0] * 2, line[1] * 2, line[2] * 2])
-            elif len((line * 6)[:6]) < 6:
-                line = (line * 6)[:6]
+                new_line = ''.join([line[0] * 2, line[1] * 2, line[2] * 2])
+            elif len((line * 6)[:6]) <= 6:
+                new_line = (line * 6)[:6]
             else:
-                line = line[:6]
+                new_line = line[:6]
+            remove_lines[new_line] = line
 
+    for new_line, line in remove_lines.items():
+        metro_map['global']['lines'][new_line] = metro_map['global']['lines'].pop(line)
+
+    for line in metro_map['global']['lines']:
         # Transformations to the display name could result in a non-unique display name, but it doesn't actually matter.
         display_name = metro_map['global']['lines'][line].get('displayName', 'Rail Line')
         if not isinstance(display_name, str) or len(display_name) < 1:

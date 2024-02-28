@@ -101,6 +101,11 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
 
             # metro_map['global']['lines'] has a line the other doesn't, we expect all three
             {"json": {"global": {"data_version": 2, "lines": {"0896d7": {"displayName": "Blue Line"}}}}, "expected": {"bd1038": "bd1038", "00b251": "00b251", "0896d7": "Blue Line"},},
+
+            # Can infer line colors from a partial hex
+            {"json": {"global": {"data_version": 2, "lines": {"add": {"displayName": "Seafoam"}}}}, "expected": {"aadddd": "Seafoam"},},
+            {"json": {"global": {"data_version": 2, "lines": {"a2": {"displayName": "Silver Line"}}}}, "expected": {"a2a2a2": "Silver Line"},},
+            {"json": {"global": {"data_version": 2, "lines": {"0": {"displayName": "Black Line"}}}}, "expected": {"000000": "Black Line"},},
         ]
 
         for mmap in maps:
