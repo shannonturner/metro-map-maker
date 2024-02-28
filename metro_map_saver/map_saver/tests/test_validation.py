@@ -30,13 +30,6 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
     metro_map['global']['style']['mapLineWidth']: 1 if not present or not allowed
     metro_map['global']['style']['mapStationStyle'] = 'wmata' if not present or not allowed
     harmless skip if:
-        metro_map['points_by_color'][color] missing ['xys'] or ['xys'] isn't dict
-        metro_map['points_by_color'][color][x] isn't dict
-        x isn't int
-        x is OOB
-        y isn't int
-        y is OOB
-        x,y already seen in a different color
         metro_map['stations'] is false or isn't dict
         metro_map['stations'][x] isn't dict
         metro_map['stations'][x][y] isn't dict
@@ -144,6 +137,47 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
                 self.assertIn(expectation, mapdata['global']['lines'])
                 self.assertEqual(line_name, mapdata['global']['lines'][expectation]['displayName'])
 
+    def test_ignore_invalid_points(self):
+
+        """ Confirm we'll ignore and skip invalid points
+        """
+
+        # In all these examples, a2a2a2 is bad
+        maps = [
+            # a2a2a2 missing xys
+            {"json": {"points_by_color": {"a2a2a2": {}, "bd1038": {"xys": {"1": {"1": 1}}}}},},
+
+            # xys isn't dict
+            {"json": {"points_by_color": {"a2a2a2": {'xys': False}, "bd1038": {"xys": {"1": {"1": 1}}}}},},
+
+            # x isn't dict
+            {"json": {"points_by_color": {"a2a2a2": {'xys': {"0": False}}, "bd1038": {"xys": {"1": {"1": 1}}}}},},
+
+            # x isn't int
+            {"json": {"points_by_color": {"a2a2a2": {'xys': {"badX": {"1": 1}}}, "bd1038": {"xys": {"1": {"1": 1}}}}},},
+
+            # x is OOB
+            {"json": {"points_by_color": {"a2a2a2": {'xys': {"-1": {"1": 1}}}, "bd1038": {"xys": {"1": {"1": 1}}}}},},
+            {"json": {"points_by_color": {"a2a2a2": {'xys': {"240": {"1": 1}}}, "bd1038": {"xys": {"1": {"1": 1}}}}},},
+
+            # y isn't int
+            {"json": {"points_by_color": {"a2a2a2": {'xys': {"2": {"badY": 1}}}, "bd1038": {"xys": {"1": {"1": 1}}}}},},
+
+            # y is OOB
+            {"json": {"points_by_color": {"a2a2a2": {'xys': {"2": {"-2": 1}}}, "bd1038": {"xys": {"1": {"1": 1}}}}},},
+            {"json": {"points_by_color": {"a2a2a2": {'xys': {"2": {"240": 1}}}, "bd1038": {"xys": {"1": {"1": 1}}}}},},
+
+            # x,y already seen in a different color
+            {"json": {"points_by_color": {"bd1038": {"xys": {"1": {"1": 1}}}, "a2a2a2": {'xys': {"1": {"1": 1}}},}},},
+        ]
+
+        for mmap in maps:
+            mmap['json'].update(self.v2_minimum)
+            form = CreateMapForm({"mapdata": mmap['json']})
+            self.assertTrue(form.is_valid())
+
+            mapdata = form.cleaned_data['mapdata']
+            self.assertFalse(mapdata['points_by_color'].get('a2a2a2'))
 
 class ValidateMap(PostMapDataMixin, TestCase):
 

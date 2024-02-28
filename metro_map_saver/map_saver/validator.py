@@ -93,7 +93,7 @@ def get_map_size(highest_xy_seen):
     for allowed_size in ALLOWED_MAP_SIZES:
         if highest_xy_seen < allowed_size:
             return allowed_size
-    return allowed_size[-1]
+    return ALLOWED_MAP_SIZES[-1]
 
 def validate_metro_map_v2(metro_map):
 
@@ -212,7 +212,7 @@ def validate_metro_map_v2(metro_map):
                 points_skipped.append(f'NONINT X at {color}: {x}')
                 continue
 
-            if int(x) < 0 or int(x) > MAX_MAP_SIZE:
+            if int(x) < 0 or int(x) >= MAX_MAP_SIZE:
                 points_skipped.append(f'OOB X at {color}: {x}')
                 continue
 
@@ -222,7 +222,7 @@ def validate_metro_map_v2(metro_map):
                     points_skipped.append(f'NONINT Y at {color}: {x},{y}')
                     continue
 
-                if int(y) < 0 or int(y) > MAX_MAP_SIZE:
+                if int(y) < 0 or int(y) >= MAX_MAP_SIZE:
                     points_skipped.append(f'OOB Y at {color}: {x},{y}')
                     continue
 
