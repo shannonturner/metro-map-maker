@@ -29,11 +29,6 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
     TODO = """
     metro_map['global']['style']['mapLineWidth']: 1 if not present or not allowed
     metro_map['global']['style']['mapStationStyle'] = 'wmata' if not present or not allowed
-    harmless skip if:
-        metro_map['stations'] is false or isn't dict
-        metro_map['stations'][x] isn't dict
-        metro_map['stations'][x][y] isn't dict
-        x,y isn't on a color
     station name is station name, _,  or truncated to :255
     metro_map['stations'][x][y]['orientation'] = 0 if not present or not allowed
     metro_map['stations'][x][y]['style'] if present and allowed; blank otherwise
@@ -178,6 +173,35 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
 
             mapdata = form.cleaned_data['mapdata']
             self.assertFalse(mapdata['points_by_color'].get('a2a2a2'))
+
+    def test_ignore_invalid_stations(self):
+
+        """ Confirm that we'll ignore and skip invalid stations
+        """
+
+        maps = [
+            # metro_map['stations'] is false or isn't dict
+            {"json": {"stations": False}},
+            {"json": {"stations": "not-a-dict"}},
+
+            # metro_map['stations'][x] isn't dict
+            {"json": {"stations": {"0": 'not-a-dict'}}},
+
+            # metro_map['stations'][x][y] isn't dict
+            {"json": {"stations": {"0": {"0": 'not-a-dict'}}}},
+
+            # x,y isn't on a color
+            {"json": {"stations": {"2": {"2": {"name": "Silver Spring"}}}}},
+        ]
+
+        for mmap in maps:
+            mmap['json'].update(self.v2_minimum)
+            mmap['json'].update(self.valid_minimum)
+            form = CreateMapForm({"mapdata": mmap['json']})
+            self.assertTrue(form.is_valid())
+
+            mapdata = form.cleaned_data['mapdata']
+            self.assertFalse(mapdata.get('stations'))
 
 class ValidateMap(PostMapDataMixin, TestCase):
 
