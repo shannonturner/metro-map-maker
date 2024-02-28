@@ -27,8 +27,6 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
     """
 
     TODO = """
-    (display name checks 1-255 should be fine, but confirm)
-    display name isn't a string -> "Rail Line"
     metro_map['global']['style']['mapLineWidth']: 1 if not present or not allowed
     metro_map['global']['style']['mapStationStyle'] = 'wmata' if not present or not allowed
     harmless skip if:
@@ -103,6 +101,8 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
             {"json": {"global": {"data_version": 2, "lines": {"add": {"displayName": "Seafoam"}}}}, "expected": {"aadddd": "Seafoam"},},
             {"json": {"global": {"data_version": 2, "lines": {"a2": {"displayName": "Silver Line"}}}}, "expected": {"a2a2a2": "Silver Line"},},
             {"json": {"global": {"data_version": 2, "lines": {"0": {"displayName": "Black Line"}}}}, "expected": {"000000": "Black Line"},},
+
+            # Truncate if too long
             {"json": {"global": {"data_version": 2, "lines": {"a2" * 100: {"displayName": "Silver Line"}}}}, "expected": {"a2a2a2": "Silver Line"},},
 
             # Can infer from HTML color name fragments
@@ -114,11 +114,35 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
             form = CreateMapForm({"mapdata": mmap['json']})
             self.assertTrue(form.is_valid())
 
-            mapdata = form.data['mapdata']
+            mapdata = form.cleaned_data['mapdata']
             for expectation, line_name in mmap['expected'].items():
                 self.assertIn(expectation, mapdata['global']['lines'])
                 self.assertEqual(line_name, mapdata['global']['lines'][expectation]['displayName'])
 
+    def test_fix_display_names(self):
+
+        """ Confirm we'll fix invalid displayNames
+        """
+
+        maps = [
+            # No name -> Rail Line
+            {"json": {"global": {"data_version": 2, "lines": {"1": {"displayName": ""}, "2": {"displayName": False}, "3": {"displayName": 0}}}}, "expected": {"111111": "Rail Line", "222222": "Rail Line", "333333": "Rail Line"},},
+            {"json": {"global": {"data_version": 2, "lines": {"add": {"displayName": False}}}}, "expected": {"aadddd": "Rail Line"},},
+            {"json": {"global": {"data_version": 2, "lines": {"add": {"displayName": 0}}}}, "expected": {"aadddd": "Rail Line"},},
+
+            # Truncated
+            {"json": {"global": {"data_version": 2, "lines": {"add": {"displayName": "Seafoam" * 100}}}}, "expected": {"aadddd": ("Seafoam" * 100)[:255]},},
+        ]
+
+        for mmap in maps:
+            mmap['json'].update(self.valid_minimum)
+            form = CreateMapForm({"mapdata": mmap['json']})
+            self.assertTrue(form.is_valid())
+
+            mapdata = form.cleaned_data['mapdata']
+            for expectation, line_name in mmap['expected'].items():
+                self.assertIn(expectation, mapdata['global']['lines'])
+                self.assertEqual(line_name, mapdata['global']['lines'][expectation]['displayName'])
 
 
 class ValidateMap(PostMapDataMixin, TestCase):
