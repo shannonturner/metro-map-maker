@@ -27,12 +27,6 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
     """
 
     TODO = """
-    metro_map['global']['style']['mapLineWidth']: 1 if not present or not allowed
-    metro_map['global']['style']['mapStationStyle'] = 'wmata' if not present or not allowed
-    station name is station name, _,  or truncated to :255
-    metro_map['stations'][x][y]['orientation'] = 0 if not present or not allowed
-    metro_map['stations'][x][y]['style'] if present and allowed; blank otherwise
-    metro_map['stations'][x][y]['transfer'] if present: -> = 1
     metro_map['global']['map_size'] is correct for highest xy seen
     valid case, v2
     v1 gets converted into v2 & It's valid (can get re-validated & comes out the same)
@@ -202,6 +196,42 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
 
             mapdata = form.cleaned_data['mapdata']
             self.assertFalse(mapdata.get('stations'))
+
+    def test_validate_station(self):
+
+        """ Confirm that station attributes get validated
+        """
+
+        maps = [
+            # Station gets renamed to be valid
+            {"json": {"stations": {"0": {"0": {}}}}, "expected": {"name": "_"}},
+            {"json": {"stations": {"0": {"0": {"name": ""}}}}, "expected": {"name": "_"}},
+            {"json": {"stations": {"0": {"0": {"name": False}}}}, "expected": {"name": "_"}},
+            {"json": {"stations": {"0": {"0": {"name": {}}}}}, "expected": {"name": "_"}},
+            {"json": {"stations": {"0": {"0": {"name": "Silver Spring" * 100}}}}, "expected": {"name": ("Silver Spring" * 100)[:255]}},
+
+            # metro_map['stations'][x][y]['orientation'] = 0 if not present or not allowed
+            {"json": {"stations": {"0": {"0": {"name": "",}}}}, "expected": {"name": "_", "orientation": "0"}},
+            {"json": {"stations": {"0": {"0": {"name": "", "orientation": "-999"}}}}, "expected": {"name": "_", "orientation": "0"}},
+
+            # metro_map['stations'][x][y]['style'] if present and allowed; blank otherwise
+            {"json": {"stations": {"0": {"0": {"style": "invalid"}}}}, "expected": {"name": "_",}},
+            {"json": {"stations": {"0": {"0": {"style": "rect"}}}}, "expected": {"name": "_", "style": "rect"}},
+
+            # metro_map['stations'][x][y]['transfer'] if present: -> = 1
+            {"json": {"stations": {"0": {"0": {"transfer": "anything"}}}}, "expected": {"name": "_", "transfer": 1}},
+        ]
+
+        for mmap in maps:
+            mmap['json'].update(self.v2_minimum)
+            mmap['json'].update(self.valid_minimum)
+            form = CreateMapForm({"mapdata": mmap['json']})
+            self.assertTrue(form.is_valid())
+
+            mapdata = form.cleaned_data['mapdata']
+            for k, v in mmap['expected'].items():
+                self.assertEqual(v, mapdata['stations']["0"]["0"].get(k))
+
 
 class ValidateMap(PostMapDataMixin, TestCase):
 

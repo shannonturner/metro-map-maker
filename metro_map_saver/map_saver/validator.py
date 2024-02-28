@@ -268,7 +268,7 @@ def validate_metro_map_v2(metro_map):
                     stations_skipped.append(f'STA BAD POS: {x},{y}')
                     continue
 
-                station_name = sanitize_string_without_html_entities(metro_map['stations'][x][y].get('name', '_'))
+                station_name = sanitize_string_without_html_entities(metro_map['stations'][x][y].get('name', '_') or '_')
                 if len(station_name) < 1:
                     station_name = '_'
                 elif len(station_name) > 255:
