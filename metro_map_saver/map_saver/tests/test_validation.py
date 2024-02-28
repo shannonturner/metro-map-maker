@@ -28,8 +28,6 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
 
     TODO = """
     html color name fragments get fixed (this might be already present, check)
-    expand line color that's too short (add -> aadddd, aa -> aaaaaa)
-    truncate line color that's too long
     (display name checks 1-255 should be fine, but confirm)
     display name isn't a string -> "Rail Line"
     metro_map['global']['style']['mapLineWidth']: 1 if not present or not allowed
@@ -106,6 +104,7 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
             {"json": {"global": {"data_version": 2, "lines": {"add": {"displayName": "Seafoam"}}}}, "expected": {"aadddd": "Seafoam"},},
             {"json": {"global": {"data_version": 2, "lines": {"a2": {"displayName": "Silver Line"}}}}, "expected": {"a2a2a2": "Silver Line"},},
             {"json": {"global": {"data_version": 2, "lines": {"0": {"displayName": "Black Line"}}}}, "expected": {"000000": "Black Line"},},
+            {"json": {"global": {"data_version": 2, "lines": {"a2" * 100: {"displayName": "Silver Line"}}}}, "expected": {"a2a2a2": "Silver Line"},},
         ]
 
         for mmap in maps:
