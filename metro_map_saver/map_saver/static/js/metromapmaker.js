@@ -894,14 +894,11 @@ function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth) {
 
     if (mapStationStyle == 'rect' || (thisStation && thisStation['style'] == 'rect')) {
         ctx.fillRect((x - 0.5) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, gridPixelMultiplier, gridPixelMultiplier)
-    } else if (mapStationStyle == 'circles-lg' || (thisStation && thisStation['style'] == 'circles-lg')) {
+    } else if (mapStationStyle == 'circles-md' || (thisStation && thisStation['style'] == 'circles-md')) {
       ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .7, 0, Math.PI * 2, true);
       ctx.fill();
-    } else if (mapStationStyle == 'circles-md' || (thisStation && thisStation['style'] == 'circles-md')) {
-      ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .5, 0, Math.PI * 2, true);
-      ctx.fill();
     } else if (mapStationStyle == 'circles-sm' || (thisStation && thisStation['style'] == 'circles-sm')) {
-      ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .4, 0, Math.PI * 2, true);
+      ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .5, 0, Math.PI * 2, true);
       ctx.fill();
     } else {
       ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .9, 0, Math.PI * 2, true); // Rail-line circle
@@ -932,11 +929,12 @@ function drawStation(ctx, x, y, metroMap, skipText) {
   if (!thisStationStyle || thisStationStyle == 'wmata') {
     drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation)
   } else if (thisStationStyle == 'circles-lg') {
-    drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.3, gridPixelMultiplier / 2)
+    var thisStationColor = '#' + getActiveLine(x, y, metroMap)
+    drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation, thisStationColor)
   } else if (thisStationStyle == 'circles-md') {
-    drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.25, gridPixelMultiplier / 4)
+    drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.3, gridPixelMultiplier / 2)
   } else if (thisStationStyle == 'circles-sm') {
-    drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.2, gridPixelMultiplier / 8)
+    drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.25, gridPixelMultiplier / 4)
   } else if (thisStationStyle == 'rect') {
     drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, 0, 0)
   } else if (thisStationStyle == 'rect-round') {
@@ -1029,9 +1027,6 @@ function drawCircleStation(ctx, x, y, metroMap, isTransferStation, stationCircle
   if (!strokeStyle && isTransferStation && mapLineWidth >= 0.5) {
     strokeStyle = '#ffffff'
     lineWidth = gridPixelMultiplier / 2
-  } else if (!strokeStyle && isTransferStation && mapLineWidth < 0.5 && stationCircleSize <= 0.25) {
-    // Make the smallest (circle-md & circle-sm) stations easier to see
-    strokeStyle = '#000000'
   }
   ctx.fillStyle = fillStyle || '#ffffff';
   ctx.beginPath();
@@ -1275,14 +1270,12 @@ function drawIndicator(x, y) {
 
   var isTransferStation = temporaryStation["transfer"] || (permStation && permStation["transfer"])
 
-  if (!thisStationStyle || thisStationStyle == 'wmata') {
+  if (!thisStationStyle || thisStationStyle == 'wmata' || thisStationStyle == 'circles-lg') {
     drawStyledStation_WMATA(ctx, x, y, activeMap, isTransferStation, '#000000', '#00ff00')
-  } else if (thisStationStyle == 'circles-lg') {
-    drawCircleStation(ctx, x, y, activeMap, isTransferStation, 0.3, gridPixelMultiplier / 2, '#00ff00', '#000000')
   } else if (thisStationStyle == 'circles-md') {
-    drawCircleStation(ctx, x, y, activeMap, isTransferStation, 0.25, gridPixelMultiplier / 4, '#00ff00', '#000000')
+    drawCircleStation(ctx, x, y, activeMap, isTransferStation, 0.3, gridPixelMultiplier / 2, '#00ff00', '#000000')
   } else if (thisStationStyle == 'circles-sm') {
-    drawCircleStation(ctx, x, y, activeMap, isTransferStation, 0.2, gridPixelMultiplier / 8, '#00ff00', '#000000')
+    drawCircleStation(ctx, x, y, activeMap, isTransferStation, 0.25, gridPixelMultiplier / 4, '#00ff00', '#000000')
   } else if (thisStationStyle == 'rect') {
     // For this and rect-round, I don't actually want to draw the one continuous station
     //  even if I could; these all should be individually selectable.
