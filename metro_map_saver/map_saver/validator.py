@@ -373,6 +373,19 @@ def validate_metro_map(metro_map):
         metro_map['global']['lines'].items()
     }
 
+    line_width = metro_map['global'].get('style', {}).get('mapLineWidth', 1)
+    if line_width not in ALLOWED_LINE_WIDTHS:
+        line_width = ALLOWED_LINE_WIDTHS[0]
+
+    station_style = metro_map['global'].get('style', {}).get('mapStationStyle', 'wmata')
+    if station_style not in ALLOWED_STATION_STYLES:
+        station_style = ALLOWED_STATION_STYLES[0]
+
+    validated_metro_map['global']['style'] = {
+        'mapLineWidth': line_width,
+        'mapStationStyle': station_style,
+    }
+
     for global_line in metro_map['global']['lines'].keys():
         assert is_hex(global_line), "[VALIDATIONFAILED] 05 global_line {0} FAILED is_hex() {0} is not a valid color: {0} is not a valid rail line color.".format(global_line)
         assert len(global_line) == 6, "[VALIDATIONFAILED] 06 global_line {0} IS NOT 6 CHARACTERS: The color {0} must be 6 characters long.".format(global_line)
@@ -439,5 +452,8 @@ def validate_metro_map(metro_map):
                            validated_metro_map[x][y]["station"]["transfer"] = 1
                         if metro_map[x][y]["station"].get('orientation') and metro_map[x][y]["station"].get('orientation') in ('0', '-45', '45', '-90', '90', '135', '-135', '180'):
                             validated_metro_map[x][y]["station"]["orientation"] = metro_map[x][y]["station"].get('orientation')
+                        station_style = metro_map[x][y]["station"].get('style')
+                        if station_style and station_style in ALLOWED_STATION_STYLES:
+                            validated_metro_map[x][y]["station"]['style'] = station_style
 
     return validated_metro_map

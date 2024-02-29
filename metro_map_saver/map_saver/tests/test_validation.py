@@ -28,7 +28,6 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
 
     TODO = """
     v1 gets converted into v2 & It's valid (can get re-validated & comes out the same)
-        ^ v1 needs to also have styles
     """
 
     # Minimum necessary to process this as a v2 map
@@ -975,3 +974,44 @@ class ValidateMap(PostMapDataMixin, TestCase):
             response = self._post_metromap(metro_map).strip()
             # 73 = 8 character urlhash + comma + 64 char naming token
             self.assertTrue(len(response), 73)
+
+    def test_valid_map_v1_allows_styles(self):
+
+        """ Confirm that styles can be backported to v1
+        """
+
+        metro_maps = [
+            {
+                "10": {
+                    "10": {
+                        "line": "008800",
+                        "station": {
+                            "name": "A", "orientation":"180", "style": "rect-round", "lines": [],
+                        }
+                    }
+                },
+                "global": {
+                    "lines": {"008800": {"displayName": "test_valid_map_v1_allows_styles"},},
+                    "style": {
+                        "mapLineWidth": 0.5,
+                        "mapStationStyle": "circles-sm",
+                    },
+                },
+            },
+        ]
+
+        for metro_map in metro_maps:
+            form = CreateMapForm({"mapdata": metro_map})
+            self.assertTrue(form.is_valid())
+
+            mapdata = form.cleaned_data['mapdata']
+            for x in metro_map:
+                if not x.isdigit():
+                    continue
+                for y in metro_map[x]:
+                    self.assertEqual(mapdata[x][y], metro_map[x][y])
+
+            self.assertEqual(
+                mapdata['global']['style'],
+                metro_map['global']['style'],
+            )
