@@ -13,6 +13,16 @@ class OptimizeMap(TestCase):
         into the smallest non-lossy representation of x,y coordinate pairs
     """
 
+    TODO = """
+    sort_points_by_color returns points_by_color, stations, map_size from v1 map_data
+        sort_points_by_color isn't pointless for v2 (it's used to generate images, for one), but can probably be streamlined as compared to v1.
+        regardless, both implementations will need testing
+    get_connected_points should return recursively-generated list of 2-tuples with all connected points for x,y, self-inclusive
+    is_adjacent should return point2 if point2 is adjacent to point1, otherwise None
+    get_adjacent_point should return horizontal, vertical, or diagonal (in pref order)
+    find_squares should find squares of contiguous colors from points_this_color, of a given width, returning lists: squares_ext, squares_int
+    """
+
     def convert_to_xy_pairs(self, linestring):
 
         """ Helper to convert a linestring of x,y pairs
@@ -43,19 +53,19 @@ class OptimizeMap(TestCase):
             '1,1 2,2 3,3 4,4 5,5': '1,1 5,5',
 
             # Cannot reduce
+            '1,1 1,2 10,30 10,31': '1,1 1,2 10,30 10,31',
         }
 
-        for preopt, goal in expected.items():
-            line = self.convert_to_xy_pairs(preopt)
-            self.assertEqual(preopt.count(','), len(line))
+        for before, goal in expected.items():
+            line = self.convert_to_xy_pairs(before)
+            self.assertEqual(before.count(','), len(line))
 
-            expected_length = goal.count(',')
-            goal = self.convert_to_xy_pairs(goal)
+            goal_line = self.convert_to_xy_pairs(goal)
+            self.assertEqual(goal.count(','), len(goal_line))
 
-            print(f'[DEBUG] line is: {line}')
-            print(f'[DEBUG] goal is: {goal}')
             optimized = reduce_straight_line(line)
-            print(f'[DEBUG] optimized is: {optimized}')
 
-            self.assertEqual(optimized, goal)
-            self.assertNotEqual(line, optimized)
+            self.assertEqual(optimized, goal_line)
+            if before != goal:
+                self.assertNotEqual(line, optimized)
+                self.assertLess(len(optimized), len(line))
