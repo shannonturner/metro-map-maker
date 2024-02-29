@@ -21,13 +21,9 @@ class PostMapDataMixin:
         )
         return response.content.decode('utf-8')
 
-class ValidateMapV2(PostMapDataMixin, TestCase):
+class ValidateMapV2(TestCase):
 
     """ Test mapDataVersion v2 validation handling
-    """
-
-    TODO = """
-    v1 gets converted into v2 & It's valid (can get re-validated & comes out the same)
     """
 
     # Minimum necessary to process this as a v2 map
@@ -395,6 +391,99 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
                 mmap['json']['global']['data_version'],
                 mapdata['global']['data_version'],
             )
+
+    def test_convert_v1_to_v2(self):
+
+        """ Confirm that we can convert v1 maps to v2 and it's valid
+        """
+
+        mmap_v1 = {
+            "10": {
+                "10": {
+                    "line": "008800",
+                    "station": {
+                        "name": "A", "orientation": "-135", "style": "rect", "lines": [],
+                    }
+                },
+                "100": {
+                    "line": "008800",
+                    "station": {
+                        "name": "B", "orientation": "-45", "style": "wmata", "lines": [],
+                    }
+                },
+            },
+            "global": {
+                "lines": {"008800": {"displayName": "Rail Line"},},
+                "style": {
+                    "mapLineWidth": 0.75,
+                    "mapStationStyle": "circles-md",
+                },
+            },
+        }
+
+        form = CreateMapForm({"mapdata": mmap_v1})
+        self.assertTrue(form.is_valid())
+
+        # Confirm the cleaned data matches the input
+        mapdata_v1 = form.cleaned_data['mapdata']
+        self.assertEqual(mapdata_v1["10"]["10"], mmap_v1["10"]["10"])
+        self.assertEqual(mapdata_v1["10"]["100"], mmap_v1["10"]["100"])
+        self.assertEqual(mapdata_v1["global"]["lines"], mmap_v1["global"]["lines"])
+        self.assertEqual(mapdata_v1["global"]["style"], mmap_v1["global"]["style"])
+
+        urlhash_v1 = form.cleaned_data['urlhash']
+        saved_map = SavedMap.objects.create(
+            urlhash=urlhash_v1,
+            mapdata=json.dumps(mapdata_v1),
+        )
+
+        # Confirm the saved map (v1) matched the cleaned data
+        saved_map = SavedMap.objects.get(urlhash=urlhash_v1)
+        saved_map_data = json.loads(saved_map.mapdata)
+        self.assertEqual(mapdata_v1["10"]["10"], saved_map_data["10"]["10"])
+        self.assertEqual(mapdata_v1["10"]["100"], saved_map_data["10"]["100"])
+        self.assertEqual(mapdata_v1["global"], saved_map_data["global"])
+
+        self.assertFalse(saved_map.data)
+        saved_map.convert_mapdata_v1_to_v2()
+        saved_map.refresh_from_db()
+
+        # Confirm the v2 version of the map has the same points
+        self.assertEqual(
+            saved_map.data['points_by_color']['008800']['xys']["10"]["10"],
+            1,
+        )
+        self.assertEqual(
+            saved_map.data['points_by_color']['008800']['xys']["10"]["100"],
+            1,
+        )
+
+        # Confirm this has the same stations, too
+        self.assertEqual(
+            saved_map.data['stations']['10']['10'],
+            {"name": "A", "orientation": "-135", "style": "rect"},
+        )
+        self.assertEqual(
+            saved_map.data['stations']['10']['100'],
+            {"name": "B", "orientation": "-45", "style": "wmata"},
+        )
+
+        # Global lines & style are the same from v1 to v2
+        self.assertEqual(saved_map.data['global']['lines'], saved_map_data['global']['lines'])
+        self.assertEqual(saved_map.data['global']['style'], saved_map_data['global']['style'])
+
+        # Data version is new, and we have the map size too
+        self.assertEqual(saved_map.data['global']['data_version'], 2)
+        self.assertEqual(saved_map.data['global']['map_size'], 120)
+
+        # Re-submit the map; this time it'll validate as v2, giving a new hash
+        form = CreateMapForm({"mapdata": saved_map.data})
+        self.assertTrue(form.is_valid())
+        self.assertNotEqual(urlhash_v1, form.cleaned_data['urlhash'])
+
+        # But the data is the same as before
+        self.assertEqual(saved_map.data, form.cleaned_data['mapdata'])
+
 
 class ValidateMap(PostMapDataMixin, TestCase):
 

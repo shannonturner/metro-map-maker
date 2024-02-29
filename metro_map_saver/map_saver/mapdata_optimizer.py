@@ -95,10 +95,14 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
                     station_data = {
                         'name': station.get('name', ''),
                         'lines': station.get('lines', []),
-                        'transfer': station.get('transfer', 0),
                         'orientation': station.get('orientation', 0),
                         'xy': (int(x), int(y)),
                     }
+                    if station.get('transfer'):
+                        station_data['transfer'] = 1
+                    style = station.get('style')
+                    if style:
+                        station_data['style'] = style
                     stations.append(station_data)
 
                 # Add the points
@@ -118,6 +122,17 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
             if highest_seen < size:
                 map_size = size
     elif map_type == 'classic' and data_version == 2:
+        # for color in mapdata['points_by_color']:
+
+        # points_by_color[line_color] = {
+        #     'x': [],
+        #     'y': [],
+        #     'xy': [],
+        # }
+
+        # valid_points_by_color[color]['xys'][x][y]
+
+
         raise NotImplementedError('TODO')
 
     return points_by_color, stations, map_size
@@ -576,5 +591,3 @@ def find_squares(points_this_color, width=5):
             potentials.remove(xy)
 
     return squares_ext, squares_int
-
-

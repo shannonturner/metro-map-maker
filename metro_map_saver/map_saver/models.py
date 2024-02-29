@@ -146,8 +146,7 @@ class SavedMap(models.Model):
         except json.decoder.JSONDecodeError as exc:
             raise
 
-        if mapdata['global'].get('map_type') or mapdata['global'].get('data_version'):
-            # Neither of these keys are present in v1
+        if mapdata['global'].get('data_version', 1) > 1:
             raise ValueError('This map is not data_version v1; cannot convert to v2')
 
         # Note that sort_points_by_color is NOT the reduced set of points, which is good here
@@ -155,7 +154,6 @@ class SavedMap(models.Model):
 
         mapdata_v2 = {
             'global': {
-                'map_type': 'classic',
                 'data_version': 2,
                 'map_size': map_size,
                 'lines': mapdata['global']['lines'],
@@ -164,14 +162,18 @@ class SavedMap(models.Model):
             'points_by_color': points_by_color,
         }
 
+        style = mapdata['global'].get('style')
+        if style:
+            mapdata_v2['global']['style'] = style
+
         # Think I'm going to drop this feature after all; it's more clutter than helpful
         for index, station in enumerate(mapdata_v2['stations']):
             mapdata_v2['stations'][index].pop('lines', None)
 
-        self.data = mapdata_v2
+        self.data = self.data_optimized_for_js_performance(mapdata_v2)
         self.save()
 
-    def data_optimized_for_js_performance(self):
+    def data_optimized_for_js_performance(self, mapdata_v2):
 
         """ sort_points_by_color is a good midway point between being optimized for
                 data size / SVG generation (Python)
@@ -194,12 +196,14 @@ class SavedMap(models.Model):
 
             Similarly, for SVGs it's fine that stations is a list of dicts,
                 but doing a lookup on a list isn't great. Again, use [x] && [x][y] pattern.
+
+            In short: the JS side needs to be as performant as possible,
+                so store the optimized data in .data
+
+            We can afford to re-run .sort_points_by_color to generate the SVG,
+                which is done less frequently than accessing the JS
+                (and ideally only once)
         """
-
-        if not self.data:
-            return False
-
-        mapdata_v2 = self.data
 
         for color in mapdata_v2['points_by_color']:
             mapdata_v2['points_by_color'][color].pop('x', None)
@@ -269,19 +273,19 @@ class SavedMap(models.Model):
         return self.urlhash
 
     def save(self, *args, **kwargs):
-        # TODO: Clean this up
-        self.stations = self._get_stations()
-        self.station_count = self._station_count()
-        self.name = self.name.strip()
-        self.thumbnail = self.thumbnail.strip()
-        if self._publicly_visible:
-            self.publicly_visible = True
-        else:
-            self.publicly_visible = False
-        suggested_city = self._suggest_city()
-        if suggested_city:
-            self.suggested_city = suggested_city[0][0].split("(")[0].strip()
-            self.suggested_city_overlap = suggested_city[0][1]
+        # TODO: Clean this up / Re-enable this
+        # self.stations = self._get_stations()
+        # self.station_count = self._station_count()
+        # self.name = self.name.strip()
+        # self.thumbnail = self.thumbnail.strip()
+        # if self._publicly_visible:
+        #     self.publicly_visible = True
+        # else:
+        #     self.publicly_visible = False
+        # suggested_city = self._suggest_city()
+        # if suggested_city:
+        #     self.suggested_city = suggested_city[0][0].split("(")[0].strip()
+        #     self.suggested_city_overlap = suggested_city[0][1]
         super().save(*args, **kwargs)
 
     DEFER_FIELDS = (
