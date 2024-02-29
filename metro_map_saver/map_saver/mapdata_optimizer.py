@@ -25,12 +25,7 @@ SVG_TEMPLATE = Template('''
         {% endfor %}
     {% endfor %}
     {% for station in stations %}
-        {% if station.transfer %}
-            <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r="1.2" fill="#000" />
-            <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r=".9" fill="#fff" />
-        {% endif %}
-        <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r=".6" fill="#000" />
-        <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r=".3" fill="#fff" />
+        {% station_marker station default_station_shape line_size %}
         {% station_text station %}
     {% endfor %}
 {#{% endspaceless %}#}
@@ -97,6 +92,7 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
                         'lines': station.get('lines', []),
                         'orientation': station.get('orientation', 0),
                         'xy': (int(x), int(y)),
+                        'color': line_color,
                     }
                     if station.get('transfer'):
                         station_data['transfer'] = 1
@@ -428,7 +424,7 @@ def reduce_straight_line(line):
     # Can't be reduced further
     return line
 
-def get_svg_from_shapes_by_color(shapes_by_color, map_size, stations=False):
+def get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, stations=False):
 
     """ Finally, let's draw SVG from the sorted shapes by color.
 
@@ -440,6 +436,8 @@ def get_svg_from_shapes_by_color(shapes_by_color, map_size, stations=False):
         'shapes_by_color': shapes_by_color,
         'canvas_size': map_size,
         'stations': stations or [],
+        'line_size': line_size,
+        'default_station_shape': default_station_shape,
     }
 
     return SVG_TEMPLATE.render(Context(context))

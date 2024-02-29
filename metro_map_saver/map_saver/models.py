@@ -224,6 +224,7 @@ class SavedMap(models.Model):
                 stations[x] = {}
             stations[x][y] = station
             stations[x][y].pop('xy')
+            stations[x][y].pop('color')
         mapdata_v2['stations'] = stations
 
         return mapdata_v2
@@ -243,14 +244,23 @@ class SavedMap(models.Model):
 
         t0 = time.time()
 
-        points_by_color, stations, map_size = sort_points_by_color(self.mapdata)
+        mapdata = self.data or self.mapdata
+
+        points_by_color, stations, map_size = sort_points_by_color(mapdata)
         shapes_by_color = get_shapes_from_points(points_by_color)
 
-        thumbnail_svg = get_svg_from_shapes_by_color(shapes_by_color, map_size)
+        if mapdata['global'].get('style'):
+            line_size = mapdata['global']['style'].get('mapLineWidth', 1)
+            default_station_shape = mapdata['global']['style'].get('mapStationStyle', 'wmata')
+        else:
+            line_size = 1
+            default_station_shape = 'wmata'
+
+        thumbnail_svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape)
         thumbnail_svg_file = ContentFile(thumbnail_svg, name=f"t{self.urlhash}.svg")
         self.thumbnail_svg = thumbnail_svg_file
 
-        svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, stations)
+        svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, stations)
         svg_file = ContentFile(svg, name=f"{self.urlhash}.svg")
         self.svg = svg_file
         self.save()
