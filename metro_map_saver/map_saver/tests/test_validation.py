@@ -27,7 +27,6 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
     """
 
     TODO = """
-    metro_map['global']['map_size'] is correct for highest xy seen
     valid case, v2
     v1 gets converted into v2 & It's valid (can get re-validated & comes out the same)
         ^ v1 needs to also have styles
@@ -257,6 +256,42 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
             mapdata = form.cleaned_data['mapdata']
             self.assertEqual(mapdata['global']['style']['mapLineWidth'], 1)
             self.assertEqual(mapdata['global']['style']['mapStationStyle'], 'wmata')
+
+    def test_map_size(self):
+
+        """ Confirm that metro_map['global']['map_size']
+            is correct for highest xy seen
+        """
+
+        maps = [
+            # Basic cases
+            {"json": {"points_by_color": {"bd1038": {"xys": {"0": {"0": 1}}}, "00b251": {"xys": {"1": {"1": 1}}}}}, "expected": 80},
+            {"json": {"points_by_color": {"bd1038": {"xys": {"80": {"80": 1}}}, "00b251": {"xys": {"1": {"1": 1}}}}}, "expected": 120},
+            {"json": {"points_by_color": {"bd1038": {"xys": {"120": {"120": 1}}}, "00b251": {"xys": {"1": {"1": 1}}}}}, "expected": 160},
+            {"json": {"points_by_color": {"bd1038": {"xys": {"160": {"160": 1}}}, "00b251": {"xys": {"1": {"1": 1}}}}}, "expected": 200},
+            {"json": {"points_by_color": {"bd1038": {"xys": {"200": {"200": 1}}}, "00b251": {"xys": {"1": {"1": 1}}}}}, "expected": 240},
+
+            # Single axis
+            {"json": {"points_by_color": {"bd1038": {"xys": {"79": {"0": 1}}}, "00b251": {"xys": {"1": {"1": 1}}}}}, "expected": 80},
+            {"json": {"points_by_color": {"bd1038": {"xys": {"0": {"79": 1}}}, "00b251": {"xys": {"1": {"1": 1}}}}}, "expected": 80},
+            {"json": {"points_by_color": {"bd1038": {"xys": {"0": {"100": 1}}}, "00b251": {"xys": {"1": {"1": 1}}}}}, "expected": 120},
+            {"json": {"points_by_color": {"bd1038": {"xys": {"150": {"100": 1}}}, "00b251": {"xys": {"1": {"1": 1}}}}}, "expected": 160},
+
+            # Bad Points
+            {"json": {"points_by_color": {"bd1038": {"xys": {"79": {"79": 1}}}, "00b251": {"xys": {"101": {"badY": 1}}}}}, "expected": 80},
+            {"json": {"points_by_color": {"bd1038": {"xys": {"110": {"110": 1}}}, "00b251": {"xys": {"201": {"badY": 1}}}}}, "expected": 120},
+
+            # OOB
+            {"json": {"points_by_color": {"bd1038": {"xys": {"79": {"79": 1}}}, "00b251": {"xys": {"240": {"1": 1}}}}}, "expected": 80},
+        ]
+
+        for mmap in maps:
+            mmap['json'].update(self.v2_minimum)
+            form = CreateMapForm({"mapdata": mmap['json']})
+            self.assertTrue(form.is_valid())
+
+            mapdata = form.cleaned_data['mapdata']
+            self.assertEqual(mapdata['global']['map_size'], mmap['expected'])
 
 
 class ValidateMap(PostMapDataMixin, TestCase):
