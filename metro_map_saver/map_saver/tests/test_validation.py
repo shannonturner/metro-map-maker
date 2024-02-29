@@ -27,7 +27,6 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
     """
 
     TODO = """
-    valid case, v2
     v1 gets converted into v2 & It's valid (can get re-validated & comes out the same)
         ^ v1 needs to also have styles
     """
@@ -293,6 +292,110 @@ class ValidateMapV2(PostMapDataMixin, TestCase):
             mapdata = form.cleaned_data['mapdata']
             self.assertEqual(mapdata['global']['map_size'], mmap['expected'])
 
+    def test_valid_v2_map(self):
+
+        """ Confirm various features of a valid v2 map
+            get validated and end up unchanged
+        """
+
+        maps = [
+            {"json": {
+                "points_by_color": {
+                    "bd1038": {"xys": {
+                        "0": {
+                            "0": 1,
+                            "1": 1,
+                            "10": 1,
+                        },
+                    }},
+                    "00b251": {"xys": {
+                        "1": {
+                            "1": 1,
+                            "2": 1,
+                            "100": 1,
+                            "160": 1,
+                        },
+                    }},
+                },
+                "stations": {
+                    "0": {
+                        "0": {
+                            "name": "Silver Spring", "orientation": '45', "style": "circles-sm", "transfer": 1
+                        },
+                        "1": {
+                            "name": "Silver Spring", "orientation": '-45', "style": "circles-md",
+                        },
+                        "10": {
+                            "name": "_", "orientation": "180", "style": "circles-lg",
+                        },
+                    },
+                    "1": {
+                        "1": {
+                            "name": "C", "orientation": '90', "style": "rect-round",
+                        },
+                        "2": {
+                            "name": "D 🚊", "orientation": '-90', "style": "rect",
+                        },
+                        "100": {
+                            "name": "E 🚊", "orientation": '135', "style": "wmata",
+                        },
+                        "160": {
+                            "name": "F 🚊", "orientation": '-135', "style": "circles-lg",
+                        },
+                    },
+                },
+                "global": {
+                    "data_version": 2,
+                    "map_size": 200,
+                    "style": {
+                        "mapLineWidth": 0.25,
+                        "mapStationStyle": "rect-round",
+                    },
+                    "lines": {
+                        "bd1038": {"displayName": "bd1038"},
+                        "00b251": {"displayName": "00b251"},
+                    },
+                },
+            }},
+        ]
+
+        for mmap in maps:
+            form = CreateMapForm({"mapdata": mmap['json']})
+            self.assertTrue(form.is_valid())
+
+            mapdata = form.cleaned_data['mapdata']
+
+            for color in mmap['json']['points_by_color']:
+                for x in mmap['json']['points_by_color'][color]['xys']:
+                    for y in mmap['json']['points_by_color'][color]['xys'][x]:
+                        self.assertEqual(
+                            mmap['json']['points_by_color'][color]['xys'][x][y],
+                            mapdata['points_by_color'][color]['xys'][x][y],
+                        )
+
+            for x in mmap['json']['stations']:
+                for y in mmap['json']['stations'][x]:
+                    self.assertEqual(
+                        mmap['json']['stations'][x][y],
+                        mapdata['stations'][x][y],
+                    )
+
+            self.assertEqual(
+                mmap['json']['global']['style']['mapLineWidth'],
+                mapdata['global']['style']['mapLineWidth'],
+            )
+            self.assertEqual(
+                mmap['json']['global']['style']['mapStationStyle'],
+                mapdata['global']['style']['mapStationStyle'],
+            )
+            self.assertEqual(
+                mmap['json']['global']['map_size'],
+                mapdata['global']['map_size'],
+            )
+            self.assertEqual(
+                mmap['json']['global']['data_version'],
+                mapdata['global']['data_version'],
+            )
 
 class ValidateMap(PostMapDataMixin, TestCase):
 
