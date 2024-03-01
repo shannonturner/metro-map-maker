@@ -3049,6 +3049,7 @@ function getConnectedStations(x, y, metroMap) {
   function shouldUseOvals(station) {
     // Note: This conditional is different than in drawPoint, because in drawPoint
     //  we're drawing the lines
+    if (!station) { return false }
     if (station['style'] == 'rect' || station['style'] == 'rect-round')
       return true
     else if (!station['style'] && (mapStationStyle == 'rect' || mapStationStyle == 'rect-round'))
@@ -3079,7 +3080,7 @@ function getConnectedStations(x, y, metroMap) {
     var yn = y
     do {
       xn += 1
-    } while (getStation(xn, yn, metroMap))
+    } while (shouldUseOvals(getStation(xn, yn, metroMap)))
     coordinates['E'] = {
       'x1': xn - 1,
       'y1': yn
@@ -3091,7 +3092,7 @@ function getConnectedStations(x, y, metroMap) {
     var yn = y
     do {
       yn += 1
-    } while (getStation(xn, yn, metroMap))
+    } while (shouldUseOvals(getStation(xn, yn, metroMap)))
     coordinates['S'] = {
       'x1': xn,
       'y1': yn - 1
@@ -3104,7 +3105,7 @@ function getConnectedStations(x, y, metroMap) {
     do {
       xn += 1
       yn -= 1
-    } while (getStation(xn, yn, metroMap))
+    } while (shouldUseOvals(getStation(xn, yn, metroMap)))
     coordinates['NE'] = {
       'x1': xn - 1,
       'y1': yn + 1
@@ -3117,7 +3118,7 @@ function getConnectedStations(x, y, metroMap) {
     do {
       xn += 1
       yn += 1
-    } while (getStation(xn, yn, metroMap))
+    } while (shouldUseOvals(getStation(xn, yn, metroMap)))
     coordinates['SE'] = {
       'x1': xn - 1,
       'y1': yn - 1
@@ -3132,7 +3133,7 @@ function getConnectedStations(x, y, metroMap) {
     var yn = y
     do {
       xn -= 1
-    } while (getStation(xn, yn, metroMap))
+    } while (shouldUseOvals(getStation(xn, yn, metroMap)))
     coordinates['W'] = {
       'x1': xn + 1,
       'y1': yn
@@ -3145,7 +3146,7 @@ function getConnectedStations(x, y, metroMap) {
     var yn = y
     do {
       yn -= 1
-    } while (getStation(xn, yn, metroMap))
+    } while (shouldUseOvals(getStation(xn, yn, metroMap)))
     coordinates['N'] = {
       'x1': xn,
       'y1': yn + 1
@@ -3159,7 +3160,7 @@ function getConnectedStations(x, y, metroMap) {
     do {
       xn -= 1
       yn -= 1
-    } while (getStation(xn, yn, metroMap))
+    } while (shouldUseOvals(getStation(xn, yn, metroMap)))
     coordinates['NW'] = {
       'x1': xn + 1,
       'y1': yn + 1
@@ -3173,7 +3174,7 @@ function getConnectedStations(x, y, metroMap) {
     do {
       xn -= 1
       yn += 1
-    } while (getStation(xn, yn, metroMap))
+    } while (shouldUseOvals(getStation(xn, yn, metroMap)))
     coordinates['SW'] = {
       'x1': xn + 1,
       'y1': yn - 1
