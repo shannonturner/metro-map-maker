@@ -245,8 +245,9 @@ class SavedMap(models.Model):
         t0 = time.time()
 
         mapdata = self.data or self.mapdata
+        data_version = mapdata['global'].get('data_version', 1)
 
-        points_by_color, stations, map_size = sort_points_by_color(mapdata)
+        points_by_color, stations, map_size = sort_points_by_color(mapdata, data_version=data_version)
         shapes_by_color = get_shapes_from_points(points_by_color)
 
         if mapdata['global'].get('style'):
@@ -256,22 +257,22 @@ class SavedMap(models.Model):
             line_size = 1
             default_station_shape = 'wmata'
 
-        thumbnail_svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape)
+        thumbnail_svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, points_by_color)
         thumbnail_svg_file = ContentFile(thumbnail_svg, name=f"t{self.urlhash}.svg")
         self.thumbnail_svg = thumbnail_svg_file
 
-        svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, stations)
+        svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, points_by_color, stations)
         svg_file = ContentFile(svg, name=f"{self.urlhash}.svg")
         self.svg = svg_file
         self.save()
 
-        png_thumbnail = settings.MEDIA_ROOT / get_thumbnail_filepath(self, f'{self.urlhash}.png')
-        thumbnail_png = draw_png_from_shapes_by_color(shapes_by_color, self.urlhash, map_size, png_thumbnail, stations=False)
-        self.thumbnail_png = get_thumbnail_filepath(self, f't{self.urlhash}.png')
+        # png_thumbnail = settings.MEDIA_ROOT / get_thumbnail_filepath(self, f'{self.urlhash}.png')
+        # thumbnail_png = draw_png_from_shapes_by_color(shapes_by_color, self.urlhash, map_size, png_thumbnail, stations=False)
+        # self.thumbnail_png = get_thumbnail_filepath(self, f't{self.urlhash}.png')
 
-        png_filename = settings.MEDIA_ROOT / get_image_filepath(self, f'{self.urlhash}.png')
-        thumbnail_png = draw_png_from_shapes_by_color(shapes_by_color, self.urlhash, map_size, png_filename, stations=stations)
-        self.png = get_image_filepath(self, f'{self.urlhash}.png')
+        # png_filename = settings.MEDIA_ROOT / get_image_filepath(self, f'{self.urlhash}.png')
+        # thumbnail_png = draw_png_from_shapes_by_color(shapes_by_color, self.urlhash, map_size, png_filename, stations=stations)
+        # self.png = get_image_filepath(self, f'{self.urlhash}.png')
 
         self.save()
 

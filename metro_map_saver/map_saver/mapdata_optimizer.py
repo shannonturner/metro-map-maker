@@ -4,28 +4,32 @@ import json
 from django.template import Context, Template
 from PIL import Image, ImageDraw
 
-from .validator import VALID_XY
+from .validator import VALID_XY, ALLOWED_MAP_SIZES
 
 SVG_TEMPLATE = Template('''
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ canvas_size|default:80 }} {{ canvas_size|default:80 }}">
 {#{% spaceless %}#} {# DEBUG; TODO: UNCOMMENT #}
 {% load metromap_utils %}
 {% if stations %}
-    <style>text { font: 1px Helvetica; font-weight: 600; white-space: pre; }</style>
+    <style>text { font: 1px Helvetica; font-weight: 600; white-space: pre; dominant-baseline: central; }</style>
 {% endif %}
     {% for color, shapes in shapes_by_color.items %}
         {% for line in shapes.lines %}
             <polyline points="{% for coords in line %}{{ coords.0 }},{{ coords.1 }} {% endfor %}" stroke="#{{ color }}" stroke-width="{{ line_size|default:1 }}" fill="none" stroke-linecap="round" stroke-linejoin="round" />
         {% endfor %}
         {% for point in shapes.points %}
-            <circle cx="{{ point.0 }}" cy="{{ point.1 }}" r="{{ point.size|default:1 }}" fill="#{{ color }}" />
+            {% if default_station_shape == 'rect' %}
+                <rect x="{{ point.0 }}" y="{{ point.1 }}" w="1" h="1"" fill="#{{ color }}" />
+            {% else %}
+                <circle cx="{{ point.0 }}" cy="{{ point.1 }}" r="{{ point.size|default:1 }}" fill="#{{ color }}" />
+            {% endif %}
         {% endfor %}
         {% for square in shapes.square_interior_points %}
             <rect x="{{ square.0.0|add:-0.5 }}" y="{{ square.0.1|add:0.5 }}" width="{{ square|length|square_root|add:2 }}" height="{{ square|length|square_root|add:2 }}" fill="#{{ color }}" />
         {% endfor %}
     {% endfor %}
     {% for station in stations %}
-        {% station_marker station default_station_shape line_size %}
+        {% station_marker station default_station_shape line_size points_by_color stations %}
         {% station_text station %}
     {% endfor %}
 {#{% endspaceless %}#}
@@ -60,7 +64,8 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
     allowed_sizes = {
         'classic': {
             # Order matters
-            1: [240, 200, 160, 120, 80],
+            1: reversed(ALLOWED_MAP_SIZES),
+            2: reversed(ALLOWED_MAP_SIZES),
         }
     }
     allowed_sizes = allowed_sizes[map_type][data_version]
@@ -114,22 +119,65 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
                 points_by_color[line_color]['y'].append(y)
                 points_by_color[line_color]['xy'].append((x, y))
 
-        for size in allowed_sizes:
-            if highest_seen < size:
-                map_size = size
     elif map_type == 'classic' and data_version == 2:
-        # for color in mapdata['points_by_color']:
+        # The point here is to convert from the data format optimized for JS
+        #   to the format best for SVG
+        colors_by_xy = {}
 
-        # points_by_color[line_color] = {
-        #     'x': [],
-        #     'y': [],
-        #     'xy': [],
-        # }
+        default_station_shape = mapdata['global'].get('style', {}).get('mapStationStyle', 'wmata')
 
-        # valid_points_by_color[color]['xys'][x][y]
+        for line_color in mapdata['points_by_color']:
+            for x in mapdata['points_by_color'][line_color]['xys']:
+                for y in mapdata['points_by_color'][line_color]['xys'][x]:
+                    x = str(x)
+                    y = str(y)
+                    if x not in VALID_XY or y not in VALID_XY:
+                        continue
 
+                    if mapdata['points_by_color'][line_color]['xys'][x][y] != 1:
+                        continue
 
-        raise NotImplementedError('TODO')
+                    if line_color not in points_by_color:
+                        points_by_color[line_color] = {
+                            'x': [],
+                            'y': [],
+                            'xy': [],
+                        }
+
+                    colors_by_xy[f'{x},{y}'] = line_color
+
+                    x = int(x)
+                    y = int(y)
+
+                    if x > highest_seen:
+                        highest_seen = x
+                    if y > highest_seen:
+                        highest_seen = y
+
+                    points_by_color[line_color]['x'].append(x)
+                    points_by_color[line_color]['y'].append(y)
+                    points_by_color[line_color]['xy'].append((x, y))
+
+        for x in mapdata['stations']:
+            for y in mapdata['stations'][x]:
+                if x not in VALID_XY or y not in VALID_XY:
+                    continue
+
+                station = mapdata['stations'][x][y]
+                station_data = {
+                    'name': station.get('name', ''),
+                    'orientation': station.get('orientation', 0),
+                    'xy': (int(x), int(y)),
+                    'color': colors_by_xy[f'{x},{y}'],
+                }
+                if station.get('transfer'):
+                    station_data['transfer'] = 1
+                station_data['style'] = station.get('style', default_station_shape)
+                stations.append(station_data)
+
+    for size in allowed_sizes:
+        if highest_seen < size:
+            map_size = size
 
     return points_by_color, stations, map_size
 
@@ -424,9 +472,13 @@ def reduce_straight_line(line):
     # Can't be reduced further
     return line
 
-def get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, stations=False):
+def get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, points_by_color, stations=False):
 
     """ Finally, let's draw SVG from the sorted shapes by color.
+
+        Note: points_by_color shouldn't be used directly to draw, but it's necessary
+            to check line direction and station adjacency for diagonal rectangle stations
+            and connecting stations
 
         If stations=True, draw stations;
             otherwise omit them (nicer for thumbnails)
@@ -434,6 +486,7 @@ def get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_s
 
     context = {
         'shapes_by_color': shapes_by_color,
+        'points_by_color': points_by_color,
         'canvas_size': map_size,
         'stations': stations or [],
         'line_size': line_size,

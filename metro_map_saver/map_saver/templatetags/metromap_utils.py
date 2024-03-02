@@ -12,7 +12,7 @@ register = template.Library()
 logger = logging.getLogger(__name__)
 
 @register.simple_tag
-def station_marker(station, default_shape, line_size):
+def station_marker(station, default_shape, line_size, points_by_color, stations):
 
     """ Generate the SVG shape for a station based on
             whether it's a transfer station and what its shape is.
@@ -21,16 +21,16 @@ def station_marker(station, default_shape, line_size):
     assert isinstance(station['xy'][0], int)
     assert isinstance(station['xy'][1], int)
 
-    if shape not in ALLOWED_STATION_STYLES:
-        logger.error(f"Can't generate SVG for shape: {shape}")
-        raise NotImplementedError(f"Can't generate SVG for shape: {shape}")
-
     x = station['xy'][0]
     y = station['xy'][1]
 
     transfer = station.get('transfer') == 1
     shape = station.get('style', default_shape)
     color = station['color']
+
+    if shape not in ALLOWED_STATION_STYLES:
+        logger.error(f"Can't generate SVG for shape: {shape}")
+        raise NotImplementedError(f"Can't generate SVG for shape: {shape}")
 
     svg = []
 
@@ -39,24 +39,110 @@ def station_marker(station, default_shape, line_size):
     #   and conditional stroke/fills based on line size
     if shape == 'wmata':
         if transfer:
-            svg.append(f'''
-                <circle cx="{x}" cy="{y}" r="1.2" fill="#000" />
-                <circle cx="{x}" cy="{y}" r=".9" fill="#fff" />
-            ''')
-        svg.append(f'''
-            <circle cx="{x}" cy="{y}" r=".6" fill="#000" />
-            <circle cx="{x}" cy="{y}" r=".3" fill="#fff" />
-        ''')
-    elif shape == 'rect':
-        pass # TODO: needs to know line size and color it sits on
-    elif shape == 'rect-round':
-        pass # TODO: needs to know line size and color it sits on
+            svg.append(svg_circle(x, y, 1.2, '#000'))
+            svg.append(svg_circle(x, y, .9, '#fff'))
+        svg.append(svg_circle(x, y, .6, '#000'))
+        svg.append(svg_circle(x, y, .3, '#fff'))
+    elif shape == 'rect' or shape == 'rect-round':
+        # TODO: needs to know line size and color it sits on,
+        #   and the line direction matters too
+        # plus of course there's adjacent-connecting staitons get combined
+        # svg_rect(x, y, w, h, fill, stroke=None, stroke_width=999, rx=None)
+        # svg_rect(x, y, w, h, fill, stroke=None, stroke_width=999, rx=None)
+
+        width = 1
+        height = 1
+
+        if shape == 'rect-round':
+            radius = 0.5 # SVG equivalent for the pill shape
+        else:
+            radius = False
+
+        line_direction = get_line_direction(x, y, color, points_by_color)
+        station_direction = get_connected_stations(x, y, stations)
+        draw_as_connected = False
+
+        if station_direction == 'internal':
+            return '' # Don't draw this point
+
+        if line_size >= 0.5 and line_direction == 'singleton':
+            stroke = '#000'
+            fill = '#fff'
+        elif line_direction == 'singleton' and shape == 'rect-round':
+            stroke = '#000'
+            fill = '#fff'
+        else:
+            stroke = fill = color
+
+        if station_direction == 'conflicting':
+            if width > height:
+                width = height
+        elif isinstance(station_direction, dict):
+            # Connect these stations
+            draw_as_connected = True
+            stroke = '#000'
+            fill = '#fff'
+
+            # TODO: width/height
+            dx = station_direction['x1'] - x
+            dy = station_direction['y1'] - y
+
+            width = abs(dx) + 1
+            height = abs(dy) + 1
+
+            # Can't rely on the line direction, because that only
+            #   accounts for a single color
+            if dx > 0 and dy == 0:
+                line_direction = 'horizontal'
+            elif dx == 0 and dy > 0:
+                line_direction = 'vertical'
+            elif dx > 0 and dy > 0:
+                line_direction = 'diagonal-se'
+                width = 1
+            elif dx > 0 and dy < 0:
+                line_direction = 'diagonal-ne'
+                height = 1
+
+        elif station_direction == 'singleton':
+            if line_direction != 'singleton' and not station.get('transfer'):
+                width = 0.5
+
+        if not draw_as_connected and shape == 'rect-round':
+            radius = 0.25
+
+        if station.get('transfer'):
+            stroke_width = 0.25
+        else:
+            stroke_width = 0.2
+
+        if line_direction == 'diagonal-ne':
+            rotation = -45
+        elif line_direction == 'diagonal-se':
+            rotation = 45
+        else:
+            rotation = False
+
+        svg.append(svg_rect(x, y, width, height, fill, stroke, stroke_width, radius, rotation))
     elif shape == 'circles-lg':
-        pass
+        if transfer:
+            svg.append(svg_circle(x, y, 1.2, color))
+            svg.append(svg_circle(x, y, .9, '#fff'))
+        svg.append(svg_circle(x, y, .6, color))
+        svg.append(svg_circle(x, y, .3, '#fff'))
     elif shape == 'circles-md':
-        pass
+        if transfer and line_size >= 0.5:
+            svg.append(svg_circle(x, y, .3, color, stroke='#fff', stroke_width=0.5))
+        elif transfer:
+            svg.append(svg_circle(x, y, .3, color))
+        else:
+            svg.append(svg_circle(x, y, .3, '#fff', stroke=color, stroke_width=0.5))
     elif shape == 'circles-sm':
-        pass
+        if transfer and line_size >= 0.5:
+            svg.append(svg_circle(x, y, .25, color, stroke='#fff', stroke_width=0.25))
+        elif transfer:
+            svg.append(svg_circle(x, y, .25, color))
+        else:
+            svg.append(svg_circle(x, y, .25, '#fff', stroke=color, stroke_width=0.25))
 
     svg = ''.join(svg)
 
@@ -64,6 +150,199 @@ def station_marker(station, default_shape, line_size):
         '{}',
         mark_safe(svg),
     )
+
+def svg_circle(x, y, r, fill, stroke=None, stroke_width=0.5):
+    if stroke:
+        return f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}"/>'
+    return f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}"/>'
+
+def svg_rect(x, y, w, h, fill, stroke=None, stroke_width=0.2, rx=None, rot=None):
+    # TODO: probably will have to offset x and y by -0.5
+    rx = f' rx="{rx}"' if rx else ''
+    rot = f' transform="rotate({rot})"' if rot else ''
+    if stroke:
+        return f'<rect x="{x - 0.5}" y="{y - 0.5}" width="{w}" height="{h}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}"{rx}{rot}/>'
+    return f'<rect x="{x - 0.5}" y="{y - 0.5}" width="{w}" height="{h}" fill="{fill}"{rx}{rot}/>'
+
+def get_line_direction(x, y, color, points_by_color):
+
+    """ Returns which direction this line is going in,
+        to help draw the positioning of rectangle stations
+    """
+
+    NW = (x-1, y-1) in points_by_color[color]
+    NE = (x+1, y-1) in points_by_color[color]
+    SW = (x-1, y+1) in points_by_color[color]
+    SE = (x+1, y+1) in points_by_color[color]
+    N = (x, y-1) in points_by_color[color]
+    E = (x+1, y) in points_by_color[color]
+    S = (x, y+1) in points_by_color[color]
+    W = (x-1, y) in points_by_color[color]
+
+    if W and E:
+        return 'horizontal'
+    elif N and S:
+        return 'vertical'
+    elif NW and SE:
+        return 'diagonal-se'
+    elif SW and NE:
+        return 'diagonal-ne'
+    elif W or E:
+        return 'horizontal'
+    elif N or S:
+        return 'vertical'
+    elif NW or SE:
+        return 'diagonal-se'
+    elif SW or NE:
+        return 'diagonal-ne'
+    else:
+        return 'singleton'
+
+def get_connected_stations(x, y, stations):
+
+    """ Returns connected stations along a SINGLE direction,
+        with the goal of getting the xy coords of the ending connecting station
+        for the direction with the longest connection.
+
+        Alternatively, return:
+            'conflicting' when more than one direction has an equal number of points,
+            'singleton' if there are no adjacent stations,
+            'internal' if this is an interior station and shouldn't be drawn
+    """
+
+    eligible_stations = [
+        (s['xy'][0], s['xy'][1]) for s in stations if s['style'] in ('rect', 'rect-round')
+    ]
+
+    NW = (x-1, y-1) in eligible_stations
+    NE = (x+1, y-1) in eligible_stations
+    SW = (x-1, y+1) in eligible_stations
+    SE = (x+1, y+1) in eligible_stations
+    N = (x, y-1) in eligible_stations
+    E = (x+1, y) in eligible_stations
+    S = (x, y+1) in eligible_stations
+    W = (x-1, y) in eligible_stations
+
+    if not any([NW, NE, SW, SE, N, E, S, W]):
+        return 'singleton'
+
+    # Each station must be rect or rect-round in order to qualify for connection
+    directions = 'N E S W NE SE SW NW'
+    coords = {d: dict() for d in directions.split()}
+    coords['highest'] = {d: 0 for d in directions.split()[:4]}
+    xn = x
+    yn = y
+    while E:
+        xn += 1
+        E = (xn, yn) in eligible_stations
+    else:
+        xn -= 1
+        if xn != x:
+            coords['E'] = {'x1': xn, 'y1': yn}
+            coords['highest']['E'] = (xn - x)
+
+    xn = x
+    yn = y
+    while S:
+        yn += 1
+        S = (xn, yn) in eligible_stations
+    else:
+        yn -= 1
+        if yn != y:
+            coords['S'] = {'x1': xn, 'y1': yn}
+            coords['highest']['S'] = (yn - y)
+
+    xn = x
+    yn = y
+    while NE:
+        xn += 1
+        yn -= 1
+        NE = (xn, yn) in eligible_stations
+    else:
+        xn -= 1
+        yn += 1
+        if xn != x:
+            coords['NE'] = {'x1': xn, 'y1': yn}
+            coords['highest']['NE'] = (xn - x)
+
+    xn = x
+    yn = y
+    while SE:
+        xn += 1
+        yn += 1
+        SE = (xn, yn) in eligible_stations
+    else:
+        xn -= 1
+        yn -= 1
+        if xn != x:
+            coords['SE'] = {'x1': xn, 'y1': yn}
+            coords['highest']['SE'] = (xn - x)
+
+    xn = x
+    yn = y
+    while W:
+        xn -= 1
+        W = (xn, yn) in eligible_stations
+    else:
+        xn += 1
+        if xn != x:
+            coords['E']['internal'] = True
+            coords['highest']['E'] += abs(xn -x)
+
+    xn = x
+    yn = y
+    while N:
+        yn -= 1
+        N = (xn, yn) in eligible_stations
+    else:
+        yn += 1
+        if yn != y:
+            coords['N']['internal'] = True
+            coords['highest']['S'] += abs(yn - y)
+
+    xn = x
+    yn = y
+    while NW:
+        xn -= 1
+        yn -= 1
+        NW = (xn, yn) in eligible_stations
+    else:
+        xn += 1
+        yn += 1
+        if yn != y:
+            coords['SE']['internal'] = True
+            coords['highest']['SE'] = abs(yn - y)
+
+    xn = x
+    yn = y
+    while SW:
+        xn -= 1
+        yn += 1
+        SW = (xn, yn) in eligible_stations
+    else:
+        xn += 1
+        yn -= 1
+        if yn != y:
+            coords['NE']['internal'] = True
+            coords['highest']['NE'] += abs(yn - y)
+
+    connections = list(coords['highest'].values())
+    most_stations = max(connections)
+    if connections.count(most_stations) > 1:
+        return 'conflicting'
+
+    for k,v in coords['highest'].items():
+        if v == most_stations:
+            longest = k
+            break
+
+    if coords[longest].get('internal'):
+        return 'internal'
+
+    return {
+        'x1': coords[longest]['x1'],
+        'y1': coords[longest]['y1'],
+    }
 
 @register.simple_tag
 def station_text(station):
@@ -84,11 +363,16 @@ def station_text(station):
     text_anchor = ''
     transform = ''
 
+    name = station['name'].replace('_', ' ').strip()
+    if not name:
+        # Save a lot of KB by not including station names that won't be seen
+        return ''
+
     assert isinstance(station['xy'][0], int)
     assert isinstance(station['xy'][1], int)
     assert station['orientation'] in ALLOWED_ORIENTATIONS
 
-    if station['transfer']:
+    if station.get('transfer'):
         x_val = station['xy'][0] + 1.5
     else:
         x_val = station['xy'][0] + 0.75
@@ -112,7 +396,7 @@ def station_text(station):
         '-90', # Below, 90
     ):
         text_anchor = 'text-anchor="end"'
-        if station['transfer']:
+        if station.get('transfer'):
             x_val = station['xy'][0] - 1.5
         else:
             x_val = station['xy'][0] - 0.75
@@ -127,8 +411,7 @@ def station_text(station):
         else:
             transform = f'transform="rotate({station["orientation"]} {station["xy"][0]}, {station["xy"][1]})"'
 
-    name = station['name'].replace('_', ' ')
-    text = f'''<text dominant-baseline="central" x="{x_val}" y="{station['xy'][1]}" {text_anchor} {transform}>'''
+    text = f'''<text x="{x_val - 0.5}" y="{station['xy'][1] - 0.5}" {text_anchor} {transform}>'''
 
     return format_html(
         '{}{}{}',
