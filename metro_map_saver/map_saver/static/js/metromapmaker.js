@@ -3183,11 +3183,11 @@ function getConnectedStations(x, y, metroMap) {
     coordinates['highest']['NE'] += Math.abs(xn - x) - 1
   }
 
-  var numConnections = Object.values(coordinates['highest']).filter((n) => Number.isNaN(n) !== true)
+  var numConnections = Object.values(coordinates['highest']).filter((n) => n > 0)
   var mostStations = Math.max(...Object.values(numConnections))
 
   if (numConnections.length == 0) {
-    return false
+    return 'singleton'
   }
 
   if (numConnections.indexOf(mostStations) != numConnections.lastIndexOf(mostStations)) {

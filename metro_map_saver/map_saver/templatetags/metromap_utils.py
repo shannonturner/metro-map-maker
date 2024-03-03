@@ -79,8 +79,7 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
             stroke = fill = color
 
         if station_direction == 'conflicting':
-            if width > height:
-                width = height
+            width = height = 1
         elif isinstance(station_direction, dict):
             # Connect these stations
             draw_as_connected = True
