@@ -124,7 +124,7 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
         else:
             rotation = False
 
-        if not draw_as_connected:
+        if not draw_as_connected and not transfer:
             if line_direction == 'vertical':
                 width = 1
                 y_offset = -0.25
@@ -150,23 +150,23 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
         svg.append(svg_circle(x, y, .3, '#fff'))
         # Consider: Optimize into 1 call; non-xfer looks equivalent to <circle cx="53" cy="15" r="0.4" stroke="#ec2527" stroke-width="0.2" fill="#fff"/>
     elif shape == 'circles-md':
-        # if transfer and line_size >= 0.5:
-        #     svg.append(svg_circle(x, y, .35, color, stroke='#fff', stroke_width=0.2))
-        # elif transfer:
-        #     svg.append(svg_circle(x, y, .35, color))
-        # else:
-        #     svg.append(svg_circle(x, y, .35, '#fff', stroke=color, stroke_width=0.2))
-        svg.append(svg_circle(x, y, .5, color))
-        svg.append(svg_circle(x, y, .25, '#fff'))
+        if transfer and line_size >= 0.5:
+            svg.append(svg_circle(x, y, .5, '#fff'))
+            svg.append(svg_circle(x, y, .25, color))
+        elif transfer:
+            svg.append(svg_circle(x, y, .5, color))
+        else:
+            svg.append(svg_circle(x, y, .5, color))
+            svg.append(svg_circle(x, y, .25, '#fff'))
     elif shape == 'circles-sm':
-        # if transfer and line_size >= 0.5:
-        #     svg.append(svg_circle(x, y, .3, color, stroke='#fff', stroke_width=0.125))
-        # elif transfer:
-        #     svg.append(svg_circle(x, y, .3, color))
-        # else:
-        #     svg.append(svg_circle(x, y, .3, '#fff', stroke=color, stroke_width=0.125))
-        svg.append(svg_circle(x, y, .4, color))
-        svg.append(svg_circle(x, y, .2, '#fff'))
+        if transfer and line_size >= 0.5:
+            svg.append(svg_circle(x, y, .4, '#fff'))
+            svg.append(svg_circle(x, y, .2, color))
+        elif transfer:
+            svg.append(svg_circle(x, y, .4, color))
+        else:
+            svg.append(svg_circle(x, y, .4, color))
+            svg.append(svg_circle(x, y, .2, '#fff'))
 
     svg = ''.join(svg)
 
@@ -376,9 +376,9 @@ def lengthen_connecting_station(length):
     """
 
     if length <= 2:
-        return length
+        return length + 0.25
     elif length == 3:
-        return length + 1
+        return length + 0.75
     else:
         return length + round((length - 2) / 2)
 
