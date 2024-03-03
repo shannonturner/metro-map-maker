@@ -35,7 +35,7 @@ if (typeof mapDataVersion === 'undefined' || mapDataVersion == 1) {
 }
 
 const ALLOWED_ORIENTATIONS = ['0', '45', '-45', '90', '-90', '135', '-135', '180'];
-const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm']
+const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -937,7 +937,7 @@ function drawStation(ctx, x, y, metroMap, skipText) {
     drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.25, gridPixelMultiplier / 4)
   } else if (thisStationStyle == 'rect') {
     drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, 0, 0)
-  } else if (thisStationStyle == 'rect-round') {
+  } else if (thisStationStyle == 'rect-round' || thisStationStyle == 'circles-thin') {
     drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, 0, 0, 20)
   }
 
@@ -1189,6 +1189,11 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
   if (MMMDEBUG && x == $('#station-coordinates-x').val() && y == $('#station-coordinates-y').val())
       console.log(`xy: ${x},${y}; wh: ${width},${height} xf: ${isTransferStation} ld: ${lineDirection} ra: ${rectArgs} cs: ${connectedStations} dac: ${drawAsConnected}`)
   
+  if (!drawAsConnected && ((mapStationStyle == 'circles-thin' && thisStation && !thisStation['style']) || (thisStation && thisStation['style'] == 'circles-thin'))) {
+    drawCircleStation(ctx, x, y, activeMap, isTransferStation, .5, gridPixelMultiplier / 4, '#ffffff', '#000000')
+    return
+  }
+
   if (lineDirection == 'singleton' || (!thisStation && isIndicator && (lineDirection == 'horizontal' || lineDirection == 'vertical'))) {
     rectArgs = [(x - 0.5) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, width, height]
   } else if (lineDirection == 'horizontal' && (drawAsConnected || isTransferStation)) {
@@ -3052,9 +3057,9 @@ function getConnectedStations(x, y, metroMap) {
     // Note: This conditional is different than in drawPoint, because in drawPoint
     //  we're drawing the lines
     if (!station) { return false }
-    if (station['style'] == 'rect' || station['style'] == 'rect-round')
+    if (station['style'] == 'rect' || station['style'] == 'rect-round' || station['style'] == 'circles-thin')
       return true
-    else if (!station['style'] && (mapStationStyle == 'rect' || mapStationStyle == 'rect-round'))
+    else if (!station['style'] && (mapStationStyle == 'rect' || mapStationStyle == 'rect-round' || mapStationStyle == 'circles-thin'))
       return true
     return false
   }

@@ -43,14 +43,14 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
             svg.append(svg_circle(x, y, .9, '#fff'))
         svg.append(svg_circle(x, y, .6, '#000'))
         svg.append(svg_circle(x, y, .3, '#fff'))
-    elif shape == 'rect' or shape == 'rect-round':
+    elif shape in ('rect', 'rect-round', 'circles-thin'):
         # Set generics, and change as needed
         width = 0.5
         height = 0.5
         x_offset = -0.5
         y_offset = -0.5
 
-        if shape == 'rect-round':
+        if shape in ('rect-round', 'circles-thin'):
             radius = 0.5 # SVG equivalent for the pill shape
         else:
             radius = False
@@ -142,7 +142,10 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
                 width = 1
                 height = 1
 
-        svg.append(svg_rect(x, y, width, height, x_offset, y_offset, fill, stroke, stroke_width, radius, rotation))
+        if not draw_as_connected and shape == 'circles-thin':
+            svg.append(svg_circle(x, y, .5, '#fff', '#000', stroke_width))
+        else:
+            svg.append(svg_rect(x, y, width, height, x_offset, y_offset, fill, stroke, stroke_width, radius, rotation))
     elif shape == 'circles-lg':
         if transfer:
             svg.append(svg_circle(x, y, 1.2, color))
@@ -237,7 +240,8 @@ def get_connected_stations(x, y, stations):
     """
 
     eligible_stations = [
-        (s['xy'][0], s['xy'][1]) for s in stations if s['style'] in ('rect', 'rect-round')
+        # Each station must be circles-thin, rect, or rect-round in order to qualify for connection
+        (s['xy'][0], s['xy'][1]) for s in stations if s['style'] in ('rect', 'rect-round', 'circles-thin')
     ]
 
     # I could set up a complex dictionary with coordinate offsets
@@ -255,7 +259,6 @@ def get_connected_stations(x, y, stations):
     if not any([NW, NE, SW, SE, N, E, S, W]):
         return 'singleton'
 
-    # Each station must be rect or rect-round in order to qualify for connection
     directions = 'N E S W NE SE SW NW'
     coords = {d: dict() for d in directions.split()}
     coords['highest'] = {d: 0 for d in directions.split()[:6]}
