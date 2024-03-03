@@ -89,8 +89,9 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
             dx = station_direction['x1'] - x
             dy = station_direction['y1'] - y
 
-            width = abs(dx)
-            height = abs(dy)
+            # The smaller dimension will be reset to 1
+            width = abs(dx) + 1
+            height = abs(dy) + 1
 
             # Can't rely on the line direction, because that only
             #   accounts for a single color
@@ -239,6 +240,9 @@ def get_connected_stations(x, y, stations):
         (s['xy'][0], s['xy'][1]) for s in stations if s['style'] in ('rect', 'rect-round')
     ]
 
+    # I could set up a complex dictionary with coordinate offsets
+    #   and avoid repeating myself several times,
+    #   but I'm not convinced it would be more readable
     NW = (x-1, y-1) in eligible_stations
     NE = (x+1, y-1) in eligible_stations
     SW = (x-1, y+1) in eligible_stations
@@ -255,109 +259,124 @@ def get_connected_stations(x, y, stations):
     directions = 'N E S W NE SE SW NW'
     coords = {d: dict() for d in directions.split()}
     coords['highest'] = {d: 0 for d in directions.split()[:6]}
+    coords['points'] = {d: set() for d in directions.split()[:6]}
     xn = x
     yn = y
     while E:
+        coords['points']['E'].add((x, y))
+        coords['points']['E'].add((xn, yn))
         xn += 1
         E = (xn, yn) in eligible_stations
-    else:
-        xn = xn - 1 if E else xn
-        if xn != x:
+        if not E:
+            # End of the line!
+            xn -= 1
             coords['E'] = {'x1': xn, 'y1': yn}
-            coords['highest']['E'] = (xn - x)
+            break
 
     xn = x
     yn = y
     while S:
+        coords['points']['S'].add((x, y))
+        coords['points']['S'].add((xn, yn))
         yn += 1
         S = (xn, yn) in eligible_stations
-    else:
-        yn = yn - 1 if S else yn
-        if yn != y:
+        if not S:
+            yn -= 1
             coords['S'] = {'x1': xn, 'y1': yn}
-            coords['highest']['S'] = (yn - y)
+            break
 
     xn = x
     yn = y
     while NE:
+        coords['points']['NE'].add((x, y))
+        coords['points']['NE'].add((xn, yn))
         xn += 1
         yn -= 1
         NE = (xn, yn) in eligible_stations
-    else:
-        xn = xn - 1 if NE else xn
-        yn = yn + 1 if NE else yn
-        if xn != x:
+        if not NE:
+            xn -= 1
+            yn += 1
             coords['NE'] = {'x1': xn, 'y1': yn}
-            coords['highest']['NE'] = (xn - x)
+            break
 
     xn = x
     yn = y
     while SE:
+        coords['points']['SE'].add((x, y))
+        coords['points']['SE'].add((xn, yn))
         xn += 1
         yn += 1
         SE = (xn, yn) in eligible_stations
-    else:
-        xn = xn - 1 if SE else xn
-        yn = yn - 1 if SE else yn
-        if xn != x:
+        if not SE:
+            xn -= 1
+            yn -= 1
             coords['SE'] = {'x1': xn, 'y1': yn}
-            coords['highest']['SE'] = (xn - x)
+            break
 
     xn = x
     yn = y
     while W:
+        coords['points']['E'].add((x, y))
+        coords['points']['E'].add((xn, yn))
         xn -= 1
         W = (xn, yn) in eligible_stations
-    else:
-        xn = xn + 1 if W else xn
-        if xn != x:
+        if not W:
+            xn += 1
             coords['E']['internal'] = True
-            coords['highest']['E'] += abs(xn -x)
+            break
 
     xn = x
     yn = y
     while N:
+        coords['points']['S'].add((x, y))
+        coords['points']['S'].add((xn, yn))
         yn -= 1
         N = (xn, yn) in eligible_stations
-    else:
-        yn = yn + 1 if N else yn
-        if yn != y:
+        if not N:
+            yn += 1
             coords['S']['internal'] = True
-            coords['highest']['S'] += abs(yn - y)
+            break
 
     xn = x
     yn = y
     while NW:
+        coords['points']['SE'].add((x, y))
+        coords['points']['SE'].add((xn, yn))
         xn -= 1
         yn -= 1
         NW = (xn, yn) in eligible_stations
-    else:
-        xn = xn + 1 if NW else xn
-        yn = yn + 1 if NW else yn
-        if yn != y:
+        if not NW:
+            xn += 1
+            yn += 1
             coords['SE']['internal'] = True
-            coords['highest']['SE'] = abs(yn - y)
+            break
 
     xn = x
     yn = y
     while SW:
+        coords['points']['NE'].add((x, y))
+        coords['points']['NE'].add((xn, yn))
         xn -= 1
         yn += 1
         SW = (xn, yn) in eligible_stations
-    else:
-        xn = x + 1 if SW else xn
-        yn = y - 1 if SW else yn
-        if yn != y:
+        if not SW:
+            xn += 1
+            yn -= 1
             coords['NE']['internal'] = True
-            coords['highest']['NE'] += abs(yn - y)
+            break
 
-    connections = list(coords['highest'].values())
+    connections = [
+        len(coords['points'][direction])
+        for direction
+        in coords['points']
+    ]
     most_stations = max(connections)
+
     if connections.count(most_stations) > 1:
         return 'conflicting'
 
-    for k,v in coords['highest'].items():
-        if v == most_stations:
+    for k,v in coords['points'].items():
+        if len(v) == most_stations:
             longest = k
             break
 
