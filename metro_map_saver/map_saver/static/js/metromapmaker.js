@@ -1122,9 +1122,11 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     // or if we're not drawing a connected station,
     if (mapStationStyle == 'rect-round' || (thisStation && thisStation['style'] == 'rect-round')) {
       radius = 2
-    } else {
-      radius = false
     }
+  }
+
+  if (thisStation && thisStation['style'] == 'rect') {
+    radius = false
   }
 
   function drawDiagonalRectStation(offset, orientation) {
