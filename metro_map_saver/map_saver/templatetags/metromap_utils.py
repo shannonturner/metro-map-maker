@@ -44,8 +44,11 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
         svg.append(svg_circle(x, y, .6, '#000'))
         svg.append(svg_circle(x, y, .3, '#fff'))
     elif shape == 'rect' or shape == 'rect-round':
+        # Set generics, and change as needed
         width = 0.5
         height = 0.5
+        x_offset = -0.5
+        y_offset = -0.5
 
         if shape == 'rect-round':
             radius = 0.5 # SVG equivalent for the pill shape
@@ -101,9 +104,12 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
             elif dx > 0 and dy > 0:
                 line_direction = 'diagonal-ne'
                 width = 1
+                # Diagonal stations look shorter, lengthen them
+                height = lengthen_connecting_station(height)
             elif dx > 0 and dy < 0:
                 line_direction = 'diagonal-ne'
                 height = 1
+                width = lengthen_connecting_station(width)
 
         elif station_direction == 'singleton':
             if line_direction != 'singleton' and not station.get('transfer'):
@@ -112,21 +118,12 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
         if not draw_as_connected and shape == 'rect-round':
             radius = 0.125
 
-        # 123, 50 (\) looks best at x122.5y49.5 / 122.75 50
-        # 144, 55 (/) starts: <rect x="143.75" y="54.5" width="5" height="1" fill="#fff" stroke="#000" stroke-width="0.1" rx="0.5" transform="rotate(-45 143.5 54.5)"/>
-        #   but looks bad;
         if line_direction == 'diagonal-ne':
-            rotation = f'-45 {x - 0.25} {y}'
-            x_offset = -0.25
-            y_offset = -0.5
+            rotation = f'-45 {x} {y}'
         elif line_direction == 'diagonal-se':
-            rotation = f'45 {x} {y - 0.25}'
-            x_offset = -0.5
-            y_offset = -0.5
+            rotation = f'45 {x} {y}'
         else:
             rotation = False
-            x_offset = -0.5
-            y_offset = -0.5
 
         if not draw_as_connected:
             if line_direction == 'vertical':
@@ -137,8 +134,10 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
                 x_offset = -0.25
             elif line_direction == 'diagonal-se':
                 height = 1
+                x_offset = -0.25
             elif line_direction == 'diagonal-ne':
                 height = 1
+                x_offset = -0.25
             elif line_direction == 'singleton':
                 width = 1
                 height = 1
@@ -370,6 +369,19 @@ def get_connected_stations(x, y, stations):
         'x1': coords[longest]['x1'],
         'y1': coords[longest]['y1'],
     }
+
+def lengthen_connecting_station(length):
+
+    """ Diagonal connecting stations look shorter,
+        so lengthen them
+    """
+
+    if length <= 2:
+        return length
+    elif length == 3:
+        return length + 1
+    else:
+        return length + round((length - 2) / 2)
 
 @register.simple_tag
 def station_text(station):
