@@ -26,7 +26,7 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
 
     transfer = station.get('transfer') == 1
     shape = station.get('style', default_shape)
-    color = station['color']
+    color = f"#{station['color']}"
 
     if shape not in ALLOWED_STATION_STYLES:
         logger.error(f"Can't generate SVG for shape: {shape}")
@@ -44,14 +44,8 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
         svg.append(svg_circle(x, y, .6, '#000'))
         svg.append(svg_circle(x, y, .3, '#fff'))
     elif shape == 'rect' or shape == 'rect-round':
-        # TODO: needs to know line size and color it sits on,
-        #   and the line direction matters too
-        # plus of course there's adjacent-connecting staitons get combined
-        # svg_rect(x, y, w, h, fill, stroke=None, stroke_width=999, rx=None)
-        # svg_rect(x, y, w, h, fill, stroke=None, stroke_width=999, rx=None)
-
-        width = 1
-        height = 1
+        width = 0.5
+        height = 0.5
 
         if shape == 'rect-round':
             radius = 0.5 # SVG equivalent for the pill shape
@@ -65,7 +59,14 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
         if station_direction == 'internal':
             return '' # Don't draw this point
 
-        if line_size >= 0.5 and line_direction == 'singleton':
+        if station.get('transfer'):
+            width = 1
+            height = 1
+            stroke_width = 0.2
+        else:
+            stroke_width = 0.1
+
+        if line_size >= 0.5 and line_direction != 'singleton':
             stroke = '#000'
             fill = '#fff'
         elif line_direction == 'singleton' and shape == 'rect-round':
@@ -83,21 +84,22 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
             stroke = '#000'
             fill = '#fff'
 
-            # TODO: width/height
             dx = station_direction['x1'] - x
             dy = station_direction['y1'] - y
 
-            width = abs(dx) + 1
-            height = abs(dy) + 1
+            width = abs(dx)
+            height = abs(dy)
 
             # Can't rely on the line direction, because that only
             #   accounts for a single color
             if dx > 0 and dy == 0:
                 line_direction = 'horizontal'
+                height = 1
             elif dx == 0 and dy > 0:
                 line_direction = 'vertical'
+                width = 1
             elif dx > 0 and dy > 0:
-                line_direction = 'diagonal-se'
+                line_direction = 'diagonal-ne'
                 width = 1
             elif dx > 0 and dy < 0:
                 line_direction = 'diagonal-ne'
@@ -108,41 +110,65 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
                 width = 0.5
 
         if not draw_as_connected and shape == 'rect-round':
-            radius = 0.25
+            radius = 0.125
 
-        if station.get('transfer'):
-            stroke_width = 0.25
-        else:
-            stroke_width = 0.2
-
+        # 123, 50 (\) looks best at x122.5y49.5 / 122.75 50
+        # 144, 55 (/) starts: <rect x="143.75" y="54.5" width="5" height="1" fill="#fff" stroke="#000" stroke-width="0.1" rx="0.5" transform="rotate(-45 143.5 54.5)"/>
+        #   but looks bad;
         if line_direction == 'diagonal-ne':
-            rotation = -45
+            rotation = f'-45 {x - 0.25} {y}'
+            x_offset = -0.25
+            y_offset = -0.5
         elif line_direction == 'diagonal-se':
-            rotation = 45
+            rotation = f'45 {x} {y - 0.25}'
+            x_offset = -0.5
+            y_offset = -0.5
         else:
             rotation = False
+            x_offset = -0.5
+            y_offset = -0.5
 
-        svg.append(svg_rect(x, y, width, height, fill, stroke, stroke_width, radius, rotation))
+        if not draw_as_connected:
+            if line_direction == 'vertical':
+                width = 1
+                y_offset = -0.25
+            elif line_direction == 'horizontal':
+                height = 1
+                x_offset = -0.25
+            elif line_direction == 'diagonal-se':
+                height = 1
+            elif line_direction == 'diagonal-ne':
+                height = 1
+            elif line_direction == 'singleton':
+                width = 1
+                height = 1
+
+        svg.append(svg_rect(x, y, width, height, x_offset, y_offset, fill, stroke, stroke_width, radius, rotation))
     elif shape == 'circles-lg':
         if transfer:
             svg.append(svg_circle(x, y, 1.2, color))
             svg.append(svg_circle(x, y, .9, '#fff'))
         svg.append(svg_circle(x, y, .6, color))
         svg.append(svg_circle(x, y, .3, '#fff'))
+        # Consider: Optimize into 1 call; non-xfer looks equivalent to <circle cx="53" cy="15" r="0.4" stroke="#ec2527" stroke-width="0.2" fill="#fff"/>
     elif shape == 'circles-md':
-        if transfer and line_size >= 0.5:
-            svg.append(svg_circle(x, y, .3, color, stroke='#fff', stroke_width=0.5))
-        elif transfer:
-            svg.append(svg_circle(x, y, .3, color))
-        else:
-            svg.append(svg_circle(x, y, .3, '#fff', stroke=color, stroke_width=0.5))
+        # if transfer and line_size >= 0.5:
+        #     svg.append(svg_circle(x, y, .35, color, stroke='#fff', stroke_width=0.2))
+        # elif transfer:
+        #     svg.append(svg_circle(x, y, .35, color))
+        # else:
+        #     svg.append(svg_circle(x, y, .35, '#fff', stroke=color, stroke_width=0.2))
+        svg.append(svg_circle(x, y, .5, color))
+        svg.append(svg_circle(x, y, .25, '#fff'))
     elif shape == 'circles-sm':
-        if transfer and line_size >= 0.5:
-            svg.append(svg_circle(x, y, .25, color, stroke='#fff', stroke_width=0.25))
-        elif transfer:
-            svg.append(svg_circle(x, y, .25, color))
-        else:
-            svg.append(svg_circle(x, y, .25, '#fff', stroke=color, stroke_width=0.25))
+        # if transfer and line_size >= 0.5:
+        #     svg.append(svg_circle(x, y, .3, color, stroke='#fff', stroke_width=0.125))
+        # elif transfer:
+        #     svg.append(svg_circle(x, y, .3, color))
+        # else:
+        #     svg.append(svg_circle(x, y, .3, '#fff', stroke=color, stroke_width=0.125))
+        svg.append(svg_circle(x, y, .4, color))
+        svg.append(svg_circle(x, y, .2, '#fff'))
 
     svg = ''.join(svg)
 
@@ -156,13 +182,12 @@ def svg_circle(x, y, r, fill, stroke=None, stroke_width=0.5):
         return f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}"/>'
     return f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}"/>'
 
-def svg_rect(x, y, w, h, fill, stroke=None, stroke_width=0.2, rx=None, rot=None):
-    # TODO: probably will have to offset x and y by -0.5
+def svg_rect(x, y, w, h, x_offset, y_offset, fill, stroke=None, stroke_width=0.2, rx=None, rot=None):
     rx = f' rx="{rx}"' if rx else ''
     rot = f' transform="rotate({rot})"' if rot else ''
     if stroke:
-        return f'<rect x="{x - 0.5}" y="{y - 0.5}" width="{w}" height="{h}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}"{rx}{rot}/>'
-    return f'<rect x="{x - 0.5}" y="{y - 0.5}" width="{w}" height="{h}" fill="{fill}"{rx}{rot}/>'
+        return f'<rect x="{x + x_offset}" y="{y + y_offset}" width="{w}" height="{h}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}"{rx}{rot}/>'
+    return f'<rect x="{x + x_offset}" y="{y + y_offset}" width="{w}" height="{h}" fill="{fill}"{rx}{rot}/>'
 
 def get_line_direction(x, y, color, points_by_color):
 
@@ -170,14 +195,16 @@ def get_line_direction(x, y, color, points_by_color):
         to help draw the positioning of rectangle stations
     """
 
-    NW = (x-1, y-1) in points_by_color[color]
-    NE = (x+1, y-1) in points_by_color[color]
-    SW = (x-1, y+1) in points_by_color[color]
-    SE = (x+1, y+1) in points_by_color[color]
-    N = (x, y-1) in points_by_color[color]
-    E = (x+1, y) in points_by_color[color]
-    S = (x, y+1) in points_by_color[color]
-    W = (x-1, y) in points_by_color[color]
+    color = color.removeprefix('#')
+
+    NW = (x-1, y-1) in points_by_color[color]['xy']
+    NE = (x+1, y-1) in points_by_color[color]['xy']
+    SW = (x-1, y+1) in points_by_color[color]['xy']
+    SE = (x+1, y+1) in points_by_color[color]['xy']
+    N = (x, y-1) in points_by_color[color]['xy']
+    E = (x+1, y) in points_by_color[color]['xy']
+    S = (x, y+1) in points_by_color[color]['xy']
+    W = (x-1, y) in points_by_color[color]['xy']
 
     if W and E:
         return 'horizontal'
@@ -229,14 +256,14 @@ def get_connected_stations(x, y, stations):
     # Each station must be rect or rect-round in order to qualify for connection
     directions = 'N E S W NE SE SW NW'
     coords = {d: dict() for d in directions.split()}
-    coords['highest'] = {d: 0 for d in directions.split()[:4]}
+    coords['highest'] = {d: 0 for d in directions.split()[:6]}
     xn = x
     yn = y
     while E:
         xn += 1
         E = (xn, yn) in eligible_stations
     else:
-        xn -= 1
+        xn = xn - 1 if E else xn
         if xn != x:
             coords['E'] = {'x1': xn, 'y1': yn}
             coords['highest']['E'] = (xn - x)
@@ -247,7 +274,7 @@ def get_connected_stations(x, y, stations):
         yn += 1
         S = (xn, yn) in eligible_stations
     else:
-        yn -= 1
+        yn = yn - 1 if S else yn
         if yn != y:
             coords['S'] = {'x1': xn, 'y1': yn}
             coords['highest']['S'] = (yn - y)
@@ -259,8 +286,8 @@ def get_connected_stations(x, y, stations):
         yn -= 1
         NE = (xn, yn) in eligible_stations
     else:
-        xn -= 1
-        yn += 1
+        xn = xn - 1 if NE else xn
+        yn = yn + 1 if NE else yn
         if xn != x:
             coords['NE'] = {'x1': xn, 'y1': yn}
             coords['highest']['NE'] = (xn - x)
@@ -272,8 +299,8 @@ def get_connected_stations(x, y, stations):
         yn += 1
         SE = (xn, yn) in eligible_stations
     else:
-        xn -= 1
-        yn -= 1
+        xn = xn - 1 if SE else xn
+        yn = yn - 1 if SE else yn
         if xn != x:
             coords['SE'] = {'x1': xn, 'y1': yn}
             coords['highest']['SE'] = (xn - x)
@@ -284,7 +311,7 @@ def get_connected_stations(x, y, stations):
         xn -= 1
         W = (xn, yn) in eligible_stations
     else:
-        xn += 1
+        xn = xn + 1 if W else xn
         if xn != x:
             coords['E']['internal'] = True
             coords['highest']['E'] += abs(xn -x)
@@ -295,9 +322,9 @@ def get_connected_stations(x, y, stations):
         yn -= 1
         N = (xn, yn) in eligible_stations
     else:
-        yn += 1
+        yn = yn + 1 if N else yn
         if yn != y:
-            coords['N']['internal'] = True
+            coords['S']['internal'] = True
             coords['highest']['S'] += abs(yn - y)
 
     xn = x
@@ -307,8 +334,8 @@ def get_connected_stations(x, y, stations):
         yn -= 1
         NW = (xn, yn) in eligible_stations
     else:
-        xn += 1
-        yn += 1
+        xn = xn + 1 if NW else xn
+        yn = yn + 1 if NW else yn
         if yn != y:
             coords['SE']['internal'] = True
             coords['highest']['SE'] = abs(yn - y)
@@ -320,8 +347,8 @@ def get_connected_stations(x, y, stations):
         yn += 1
         SW = (xn, yn) in eligible_stations
     else:
-        xn += 1
-        yn -= 1
+        xn = x + 1 if SW else xn
+        yn = y - 1 if SW else yn
         if yn != y:
             coords['NE']['internal'] = True
             coords['highest']['NE'] += abs(yn - y)
@@ -388,14 +415,14 @@ def station_text(station):
         if station['orientation'] == '90':
             station['orientation'] = '-90' 
 
-        transform = f'transform="rotate({station["orientation"]} {station["xy"][0]}, {station["xy"][1]})"'
+        transform = f' transform="rotate({station["orientation"]} {station["xy"][0]}, {station["xy"][1]})"'
     elif station['orientation'] in (
         '180', # Left
         '135', # Below left, 45 -> SVG: (-45)
         '-135', # Above left, 45 -> SVG: (45)
         '-90', # Below, 90
     ):
-        text_anchor = 'text-anchor="end"'
+        text_anchor = ' text-anchor="end"'
         if station.get('transfer'):
             x_val = station['xy'][0] - 1.5
         else:
@@ -409,9 +436,9 @@ def station_text(station):
         if station['orientation'] == '180':
             transform = ''
         else:
-            transform = f'transform="rotate({station["orientation"]} {station["xy"][0]}, {station["xy"][1]})"'
+            transform = f' transform="rotate({station["orientation"]} {station["xy"][0]}, {station["xy"][1]})"'
 
-    text = f'''<text x="{x_val - 0.5}" y="{station['xy'][1] - 0.5}" {text_anchor} {transform}>'''
+    text = f'''<text x="{x_val}" y="{station['xy'][1]}"{text_anchor}{transform}>'''
 
     return format_html(
         '{}{}{}',

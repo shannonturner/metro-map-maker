@@ -19,7 +19,7 @@ SVG_TEMPLATE = Template('''
         {% endfor %}
         {% for point in shapes.points %}
             {% if default_station_shape == 'rect' %}
-                <rect x="{{ point.0 }}" y="{{ point.1 }}" w="1" h="1"" fill="#{{ color }}" />
+                <rect x="{{ point.0|add:-0.5 }}" y="{{ point.1|add:-0.5 }}" w="1" h="1"" fill="#{{ color }}" />
             {% else %}
                 <circle cx="{{ point.0 }}" cy="{{ point.1 }}" r="{{ point.size|default:1 }}" fill="#{{ color }}" />
             {% endif %}
