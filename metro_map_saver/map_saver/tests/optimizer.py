@@ -2,7 +2,10 @@
 
 # from map_saver.models import SavedMap
 # from map_saver.validator import validate_metro_map
-from map_saver.mapdata_optimizer import reduce_straight_line
+from map_saver.mapdata_optimizer import (
+    is_adjacent,
+    reduce_straight_line,
+)
 
 from django.test import TestCase
 # from django.core.exceptions import ObjectDoesNotExist
@@ -11,16 +14,6 @@ class OptimizeMap(TestCase):
 
     """ Tests to optimize map data and especially collapse map data
         into the smallest non-lossy representation of x,y coordinate pairs
-    """
-
-    TODO = """
-    sort_points_by_color returns points_by_color, stations, map_size from v1 map_data
-        sort_points_by_color isn't pointless for v2 (it's used to generate images, for one), but can probably be streamlined as compared to v1.
-        regardless, both implementations will need testing
-    get_connected_points should return recursively-generated list of 2-tuples with all connected points for x,y, self-inclusive
-    is_adjacent should return point2 if point2 is adjacent to point1, otherwise None
-    get_adjacent_point should return horizontal, vertical, or diagonal (in pref order)
-    find_squares should find squares of contiguous colors from points_this_color, of a given width, returning lists: squares_ext, squares_int
     """
 
     def convert_to_xy_pairs(self, linestring):
@@ -69,3 +62,125 @@ class OptimizeMap(TestCase):
             if before != goal:
                 self.assertNotEqual(line, optimized)
                 self.assertLess(len(optimized), len(line))
+
+    def test_sort_points_by_color_v1(self):
+
+        """ Confirm that given a JSON of mapdata,
+                sort_points_by_color returns:
+            * a dict of x,y points sorted by their color
+            * a list of stations
+            * the allowed map size
+
+            This is more of a test for this function as compared to
+                validation.test_convert_v1_to_v2,
+                which does call sort_points_by_color
+                but is more of an integration test.
+        """
+
+        self.assertFalse('TODO - Not yet implemented')
+
+    def test_sort_points_by_color_v2(self):
+
+        """ As test_sort_points_by_color_v1, but for v2 data
+        """
+
+        self.assertFalse('TODO - Not yet implemented')
+
+    def test_get_connected_points(self):
+
+        """ Confirm that get_connected_points returns
+            a list of all points connected to x,y (inclusive)
+        """
+
+        self.assertFalse('TODO - Not yet implemented')
+
+    def test_is_adjacent(self):
+
+        """ Confirm that is_adjacent()
+            returns point2 if adjacent to point2
+        """
+
+        adjacent_points = [
+            ((1,1), (0,0)),
+            ((1,1), (1,0)),
+            ((1,1), (2,0)),
+            ((1,1), (0,1)),
+            ((1,1), (2,1)),
+            ((1,1), (0,2)),
+            ((1,1), (1,2)),
+            ((1,1), (2,2)),
+        ]
+
+        non_adjacent_points = [
+            ((2,2), (0,0)),
+            ((2,2), (1,0)),
+            ((2,2), (2,0)),
+            ((2,2), (3,0)),
+            ((2,2), (4,0)),
+            ((2,2), (4,1)),
+            ((2,2), (4,2)),
+            ((2,2), (4,3)),
+            ((2,2), (4,4)),
+            ((2,2), (3,4)),
+            ((2,2), (2,4)),
+            ((2,2), (1,4)),
+            ((2,2), (0,4)),
+            ((2,2), (0,3)),
+            ((2,2), (0,2)),
+            ((2,2), (0,1)),
+        ]
+
+        for p1, p2 in adjacent_points:
+            self.assertEqual(p2, is_adjacent(p1, p2))
+
+        for p1, p2 in non_adjacent_points:
+            self.assertFalse(is_adjacent(p1, p2))
+
+    def test_get_adjacent_point(self):
+
+        """ Confirm that get_adjacent_point returns
+            one adjacent point in order of preference:
+                horizontal, vertical, diagonal
+        """
+
+        self.assertFalse('TODO - Not yet implemented')
+
+    def test_find_squares(self):
+
+        """ Confirm that find_squares will return two lists of points:
+            * the exterior border x,y points
+            * the interior x,y points
+            as long as all points are of the same color
+            and are adjacent to one another in an N-sized square shape
+        """
+
+        self.assertFalse('TODO - Not yet implemented')
+
+    def test_get_line_direction(self):
+
+        """ Confirm that metromap_utils.get_line_direction
+            returns the direction the line is going in,
+            which helps the placement/rotation of rectangle stations
+        """
+
+        self.assertFalse('TODO - Not yet implemented')
+
+    def test_get_connected_stations(self):
+
+        """ Confirm that metromap_utils.get_connected_stations
+            returns connected stations along a SINGLE direction,
+            in the direction where there are the most stations,
+            to facilitate drawing connected stations as a capsule or rect
+        """
+
+        self.assertFalse('TODO - Not yet implemented')
+
+    def test_station_marker(self):
+
+        """ metromap_utils.station_marker is complex enough
+            (esp with capsule stations and rectangles)
+            and there's enough edge cases
+            that it's worth confirming expected behaviors
+        """
+
+        self.assertFalse('TODO - Not yet implemented')
