@@ -3,6 +3,7 @@
 # from map_saver.models import SavedMap
 # from map_saver.validator import validate_metro_map
 from map_saver.mapdata_optimizer import (
+    get_adjacent_point,
     is_adjacent,
     reduce_straight_line,
 )
@@ -140,10 +141,29 @@ class OptimizeMap(TestCase):
 
         """ Confirm that get_adjacent_point returns
             one adjacent point in order of preference:
-                horizontal, vertical, diagonal
+                vertical, horizontal, diagonal
         """
 
-        self.assertFalse('TODO - Not yet implemented')
+        # Set examples up so the first point is fed into get_adjacent_point(),
+        #   and the second point is what we expect to be returned.
+        all_points = [
+            # Has all points, so will prefer 1,2 (vertical)
+            [(1,1), (1,2), (2,1), (2,2),],
+
+            # Doesn't have vertical, so will prefer 12,11 (horizontal)
+            [(11, 11), (12, 11), (12, 12),],
+
+            # Doesn't have either, so will prefer diagonal
+            [(21, 21), (22, 22),],
+
+            # It's also fine with lower values, too. (vertical)
+            [(32, 32), (31, 32), (32, 31), (31, 31),],
+            [(42, 42), (41, 42), (41, 41),], # (horizontal)
+            [(52, 52), (51, 51),], # (diagonal)
+        ]
+
+        for points in all_points:
+            self.assertEqual(points[0], get_adjacent_point(points[1], points))
 
     def test_find_squares(self):
 

@@ -414,9 +414,17 @@ def is_adjacent(point1, point2):
 def get_adjacent_point(pt, all_points):
 
     """ Attempts to find:
-            a horizontally-adjacent point
             a vertically-adjacent point
+            a horizontally-adjacent point
             a diagonally-adjcaent point
+
+        This wouldn't be efficient if all_points
+            was ALL possible points (but it isn't),
+            and would be more direct to generate
+            the nearest 8 neighboring points
+            and check whether pt is in that,
+            but that doesn't account for whether those points
+            are actually in this color.
     """
 
     for point in all_points:
