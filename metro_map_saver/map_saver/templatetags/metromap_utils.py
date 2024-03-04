@@ -75,6 +75,9 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
         elif line_direction == 'singleton' and shape == 'rect-round':
             stroke = '#000'
             fill = '#fff'
+        elif line_direction == 'singleton' and station_direction == 'singleton' and shape in ('rect', 'rect-round'):
+            stroke = '#000'
+            fill = color
         else:
             stroke = fill = color
 

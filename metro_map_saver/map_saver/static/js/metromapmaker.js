@@ -1106,6 +1106,10 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     // and draw as normal
     if (lineDirection == 'singleton') {
       // Keep original width
+      ctx.strokeStyle = '#000000'
+      if (mapLineWidth < 0.5 && (mapStationStyle == 'rect-round' || thisStation && thisStation['style'] == 'rect-round')) {
+        ctx.fillStyle = lineColor
+      }
     } else if (!isTransferStation) {
       width = gridPixelMultiplier / 2
     }
@@ -1187,10 +1191,14 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
   if (fillColor) { ctx.fillStyle = fillColor }
 
   if (MMMDEBUG && x == $('#station-coordinates-x').val() && y == $('#station-coordinates-y').val())
-      console.log(`xy: ${x},${y}; wh: ${width},${height} xf: ${isTransferStation} ld: ${lineDirection} ra: ${rectArgs} cs: ${connectedStations} dac: ${drawAsConnected}`)
+      console.log(`xy: ${x},${y}; wh: ${width},${height} xf: ${isTransferStation} ld: ${lineDirection} ra: ${rectArgs} cs: ${connectedStations} dac: ${drawAsConnected} sC: ${strokeColor} fC: ${fillColor}`)
   
   if (!drawAsConnected && ((mapStationStyle == 'circles-thin' && thisStation && !thisStation['style']) || (thisStation && thisStation['style'] == 'circles-thin'))) {
-    drawCircleStation(ctx, x, y, activeMap, isTransferStation, .5, gridPixelMultiplier / 4, '#ffffff', '#000000')
+    if (!isIndicator) {
+      strokeColor = '#000000'
+      fillColor = '#ffffff'
+    }
+    drawCircleStation(ctx, x, y, activeMap, isTransferStation, .5, ctx.lineWidth, fillColor, strokeColor)
     return
   }
 
@@ -1287,7 +1295,7 @@ function drawIndicator(x, y) {
     // For this and rect-round, I don't actually want to draw the one continuous station
     //  even if I could; these all should be individually selectable.
     drawStyledStation_rectangles(ctx, x, y, activeMap, isTransferStation, '#000000', '#00ff00', false, true)
-  } else if (thisStationStyle == 'rect-round') {
+  } else if (thisStationStyle == 'rect-round' || thisStationStyle == 'circles-thin') {
     drawStyledStation_rectangles(ctx, x, y, activeMap, isTransferStation, '#000000', '#00ff00', 20, true)
   } 
 } // drawIndicator(x, y)
