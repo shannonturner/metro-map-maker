@@ -3,6 +3,7 @@
 # from map_saver.models import SavedMap
 # from map_saver.validator import validate_metro_map
 from map_saver.mapdata_optimizer import (
+    find_squares,
     get_adjacent_point,
     is_adjacent,
     reduce_straight_line,
@@ -174,7 +175,58 @@ class OptimizeMap(TestCase):
             and are adjacent to one another in an N-sized square shape
         """
 
-        self.assertFalse('TODO - Not yet implemented')
+        # First, make the square
+        points_this_color = {'xy': [], 'x': [], 'y': []}
+        for x in range(1, 6):
+            for y in range(1, 6):
+                points_this_color['x'].append(x) # Yes, this is repetitive -- that's a feature
+                points_this_color['y'].append(y)
+                points_this_color['xy'].append((x, y))
+
+        # In a 5x5 square, there are 16 exterior points and 9 interior points
+        exterior, interior = find_squares(points_this_color, width=5)
+        self.assertEqual(len(exterior[0]), 16)
+        self.assertEqual(len(interior[0]), 9)
+
+        for point in exterior[0]:
+            # Exterior points will all have either an x of (1,5)
+            #   or a y of (1,5);
+            # Interior points will have none of these
+            self.assertTrue(point[0] in (1,5) or point[1] in (1,5))
+
+        for point in interior[0]:
+            self.assertFalse(point[0] in (1,5) or point[1] in (1,5))
+            self.assertTrue(point[0] in (2,3,4) and point[1] in (2,3,4))
+
+        # This can also be used to find squares of smaller (or larger) sizes
+        exterior, interior = find_squares(points_this_color, width=4)
+        self.assertEqual(len(exterior[0]), 12)
+        self.assertEqual(len(interior[0]), 4)
+
+        for point in exterior[0]:
+            self.assertTrue(point[0] in (1, 4) or point[1] in (1,4))
+
+        for point in interior[0]:
+            self.assertFalse(point[0] in (1,4) or point[1] in (1,4))
+            self.assertTrue(point[0] in (2,3) and point[1] in (2,3))
+
+        # Smallest square is 3x3
+        exterior, interior = find_squares(points_this_color, width=3)
+        self.assertEqual(len(exterior[0]), 8)
+        self.assertEqual(len(interior[0]), 1)
+
+        for point in exterior[0]:
+            self.assertTrue(point[0] in (1, 3) or point[1] in (1,3))
+
+        for point in interior[0]:
+            self.assertFalse(point[0] in (1,3) or point[1] in (1,3))
+            self.assertTrue(point[0] in (2,) and point[1] in (2,))
+
+        # Removing even one point means that there's no square.
+        points_this_color['xy'].remove((3,3))
+        exterior, interior = find_squares(points_this_color, width=5)
+        self.assertFalse(exterior)
+        self.assertFalse(interior)
 
     def test_get_line_direction(self):
 
