@@ -10,6 +10,10 @@ from map_saver.mapdata_optimizer import (
     reduce_straight_line,
 )
 
+from map_saver.templatetags.metromap_utils import (
+    get_line_direction,
+)
+
 from django.test import TestCase
 # from django.core.exceptions import ObjectDoesNotExist
 
@@ -254,7 +258,61 @@ class OptimizeMap(TestCase):
             which helps the placement/rotation of rectangle stations
         """
 
-        self.assertFalse('TODO - Not yet implemented')
+        horizontal = [(1,1), (2,1), (3,1), (4,1)]
+        vertical = [(1,3), (1,4), (1,5), (1,6)]
+        diagonal_se = [(4,4), (5,5), (6,6), (7,7)]
+        diagonal_ne = [(10,10), (11,9), (12,8), (13,7)]
+        singleton = [(11,2), (3,9), (8,2), (6,1)]
+
+        points_by_color = {
+            'bd1038': {
+                'xy': horizontal + \
+                        vertical + \
+                        diagonal_se + \
+                        diagonal_ne + \
+                        singleton,
+            },
+            '0896d7': {
+                'xy': [
+                    # These should not get picked up
+                    # even though they run in other directions
+                    # to the red lines
+                    (2,3), (3,3), (4,3), (5,3),
+                    (4,8), (4,9), (4,10),
+                    (10,6), (10,7), (10,8),
+                ],
+            },
+        }
+
+        for point in horizontal:
+            self.assertEqual(
+                'horizontal',
+                get_line_direction(point[0], point[1], 'bd1038', points_by_color),
+            )
+
+        for point in vertical:
+            self.assertEqual(
+                'vertical',
+                get_line_direction(point[0], point[1], 'bd1038', points_by_color),
+            )
+
+        for point in diagonal_se:
+            self.assertEqual(
+                'diagonal-se',
+                get_line_direction(point[0], point[1], 'bd1038', points_by_color),
+            )
+
+        for point in diagonal_ne:
+            self.assertEqual(
+                'diagonal-ne',
+                get_line_direction(point[0], point[1], 'bd1038', points_by_color),
+            )
+
+        for point in singleton:
+            self.assertEqual(
+                'singleton',
+                get_line_direction(point[0], point[1], 'bd1038', points_by_color),
+            )
 
     def test_get_connected_stations(self):
 
