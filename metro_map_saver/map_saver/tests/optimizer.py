@@ -5,6 +5,7 @@
 from map_saver.mapdata_optimizer import (
     find_squares,
     get_adjacent_point,
+    get_connected_points,
     is_adjacent,
     reduce_straight_line,
 )
@@ -94,7 +95,25 @@ class OptimizeMap(TestCase):
             a list of all points connected to x,y (inclusive)
         """
 
-        self.assertFalse('TODO - Not yet implemented')
+        connected = [
+            (1,1), (1,2), (1,3), (1,4), # S
+            (2,5), (3,6), (4,6), (5,6), # SE, E
+            (6,5), (7,4), (6,3), (7,2), # NE, NW
+            (8,1), (7,0), (6,0), (5,1), # NE, NW, W, SW
+            (4,2), (3,2), (3,1), (3,0), # SW, W, N
+        ]
+
+        unconnected = [
+            (10,10), (12,12), (4,4),
+        ]
+
+        for xy in connected:
+            # Doesn't matter which point you start from!
+            connected_points = get_connected_points(xy[0], xy[1], connected + unconnected)
+            self.assertEqual(sorted(connected), sorted(connected_points))
+
+        for point in connected_points:
+            self.assertNotIn(point, unconnected)
 
     def test_is_adjacent(self):
 
