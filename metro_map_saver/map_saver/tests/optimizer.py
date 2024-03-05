@@ -12,6 +12,7 @@ from map_saver.mapdata_optimizer import (
 
 from map_saver.templatetags.metromap_utils import (
     get_line_direction,
+    get_connected_stations,
 )
 
 from django.test import TestCase
@@ -320,9 +321,55 @@ class OptimizeMap(TestCase):
             returns connected stations along a SINGLE direction,
             in the direction where there are the most stations,
             to facilitate drawing connected stations as a capsule or rect
+
+            Eligibility is determined by being rect,rect-round, or circles-thin.
+
+            No eligible adjacent points? singleton
+            More than one direction w/ an equal number of points? conflicting
+            Interior station that shouldn't be drawn? internal
         """
 
-        self.assertFalse('TODO - Not yet implemented')
+        stations = [
+            # 4 vertical
+            {'xy': (1,1), 'style': 'circles-thin', 'expected': (1,4)},
+            {'xy': (1,2), 'style': 'rect', 'expected': 'internal'},
+            {'xy': (1,3), 'style': 'rect-round', 'expected': 'internal'},
+            {'xy': (1,4), 'style': 'rect-round', 'expected': 'internal'},
+
+            # 3 horizontal (including 1,1),
+            #   but doesn't know 1,1 is drawn vertically.
+            # Might at some point be worth changing this,
+            #   but I expect it's a weird corner case,
+            #   and it's already added so much complexity
+            {'xy': (2,1), 'style': 'rect', 'expected': 'internal'},
+            {'xy': (3,1), 'style': 'rect', 'expected': 'internal'},
+
+            # 3 diagonal-se
+            {'xy': (3,3), 'style': 'rect', 'expected': (5,5)},
+            {'xy': (4,4), 'style': 'rect', 'expected': 'internal'},
+            {'xy': (5,5), 'style': 'rect', 'expected': 'internal'},
+
+            # Even though these connect to the other lines,
+            #   these styles aren't eligible
+            {'xy': (1,5), 'style': 'wmata', 'expected': 'singleton'},
+            {'xy': (6,6), 'style': 'circles-lg', 'expected': 'singleton'},
+
+            # 3 Horizontal
+            {'xy': (11,1), 'style': 'rect', 'expected': (13,1)},
+            {'xy': (12,1), 'style': 'rect', 'expected': 'internal'},
+            {'xy': (13,1), 'style': 'rect', 'expected': 'internal'},
+
+            # 1 conflicting, because it could connect in any of: NW, N, NE
+            {'xy': (12,2), 'style': 'rect', 'expected': 'conflicting'},
+        ]
+
+        for station in stations:
+            result = get_connected_stations(station['xy'][0], station['xy'][1], stations)
+            if isinstance(result, dict):
+                self.assertEqual(result['x1'], station['expected'][0])
+                self.assertEqual(result['y1'], station['expected'][1])
+            else:
+                self.assertEqual(result, station['expected'])
 
     def test_station_marker(self):
 

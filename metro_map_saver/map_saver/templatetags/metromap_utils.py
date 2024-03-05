@@ -2,7 +2,12 @@ from django import template
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
-from map_saver.validator import ALLOWED_ORIENTATIONS, ALLOWED_STATION_STYLES, is_hex
+from map_saver.validator import (
+    ALLOWED_ORIENTATIONS,
+    ALLOWED_STATION_STYLES,
+    ALLOWED_CONNECTING_STATIONS,
+    is_hex,
+)
 
 import logging
 from math import sqrt
@@ -43,7 +48,7 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
             svg.append(svg_circle(x, y, .9, '#fff'))
         svg.append(svg_circle(x, y, .6, '#000'))
         svg.append(svg_circle(x, y, .3, '#fff'))
-    elif shape in ('rect', 'rect-round', 'circles-thin'):
+    elif shape in ALLOWED_CONNECTING_STATIONS:
         # Set generics, and change as needed
         width = 0.5
         height = 0.5
@@ -244,8 +249,11 @@ def get_connected_stations(x, y, stations):
 
     eligible_stations = [
         # Each station must be circles-thin, rect, or rect-round in order to qualify for connection
-        (s['xy'][0], s['xy'][1]) for s in stations if s['style'] in ('rect', 'rect-round', 'circles-thin')
+        (s['xy'][0], s['xy'][1]) for s in stations if s['style'] in ALLOWED_CONNECTING_STATIONS
     ]
+
+    if (x, y) not in eligible_stations:
+        return 'singleton'
 
     # I could set up a complex dictionary with coordinate offsets
     #   and avoid repeating myself several times,
