@@ -10,12 +10,11 @@ from map_saver.mapdata_optimizer import (
 from map_saver.templatetags.metromap_utils import (
     get_line_direction,
     get_connected_stations,
-    station_marker,
 )
 
 from django.test import TestCase
 
-class OptimizeMap(TestCase):
+class OptimizeMapTest(TestCase):
 
     """ Tests to optimize map data and especially collapse map data
         into the smallest non-lossy representation of x,y coordinate pairs
@@ -367,32 +366,3 @@ class OptimizeMap(TestCase):
                 self.assertEqual(result['y1'], station['expected'][1])
             else:
                 self.assertEqual(result, station['expected'])
-
-    def test_station_marker(self):
-
-        """ metromap_utils.station_marker is complex enough
-            (esp with capsule stations and rectangles)
-            and there's enough edge cases
-            that it's worth confirming expected behaviors
-        """
-
-        # PROBABLY THIS IS TO BE SPLIT INTO MANY TESTS,
-        #         PERHAPS EVEN I HAVE SO MANY TEST CASES
-        #         AS TO FILL ITS OWN SEPARATE FILE
-        TODO = """
-        transfer wmata gives 4 svgs, not 2
-        if a station doesn't have a shape, use the map's default
-        if xfer and line size >= 0.5, circle sm/md have a big white circle and small color circle
-        elif xfer, circle sm/md have 1 color circle
-        else, circle sm/md have a big color circle and small white circle
-        circles lg: as wmata, but with color
-        circles-thin: always b/w; xfer controls stroke width
-        rectangles:
-            if line size >= 0.5, drawn in b/w; otherwise color
-            if line size >= 0.5, xfer controls stroke width
-            if rounded, has radius of 0.125
-        connected stations
-        """
-        # station_marker(station, default_shape, line_size, points_by_color, stations)
-
-        self.assertFalse('TODO - Not yet implemented')
