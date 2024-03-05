@@ -21,6 +21,12 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
 
     """ Generate the SVG shape for a station based on
             whether it's a transfer station and what its shape is.
+
+        Consider: some stations could probably be optimized into a single SVG, or at least fewer.
+
+            For example, a WMATA transfer station is currently 4 circles, but could be 2 circles with strokes.
+
+            Only worth doing if it would be a real byte savings and not a loss of image quality / fidelity to the canvas-rendered version.
     """
 
     assert isinstance(station['xy'][0], int)
