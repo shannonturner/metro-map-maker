@@ -10,7 +10,6 @@ class StationMarkerTest(TestCase):
     """
 
     TODO = """
-        circles-thin: always b/w; xfer controls stroke width
         rectangles:
             if line size >= 0.5, drawn in b/w; otherwise color
             if line size >= 0.5, xfer controls stroke width
@@ -190,3 +189,24 @@ class StationMarkerTest(TestCase):
                 station['transfer'] = 1
                 marker = station_marker(station, 'circles-thin', 0.125, self.points_by_color, self.stations)
                 self.assertEqual(marker, f'<circle cx="{x}" cy="{y}" r="0.5" fill="#fff" stroke="#000" stroke-width="0.2"/>')
+
+    def test_rectangles_connected(self):
+
+        """ Confirm behavior of rectangle connected stations;
+            will test rectangle singletons separately
+        """
+
+        for station in self.stations:
+            x = station['xy'][0]
+            y = station['xy'][1]
+
+            station['style'] = 'rect'
+
+            if station['expected'] == 'connected':
+                marker = station_marker(station, 'circles-thin', 0.125, self.points_by_color, self.stations)
+                self.assertEqual(marker.count('<rect '), 1)
+                self.assertTrue('width="3' in marker or 'height="3' in marker)
+                self.assertNotIn('rx=', marker)
+            elif station['expected'] == 'interior':
+                marker = station_marker(station, 'circles-thin', 0.125, self.points_by_color, self.stations)
+                self.assertFalse(marker)
