@@ -10,10 +10,6 @@ class StationMarkerTest(TestCase):
     """
 
     TODO = """
-        if a station doesn't have a shape, use the map's default
-        if xfer and line size >= 0.5, circle sm/md have a big white circle and small color circle
-        elif xfer, circle sm/md have 1 color circle
-        else, circle sm/md have a big color circle and small white circle
         circles-thin: always b/w; xfer controls stroke width
         rectangles:
             if line size >= 0.5, drawn in b/w; otherwise color
@@ -94,3 +90,15 @@ class StationMarkerTest(TestCase):
         marker = station_marker(station, 'wmata', 0.5, {}, {})
         self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.4" fill="#fff"'), 1)
         self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.2" fill="#bd1038"'), 1)
+
+
+    def test_default_shape(self):
+
+        """ Confirm that if station does not have a style (shape),
+                the default will be used.
+        """
+
+        station = {'xy': (1,1), 'color': 'bd1038'}
+        marker = station_marker(station, 'circles-sm', 0.125, {}, {})
+        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.4" fill="#bd1038"'), 1)
+        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.2" fill="#fff"'), 1)
