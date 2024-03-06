@@ -18,6 +18,66 @@ class StationMarkerTest(TestCase):
         connected stations
         """
 
+    points_by_color = {
+        # A set of horizontal, vertical, diagonal-se, diagonal-ne points, and some singletons
+        'bd1038': {
+            'xy': [
+                (1,1), (2,1), (3,1), (4,1), (5,1),
+                (11,1), (11,2), (11,3), (11,4), (11,5),
+                (21,1), (22,2), (23,3), (24,4), (25,5),
+                (31,5), (32,4), (33,3), (34,2), (35,1),
+                (40,0), (50,0), (60,0), (70,0), (80,0),
+            ],
+        },
+        '00b251': {
+            'xy': [
+                (1,2), (2,2), (3,2), (4,2), (5,2),
+                (12,1), (12,2), (12,3), (12,4), (12,5),
+                (22,1), (23,2), (24,3), (25,4), (26,5),
+                (32,5), (33,4), (34,3), (35,2), (36,1),
+                (40,10), (50,10), (60,10), (70,10), (80,10),
+            ],
+        },
+        '0896d7': {
+            'xy': [
+                (1,3), (2,3), (3,3), (4,3), (5,3),
+                (13,1), (13,2), (13,3), (13,4), (13,5),
+                (23,1), (24,2), (25,3), (26,4), (27,5),
+                (33,5), (34,4), (35,3), (36,2), (37,1),
+                (40,20), (50,20), (60,20), (70,20), (80,20),
+            ],
+        },
+    }
+
+    stations = [
+        # Vertical Connected
+        {'xy': (1,1), 'color': 'bd1038', 'style': 'rect-round', 'expected': 'connected'},
+        {'xy': (1,2), 'color': '00b251', 'style': 'rect-round', 'expected': 'interior'},
+        {'xy': (1,3), 'color': '0896d7', 'style': 'rect-round', 'expected': 'interior'},
+
+        # Horizontal Connected
+        {'xy': (11,2), 'color': 'bd1038', 'style': 'rect-round', 'expected': 'connected'},
+        {'xy': (12,2), 'color': '00b251', 'style': 'rect-round', 'expected': 'interior'},
+        {'xy': (13,2), 'color': '0896d7', 'style': 'rect-round', 'expected': 'interior'},
+
+        # Diagonal NE Connected
+        {'xy': (31,5), 'color': 'bd1038', 'style': 'rect-round', 'expected': 'connected'},
+        {'xy': (32,4), 'color': 'bd1038', 'style': 'rect-round', 'expected': 'interior'},
+        {'xy': (33,3), 'color': 'bd1038', 'style': 'rect-round', 'expected': 'interior'},
+
+        # Diagonal SE Connected
+        {'xy': (23,1), 'color': '0896d7', 'style': 'rect-round', 'expected': 'connected'},
+        {'xy': (24,2), 'color': '0896d7', 'style': 'rect-round', 'expected': 'interior'},
+        {'xy': (25,3), 'color': '0896d7', 'style': 'rect-round', 'expected': 'interior'},
+
+        # Singletons
+        {'xy': (80,0), 'color': 'bd1038', 'style': 'rect-round', 'expected': 'singleton'},
+        {'xy': (80,10), 'color': '00b251', 'style': 'rect-round', 'expected': 'singleton'},
+        {'xy': (80,20), 'color': '0896d7', 'style': 'rect-round', 'expected': 'singleton'},
+    ]
+
+
+
     def test_wmata(self, line_color='bd1038', station_color='#000', style='wmata'):
 
         """ Confirm the styling of WMATA (Classic) stations
@@ -91,7 +151,6 @@ class StationMarkerTest(TestCase):
         self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.4" fill="#fff"'), 1)
         self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.2" fill="#bd1038"'), 1)
 
-
     def test_default_shape(self):
 
         """ Confirm that if station does not have a style (shape),
@@ -102,3 +161,32 @@ class StationMarkerTest(TestCase):
         marker = station_marker(station, 'circles-sm', 0.125, {}, {})
         self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.4" fill="#bd1038"'), 1)
         self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.2" fill="#fff"'), 1)
+
+    def test_circles_thin(self):
+
+        """ Confirm that circles-thin is drawn as a b/w circle,
+                with thicker stroke for transfer stations;
+                and with connecting stations when appropriate.
+        """
+
+        for station in self.stations:
+            x = station['xy'][0]
+            y = station['xy'][1]
+
+            station['style'] = 'circles-thin'
+
+            if station['expected'] == 'connected':
+                marker = station_marker(station, 'circles-thin', 0.125, self.points_by_color, self.stations)
+                self.assertEqual(marker.count('<rect '), 1)
+                self.assertEqual(marker.count('<circle '), 0)
+            elif station['expected'] == 'interior':
+                marker = station_marker(station, 'circles-thin', 0.125, self.points_by_color, self.stations)
+                self.assertFalse(marker)
+            elif station['expected'] == 'singleton':
+                station['transfer'] = 0
+                marker = station_marker(station, 'circles-thin', 0.125, self.points_by_color, self.stations)
+                self.assertEqual(marker, f'<circle cx="{x}" cy="{y}" r="0.5" fill="#fff" stroke="#000" stroke-width="0.1"/>')
+
+                station['transfer'] = 1
+                marker = station_marker(station, 'circles-thin', 0.125, self.points_by_color, self.stations)
+                self.assertEqual(marker, f'<circle cx="{x}" cy="{y}" r="0.5" fill="#fff" stroke="#000" stroke-width="0.2"/>')
