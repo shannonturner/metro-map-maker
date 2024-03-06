@@ -46,3 +46,51 @@ class StationMarkerTest(TestCase):
         """
 
         self.test_wmata(line_color='bd1038', station_color='#bd1038', style='circles-lg')
+
+    def test_circles_md(self):
+
+        """ Confirm that circles-md stations have three options:
+            transfer & line_size >= 0.5
+            transfer
+            non-transfer
+        """
+
+        station = {'xy': (1,1), 'style': 'circles-md', 'color': 'bd1038'}
+        # Non-transfer
+        marker = station_marker(station, 'wmata', 0.25, {}, {})
+        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.5" fill="#bd1038"'), 1)
+        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.25" fill="#fff"'), 1)
+
+        # Transfer (thin line)
+        station['transfer'] = 1
+        marker = station_marker(station, 'wmata', 0.25, {}, {})
+        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.5" fill="#bd1038"'), 1)
+
+        # Transfer (thick line)
+        marker = station_marker(station, 'wmata', 0.5, {}, {})
+        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.5" fill="#fff"'), 1)
+        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.25" fill="#bd1038"'), 1)
+
+    def test_circles_sm(self):
+
+        """ Confirm that circles-sm stations have three options:
+            transfer & line_size >= 0.5
+            transfer
+            non-transfer
+        """
+
+        station = {'xy': (1,1), 'style': 'circles-sm', 'color': 'bd1038'}
+        # Non-transfer
+        marker = station_marker(station, 'wmata', 0.25, {}, {})
+        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.4" fill="#bd1038"'), 1)
+        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.2" fill="#fff"'), 1)
+
+        # Transfer (thin line)
+        station['transfer'] = 1
+        marker = station_marker(station, 'wmata', 0.25, {}, {})
+        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.4" fill="#bd1038"'), 1)
+
+        # Transfer (thick line)
+        marker = station_marker(station, 'wmata', 0.5, {}, {})
+        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.4" fill="#fff"'), 1)
+        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.2" fill="#bd1038"'), 1)
