@@ -81,7 +81,35 @@ class OptimizeMapTest(TestCase):
                 but is more of an integration test.
         """
 
-        self.assertFalse('TODO - Not yet implemented')
+        # mUCL18da
+        mapdata = '{"1":{"1":{"line":"00b251"},"2":{"line":"00b251"},"3":{"line":"00b251"},"4":{"line":"00b251"},"5":{"line":"00b251"},"6":{"line":"00b251"},"7":{"line":"00b251"},"8":{"line":"00b251","station":{"name":"Green SW","orientation":45}}},"2":{"1":{"line":"00b251"},"2":{"line":"0896d7"},"3":{"line":"0896d7"},"4":{"line":"0896d7"},"5":{"line":"0896d7"},"6":{"line":"0896d7"},"7":{"line":"0896d7"},"8":{"line":"00b251"}},"3":{"1":{"line":"00b251"},"2":{"line":"0896d7"},"3":{"line":"bd1038","station":{"name":"Red NW","orientation":-45,"style":"rect","transfer":1}},"4":{"line":"0896d7"},"5":{"line":"0896d7"},"6":{"line":"bd1038"},"7":{"line":"0896d7"},"8":{"line":"00b251"}},"4":{"1":{"line":"00b251"},"2":{"line":"0896d7"},"3":{"line":"0896d7"},"4":{"line":"bd1038"},"5":{"line":"bd1038"},"6":{"line":"0896d7"},"7":{"line":"0896d7"},"8":{"line":"00b251"}},"5":{"1":{"line":"00b251"},"2":{"line":"0896d7"},"3":{"line":"0896d7"},"4":{"line":"bd1038"},"5":{"line":"bd1038"},"6":{"line":"0896d7"},"7":{"line":"0896d7"},"8":{"line":"00b251"}},"6":{"1":{"line":"00b251"},"2":{"line":"0896d7"},"3":{"line":"bd1038"},"4":{"line":"0896d7"},"5":{"line":"0896d7"},"6":{"line":"bd1038"},"7":{"line":"0896d7"},"8":{"line":"00b251"}},"7":{"1":{"line":"00b251"},"2":{"line":"0896d7","station":{"name":"Blue NE","style":"circles-lg"}},"3":{"line":"0896d7"},"4":{"line":"0896d7"},"5":{"line":"0896d7"},"6":{"line":"0896d7"},"7":{"line":"0896d7"},"8":{"line":"00b251"}},"8":{"1":{"line":"00b251"},"2":{"line":"00b251"},"3":{"line":"00b251"},"4":{"line":"00b251"},"5":{"line":"00b251"},"6":{"line":"00b251"},"7":{"line":"00b251"},"8":{"line":"00b251"}},"global":{"lines":{"0896d7":{"displayName":"Blue Line"},"00b251":{"displayName":"Green Line"},"bd1038":{"displayName":"Red Line"}},"map_size":160,"style":{"mapStationStyle":"circles-thin","mapLineWidth":0.125}},"points_by_color":{},"stations":{}}'
+
+        points_by_color, stations, map_size = sort_points_by_color(mapdata, map_type='classic', data_version=1)
+
+        self.assertEqual(map_size, 80)
+        self.assertEqual(len(stations), 3)
+        self.assertEqual(
+            stations,
+            [
+                {'name': 'Green SW', 'orientation': 45, 'xy': (1,8), 'color': '00b251'},
+                {'name': 'Red NW', 'orientation': -45, 'xy': (3,3), 'color': 'bd1038', 'transfer': 1, 'style': 'rect'},
+                {'name': 'Blue NE', 'orientation': 0, 'xy': (7,2), 'color': '0896d7', 'style': 'circles-lg'},
+            ]
+        )
+        self.assertEqual(len(points_by_color['bd1038']['xy']), 8)
+        self.assertEqual(len(points_by_color['00b251']['xy']), 28)
+        self.assertEqual(len(points_by_color['0896d7']['xy']), 28)
+
+        # Confirm a handful of the expected points exist
+        expected = {
+            'bd1038': [(3,3), (4,4), (5,5), (6,6), (6,3), (3,6)],
+            '00b251': [(1,1), (1,8), (8,8), (8,1), (8,5), (1,4)],
+            '0896d7': [(2,2), (7,2), (7,7), (2,7), (3,5), (6,4)],
+        }
+
+        for color in expected:
+            for point in expected[color]:
+                self.assertIn(point, points_by_color[color]['xy'])
 
     def test_sort_points_by_color_v2(self):
 
