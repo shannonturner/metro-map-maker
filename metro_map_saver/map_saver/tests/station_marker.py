@@ -1,6 +1,7 @@
 from map_saver.templatetags.metromap_utils import (
     station_marker,
 )
+from map_saver.validator import ALLOWED_LINE_WIDTHS
 
 from django.test import TestCase
 
@@ -8,13 +9,6 @@ class StationMarkerTest(TestCase):
 
     """ Confirm the behavior of station markers
     """
-
-    TODO = """
-        rectangles:
-            if line size >= 0.5, drawn in b/w; otherwise color
-            if line size >= 0.5, xfer controls stroke width
-            if rounded, has radius of 0.125
-        """
 
     points_by_color = {
         # A set of horizontal, vertical, diagonal-se, diagonal-ne points, and some singletons
@@ -68,13 +62,17 @@ class StationMarkerTest(TestCase):
         {'xy': (24,2), 'color': '0896d7', 'style': 'rect-round', 'expected': 'interior'},
         {'xy': (25,3), 'color': '0896d7', 'style': 'rect-round', 'expected': 'interior'},
 
-        # Singletons
-        {'xy': (80,0), 'color': 'bd1038', 'style': 'rect-round', 'expected': 'singleton'},
-        {'xy': (80,10), 'color': '00b251', 'style': 'rect-round', 'expected': 'singleton'},
-        {'xy': (80,20), 'color': '0896d7', 'style': 'rect-round', 'expected': 'singleton'},
+        # Singletons in point and station
+        {'xy': (80,0), 'color': 'bd1038', 'style': 'rect-round', 'expected': 'singleton', 'line_direction': 'singleton'},
+        {'xy': (80,10), 'color': '00b251', 'style': 'rect-round', 'expected': 'singleton', 'line_direction': 'singleton'},
+        {'xy': (80,20), 'color': '0896d7', 'style': 'rect-round', 'expected': 'singleton', 'line_direction': 'singleton'},
+
+        # Singleton stations on a line
+        {'xy': (3,1), 'color': 'bd1038', 'style': 'rect-round', 'expected': 'singleton', 'line_direction': 'horizontal'},
+        {'xy': (13,4), 'color': '0896d7', 'style': 'rect-round', 'expected': 'singleton', 'line_direction': 'vertical'},
+        {'xy': (26,5), 'color': '00b251', 'style': 'rect-round', 'expected': 'singleton', 'line_direction': 'diagonal-se'},
+        {'xy': (37,1), 'color': '0896d7', 'style': 'rect-round', 'expected': 'singleton', 'line_direction': 'diagonal-ne'},
     ]
-
-
 
     def test_wmata(self, line_color='bd1038', station_color='#000', style='wmata'):
 
@@ -230,3 +228,48 @@ class StationMarkerTest(TestCase):
             elif station['expected'] == 'interior':
                 marker = station_marker(station, 'circles-thin', 0.125, self.points_by_color, self.stations)
                 self.assertFalse(marker)
+
+
+    def test_rectangles_not_connected(self, rounded=False):
+
+        """ Confirm that non-connected rectangle station markers
+            are drawn as expected
+        """
+
+        for line_width in ALLOWED_LINE_WIDTHS:
+            # Singletons only
+            for station in self.stations[-7:]:
+                marker = station_marker(station, 'wmata', line_width, self.points_by_color, self.stations)
+                self.assertEqual(marker.count('<rect '), 1)
+                self.assertTrue('width="1"' in marker or 'width="0.5"' in marker)
+                self.assertTrue('height="1"' in marker or 'height="0.5"' in marker)
+
+                if rounded:
+                    if line_width >= 0.5 or station['line_direction'] == 'singleton':
+                        self.assertIn('fill="#fff"', marker)
+                        self.assertIn('stroke="#000"', marker)
+                    else:
+                        self.assertIn(f'fill="#{station["color"]}"', marker)
+                else:
+                    # If line size >= 0.5, drawn in b/w; otherwise color
+                    if station['line_direction'] == 'singleton':
+                        self.assertIn(f'fill="#{station["color"]}"', marker)
+                    elif line_width >= 0.5:
+                        self.assertIn('fill="#fff"', marker)
+                        self.assertIn('stroke="#000"', marker)
+                    else:
+                        self.assertIn(f'fill="#{station["color"]}"', marker)
+
+                # If rounded, has radius of 0.125
+                if rounded:
+                    self.assertIn('rx="0.125"', marker)
+                else:
+                    self.assertNotIn('rx="0.125"', marker)
+
+                if 'diagonal' in station['line_direction']:
+                    self.assertIn('transform="rotate', marker)
+                else:
+                    self.assertNotIn('transform="rotate', marker)
+
+    def test_rounded_rectangles_not_connected(self):
+        self.test_rectangles_not_connected(rounded=True)
