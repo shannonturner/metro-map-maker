@@ -14,7 +14,6 @@ class StationMarkerTest(TestCase):
             if line size >= 0.5, drawn in b/w; otherwise color
             if line size >= 0.5, xfer controls stroke width
             if rounded, has radius of 0.125
-        connected stations
         """
 
     points_by_color = {
@@ -207,6 +206,27 @@ class StationMarkerTest(TestCase):
                 self.assertEqual(marker.count('<rect '), 1)
                 self.assertTrue('width="3' in marker or 'height="3' in marker)
                 self.assertNotIn('rx=', marker)
+            elif station['expected'] == 'interior':
+                marker = station_marker(station, 'circles-thin', 0.125, self.points_by_color, self.stations)
+                self.assertFalse(marker)
+
+    def test_rounded_rectangles_connected(self):
+
+        """ Confirm behavior of rounded rectangle connected stations;
+            will test rounded rectangle singletons separately
+        """
+
+        for station in self.stations:
+            x = station['xy'][0]
+            y = station['xy'][1]
+
+            station['style'] = 'rect-round'
+
+            if station['expected'] == 'connected':
+                marker = station_marker(station, 'circles-thin', 0.125, self.points_by_color, self.stations)
+                self.assertEqual(marker.count('<rect '), 1)
+                self.assertTrue('width="3' in marker or 'height="3' in marker)
+                self.assertIn('rx=', marker)
             elif station['expected'] == 'interior':
                 marker = station_marker(station, 'circles-thin', 0.125, self.points_by_color, self.stations)
                 self.assertFalse(marker)
