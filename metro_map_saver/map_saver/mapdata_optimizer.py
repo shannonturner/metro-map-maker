@@ -94,7 +94,6 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
                 if station:
                     station_data = {
                         'name': station.get('name', ''),
-                        'lines': station.get('lines', []),
                         'orientation': station.get('orientation', 0),
                         'xy': (int(x), int(y)),
                         'color': line_color,
