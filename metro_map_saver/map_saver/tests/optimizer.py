@@ -34,6 +34,47 @@ class OptimizeMapTest(TestCase):
             line.append((int(x), int(y)))
         return line
 
+    def confirm_map_for_sort_points_by_color(self, version, points_by_color, stations, map_size):
+
+        """ Helper function to repeat the same checks for both v1 and v2
+        """
+
+        self.assertEqual(map_size, 80)
+        self.assertEqual(len(stations), 3)
+
+        if version == 1:
+            # v1 of sort_points_by_color does NOT explicitly add station styles,
+            #   because v1 maps originally didn't have styles,
+            #   and omitting them will make it easier to edit styles because you won't have to override each station
+            green = {'name': 'Green SW', 'orientation': 45, 'xy': (1,8), 'color': '00b251'}
+        elif version == 2:
+            # v2 of sort_points_by_color explicitly adds the station style,
+            #   because it's used by the SVG
+            green = {'name': 'Green SW', 'orientation': 45, 'xy': (1,8), 'color': '00b251', 'style': 'circles-thin'}
+
+        self.assertEqual(
+            stations,
+            [
+                green,
+                {'name': 'Red NW', 'orientation': -45, 'xy': (3,3), 'color': 'bd1038', 'transfer': 1, 'style': 'rect'},
+                {'name': 'Blue NE', 'orientation': 0, 'xy': (7,2), 'color': '0896d7', 'style': 'circles-lg'},
+            ]
+        )
+        self.assertEqual(len(points_by_color['bd1038']['xy']), 8)
+        self.assertEqual(len(points_by_color['00b251']['xy']), 28)
+        self.assertEqual(len(points_by_color['0896d7']['xy']), 28)
+
+        # Confirm a handful of the expected points exist
+        expected = {
+            'bd1038': [(3,3), (4,4), (5,5), (6,6), (6,3), (3,6)],
+            '00b251': [(1,1), (1,8), (8,8), (8,1), (8,5), (1,4)],
+            '0896d7': [(2,2), (7,2), (7,7), (2,7), (3,5), (6,4)],
+        }
+
+        for color in expected:
+            for point in expected[color]:
+                self.assertIn(point, points_by_color[color]['xy'])
+
     def test_reduce_straight_line(self):
 
         """ Confirm that we can reduce straight lines into
@@ -85,38 +126,17 @@ class OptimizeMapTest(TestCase):
         mapdata = '{"1":{"1":{"line":"00b251"},"2":{"line":"00b251"},"3":{"line":"00b251"},"4":{"line":"00b251"},"5":{"line":"00b251"},"6":{"line":"00b251"},"7":{"line":"00b251"},"8":{"line":"00b251","station":{"name":"Green SW","orientation":45}}},"2":{"1":{"line":"00b251"},"2":{"line":"0896d7"},"3":{"line":"0896d7"},"4":{"line":"0896d7"},"5":{"line":"0896d7"},"6":{"line":"0896d7"},"7":{"line":"0896d7"},"8":{"line":"00b251"}},"3":{"1":{"line":"00b251"},"2":{"line":"0896d7"},"3":{"line":"bd1038","station":{"name":"Red NW","orientation":-45,"style":"rect","transfer":1}},"4":{"line":"0896d7"},"5":{"line":"0896d7"},"6":{"line":"bd1038"},"7":{"line":"0896d7"},"8":{"line":"00b251"}},"4":{"1":{"line":"00b251"},"2":{"line":"0896d7"},"3":{"line":"0896d7"},"4":{"line":"bd1038"},"5":{"line":"bd1038"},"6":{"line":"0896d7"},"7":{"line":"0896d7"},"8":{"line":"00b251"}},"5":{"1":{"line":"00b251"},"2":{"line":"0896d7"},"3":{"line":"0896d7"},"4":{"line":"bd1038"},"5":{"line":"bd1038"},"6":{"line":"0896d7"},"7":{"line":"0896d7"},"8":{"line":"00b251"}},"6":{"1":{"line":"00b251"},"2":{"line":"0896d7"},"3":{"line":"bd1038"},"4":{"line":"0896d7"},"5":{"line":"0896d7"},"6":{"line":"bd1038"},"7":{"line":"0896d7"},"8":{"line":"00b251"}},"7":{"1":{"line":"00b251"},"2":{"line":"0896d7","station":{"name":"Blue NE","style":"circles-lg"}},"3":{"line":"0896d7"},"4":{"line":"0896d7"},"5":{"line":"0896d7"},"6":{"line":"0896d7"},"7":{"line":"0896d7"},"8":{"line":"00b251"}},"8":{"1":{"line":"00b251"},"2":{"line":"00b251"},"3":{"line":"00b251"},"4":{"line":"00b251"},"5":{"line":"00b251"},"6":{"line":"00b251"},"7":{"line":"00b251"},"8":{"line":"00b251"}},"global":{"lines":{"0896d7":{"displayName":"Blue Line"},"00b251":{"displayName":"Green Line"},"bd1038":{"displayName":"Red Line"}},"map_size":160,"style":{"mapStationStyle":"circles-thin","mapLineWidth":0.125}},"points_by_color":{},"stations":{}}'
 
         points_by_color, stations, map_size = sort_points_by_color(mapdata, map_type='classic', data_version=1)
-
-        self.assertEqual(map_size, 80)
-        self.assertEqual(len(stations), 3)
-        self.assertEqual(
-            stations,
-            [
-                {'name': 'Green SW', 'orientation': 45, 'xy': (1,8), 'color': '00b251'},
-                {'name': 'Red NW', 'orientation': -45, 'xy': (3,3), 'color': 'bd1038', 'transfer': 1, 'style': 'rect'},
-                {'name': 'Blue NE', 'orientation': 0, 'xy': (7,2), 'color': '0896d7', 'style': 'circles-lg'},
-            ]
-        )
-        self.assertEqual(len(points_by_color['bd1038']['xy']), 8)
-        self.assertEqual(len(points_by_color['00b251']['xy']), 28)
-        self.assertEqual(len(points_by_color['0896d7']['xy']), 28)
-
-        # Confirm a handful of the expected points exist
-        expected = {
-            'bd1038': [(3,3), (4,4), (5,5), (6,6), (6,3), (3,6)],
-            '00b251': [(1,1), (1,8), (8,8), (8,1), (8,5), (1,4)],
-            '0896d7': [(2,2), (7,2), (7,7), (2,7), (3,5), (6,4)],
-        }
-
-        for color in expected:
-            for point in expected[color]:
-                self.assertIn(point, points_by_color[color]['xy'])
+        self.confirm_map_for_sort_points_by_color(1, points_by_color, stations, map_size)
 
     def test_sort_points_by_color_v2(self):
 
         """ As test_sort_points_by_color_v1, but for v2 data
         """
 
-        self.assertFalse('TODO - Not yet implemented')
+        mapdata = '{"global":{"lines":{"00b251":{"displayName":"Green Line"},"0896d7":{"displayName":"Blue Line"},"bd1038":{"displayName":"Red Line"}},"style":{"mapLineWidth":0.125,"mapStationStyle":"circles-thin"},"map_size":80,"data_version":2},"stations":{"1":{"8":{"name":"Green SW","orientation":45}},"3":{"3":{"name":"Red NW","style":"rect","transfer":1,"orientation":-45}},"7":{"2":{"name":"Blue NE","style":"circles-lg","orientation":0}}},"points_by_color":{"00b251":{"xys":{"1":{"1":1,"2":1,"3":1,"4":1,"5":1,"6":1,"7":1,"8":1},"2":{"1":1,"8":1},"3":{"1":1,"8":1},"4":{"1":1,"8":1},"5":{"1":1,"8":1},"6":{"1":1,"8":1},"7":{"1":1,"8":1},"8":{"1":1,"2":1,"3":1,"4":1,"5":1,"6":1,"7":1,"8":1}}},"0896d7":{"xys":{"2":{"2":1,"3":1,"4":1,"5":1,"6":1,"7":1},"3":{"2":1,"4":1,"5":1,"7":1},"4":{"2":1,"3":1,"6":1,"7":1},"5":{"2":1,"3":1,"6":1,"7":1},"6":{"2":1,"4":1,"5":1,"7":1},"7":{"2":1,"3":1,"4":1,"5":1,"6":1,"7":1}}},"bd1038":{"xys":{"3":{"3":1,"6":1},"4":{"4":1,"5":1},"5":{"4":1,"5":1},"6":{"3":1,"6":1}}}}}'
+
+        points_by_color, stations, map_size = sort_points_by_color(mapdata, map_type='classic', data_version=2)
+        self.confirm_map_for_sort_points_by_color(2, points_by_color, stations, map_size)
 
     def test_get_connected_points(self):
 
