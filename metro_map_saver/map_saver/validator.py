@@ -14,7 +14,7 @@ MAX_MAP_SIZE = ALLOWED_MAP_SIZES[-1]
 VALID_XY = [str(x) for x in range(MAX_MAP_SIZE)]
 ALLOWED_LINE_WIDTHS = [1, 0.75, 0.5, 0.25, 0.125]
 ALLOWED_STATION_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
-ALLOWED_ORIENTATIONS = ['0', '45', '-45', '90', '-90', '135', '-135', '180']
+ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180]
 ALLOWED_CONNECTING_STATIONS = ['rect', 'rect-round', 'circles-thin']
 
 def is_hex(string):
@@ -277,7 +277,7 @@ def validate_metro_map_v2(metro_map):
 
                 station = {'name': station_name}
 
-                station_orientation = str(metro_map['stations'][x][y].get('orientation', 0))
+                station_orientation = metro_map['stations'][x][y].get('orientation', ALLOWED_ORIENTATIONS[0])
                 if station_orientation not in ALLOWED_ORIENTATIONS:
                     station_orientation = ALLOWED_ORIENTATIONS[0]
                 station['orientation'] = station_orientation
@@ -451,8 +451,15 @@ def validate_metro_map(metro_map):
                                 validated_metro_map[x][y]["station"]["lines"].append(station_line)
                         if metro_map[x][y]["station"].get('transfer'):
                            validated_metro_map[x][y]["station"]["transfer"] = 1
-                        if metro_map[x][y]["station"].get('orientation') and metro_map[x][y]["station"].get('orientation') in ('0', '-45', '45', '-90', '90', '135', '-135', '180'):
-                            validated_metro_map[x][y]["station"]["orientation"] = metro_map[x][y]["station"].get('orientation')
+
+                        try:
+                            station_orientation = int(metro_map[x][y]["station"].get('orientation', ALLOWED_ORIENTATIONS[0]))
+                        except Exception:
+                            station_orientation = ALLOWED_ORIENTATIONS[0]
+                        if station_orientation not in ALLOWED_ORIENTATIONS:
+                            station_orientation = ALLOWED_ORIENTATIONS[0]
+                        validated_metro_map[x][y]["station"]["orientation"] = station_orientation
+
                         station_style = metro_map[x][y]["station"].get('style')
                         if station_style and station_style in ALLOWED_STATION_STYLES:
                             validated_metro_map[x][y]["station"]['style'] = station_style

@@ -458,19 +458,19 @@ def station_text(station):
         # Right
         pass
     elif station['orientation'] in (
-        '45', # Below right, 45
-        '90', # Above, 90 -> SVG: (-90)
-        '-45', # Below right, 45
+        45, # Below right, 45
+        90, # Above, 90 -> SVG: (-90)
+        -45, # Below right, 45
         ):
-        if station['orientation'] == '90':
-            station['orientation'] = '-90' 
+        if station['orientation'] == 90:
+            station['orientation'] = -90
 
         transform = f' transform="rotate({station["orientation"]} {station["xy"][0]}, {station["xy"][1]})"'
     elif station['orientation'] in (
-        '180', # Left
-        '135', # Below left, 45 -> SVG: (-45)
-        '-135', # Above left, 45 -> SVG: (45)
-        '-90', # Below, 90
+        180, # Left
+        135, # Below left, 45 -> SVG: (-45)
+        -135, # Above left, 45 -> SVG: (45)
+        -90, # Below, 90
     ):
         text_anchor = ' text-anchor="end"'
         if station.get('transfer'):
@@ -478,12 +478,12 @@ def station_text(station):
         else:
             x_val = station['xy'][0] - 0.75
 
-        if station['orientation'] == '135':
-            station['orientation'] = '-45'
-        elif station['orientation'] == '-135':
-            station['orientation'] = '45'
+        if station['orientation'] == 135:
+            station['orientation'] = -45
+        elif station['orientation'] == -135:
+            station['orientation'] = 45
 
-        if station['orientation'] == '180':
+        if station['orientation'] == 180:
             transform = ''
         else:
             transform = f' transform="rotate({station["orientation"]} {station["xy"][0]}, {station["xy"][1]})"'
