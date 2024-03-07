@@ -485,6 +485,20 @@ class ValidateMapV2(TestCase):
         # But the data is the same as before
         self.assertEqual(saved_map.data, form.cleaned_data['mapdata'])
 
+    def test_orientation_string_to_int(self):
+
+        """ Confirm that orientations will be converted from string to int
+            during validation
+        """
+
+        mapdata = {"global":{"lines":{"00b251":{"displayName":"Green Line"},"0896d7":{"displayName":"Blue Line"},"bd1038":{"displayName":"Red Line"}},"style":{"mapLineWidth":0.125,"mapStationStyle":"circles-thin"},"map_size":80,"data_version":2},"stations":{"1":{"8":{"name":"Green SW","orientation":"45"}},"3":{"3":{"name":"Red NW","style":"rect","transfer":1,"orientation":"-45"}},"7":{"2":{"name":"Blue NE","style":"circles-lg","orientation":"0"}}},"points_by_color":{"00b251":{"xys":{"1":{"7":1,"8":1},"2":{"8":1},"3":{},"4":{},"5":{},"6":{},"7":{},"8":{}}},"0896d7":{"xys":{"2":{},"3":{},"4":{},"5":{},"6":{},"7":{"2":1}}},"bd1038":{"xys":{"3":{"3":1},"4":{},"5":{},"6":{}}}}}
+        form = CreateMapForm({"mapdata": mapdata})
+        self.assertTrue(form.is_valid())
+
+        self.assertEqual(45, form.cleaned_data['mapdata']['stations']['1']['8']['orientation'])
+        self.assertEqual(-45, form.cleaned_data['mapdata']['stations']['3']['3']['orientation'])
+        self.assertEqual(0, form.cleaned_data['mapdata']['stations']['7']['2']['orientation'])
+
 
 class ValidateMap(PostMapDataMixin, TestCase):
 
@@ -1109,3 +1123,16 @@ class ValidateMap(PostMapDataMixin, TestCase):
                 mapdata['global']['style'],
                 metro_map['global']['style'],
             )
+
+    def test_orientation_string_to_int(self):
+
+        """ Confirm that string orientations will be converted to ints
+        """
+
+        mapdata = {"1":{"8":{"line":"00b251","station":{"name":"Green SW","lines":[],"orientation":"45"}}},"2":{"8":{"line":"00b251"}},"3":{"3":{"line":"bd1038","station":{"name":"Red NW","lines":[],"orientation":"-45"}}},"7":{"2":{"line":"0896d7","station":{"name":"Blue E","lines":[],"orientation":"0"}}},"global":{"lines":{"00b251":{"displayName":"Green Line"},"0896d7":{"displayName":"Blue Line"},"bd1038":{"displayName":"Red Line"}},"style":{"mapLineWidth":0.125,"mapStationStyle":"circles-thin"},"data_version":1,"map_size":80}}
+        form = CreateMapForm({"mapdata": mapdata})
+        self.assertTrue(form.is_valid())
+
+        self.assertEqual(45, form.cleaned_data['mapdata']['1']['8']['station']['orientation'])
+        self.assertEqual(-45, form.cleaned_data['mapdata']['3']['3']['station']['orientation'])
+        self.assertEqual(0, form.cleaned_data['mapdata']['7']['2']['station']['orientation'])

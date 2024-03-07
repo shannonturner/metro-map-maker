@@ -277,7 +277,11 @@ def validate_metro_map_v2(metro_map):
 
                 station = {'name': station_name}
 
-                station_orientation = metro_map['stations'][x][y].get('orientation', ALLOWED_ORIENTATIONS[0])
+                try:
+                    station_orientation = int(metro_map['stations'][x][y].get('orientation', ALLOWED_ORIENTATIONS[0]))
+                except Exception:
+                    station_orientation = ALLOWED_ORIENTATIONS[0]
+
                 if station_orientation not in ALLOWED_ORIENTATIONS:
                     station_orientation = ALLOWED_ORIENTATIONS[0]
                 station['orientation'] = station_orientation
