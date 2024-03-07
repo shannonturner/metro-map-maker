@@ -34,7 +34,7 @@ if (typeof mapDataVersion === 'undefined' || mapDataVersion == 1) {
   $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
 }
 
-const ALLOWED_ORIENTATIONS = ['0', '45', '-45', '90', '-90', '135', '-135', '180'];
+const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
 
 String.prototype.replaceAll = function(search, replacement) {
@@ -321,7 +321,7 @@ function makeStation(x, y) {
       document.getElementById('station-name-orientation').value = lastStationOrientation;
       $('#station-name-orientation').change(); // This way, it will be saved
     } else {
-      document.getElementById('station-name-orientation').value = '0';
+      document.getElementById('station-name-orientation').value = 0;
     }
     document.getElementById('station-style').value = ''
   } // if (create new station)
@@ -340,7 +340,7 @@ function makeStation(x, y) {
       }
 
       // Select the correct orientation too.
-      document.getElementById('station-name-orientation').value = getStation(x, y, activeMap)["orientation"];
+      document.getElementById('station-name-orientation').value = parseInt(getStation(x, y, activeMap)["orientation"]);
 
       document.getElementById('station-style').value = getStation(x, y, activeMap)["style"] || ''
     } // edit named station
@@ -952,7 +952,7 @@ function drawStationName(ctx, x, y, metroMap, isTransferStation, drawAsConnected
   ctx.save();
   var station = getStation(x, y, metroMap)
   var stationName = station["name"].replaceAll('_', ' ')
-  var orientation = station["orientation"]
+  var orientation = parseInt(station["orientation"])
   var textSize = ctx.measureText(stationName).width;
   if (isTransferStation)
     var xOffset = gridPixelMultiplier * 1.5
@@ -963,31 +963,31 @@ function drawStationName(ctx, x, y, metroMap, isTransferStation, drawAsConnected
   var yOffset = gridPixelMultiplier * .25
 
   // Rotate the canvas if specified in the station name orientation
-  if (orientation == '-45') {
+  if (orientation == -45) {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(-45 * (Math.PI/ 180));
     ctx.fillText(stationName, xOffset, yOffset);
-  } else if (orientation == '45') {
+  } else if (orientation == 45) {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(45 * (Math.PI/ 180));
     ctx.fillText(stationName, xOffset, yOffset);
-  } else if (orientation == '-90') {
+  } else if (orientation == -90) {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(-90 * (Math.PI/ 180));
     ctx.fillText(stationName, -1 * textSize - xOffset, yOffset);
-  } else if (orientation == '90') {
+  } else if (orientation == 90) {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(-90 * (Math.PI/ 180));
     ctx.fillText(stationName, xOffset, yOffset);
-  } else if (orientation == '135') {
+  } else if (orientation == 135) {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(-45 * (Math.PI/ 180));
     ctx.fillText(stationName, -1 * textSize - xOffset, yOffset);
-  } else if (orientation == '-135') {
+  } else if (orientation == -135) {
     ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier);
     ctx.rotate(45 * (Math.PI/ 180));
     ctx.fillText(stationName, -1 * textSize - xOffset, yOffset);
-  } else if (orientation == '180') {
+  } else if (orientation == 180) {
     // When drawing on the left, this isn't very different from drawing on the right
     //      with no rotation, except that we include the measured text width
     if (isTransferStation) {
@@ -2769,29 +2769,31 @@ $(document).ready(function() {
     var x = $('#station-coordinates-x').val();
     var y = $('#station-coordinates-y').val();
 
+    var orientation = parseInt($(this).val())
+
     if (x >= 0 && y >= 0) {
-      if ($(this).val() == '0') {
+      if (orientation == 0) {
         if (Object.keys(temporaryStation).length > 0) {
-          temporaryStation["orientation"] = '0'
+          temporaryStation["orientation"] = 0
         } else {
           if (mapDataVersion == 2)
-            activeMap["stations"][x][y]["orientation"] = '0'
+            activeMap["stations"][x][y]["orientation"] = 0
           else if (mapDataVersion == 1)
-            activeMap[x][y]["station"]["orientation"] = '0'
+            activeMap[x][y]["station"]["orientation"] = 0
         }
-      } else if (ALLOWED_ORIENTATIONS.indexOf($(this).val()) >= 0) {
+      } else if (ALLOWED_ORIENTATIONS.indexOf(orientation) >= 0) {
         if (Object.keys(temporaryStation).length > 0) {
-          temporaryStation["orientation"] = $(this).val()
+          temporaryStation["orientation"] = orientation
         } else {
           if (mapDataVersion == 2)
-            activeMap["stations"][x][y]["orientation"] = $(this).val()
+            activeMap["stations"][x][y]["orientation"] = orientation
           else if (mapDataVersion == 1)
-            activeMap[x][y]["station"]["orientation"] = $(this).val()
+            activeMap[x][y]["station"]["orientation"] = orientation
         } // else (not temporaryStation)
       } // else if ALLOWED_ORIENTATION
     } // if x >= 0 && y >= 0
 
-    window.localStorage.setItem('metroMapStationOrientation', $(this).val());
+    window.localStorage.setItem('metroMapStationOrientation', orientation);
     if (Object.keys(temporaryStation).length == 0) {
       autoSave(activeMap);
     }
@@ -2890,6 +2892,7 @@ function getSurroundingLine(x, y, metroMap) {
 
 function setAllStationOrientations(metroMap, orientation) {
   // Set all station orientations to a certain direction
+  orientation = parseInt(orientation)
   if (ALLOWED_ORIENTATIONS.indexOf(orientation) == -1)
     return
 
