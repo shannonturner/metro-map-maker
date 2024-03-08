@@ -68,7 +68,7 @@ input[type=checkbox]{margin:4px 0 0;margin-top:1px\9;line-height:normal}
 button {
   color: #fff;
 }
-#toolbox button, #remix button {
+#toolbox button, #remix button, #mobile-browse button {
   display: flex;
   flex-flow: column nowrap;
   align-items: center;
@@ -76,8 +76,12 @@ button {
   overflow: auto;
 }
 
-#remix button {
+#remix button, #mobile-browse button {
   height: 6rem;
+}
+
+#mobile-browse {
+  margin-bottom: 1rem;
 }
 
 button#tool-line.active.draw-rail-line,
@@ -90,7 +94,7 @@ button#tool-line.active.draw-rail-line:active {
 
 #toolbox button svg, #toolbox button span { margin: auto; }
 
-#toolbox button.width-100, #remix .width-100 { width: 100%; }
+#toolbox button.width-100, #remix .width-100, #remix fieldset, #mobile-browse .width-100 { width: 100%; }
 
 button.styled:hover {
   border-color: rgba(255, 255, 255, 0.3);
@@ -290,6 +294,7 @@ canvas#grid-canvas, canvas#hover-canvas {
   align-items: center;
   width: 5rem;
   overflow-x: hidden;
+  overflow-y: clip;
   border-radius: 0.333rem;
   border: 0.5rem solid transparent;
 }
@@ -425,6 +430,18 @@ select {
   }
   #zoom-out-container {
     padding-left: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  #controls {
+    position: fixed;
+    bottom: 5px;
+    height: 75%;
+    overflow-y: scroll;
+  }
+  button#tool-export-canvas {
+    display: flex !important;
   }
 }
 

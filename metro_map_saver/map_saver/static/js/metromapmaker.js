@@ -29,7 +29,7 @@ MMMDEBUG = false
 if (typeof mapDataVersion === 'undefined' || mapDataVersion == 1) {
   mapDataVersion = 1
   // At a glance, this helps me to see whether I'm on v1 or v2
-  $('.M').css({"background-color": "#bd1038"})
+  $('.M:not(.mobile)').css({"background-color": "#bd1038"})
   $('#title').css({"color": "#bd1038"})
   $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
 }
@@ -2516,7 +2516,7 @@ $(document).ready(function() {
       $('#export-canvas-help').show();
       $('button').attr('disabled', true);
       $(this).attr('disabled', false);
-      $('#tool-export-canvas').html('<i class="fa fa-pencil-square-o" aria-hidden="true"></i> Edit map');
+
       $(this).attr('title', "Go back to editing your map").tooltip('fixTitle').tooltip('show');
     } else {
       $('#grid-canvas').show();
@@ -2526,7 +2526,7 @@ $(document).ready(function() {
       $("#metro-map-image").hide();
       $('#export-canvas-help').hide();
       $('button').attr('disabled', false);
-      $('#tool-export-canvas').html('<i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image');
+
       $(this).attr('title', "Download your map to share with friends").tooltip('fixTitle').tooltip('show');
     }
   }); // #tool-export-canvas.click()
@@ -3378,14 +3378,15 @@ function replaceColors(color1, color2) {
 } // replaceColors(color1, color2)
 
 // Steer mobile users toward the gallery, for a better experience
-$('#try-on-mobile').click(function() {
-  $(this).removeClass('visible-xs')
-  $('#try-on-mobile').hide();
-  $('#favorite-maps').hide();
-  $('#mobile-compatibility-warning').removeClass('visible-xs')
-  $('#mobile-compatibility-warning').hide()
-  $('#toolbox-mobile-hint').removeClass('hidden-xs');
+function editOnSmallScreen() {
+  $('#mobile-header').removeClass('visible-xs') // otherwise .hide won't take effect
+  $('#mobile-header').hide()
+  $('#mobile-header').css({"height": 0}) // otherwise the canvas is all messed up
+
   $('#controls').removeClass('hidden-xs');
+
+  collapseToolbox()
+  $('#snap-controls-left').trigger('click')
 
   if ($('#tool-line').prop('disabled')) {
     $('#tool-export-canvas').click()
@@ -3401,7 +3402,18 @@ $('#try-on-mobile').click(function() {
   snapCanvasToGrid();
 
   drawCanvas();
+} // editOnSmallScreen
+
+$('#try-on-mobile').click(function() {
+  editOnSmallScreen()
 });
+
+$('#i-am-on-desktop').on('click', function() {
+  editOnSmallScreen()
+  $('#tool-export-canvas').remove()
+  $('#tool-download-image').removeClass('hidden-xs')
+  // Consider: Set localStorage; but what if someone clicks this by mistake?
+})
 
 function collapseToolbox() {
   // When collapsed, the toolbox is pretty small -- too small really to be able to read

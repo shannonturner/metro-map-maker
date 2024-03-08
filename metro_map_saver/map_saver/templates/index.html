@@ -59,9 +59,27 @@
 
   <div id="mobile-header" class="visible-xs text-left row">
     <div class="col-lg-10 col-offset-1">
-      <h3 class="text-center"><span class="M">M</span>etro <span class="M">M</span>ap <span class="M">M</span>aker</h3>
+      {# Prevent these turning red for v1; using .mobile instead of .visible-xs because .visible-xs is display:block #}
+      <h3><span class="M mobile">M</span>etro <span class="M mobile">M</span>ap <span class="M mobile">M</span>aker</h3>
       <h5>Build the Metro map of your dreams, save, and share with friends!</h5>
-      <a href="gallery/"><h4><b>Check out maps created by visitors like you!</b></h4></a>
+      <div id="mobile-browse">
+        <fieldset>
+          <legend>Browse Maps created by visitors like you</legend>
+            <a href="{% url 'public_gallery' %}" class="width-100">
+              <button class="styled styling-blueline width-100">
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#postage-heart"/></svg>
+                <span class="button-label">My Favorites</span>
+              </button>
+            </a>
+            <a href="{% url 'calendar' %}" class="width-100">
+              <button class="styled styling-blueline width-100">
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#calendar-date"/></svg>
+                <span class="button-label">All Maps by Date</span>
+              </button>
+            </a>
+        </fieldset>
+      </div>
+
       {% if not saved_map %}
       <div id="favorite-maps">
         <h5>Some of my favorites include:</h5>
@@ -78,7 +96,11 @@
       </div> <!-- #favorite-maps -->
       {% endif %}
 
-      <h5 id="toolbox-mobile-hint" class="hidden-xs">All the tools you need are below the grid.</h5>
+      <h5 id="mobile-compatibility-warning" class="visible-xs">This works best on desktop; some features may not work as well if you are on a mobile device.</h5>
+      <div style="display: flex;gap: 1rem;margin-bottom: 1rem;">
+        <button id="try-on-mobile" class="styled styling-silverline visible-xs">Edit this map anyway</button>
+        <button id="i-am-on-desktop" class="styled styling-redline visible-xs">I am on desktop</button>
+      </div>
     </div>
   </div>
 
@@ -91,9 +113,6 @@
     <a id="metro-map-image-download-link" rel="noopener" starget="_blank"></a>
     <img id="metro-map-image" class="img-responsive" alt="">
   </div>
-
-  <h5 id="mobile-compatibility-warning" class="visible-xs">This works best on desktop; some features may not work correctly on your mobile device.</h5>
-  <button id="try-on-mobile" class="styled styling-red visible-xs">Edit this map on mobile anyway</button>
 
   <div id="controls" class="col-md-3 col-lg-2 text-left hidden-xs">
     <h3 id="title"><span class="M">M</span>etro<span class="M">M</span>ap<span class="M">M</span>aker</h3>
@@ -327,15 +346,19 @@
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
         <span class="button-label">Download</span>
       </button>
+
+      <!-- Download button when on mobile -->
       <button id="tool-export-canvas" class="width-100 has-tooltip visible-xs styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
         <span class="button-label">Download</span>
       </button>
 
       <div id="export-canvas-help" class="text-left" style="display: none;">
-        <h5><b>Tap and hold the map to save as an image, or right click the map and click "Save Image As".</b></h5>
-        <h5>Or click "Edit map" to continue editing your map.</h5>
-        <h5>Happy with your map? Be sure to click Save &amp; Share map and it might be <a href="https://metromapmaker.com/gallery" rel="noopener" target="_blank">featured in the gallery</a>!</h5>
+        <fieldset>
+          <h5><b>On mobile, downloading maps works differently. Tap and hold the map to save as an image, or right click the map and click "Save Image As".</b></h5>
+          <h5>Click the "Download" button again to go back to editing your map.</h5>
+          <h5>Happy with your map? Be sure to click Save &amp; Share map and it might be <a href="https://metromapmaker.com/gallery" rel="noopener" target="_blank">featured in the gallery</a>!</h5>
+        </fieldset>
       </div>
 
       <button id="tool-save-map" class="width-100 has-tooltip styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Create a unique, shareable URL for your map">
