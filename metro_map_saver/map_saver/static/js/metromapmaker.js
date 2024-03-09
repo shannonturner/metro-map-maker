@@ -1898,6 +1898,8 @@ function combineCanvases() {
   // Layer the stations on top of the canvas
   var ctx = canvas.getContext('2d', {alpha: false});
   ctx.drawImage(canvasStations, 0, 0);
+  var ctxStations = canvasStations.getContext('2d', {alpha: true});
+  ctxStations.clearRect(0, 0, canvasStations.width, canvasStations.height);
   return canvas
 } // combineCanvases()
 
@@ -1920,6 +1922,7 @@ function downloadImage(canvas, showImg) {
       $('#metro-map-image').show()
     } else {
       document.getElementById('metro-map-image-download-link').click()
+      drawCanvas(activeMap) // repaint the canvas, because otherwise the stations are drawn twice
     }
   } else {
     if (pngUrl) {
@@ -1941,6 +1944,7 @@ function downloadImage(canvas, showImg) {
         $('#metro-map-image').show()
       } else {
         document.getElementById('metro-map-image-download-link').click()
+        drawCanvas(activeMap) // repaint the canvas, because otherwise the stations are drawn twice
       } // else
     }) // canvas.toBlob()
   } // else (.toBlob available)
