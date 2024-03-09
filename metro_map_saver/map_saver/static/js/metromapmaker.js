@@ -2821,20 +2821,27 @@ $(document).ready(function() {
     var x = $('#station-coordinates-x').val()
     var y = $('#station-coordinates-y').val()
 
+    var thisStationStyle = $(this).val()
+
     if (x >= 0 && y >= 0) {
-      if (ALLOWED_STYLES.indexOf($(this).val()) >= 0) {
+      if (ALLOWED_STYLES.indexOf(thisStationStyle) >= 0) {
         if (Object.keys(temporaryStation).length > 0) {
-          temporaryStation["style"] = $(this).val()
+          temporaryStation["style"] = thisStationStyle
         } else {
           if (mapDataVersion == 2)
-            activeMap["stations"][x][y]["style"] = $(this).val()
+            activeMap["stations"][x][y]["style"] = thisStationStyle
           else if (mapDataVersion == 1)
-            activeMap[x][y]["station"]["style"] = $(this).val()
+            activeMap[x][y]["station"]["style"] = thisStationStyle
         } // else (not temporaryStation)
-      } // else if ALLOWED_STYLES
+      } else if (!thisStationStyle) {
+        if (mapDataVersion == 2 && activeMap['stations'][x][y]['style']) {
+          delete activeMap['stations'][x][y]['style']
+        } else if (mapDataVersion == 1 && activeMap[x][y]['station']['style']) {
+          delete activeMap[x][y]['station']['style']
+        }
+      }// else if ALLOWED_STYLES
     } // if x >= 0 && y >= 0
 
-    window.localStorage.setItem('metroMapStationStyle', $(this).val());
     if (Object.keys(temporaryStation).length == 0) {
       autoSave(activeMap);
     }
