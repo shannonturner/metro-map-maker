@@ -1401,6 +1401,11 @@ function autoLoad() {
       } else { // Success, load the map
         activeMap = JSON.parse(activeMap)
         setMapStyle(activeMap)
+        if (activeMap && activeMap['global'] && activeMap['global']['data_version']) {
+          mapDataVersion = activeMap['global']['data_version']
+        } else {
+          mapDataVersion = 1
+        }
         mapSize = setMapSize(activeMap, mapDataVersion > 1)
         loadMapFromObject(activeMap)
         setTimeout(function() {
@@ -2735,6 +2740,7 @@ $(document).ready(function() {
   })
 
   $('.map-style-station').on('click', function() {
+    autoSave(activeMap)
     mapStationStyle = $(this).data('station-style')
     $('.map-style-station.active-mapstyle').removeClass('active-mapstyle')
     $(this).addClass('active-mapstyle')
@@ -2925,6 +2931,7 @@ function setAllStationOrientations(metroMap, orientation) {
   }
 }
 $('#set-all-station-name-orientation').on('click', function() {
+  autoSave(activeMap)
   var orientation = $('#set-all-station-name-orientation-choice').val()
   setAllStationOrientations(activeMap, orientation)
   drawCanvas()
@@ -2961,6 +2968,7 @@ function resetAllStationStyles(metroMap) {
   }
 }
 $('#reset-all-station-styles').on('click', function() {
+  autoSave(activeMap)
   resetAllStationStyles(activeMap)
   drawCanvas()
   setTimeout(function() {
