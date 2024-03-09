@@ -308,7 +308,7 @@ def validate_metro_map_v2(metro_map):
 
     validated_metro_map['global']['map_size'] = get_map_size(highest_xy_seen)
 
-    return validated_metro_map # TODO: delete the commented-out full maps above lol
+    return validated_metro_map
 
 def validate_metro_map(metro_map):
     
