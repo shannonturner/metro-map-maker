@@ -2176,7 +2176,9 @@ $(document).ready(function() {
     else if ((event.which == 88) && (!event.metaKey && !event.ctrlKey)) // X
       $('#controls-expand-menu').trigger('click')
     else if ((event.which == 89) && (!event.metaKey && !event.ctrlKey)) // Y
-      $('#tool-map-style').trigger('click')
+      if (!menuIsCollapsed) {
+        $('#tool-map-style').trigger('click')
+      }
     else if (event.which == 37 && !event.metaKey) { // left arrow, except for "go back"
       event.preventDefault(); moveMap('left')
     } else if (event.which == 38) { // up arrow
