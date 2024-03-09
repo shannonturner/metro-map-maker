@@ -471,9 +471,9 @@ select {
 }
 
 /* Display a preview of what the station styles will look like */
-#toolbox button.map-style-station span.style-hover-display {
-  margin: 0 !important;
-  /* TODO: the text "Metro Classic" is skewed to the right and this isn't helping, what will? */
+#toolbox button.map-style-station span.style-hover-display,
+#toolbox button.map-style-station span.style-description {
+  margin: unset;
 }
 
 .map-style-station span.style-hover-display {
@@ -482,9 +482,12 @@ select {
 
 .map-style-station:hover span.style-hover-display {
   display: block;
-  overflow: clip;
 }
 
 .map-style-station:hover span.style-description {
   display: none;
+}
+
+#toolbox button.map-style-station {
+  overflow: clip;
 }
