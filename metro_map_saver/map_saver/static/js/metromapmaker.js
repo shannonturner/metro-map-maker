@@ -1420,6 +1420,9 @@ function autoLoad() {
   mapSize = setMapSize(activeMap, mapDataVersion > 1)
   loadMapFromObject(activeMap)
 
+  // Remove the underpainted SVG
+  $('#canvas-container').css('background', 'unset')
+
   setTimeout(function() {
     $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
   }, 1000);

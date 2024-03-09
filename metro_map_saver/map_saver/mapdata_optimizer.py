@@ -4,7 +4,7 @@ import json
 from django.template import Context, Template
 from PIL import Image, ImageDraw
 
-from .validator import VALID_XY, ALLOWED_MAP_SIZES
+from .validator import VALID_XY, ALLOWED_MAP_SIZES, ALLOWED_ORIENTATIONS
 
 SVG_TEMPLATE = Template('''
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ canvas_size|default:80 }} {{ canvas_size|default:80 }}">
@@ -94,10 +94,13 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
                 if station:
                     station_data = {
                         'name': station.get('name', ''),
-                        'orientation': station.get('orientation', 0),
                         'xy': (int(x), int(y)),
                         'color': line_color,
                     }
+                    try:
+                        station_data['orientation'] = int(station.get('orientation', ALLOWED_ORIENTATIONS[0]))
+                    except Exception:
+                        station_data['orientation'] = ALLOWED_ORIENTATIONS[0]
                     if station.get('transfer'):
                         station_data['transfer'] = 1
                     style = station.get('style')
