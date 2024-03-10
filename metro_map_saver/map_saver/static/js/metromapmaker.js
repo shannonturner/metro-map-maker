@@ -34,7 +34,7 @@ if (typeof mapDataVersion === 'undefined' || mapDataVersion == 1) {
   $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
 }
 
-const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'] // 1-20; is set up this way to have same functionality on all keyboards
+const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'] // 1-30; is set up this way to have same functionality on all keyboards
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
 
@@ -1574,6 +1574,8 @@ function loadMapFromObject(metroMapObject, update) {
             keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: ' + numberKeys[numLines - 1].replace('Digit', '') + '"'
           } else if (numLines < 21) {
             keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: Shift + ' + numberKeys[numLines - 1].replace('Digit', '') + '"'
+          } else if (numLines < 31) {
+            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: Alt + ' + numberKeys[numLines - 1].replace('Digit', '') + '"'
           } else {
             keyboardShortcut = ''
           }
@@ -2148,6 +2150,9 @@ $(document).ready(function() {
       return
     }
 
+    var possibleRailLines = $('.rail-line')
+    var railKey = false
+
     if (event.key == 'z' && (event.metaKey || event.ctrlKey)) {
       // If Control+Z is pressed
       undo();
@@ -2215,21 +2220,21 @@ $(document).ready(function() {
       $('#snap-controls-right').trigger('click')
     }
     // 0-9, except when switching tabs (Control)
-    // Check shift key first, for 11-20
+    // Check shift key first, for 11-20; alt key for 21-30; then with no modifying key for 1-10
     else if (!event.metaKey && !event.ctrlKey && event.shiftKey && numberKeys.indexOf(event.code) >= 0) {
-      var railKey = numberKeys.indexOf(event.code) + 10
-      var possibleRailLines = $('.rail-line')
-      if (possibleRailLines[railKey])
-        possibleRailLines[railKey].click()
+      railKey = numberKeys.indexOf(event.code) + 10
     }
-    // Consider: Could add event.altKey to have 21-30, but this seems like overkill
+    else if (!event.metaKey && !event.ctrlKey && event.altKey && numberKeys.indexOf(event.code) >= 0) {
+      railKey = numberKeys.indexOf(event.code) + 20
+    }
     else if (!event.metaKey && !event.ctrlKey && numberKeys.indexOf(event.code) >= 0) {
-      // 0-9, except when switching tabs (Control)
       // Draw rail colors in order of appearance, 1-10 (0 is 10)
-      var railKey = numberKeys.indexOf(event.code)
-      var possibleRailLines = $('.rail-line')
-      if (possibleRailLines[railKey])
-        possibleRailLines[railKey].click()
+      railKey = numberKeys.indexOf(event.code)
+    }
+
+    // ----- Note: This is a separate conditional from the event.code keydowns
+    if (railKey !== false && possibleRailLines[railKey]) {
+      possibleRailLines[railKey].click()
     }
   }); // document.addEventListener("keydown")
 
