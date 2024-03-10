@@ -34,6 +34,7 @@ if (typeof mapDataVersion === 'undefined' || mapDataVersion == 1) {
   $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
 }
 
+const numberKeys = ['1','2','3','4','5','6','7','8','9','0', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')'] // 1-20
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
 
@@ -1569,10 +1570,8 @@ function loadMapFromObject(metroMapObject, update) {
     var numLines = 1;
     for (var line in metroMapObject['global']['lines']) {
       if (metroMapObject['global']['lines'].hasOwnProperty(line) && document.getElementById('rail-line-' + line) === null) {
-          if (numLines < 10) {
-            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: ' + numLines + '"'
-          } else if (numLines == 10) {
-            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: 0"'
+          if (numLines < 21) {
+            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: ' + numberKeys[numLines - 1] + '"'
           } else {
             keyboardShortcut = ''
           }
@@ -2135,7 +2134,7 @@ $(document).ready(function() {
   document.addEventListener("keydown", function(event) {
     // Don't use keyboard shortcuts if any text input has focus
     if (document.activeElement && document.activeElement.type == 'text') {
-      if (event.which == 13) { // Enter
+      if (event.key == 'Enter') { // Enter
         // If focused on the rail line name, save the line
         if (document.activeElement.id == 'new-rail-line-name')
           $('#create-new-rail-line').click()
@@ -2146,62 +2145,77 @@ $(document).ready(function() {
       }
       return
     }
-    if (event.which == 90 && (event.metaKey || event.ctrlKey)) {
+
+    if (event.key == 'z' && (event.metaKey || event.ctrlKey)) {
       // If Control+Z is pressed
       undo();
     }
-    else if ((event.which == 67) && (!event.metaKey && !event.ctrlKey))// C
+    else if ((event.key == 'c') && (!event.metaKey && !event.ctrlKey)) { // C
       $('#controls-collapse-menu').trigger('click')
-    else if (event.which == 68) // D
-      $('#tool-line').click()
-    else if (event.which == 69) // E
-      $('#tool-eraser').click()
-    else if (event.which == 70) { // F
+    }
+    else if (event.key == 'd') { // D
+      $('#tool-line').trigger('click')
+    }
+    else if (event.key == 'e') { // E
+      $('#tool-eraser').trigger('click')
+    }
+    else if (event.key == 'f') { // F
       if ($('#tool-flood-fill').prop('checked')) {
         $('#tool-flood-fill').prop('checked', false)
       } else {
         $('#tool-flood-fill').prop('checked', true)
       }
       setFloodFillUI()
-    } else if (event.which == 71) { // G
+    }
+    else if (event.key == 'g') { // G
       if ($('#straight-line-assist').prop('checked')) {
         $('#straight-line-assist').prop('checked', false)
       } else {
         $('#straight-line-assist').prop('checked', true)
       }
-    } else if (event.which == 72) // H
-      $('#tool-grid').click()
-    else if (event.which == 83) // S
-      $('#tool-station').click()
-    else if ((event.which == 88) && (!event.metaKey && !event.ctrlKey)) // X
+    }
+    else if (event.key == 'h') { // H
+      $('#tool-grid').trigger('click')
+    }
+    else if (event.key == 's') { // S
+      $('#tool-station').trigger('click')
+    }
+    else if ((event.key == 'x') && (!event.metaKey && !event.ctrlKey)) { // X
       $('#controls-expand-menu').trigger('click')
-    else if ((event.which == 89) && (!event.metaKey && !event.ctrlKey)) // Y
+    }
+    else if ((event.key == 'y') && (!event.metaKey && !event.ctrlKey)) { // Y
       if (!menuIsCollapsed) {
         $('#tool-map-style').trigger('click')
       }
-    else if (event.which == 37 && !event.metaKey) { // left arrow, except for "go back"
+    }
+    else if (event.key == 'ArrowLeft' && !event.metaKey) { // left arrow, except for "go back"
       event.preventDefault(); moveMap('left')
-    } else if (event.which == 38) { // up arrow
+    }
+    else if (event.key == 'ArrowUp') { // up arrow
       event.preventDefault(); moveMap('up')
-    } else if (event.which == 39 && !event.metaKey) { // right arrow, except for "go forward"
+    }
+    else if (event.key == 'ArrowRight' && !event.metaKey) { // right arrow, except for "go forward"
       event.preventDefault(); moveMap('right')
-    } else if (event.which == 40) {// down arrow
+    }
+    else if (event.key == 'ArrowDown') { // down arrow
       event.preventDefault(); moveMap('down')
-    } else if (event.which == 189 || event.key == '-') // minus
-      $('#tool-zoom-out').click()
-    else if (event.which == 187 || event.key == '=') // plus / equal sign
-      $('#tool-zoom-in').click()
-    else if (event.which == 219) { // [
+    }
+    else if (event.key == '-' || event.key == '_') { // minus
+      $('#tool-zoom-out').trigger('click')
+    }
+    else if (event.key == '=' || event.key == '+') { // plus / equal sign
+      $('#tool-zoom-in').trigger('click')
+    }
+    else if (event.code == 'BracketLeft') { // [
       $('#snap-controls-left').trigger('click')
-    } else if (event.which == 221) { // ]
+    }
+    else if (event.code == 'BracketRight') { // ]
       $('#snap-controls-right').trigger('click')
     }
-    else if (!event.metaKey && !event.ctrlKey && event.which >= 48 && event.which <= 57) {
+    else if (!event.metaKey && !event.ctrlKey && numberKeys.indexOf(event.key) >= 0) {
       // 0-9, except when switching tabs (Control)
       // Draw rail colors in order of appearance, 1-10 (0 is 10)
-      var railKey = parseInt(event.which) - 49
-      if (railKey == -1)
-        railKey = 9 // which is 10th
+      var railKey = numberKeys.indexOf(event.key)
       var possibleRailLines = $('.rail-line')
       if (possibleRailLines[railKey])
         possibleRailLines[railKey].click()
