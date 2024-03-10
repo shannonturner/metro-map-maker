@@ -278,7 +278,7 @@ def get_connected_stations(x, y, stations):
 
     directions = 'N E S W NE SE SW NW'
     coords = {d: dict() for d in directions.split()}
-    coords['highest'] = {d: 0 for d in directions.split()[:6]}
+    coords['highest'] = {d: 0 for d in directions.split()[:6]} # This slice/ordering looks wrong when compared to find_lines but it's OK
     coords['points'] = {d: set() for d in directions.split()[:6]}
     xn = x
     yn = y
