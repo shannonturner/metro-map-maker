@@ -34,7 +34,7 @@ if (typeof mapDataVersion === 'undefined' || mapDataVersion == 1) {
   $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
 }
 
-const numberKeys = ['1','2','3','4','5','6','7','8','9','0', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')'] // 1-20 // TODO: This might be less useful on non-US keyboards; re-consider
+const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'] // 1-20; is set up this way to have same functionality on all keyboards
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
 
@@ -1570,8 +1570,10 @@ function loadMapFromObject(metroMapObject, update) {
     var numLines = 1;
     for (var line in metroMapObject['global']['lines']) {
       if (metroMapObject['global']['lines'].hasOwnProperty(line) && document.getElementById('rail-line-' + line) === null) {
-          if (numLines < 21) {
-            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: ' + numberKeys[numLines - 1] + '"'
+          if (numLines < 11) {
+            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: ' + numberKeys[numLines - 1].replace('Digit', '') + '"'
+          } else if (numLines < 21) {
+            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: Shift + ' + numberKeys[numLines - 1].replace('Digit', '') + '"'
           } else {
             keyboardShortcut = ''
           }
@@ -2212,10 +2214,19 @@ $(document).ready(function() {
     else if (event.code == 'BracketRight') { // ]
       $('#snap-controls-right').trigger('click')
     }
-    else if (!event.metaKey && !event.ctrlKey && numberKeys.indexOf(event.key) >= 0) {
+    // 0-9, except when switching tabs (Control)
+    // Check shift key first, for 11-20
+    else if (!event.metaKey && !event.ctrlKey && event.shiftKey && numberKeys.indexOf(event.code) >= 0) {
+      var railKey = numberKeys.indexOf(event.code) + 10
+      var possibleRailLines = $('.rail-line')
+      if (possibleRailLines[railKey])
+        possibleRailLines[railKey].click()
+    }
+    // Consider: Could add event.altKey to have 21-30, but this seems like overkill
+    else if (!event.metaKey && !event.ctrlKey && numberKeys.indexOf(event.code) >= 0) {
       // 0-9, except when switching tabs (Control)
       // Draw rail colors in order of appearance, 1-10 (0 is 10)
-      var railKey = numberKeys.indexOf(event.key)
+      var railKey = numberKeys.indexOf(event.code)
       var possibleRailLines = $('.rail-line')
       if (possibleRailLines[railKey])
         possibleRailLines[railKey].click()
