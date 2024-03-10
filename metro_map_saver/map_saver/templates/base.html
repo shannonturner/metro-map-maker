@@ -51,7 +51,15 @@
         {% endif %}
     {% endblock metatags %}
 
-    <!-- TODO: add google analytics -->
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-24QX9VFLRV"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-24QX9VFLRV');
+    </script>
 
     <link rel="icon" href="{% static 'assets/favicon.ico' %}?version=2">
 
