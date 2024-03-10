@@ -34,7 +34,7 @@ if (typeof mapDataVersion === 'undefined' || mapDataVersion == 1) {
   $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
 }
 
-const numberKeys = ['1','2','3','4','5','6','7','8','9','0', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')'] // 1-20
+const numberKeys = ['1','2','3','4','5','6','7','8','9','0', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')'] // 1-20 // TODO: This might be less useful on non-US keyboards; re-consider
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
 
