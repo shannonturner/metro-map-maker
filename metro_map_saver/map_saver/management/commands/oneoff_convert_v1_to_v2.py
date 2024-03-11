@@ -1,5 +1,7 @@
 from django.core.management.base import BaseCommand
 
+import json
+
 class Command(BaseCommand):
     help = """
         Run to generate v2-style mapdata
@@ -36,7 +38,11 @@ class Command(BaseCommand):
             maps_to_update = SavedMap.objects.filter(data={}).order_by('id')[:limit]
 
         for index, saved_map in enumerate(maps_to_update):
-            saved_map.convert_mapdata_v1_to_v2()
+            try:
+                saved_map.convert_mapdata_v1_to_v2()
+            except json.decoder.JSONDecodeError:
+                print(f'[WARN] JSONDecodeError for {saved_map.urlhash}') # Will need to manually fix these
+                continue
             if limit < 1000:
                 self.stdout.write(f"Generated v2 mapdata for {saved_map.urlhash}")
             elif index % 1000 == 0:
