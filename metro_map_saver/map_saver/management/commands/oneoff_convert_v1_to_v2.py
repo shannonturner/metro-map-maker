@@ -11,12 +11,12 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            '-l',
-            '--limit',
+            '-c',
+            '--chunksize',
             type=int,
-            dest='limit',
+            dest='chunksize',
             default=1000,
-            help='Generate mapdata for this many maps',
+            help='Generate mapdata for this many maps at a time (but they will all be processed)',
         )
         parser.add_argument(
             '-u',
@@ -30,18 +30,18 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         from map_saver.models import SavedMap
 
-        limit = kwargs.get('limit')
+        chunksize = kwargs.get('chunksize')
         urlhash = kwargs.get('urlhash')
 
         if urlhash:
             maps_to_update = SavedMap.objects.filter(urlhash=urlhash)
         else:
-            maps_to_update = Paginator(SavedMap.objects.filter(data={}).order_by('id'), limit)
+            maps_to_update = Paginator(SavedMap.objects.filter(data={}).order_by('id'), chunksize)
 
         for page in maps_to_update:
 
-            if limit >= 1000:
-                self.stdout.write(f"Generating v2 mapdata for {page.start_index()} - {page.end_index()} (of {maps_to_update.num_pages * limit})")
+            if chunksize >= 1000:
+                self.stdout.write(f"Generating v2 mapdata for {page.start_index()} - {page.end_index()} (of {maps_to_update.num_pages * chunksize})")
 
             for saved_map in page.object_list:
                 try:
@@ -53,5 +53,5 @@ class Command(BaseCommand):
                     print(f'[WARN] Exception {exc} for {saved_map.urlhash}')
                     continue
 
-                if limit < 1000:
+                if chunksize < 1000:
                     self.stdout.write(f"Generated v2 mapdata for {saved_map.urlhash}")
