@@ -13,7 +13,7 @@ from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.gzip import gzip_page
-from django.views.decorators.cache import cache_page, never_cache
+from django.views.decorators.cache import cache_page, never_cache, cache_control
 from django.conf import settings
 from django.views.generic.dates import (
     DayArchiveView,
@@ -872,6 +872,10 @@ class MapsPerDayView(DayArchiveView):
             context['date_estimate_disclaimer'] = True
 
         return context
+
+    @method_decorator(cache_control(max_age=60))
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 class SameDayView(ListView):
 

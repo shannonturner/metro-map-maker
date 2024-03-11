@@ -1,5 +1,7 @@
 from django.http import Http404
 from django.shortcuts import render, reverse
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_control
 from django.views.generic.dates import (
     YearArchiveView,
     MonthArchiveView,
@@ -185,6 +187,10 @@ class MapsByDateMixin:
         except Http404:
             year = datetime.datetime.now().strftime(self.get_year_format())
         return year
+
+    @method_decorator(cache_control(max_age=60))
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
 
 class MapsPerYearView(MapsByDateMixin, YearArchiveView):
     # Since it's not actually the maps, only the MapsByDay objects, this is fine
