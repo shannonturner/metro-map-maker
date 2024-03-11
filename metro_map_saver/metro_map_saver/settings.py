@@ -86,8 +86,6 @@ MIDDLEWARE = [
     'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
-CSRF_COOKIE_AGE = 60 * 60 * 24 * 7
-
 ROOT_URLCONF = 'metro_map_saver.urls'
 
 TEMPLATES = [
