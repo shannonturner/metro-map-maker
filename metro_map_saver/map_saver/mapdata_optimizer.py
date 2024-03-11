@@ -2,7 +2,6 @@ import itertools
 import json
 
 from django.template import Context, Template
-from PIL import Image, ImageDraw
 
 from .validator import VALID_XY, ALLOWED_MAP_SIZES, ALLOWED_ORIENTATIONS
 
@@ -504,82 +503,6 @@ def get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_s
     }
 
     return SVG_TEMPLATE.render(Context(context))
-
-def draw_png_from_shapes_by_color(shapes_by_color, urlhash, map_size, filename, stations=False):
-
-    """ For some maps, the PNG may be a smaller filesize.
-
-        TODO: Add support for social sharing image generation since Opengraph doesn't
-            support SVG
-            ^ this really means TODO: Add stations & text
-    """
-
-    line_size = 240 // map_size
-
-    if stations:
-        canvas_size = 1920
-        line_size = line_size * 8
-    else:
-        # Thumbnail
-        canvas_size = 240
-
-    with Image.new('RGBA', (canvas_size, canvas_size), (0, 0, 0, 0)) as img:
-
-        draw = ImageDraw.Draw(img)
-
-        for color in shapes_by_color:
-            for line in shapes_by_color[color]['lines']:
-                line = [(x * line_size, y * line_size) for x, y in line]
-                draw.line(line, fill='#' + color, width=line_size, joint='curve')
-            for point in shapes_by_color[color]['points']:
-                circle = [point[0] * line_size, point[1] * line_size]
-                circle.extend([
-                    (point[0] + 1) * line_size, # x1
-                    (point[1] + 1) * line_size, # y1
-                ])
-                draw.ellipse(circle, fill='#' + color, width=1)
-
-        if stations:
-            for station in stations:
-                x, y = station['xy']
-                x = int(x)
-                y = int(y)
-                circle = [(x - 0.5) * line_size, (y - 0.5) * line_size]
-                circle.extend([
-                    (x + 0.5) * line_size,
-                    (y + 0.5) * line_size,
-                ])
-                if station['transfer']:
-                    # TODO" this doesnt show up
-                    # draw.ellipse(circle, fill='#000', width=1.2 * line_size)
-                    # draw.ellipse(circle, fill='#fff', width=.9 * line_size)
-                    draw.ellipse(circle, fill='#fff', outline='#000', width=round(line_size / 2.5))
-                # This has a few problems --- the circle is off-center
-                # and the black circle outline isn't bold enough
-                # Also, width cant be a float
-                # draw.ellipse(circle, fill='#000', width=.6 * line_size)
-                draw.ellipse(circle, fill='#fff', outline='#000', width=round(line_size / 5))
-                # draw.arc(circle, start=0, end=360, fill='#000', width=round(1.2 * line_size))
-
-                # draw.arc(circle, start=0, end=360, fill=)
-
-                # ImageDraw.arc(xy, start, end, fill=None, width=0)[source]
-                # ctx.arc(x * gridPixelMultiplier, y * gridPixelMultiplier, gridPixelMultiplier * .6, 0, Math.PI * 2, true);
-
-                # TODO: Station text
-                # https://pillow.readthedocs.io/en/stable/reference/ImageDraw.html#PIL.ImageDraw.ImageDraw.text
-
-                """
-                {% if station.transfer %}
-                    <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r="1.2" fill="#000" />
-                    <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r=".9" fill="#fff" />
-                {% endif %}
-                <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r=".6" fill="#000" />
-                <circle cx="{{ station.xy.0 }}" cy="{{ station.xy.1 }}" r=".3" fill="#fff" />
-                {% station_text station %}
-                """
-
-        img.save(filename, 'PNG')
 
 def find_squares(points_this_color, width=5):
 
