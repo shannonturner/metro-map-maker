@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.core.paginator import Paginator
 
 import json
 
@@ -14,7 +15,7 @@ class Command(BaseCommand):
             '--limit',
             type=int,
             dest='limit',
-            default=100,
+            default=1000,
             help='Generate mapdata for this many maps',
         )
         parser.add_argument(
@@ -35,19 +36,22 @@ class Command(BaseCommand):
         if urlhash:
             maps_to_update = SavedMap.objects.filter(urlhash=urlhash)
         else:
-            maps_to_update = SavedMap.objects.filter(data={}).order_by('id')[:limit]
+            maps_to_update = Paginator(SavedMap.objects.filter(data={}).order_by('id'), limit)
 
-        for index, saved_map in enumerate(maps_to_update):
-            try:
-                saved_map.convert_mapdata_v1_to_v2()
-            except json.decoder.JSONDecodeError:
-                print(f'[WARN] JSONDecodeError for {saved_map.urlhash}') # Will need to manually fix these
-                continue
-            except Exception as exc:
-                print(f'[WARN] Exception {exc} for {saved_map.urlhash}')
-                continue
+        for page in maps_to_update:
 
-            if limit < 1000:
-                self.stdout.write(f"Generated v2 mapdata for {saved_map.urlhash}")
-            elif index % 1000 == 0:
-                self.stdout.write(f"Generating v2 mapdata for {index} - {index + 1000 if index + 1000 < limit else limit} of {limit}")
+            if limit >= 1000:
+                self.stdout.write(f"Generating v2 mapdata for {page.start_index()} - {page.end_index()} (of {maps_to_update.num_pages * limit})")
+
+            for saved_map in page.object_list:
+                try:
+                    saved_map.convert_mapdata_v1_to_v2()
+                except json.decoder.JSONDecodeError:
+                    print(f'[WARN] JSONDecodeError for {saved_map.urlhash}') # Will need to manually fix these
+                    continue
+                except Exception as exc:
+                    print(f'[WARN] Exception {exc} for {saved_map.urlhash}')
+                    continue
+
+                if limit < 1000:
+                    self.stdout.write(f"Generated v2 mapdata for {saved_map.urlhash}")
