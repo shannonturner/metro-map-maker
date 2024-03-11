@@ -102,17 +102,25 @@ class SavedMap(models.Model):
         """
 
         stations = set()
-        try:
-            mapdata = json.loads(self.mapdata)
-        except Exception:
+
+        if self.data:
+            for x in self.data.get('stations', {}):
+                for y in self.data['stations'][x]:
+                    stations.add(self.data['stations'][x][y].get('name', '').lower())
+            return ','.join(stations)
+        elif self.mapdata:
+            try:
+                mapdata = json.loads(self.mapdata)
+            except Exception:
+                return ''
+
+            for x in mapdata:
+                for y in mapdata[x]:
+                    if 'station' in mapdata[x][y]:
+                        stations.add(mapdata[x][y]['station'].get('name', '').lower())
+            return ','.join(stations)
+        else:
             return ''
-
-        for x in mapdata:
-            for y in mapdata[x]:
-                if 'station' in mapdata[x][y]:
-                    stations.add(mapdata[x][y]['station'].get('name', '').lower())
-
-        return ','.join(stations)
 
     def _station_count(self):
         if self.stations:
@@ -285,8 +293,6 @@ class SavedMap(models.Model):
 
     def save(self, *args, **kwargs):
         # TODO: Clean this up / Re-enable this
-        # self.stations = self._get_stations()
-        # self.station_count = self._station_count()
         # self.name = self.name.strip()
         # self.thumbnail = self.thumbnail.strip()
         # if self._publicly_visible:
