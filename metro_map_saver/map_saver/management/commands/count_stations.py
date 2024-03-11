@@ -15,3 +15,5 @@ class Command(BaseCommand):
             mmap.stations = mmap._get_stations()
             mmap.station_count = mmap._station_count()
             mmap.save()
+
+        self.stdout.write(f'Counted stations for {needs_stations.count()} maps.')
