@@ -43,6 +43,10 @@ class Command(BaseCommand):
             except json.decoder.JSONDecodeError:
                 print(f'[WARN] JSONDecodeError for {saved_map.urlhash}') # Will need to manually fix these
                 continue
+            except Exception as exc:
+                print(f'[WARN] Exception {exc} for {saved_map.urlhash}')
+                continue
+
             if limit < 1000:
                 self.stdout.write(f"Generated v2 mapdata for {saved_map.urlhash}")
             elif index % 1000 == 0:
