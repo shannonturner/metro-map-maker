@@ -92,8 +92,6 @@ class SavedMap(models.Model):
             uses utils.MINIMUM_STATION_OVERLAP otherwise
         """
 
-        return False # DEBUG, FOR NOW (TODO: REENABLE)
-
         return suggest_city(set(self.stations.lower().split(',')), overlap)
 
     def _get_stations(self):
@@ -292,17 +290,12 @@ class SavedMap(models.Model):
         return self.urlhash
 
     def save(self, *args, **kwargs):
-        # TODO: Clean this up / Re-enable this
-        # self.name = self.name.strip()
-        # self.thumbnail = self.thumbnail.strip()
-        # if self._publicly_visible:
-        #     self.publicly_visible = True
-        # else:
-        #     self.publicly_visible = False
-        # suggested_city = self._suggest_city()
-        # if suggested_city:
-        #     self.suggested_city = suggested_city[0][0].split("(")[0].strip()
-        #     self.suggested_city_overlap = suggested_city[0][1]
+        self.name = self.name.strip()
+        self.thumbnail = self.thumbnail.strip()
+        if self._publicly_visible:
+            self.publicly_visible = True
+        else:
+            self.publicly_visible = False
         super().save(*args, **kwargs)
 
     DEFER_FIELDS = (
