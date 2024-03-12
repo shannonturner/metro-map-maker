@@ -1411,9 +1411,9 @@ function autoLoad() {
         } else {
           mapDataVersion = 1
         }
+        compatibilityModeIndicator()
         mapSize = setMapSize(activeMap, mapDataVersion > 1)
         loadMapFromObject(activeMap)
-        compatibilityModeIndicator()
         setTimeout(function() {
           $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
         }, 1000);
@@ -1430,7 +1430,6 @@ function autoLoad() {
   setMapStyle(activeMap)
   mapSize = setMapSize(activeMap, mapDataVersion > 1)
   loadMapFromObject(activeMap)
-  compatibilityModeIndicator()
 
   // Remove the underpainted SVG
   $('#canvas-container').css('background', 'unset')
