@@ -540,8 +540,13 @@ class MapDataView(TemplateView):
             context['error'] = '[ERROR] Multiple objects returned ({0}). This should never happen.'.format(urlhash)
             saved_map = SavedMap.objects.filter(urlhash=urlhash).first()
             context['saved_map'] = saved_map.mapdata
-        else:
-            context['saved_map'] = saved_map.data or saved_map.mapdata
+
+        if not context.get('error'):
+            if saved_map.data:
+                mapdata = json.dumps(saved_map.data)
+            elif saved_map.mapdata:
+                mapdata = saved_map.mapdata
+            context['saved_map'] = mapdata
 
         return render(request, 'MapDataView.html', context)
 

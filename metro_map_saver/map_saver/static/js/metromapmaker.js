@@ -26,12 +26,15 @@ var adjacentPoints = undefined
 
 MMMDEBUG = false
 
-if (typeof mapDataVersion === 'undefined' || mapDataVersion == 1) {
-  mapDataVersion = 1
-  // At a glance, this helps me to see whether I'm on v1 or v2
-  $('.M:not(.mobile)').css({"background-color": "#bd1038"})
-  $('#title').css({"color": "#bd1038"})
-  $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
+function compatibilityModeIndicator() {
+  // Visual cue to indicate that this is in compatibility mode
+  if (typeof mapDataVersion === 'undefined' || mapDataVersion == 1) {
+    mapDataVersion = 1
+    // At a glance, this helps me to see whether I'm on v1 or v2
+    $('.M:not(.mobile)').css({"background-color": "#bd1038"})
+    $('#title').css({"color": "#bd1038"})
+    $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
+  }
 }
 
 const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'] // 1-30; is set up this way to have same functionality on all keyboards
@@ -1409,6 +1412,7 @@ function autoLoad() {
         }
         mapSize = setMapSize(activeMap, mapDataVersion > 1)
         loadMapFromObject(activeMap)
+        compatibilityModeIndicator()
         setTimeout(function() {
           $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
         }, 1000);
@@ -1425,6 +1429,7 @@ function autoLoad() {
   setMapStyle(activeMap)
   mapSize = setMapSize(activeMap, mapDataVersion > 1)
   loadMapFromObject(activeMap)
+  compatibilityModeIndicator()
 
   // Remove the underpainted SVG
   $('#canvas-container').css('background', 'unset')
