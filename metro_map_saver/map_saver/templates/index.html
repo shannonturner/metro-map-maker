@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-{% load static %}
+{% load static metromap_utils %}
 
 <html lang="en">
   <head>
@@ -37,7 +37,7 @@
     <title>Metro Map Maker</title>
 
     <link rel="icon" href="{% static 'assets/favicon.ico' %}?version=2">
-    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' %}?version=20240310">
+    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' as mmmcss %}{{ mmmcss }}?version={{ mmmcss|static_cache_version }}">
 
   </head>
 
@@ -486,7 +486,11 @@
   <!--
     For a human-readable version of the Javascript, see https://metromapmaker.com{% static "js/metromapmaker.js" %}
   -->
-  <script src='{% static "js/metromapmaker.min.js" %}?version=20240312' async></script>
+  {% if debug %}
+    <script src='{% static "js/metromapmaker.js" as mmmjs %}{{ mmmjs }}?version={{ mmmjs|static_cache_version }}' async></script>
+  {% else %}
+    <script src='{% static "js/metromapmaker.min.js" %}{{ mmmjs }}?version={{ mmmjs|static_cache_version }}' async></script>
+  {% endif %}
   <script src='{% static "js/tooltips.min.js" %}' defer="defer"></script>
   <script src='{% static "js/django-csrf.js" %}' defer="defer"></script>
   <script src='{% static "js/mmm-cheatcodes.js" %}' defer="defer"></script>

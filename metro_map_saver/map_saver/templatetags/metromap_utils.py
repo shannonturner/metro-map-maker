@@ -1,4 +1,5 @@
 from django import template
+from django.conf import settings
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 
@@ -11,6 +12,7 @@ from map_saver.validator import (
 
 import logging
 from math import sqrt
+from os.path import getmtime
 
 register = template.Library()
 
@@ -501,3 +503,13 @@ def station_text(station):
 @register.filter
 def square_root(value):
     return sqrt(value)
+
+
+@register.filter
+def static_cache_version(value):
+
+    """ Automate generating a cache version string
+        to bust the static cache
+    """
+
+    return getmtime(str(settings.BASE_DIR) + value)
