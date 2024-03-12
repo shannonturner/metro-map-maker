@@ -27,7 +27,7 @@ var adjacentPoints = undefined
 MMMDEBUG = false
 
 if (typeof mapDataVersion === 'undefined') {
-    mapDataVersion = 1
+    var mapDataVersion = undefined
 }
 function compatibilityModeIndicator() {
   // Visual cue to indicate that this is in compatibility mode
@@ -1434,6 +1434,11 @@ function autoLoad() {
   } // else
 
   setMapStyle(activeMap)
+  if (activeMap && activeMap['global'] && activeMap['global']['data_version']) {
+    mapDataVersion = activeMap['global']['data_version']
+  } else {
+    mapDataVersion = 1
+  }
   mapSize = setMapSize(activeMap, mapDataVersion > 1)
   loadMapFromObject(activeMap)
 
