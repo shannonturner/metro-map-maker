@@ -26,14 +26,20 @@ var adjacentPoints = undefined
 
 MMMDEBUG = false
 
+if (typeof mapDataVersion === 'undefined') {
+    mapDataVersion = 1
+}
 function compatibilityModeIndicator() {
   // Visual cue to indicate that this is in compatibility mode
-  if (typeof mapDataVersion === 'undefined' || mapDataVersion == 1) {
-    mapDataVersion = 1
+  if (mapDataVersion == 1) {
     // At a glance, this helps me to see whether I'm on v1 or v2
     $('.M:not(.mobile)').css({"background-color": "#bd1038"})
     $('#title').css({"color": "#bd1038"})
     $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
+  } else {
+    $('.M:not(.mobile)').css({"background-color": "#000"})
+    $('#title').css({"color": "#000"})
+    $('#tool-move-v1-warning').attr('style', 'display: none')
   }
 }
 compatibilityModeIndicator()
