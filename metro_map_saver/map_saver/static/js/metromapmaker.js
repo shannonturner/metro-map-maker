@@ -36,6 +36,7 @@ function compatibilityModeIndicator() {
     $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
   }
 }
+compatibilityModeIndicator()
 
 const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'] // 1-30; is set up this way to have same functionality on all keyboards
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180];
