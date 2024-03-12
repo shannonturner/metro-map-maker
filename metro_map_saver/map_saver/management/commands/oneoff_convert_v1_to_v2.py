@@ -36,12 +36,13 @@ class Command(BaseCommand):
         if urlhash:
             maps_to_update = SavedMap.objects.filter(urlhash=urlhash)
         else:
-            maps_to_update = Paginator(SavedMap.objects.filter(data={}).order_by('id'), chunksize)
+            maps_to_update = SavedMap.objects.filter(data={})
+        count = maps_to_update.count()
 
-        for page in maps_to_update:
+        for page in Paginator(maps_to_update.order_by('id'), chunksize):
 
             if chunksize >= 1000:
-                self.stdout.write(f"Generating v2 mapdata for {page.start_index()} - {page.end_index()} (of {maps_to_update.num_pages * chunksize})")
+                self.stdout.write(f"Generating v2 mapdata for {page.start_index()} - {page.end_index()} (of {count})")
 
             for saved_map in page.object_list:
                 try:
