@@ -2098,11 +2098,13 @@ function setURLAfterSave(urlhash) {
   // I think it'll be confusing behavior likely to lead to frustration,
   // and less important when people can find their own maps in the calendar.
   var currentUrl = window.location.href.split('=')[0]
-  if (currentUrl.indexOf('?map') > -1) {
-    window.history.pushState(null, "", currentUrl + '=' + urlhash)
-  } else {
-    window.history.pushState(null, "", currentUrl + '?map=' + urlhash)
-  }
+  // HEADS UP: If you bring this back,
+  // it will need to handle /map/<urlhash> being equivalent to ?map=<urlhash>
+  // if (currentUrl.indexOf('?map') > -1) {
+  //   window.history.pushState(null, "", currentUrl + '=' + urlhash)
+  // } else {
+  //   window.history.pushState(null, "", currentUrl + '?map=' + urlhash)
+  // }
 }
 
 $(document).ready(function() {
@@ -2447,7 +2449,7 @@ $(document).ready(function() {
         data = data.split(',');
         var urlhash = data[0].replace(/\s/g,'');
         var namingToken = data[1].replace(/\s/g,'');
-        var toolSaveOptions = '<button id="hide-save-share-url" class="styling-greenline width-100">Hide sharing explanation</button><h5 style="overflow-x: hidden;" class="text-left">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="/?map=' + urlhash + '" target="_blank">metromapmaker.com/?map=' + urlhash + '</a></h5> <h5 class="text-left">You can then share this URL with a friend - and they can remix your map without you losing your original! <b>If you make changes to this map, click Save &amp; Share again to get a new URL.</b></h5>';
+        var toolSaveOptions = '<button id="hide-save-share-url" class="styling-greenline width-100">Hide sharing explanation</button><h5 style="overflow-x: hidden;" class="text-left">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="/map/' + urlhash + '" target="_blank">metromapmaker.com/map/' + urlhash + '</a></h5> <h5 class="text-left">You can then share this URL with a friend - and they can remix your map without you losing your original! <b>If you make changes to this map, click Save &amp; Share again to get a new URL.</b></h5>';
         // setURLAfterSave(urlhash)
         if (namingToken) {
           // Only show the naming form if the map could actually be renamed.

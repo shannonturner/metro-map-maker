@@ -133,7 +133,7 @@
       {% for map in saved_maps %}
         <li id="map-control-{{ map.id }}" class="nav-item map-control {% if not forloop.first %}start-hidden{% endif %}"><a class="nav-link hidden" href="#map-container-{{ map.id }}"><!-- a link with anchor is needed but I don't need it to be visible {{ map.id }}--></a>
         
-          <h4 class="map-link">{% if is_staff %}<a href="/admin/map_saver/savedmap/{{ map.id }}/change/" target="_blank">#{{ map.id }}</a>{% else %}#{{ map.id }}{% endif %} (<a href="/?map={{ map.urlhash }}">https://metromapmaker.com/?map={{ map.urlhash }}</a>) <input type="text" name="map_name" class="map-name" id="map-name-{{ map.id }}" value="{{ map.name }}" placeholder="(unnamed)">
+          <h4 class="map-link">{% if is_staff %}<a href="/admin/map_saver/savedmap/{{ map.id }}/change/" target="_blank">#{{ map.id }}</a>{% else %}#{{ map.id }}{% endif %} (<a href="/map/{{ map.urlhash }}">https://metromapmaker.com/map/{{ map.urlhash }}</a>) <input type="text" name="map_name" class="map-name" id="map-name-{{ map.id }}" value="{{ map.name }}" placeholder="(unnamed)">
             {% with map.suggested_city as suggested_city %}
               {% if suggested_city %}
                 Suggested: {{ suggested_city }} ({% stations_in_travelsystem suggested_city %}) (overlap: {{ map.suggested_city_overlap }} / this: {{ map.station_count }})

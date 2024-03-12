@@ -65,11 +65,11 @@
         <div class="col-sm-6 col-md-4 col-xxl-3 mb-3 mt-3"><div class="card h-100 text-center">
             <div class="card-header styling-{% cycle 'red' 'orange' 'yellow' 'green' 'blue' 'purple' 'silver' %}line">
                 <h3 class="card-title mt-2">
-                    <a class="text-outline bg-styled" href="{% url 'home' %}?map={{ map.urlhash }}">Map #{{ map.id }}: {{ map.urlhash }}</a>
+                    <a class="text-outline bg-styled" href="{% url 'home_map' map.urlhash %}">Map #{{ map.id|intcomma }}: {{ map.urlhash }}</a>
                 </h3>
             </div>
             <div class="card-body d-flex flex-column text-center">
-                <a href="{% url 'home' %}?map={{ map.urlhash }}">
+                <a href="{% url 'home_map' map.urlhash %}">
                     {% if map.thumbnail_svg and map.thumbnail_png and map.thumbnail_svg.size > 5000 and map.thumbnail_png.size <  map.thumbnail_svg.size %}
                         <img src="{{ map.thumbnail_png.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">
                     {% elif map.thumbnail_svg %}
@@ -81,7 +81,7 @@
                     {% endif %}
                 </a>
 
-                <a href="{% url 'home' %}?map={{ map.urlhash }}">
+                <a href="{% url 'home_map' map.urlhash %}">
                     {% if map.name %}
                         <h4>{{ map.name }}</h4>
                     {% else %}
@@ -90,7 +90,7 @@
                 </a>
 
                 <div class="card-footer d-flex justify-content-evenly">
-                    <a href="{% url 'home' %}?map={{ map.urlhash }}"><i class="bi bi-tools"></i> Remix</a>
+                    <a href="{% url 'home_map' map.urlhash %}"><i class="bi bi-tools"></i> Remix</a>
                     {% if map.svg %}
                         {# Only show Rate link if you'll be able to see the full SVG #}
                         <a href="{% url 'rate' map.urlhash %}"><i class="bi bi-heart"></i> Rate</a>

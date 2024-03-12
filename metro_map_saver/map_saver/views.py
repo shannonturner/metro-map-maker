@@ -50,7 +50,8 @@ class HomeView(TemplateView):
     @method_decorator(gzip_page)
     @method_decorator(ensure_csrf_cookie)
     def get(self, request, **kwargs):
-        if not request.GET.get('map'):
+        urlhash = kwargs.get('urlhash', request.GET.get('map'))
+        if not urlhash:
             # Only show favorite thumbnails if we're NOT loading a specific map,
             #   otherwise that wastes a bit of bandwidth and pagespeed
             #   which is especially important since this only shows on mobile
@@ -67,7 +68,7 @@ class HomeView(TemplateView):
             }
         else:
             try:
-                saved_map = SavedMap.objects.get(urlhash=request.GET.get('map'))
+                saved_map = SavedMap.objects.get(urlhash=urlhash)
             except Exception:
                 context = {}
             else:

@@ -19,7 +19,7 @@
     <div class="container-fluid">
 
         <h3 class="card-title mt-2 p-3 styling-redline text-center">
-            <a class="text-outline bg-styled" href="{% url 'home' %}?map={{ map.urlhash }}">Map #{{ map.id }}: {{ map.urlhash }} ({{ map.created_at|date:'F j, Y' }})</a>
+            <a class="text-outline bg-styled" href="{% url 'home_map' map.urlhash %}">Map #{{ map.id|intcomma }}: {{ map.urlhash }} ({{ map.created_at|date:'F j, Y' }})</a>
         </h3>
         <div class="d-flex justify-content-evenly align-items-center m-3">
             {% if map.svg %}
@@ -50,7 +50,7 @@
 
             {% endif %}
 
-            <a href="{% url 'home' %}?map={{ map.urlhash }}">
+            <a href="{% url 'home_map' map.urlhash %}">
                 <button class="bg-styled styling-blueline fs-4">
                     <i class="bi bi-tools"></i> Remix this map
                 </button>
@@ -61,7 +61,7 @@
             {% if map.svg %}
                 <img src="{{ map.svg.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}">
             {% else %}
-                Thumbnail not available, but you can <a href="{% url 'home' %}?map={{ map.urlhash }}">remix this map</a>.
+                Thumbnail not available, but you can <a href="{% url 'home_map' map.urlhash %}">remix this map</a>.
             {% endif %}
         </div>
     </div>

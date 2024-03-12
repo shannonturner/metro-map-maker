@@ -491,3 +491,7 @@ select {
 #toolbox button.map-style-station {
   overflow: clip;
 }
+
+#shareable-map-link {
+  word-break: break-word;
+}

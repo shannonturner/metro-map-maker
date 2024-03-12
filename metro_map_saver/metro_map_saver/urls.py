@@ -27,6 +27,7 @@ import summary.views
 urlpatterns = [
     # Main page; only caches for 15 minutes so you don't have to wait a full day for static asset updates
     path('', cache_page(60 * 15)(map_saver.views.HomeView.as_view()), name='home'),
+    path('map/<slug:urlhash>', cache_page(60 * 15)(map_saver.views.HomeView.as_view()), name='home_map'),
 
     # Public Gallery
     path('gallery/', map_saver.views.PublicGalleryView.as_view(), name='public_gallery'),
