@@ -541,9 +541,7 @@ class MapDataView(TemplateView):
             saved_map = SavedMap.objects.filter(urlhash=urlhash).first()
             context['saved_map'] = saved_map.mapdata
         else:
-            # TODO: Conditionally check for map data version & display the correct version
-            #   (.mapdata or .data)
-            context['saved_map'] = saved_map.mapdata
+            context['saved_map'] = saved_map.data or saved_map.mapdata
 
         return render(request, 'MapDataView.html', context)
 
