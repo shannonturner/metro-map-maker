@@ -1,4 +1,5 @@
 from map_saver.mapdata_optimizer import (
+    find_endpoint_of_line,
     find_squares,
     get_adjacent_point,
     get_connected_points,
@@ -414,3 +415,44 @@ class OptimizeMapTest(TestCase):
                 self.assertEqual(result['y1'], station['expected'][1])
             else:
                 self.assertEqual(result, station['expected'])
+
+    def test_find_endpoint_of_line(self):
+
+        """ Confirm that find_endpoint_of_line
+                correctly returns the endpoint coordinates
+                as well as the betweens
+        """
+
+        directions = 'E S NE SE SW'
+
+        expected = {
+            # Basic case
+            '1,1 2,1 3,1 4,1 5,1': {'direction': 'E', 'x1': 5, 'y1': 1, 'between': '1,1 2,1 3,1 4,1 5,1'},
+            '1,1 1,2 1,3 1,4 1,5': {'direction': 'S', 'x1': 1, 'y1': 5, 'between': '1,1 1,2 1,3 1,4 1,5'},
+            '0,5 1,4 2,3 3,2 4,1': {'direction': 'NE', 'x1': 4, 'y1': 1, 'between': '0,5 1,4 2,3 3,2 4,1'},
+            '1,1 2,2 3,3 4,4 5,5': {'direction': 'SE', 'x1': 5, 'y1': 5, 'between': '1,1 2,2 3,3 4,4 5,5'},
+            '4,1 3,2 2,3 1,4 0,5': {'direction': 'SW', 'x1': 0, 'y1': 5, 'between': '4,1 3,2 2,3 1,4 0,5'},
+
+            # If there's a gap, stop!
+            '1,1 2,1 4,1 5,1': {'direction': 'E', 'x1': 2, 'y1': 1, 'between': '1,1 2,1'},
+            '1,1 1,2 1,4 1,5': {'direction': 'S', 'x1': 1, 'y1': 2, 'between': '1,1 1,2'},
+            '0,5 1,4 3,2 4,1': {'direction': 'NE', 'x1': 1, 'y1': 4, 'between': '0,5 1,4'},
+            '1,1 2,2 4,4 5,5': {'direction': 'SE', 'x1': 2, 'y1': 2, 'between': '1,1 2,2'},
+            '4,1 3,2 1,4 0,5': {'direction': 'SW', 'x1': 3, 'y1': 2, 'between': '4,1 3,2'},
+        }
+
+        for before, goal in expected.items():
+
+            points = self.convert_to_xy_pairs(before)
+            x, y = points[0]
+
+            for d in directions.split():
+                endpoint = find_endpoint_of_line(x, y, points, d)
+                if d == goal['direction']:
+                    # The correct direction, we expect to find something!
+                    self.assertEqual(endpoint['x1'], goal['x1'])
+                    self.assertEqual(endpoint['y1'], goal['y1'])
+                    self.assertEqual(endpoint['between'], self.convert_to_xy_pairs(goal['between']))
+                else:
+                    # Empty endpoint means no connection found
+                    self.assertFalse(endpoint)

@@ -575,3 +575,42 @@ def find_squares(points_this_color, width=5):
             potentials.remove(xy)
 
     return squares_ext, squares_int
+
+def find_endpoint_of_line(x, y, points, direction):
+
+    """ Given x, y, and a set of coordinate pairs (points),
+        find the endpoint of the line originating at (x, y)
+        for a given direction
+    """
+
+    between = [(x, y)]
+
+    # 'E S NE SE SW' # Don't need to draw N, W, NW
+    directions = {
+        'E': {'dx': 1, 'dy': 0},
+        'S': {'dx': 0, 'dy': 1},
+        'NE': {'dx': 1, 'dy': -1},
+        'SE': {'dx': 1, 'dy': 1},
+        'SW': {'dx': -1, 'dy': 1},
+    }
+
+    dx = directions[direction]['dx']
+    dy = directions[direction]['dy']
+
+    (x1, y1) = (x + dx, y + dy)
+
+    if (x1, y1) not in points:
+        return
+
+    while (x1, y1) in points:
+        between.append((x1, y1))
+        (x1, y1) = (x1 + dx, y1 + dy)
+
+    return {
+        # "between" is maybe a misnomer;
+        #   it's the points we don't have to check in this direction,
+        #   which includes the starting and ending points
+        'between': between,
+        'x1': between[-1][0],
+        'y1': between[-1][1],
+    }
