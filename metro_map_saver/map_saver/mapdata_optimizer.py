@@ -14,7 +14,8 @@ SVG_TEMPLATE = Template('''
 {% endif %}
     {% for color, shapes in shapes_by_color.items %}
         {% for line in shapes.lines %}
-            <polyline points="{% for coords in line %}{{ coords.0 }},{{ coords.1 }} {% endfor %}" stroke="#{{ color }}" stroke-width="{{ line_size|default:1 }}" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+            <line x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#{{ color }}" stroke-width="{{ line_size|default:1 }}" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+            {#<polyline points="{% for coords in line %}{{ coords.0 }},{{ coords.1 }} {% endfor %}" stroke="#{{ color }}" stroke-width="{{ line_size|default:1 }}" fill="none" stroke-linecap="round" stroke-linejoin="round" />#}
         {% endfor %}
         {% for point in shapes.points %}
             {% if default_station_shape == 'rect' %}
@@ -23,9 +24,11 @@ SVG_TEMPLATE = Template('''
                 <circle cx="{{ point.0 }}" cy="{{ point.1 }}" r="{{ point.size|default:1 }}" fill="#{{ color }}" />
             {% endif %}
         {% endfor %}
+        {% comment %}
         {% for square in shapes.square_interior_points %}
             <rect x="{{ square.0.0|add:-0.5 }}" y="{{ square.0.1|add:0.5 }}" width="{{ square|length|square_root|add:2 }}" height="{{ square|length|square_root|add:2 }}" fill="#{{ color }}" />
         {% endfor %}
+        {% endcomment %}
     {% endfor %}
     {% for station in stations %}
         {% station_marker station default_station_shape line_size points_by_color stations %}

@@ -474,7 +474,6 @@ class OptimizeMapTest(TestCase):
 
             # Singletons
             '0,7 80,40 100,1 100,20',
-
         ]
         points = self.convert_to_xy_pairs(' '.join(points))
 

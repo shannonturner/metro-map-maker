@@ -242,9 +242,8 @@ class SavedMap(models.Model):
         """
 
         from .mapdata_optimizer import (
+            find_lines,
             sort_points_by_color,
-            get_shapes_from_points,
-            draw_png_from_shapes_by_color,
             get_svg_from_shapes_by_color,
         )
 
@@ -254,7 +253,10 @@ class SavedMap(models.Model):
         data_version = mapdata['global'].get('data_version', 1)
 
         points_by_color, stations, map_size = sort_points_by_color(mapdata, data_version=data_version)
-        shapes_by_color = get_shapes_from_points(points_by_color)
+        shapes_by_color = {}
+        for color in points_by_color:
+            lines, singletons = find_lines(points_by_color[color]['xy'])
+            shapes_by_color[color] = {'lines': lines, 'points': singletons}
 
         if mapdata['global'].get('style'):
             line_size = mapdata['global']['style'].get('mapLineWidth', 1)
