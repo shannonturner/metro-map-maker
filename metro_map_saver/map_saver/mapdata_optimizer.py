@@ -25,11 +25,9 @@ SVG_TEMPLATE = Template('''
                 <circle cx="{{ point.0 }}" cy="{{ point.1 }}" r="{{ point.size|default:1 }}" fill="#{{ color }}" />
             {% endif %}
         {% endfor %}
-        {% comment %}
         {% for square in shapes.square_interior_points %}
             <rect x="{{ square.0.0|add:-0.5 }}" y="{{ square.0.1|add:0.5 }}" width="{{ square|length|square_root|add:2 }}" height="{{ square|length|square_root|add:2 }}" fill="#{{ color }}" />
         {% endfor %}
-        {% endcomment %}
     {% endfor %}
     {% for station in stations %}
         {% station_marker station default_station_shape line_size points_by_color stations %}
@@ -41,6 +39,7 @@ SVG_TEMPLATE = Template('''
 
 # Largest square worth checking with find_squares()
 LARGEST_SQUARE = 6
+USE_SQUARES_THRESHOLD = 1000 # If there are this many points in a single color, use squares even if the line width is thin
 
 def sort_points_by_color(mapdata, map_type='classic', data_version=1):
 
