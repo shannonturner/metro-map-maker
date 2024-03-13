@@ -576,6 +576,45 @@ def find_squares(points_this_color, width=5):
 
     return squares_ext, squares_int
 
+def find_lines(points_this_color):
+
+    """ Better drawing algorithm,
+            returning a small number of lines,
+            and still has fidelity with classic omnidirectional style
+    """
+
+    directions = 'E S NE SE SW' # Don't need to draw N, W, NW
+    skip_points = {d: list() for d in directions.split()}
+
+    lines = []
+    singletons = set()
+    not_singletons = set()
+
+    for point in points_this_color:
+        x, y = point
+        for direction in directions.split():
+            if (x, y) in skip_points[direction]:
+                continue
+            endpoint = find_endpoint_of_line(x, y, points_this_color, direction)
+            if endpoint:
+                lines.append((x, y, endpoint['x1'], endpoint['y1']))
+                not_singletons.add((x,y))
+                not_singletons.add((endpoint['x1'], endpoint['y1']))
+                for pt in endpoint['between']:
+                    not_singletons.add(pt)
+                skip_points[direction].extend(endpoint['between'])
+            elif (x,y) in not_singletons:
+                # This might not make a line in this direction,
+                #   but it does connect to a line in SOME direction,
+                #   so it's not a singleton
+                pass
+            else:
+                singletons.add((x, y))
+
+    # Some of the points that we thought were singletons at the time might not be,
+    #   if we haven't processed those points yet
+    return lines, (singletons - not_singletons)
+
 def find_endpoint_of_line(x, y, points, direction):
 
     """ Given x, y, and a set of coordinate pairs (points),

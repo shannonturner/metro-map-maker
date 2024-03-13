@@ -1,5 +1,6 @@
 from map_saver.mapdata_optimizer import (
     find_endpoint_of_line,
+    find_lines,
     find_squares,
     get_adjacent_point,
     get_connected_points,
@@ -456,3 +457,39 @@ class OptimizeMapTest(TestCase):
                 else:
                     # Empty endpoint means no connection found
                     self.assertFalse(endpoint)
+
+    def test_find_lines(self):
+
+        """ Confirm that find_lines
+                correctly returns the most efficient representation of all lines,
+                and also the singleton points
+        """
+
+        points = [
+            '0,0 1,0 2,0 3,0 4,0', # E
+            '0,1 0,2 0,3 0,4 0,5', # S
+            '1,1 2,2 3,3 4,4 5,5', # SE
+            '10,4 11,3 12,2 13,1 14,0', # NE
+            '24,0 23,1 22,2 21,3', # SW
+
+            # Singletons
+            '0,7 80,40 100,1 100,20',
+
+        ]
+        points = self.convert_to_xy_pairs(' '.join(points))
+
+        expected = [
+            (0,0, 4,0),
+            (0,0, 0,5),
+            (0,0, 5,5),
+            (10,4, 14,0),
+            (24,0, 21,3),
+        ]
+
+        lines, singletons = find_lines(points)
+
+        self.assertEqual(len(singletons), 4)
+        self.assertEqual(sorted(list(singletons)), [(0,7), (80,40), (100,1), (100,20)])
+
+        for exp in expected:
+            self.assertIn(exp, lines)
