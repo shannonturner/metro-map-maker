@@ -10,12 +10,13 @@ SVG_TEMPLATE = Template('''
 {#{% spaceless %}#} {# DEBUG; TODO: UNCOMMENT #}
 {% load metromap_utils %}
 {% if stations %}
-    <style>text { font: 1px Helvetica; font-weight: 600; white-space: pre; dominant-baseline: central; }</style>
+    <style>text { font: 1px Helvetica; font-weight: 600; white-space: pre; dominant-baseline: central; } line { stroke-width: {{ line_size|default:1 }}; fill: none; stroke-linecap: round; stroke-linejoin: round; }</style>
+{% else %}
+    <style>line { stroke-width: {{ line_size|default:1 }}; fill: none; stroke-linecap: round; stroke-linejoin: round; }</style>
 {% endif %}
     {% for color, shapes in shapes_by_color.items %}
         {% for line in shapes.lines %}
-            <line x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#{{ color }}" stroke-width="{{ line_size|default:1 }}" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-            {#<polyline points="{% for coords in line %}{{ coords.0 }},{{ coords.1 }} {% endfor %}" stroke="#{{ color }}" stroke-width="{{ line_size|default:1 }}" fill="none" stroke-linecap="round" stroke-linejoin="round" />#}
+            <line x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#{{ color }}"/>
         {% endfor %}
         {% for point in shapes.points %}
             {% if default_station_shape == 'rect' %}
