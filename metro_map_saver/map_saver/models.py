@@ -287,7 +287,7 @@ class SavedMap(models.Model):
             lines, singletons = find_lines(points_this_color, flatten_nested(squares))
             shapes_by_color[color] = {'lines': lines, 'points': singletons, 'square_interior_points': squares}
 
-        thumbnail_svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, points_by_color)
+        thumbnail_svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, points_by_color, stations)
         thumbnail_svg_file = ContentFile(thumbnail_svg, name=f"t{self.urlhash}.svg")
         self.thumbnail_svg = thumbnail_svg_file
 

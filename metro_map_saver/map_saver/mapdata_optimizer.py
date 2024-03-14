@@ -519,6 +519,11 @@ def add_stations_to_svg(thumbnail_svg, line_size, default_station_shape, points_
 
     """ This allows me to avoid generating the map SVG twice
         (once for thumbnails, once for stations)
+
+        In theory, why have an SVG thumbnail at all?
+        In practice, the byte size difference is meaningful for load times,
+        especially when deciding whether to display a lower-quality PNG,
+        and when displaying a lot of thumbnails on a screen.
     """
 
     return thumbnail_svg.replace('</svg>', STATIONS_SVG_TEMPLATE.render(Context({'stations': stations})))
