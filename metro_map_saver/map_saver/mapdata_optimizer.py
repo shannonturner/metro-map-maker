@@ -522,7 +522,13 @@ def find_squares(points_this_color, width=5, already_found=None):
             width=3 gets a 3x3 square with a 1x1 interior
     """
 
+    if not already_found:
+        already_found = []
+
     ptc_x = points_this_color['x']
+    for pt in already_found:
+        if pt[0] in ptc_x:
+            ptc_x.remove(pt[0])
     counts_x = {x: ptc_x.count(x) for x in set(ptc_x)}
     counts_x = {x: count for x, count in counts_x.items() if count >= width}
 
@@ -532,14 +538,14 @@ def find_squares(points_this_color, width=5, already_found=None):
 
     # Repeat for y
     ptc_y = points_this_color['y']
+    for pt in already_found:
+        if pt[1] in ptc_y:
+            ptc_y.remove(pt[1])
     counts_y = {y: ptc_y.count(y) for y in set(ptc_y)}
     counts_y = {y: count for y, count in counts_y.items() if count >= width}
 
     if not counts_y:
         return [], []
-
-    if not already_found:
-        already_found = []
 
     # Excluding trivials was the easy part.
     ptc_xy = points_this_color['xy']
@@ -601,7 +607,9 @@ def find_lines(points_this_color, square_interior_points=None):
 
     for point in points_this_color:
         x, y = point
-        if (x, y) in square_interior_points:
+        print(f'TODO - DEBUG; point: {point}')
+        if point in square_interior_points:
+            print(f'\tIS IN INTERIOR, SKIP')
             continue
         for direction in directions.split():
             if (x, y) in skip_points[direction]:
