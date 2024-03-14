@@ -307,7 +307,9 @@ class SavedMap(models.Model):
 
         t1 = time.time()
 
-        return f'Wrote images for #{self.pk} ({self.created_at.date()}): {self.thumbnail_svg.path} ({self.thumbnail_svg.size:,} bytes in {t1 - t0:.2f}s)'
+        output = f'Wrote images for #{self.pk} ({self.created_at.date()}): {self.thumbnail_svg.path} ({self.thumbnail_svg.size:,} bytes in {t1 - t0:.2f}s)'
+        output += f'\nWrote images for #{self.pk} ({self.created_at.date()}):     {self.svg.path} ({self.svg.size:,} bytes in {t1 - t0:.2f}s)'
+        return output
 
     def __str__(self):
         return self.urlhash
