@@ -504,6 +504,20 @@ def station_text(station):
 def square_root(value):
     return sqrt(value)
 
+@register.filter
+def addf(value, arg):
+
+    """ Like the built-in |add
+        but allowing floats
+    """
+
+    try:
+        return value + float(arg)
+    except (ValueError, TypeError):
+        try:
+            return value + arg
+        except Exception:
+            return ""
 
 @register.filter
 def static_cache_version(value):
