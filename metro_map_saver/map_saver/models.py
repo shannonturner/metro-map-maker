@@ -273,7 +273,7 @@ class SavedMap(models.Model):
             if use_squares:
                 pbc = {k: list(v) for k, v in points_by_color[color].items()}
                 for sq_size in range(LARGEST_SQUARE, 2, -1):
-                    exterior, interior = find_squares(pbc, sq_size)
+                    exterior, interior = find_squares(pbc, sq_size, flatten_nested(squares))
                     if exterior and interior:
                         print(f'color: {color} sq_size: {sq_size} interior: {interior}')
                         for square in interior:

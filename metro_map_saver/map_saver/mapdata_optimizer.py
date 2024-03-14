@@ -507,7 +507,7 @@ def get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_s
 
     return SVG_TEMPLATE.render(Context(context))
 
-def find_squares(points_this_color, width=5):
+def find_squares(points_this_color, width=5, already_found=None):
 
     """ Must be called before get_connected_points, because this is meant to
         prevent recursion depth problems on maps with a lot of "terrain"
@@ -538,11 +538,14 @@ def find_squares(points_this_color, width=5):
     if not counts_y:
         return [], []
 
+    if not already_found:
+        already_found = []
+
     # Excluding trivials was the easy part.
     ptc_xy = points_this_color['xy']
     potentials = sorted([
         xy for xy in ptc_xy
-        if xy[0] in counts_x and xy[1] in counts_y
+        if xy[0] in counts_x and xy[1] in counts_y and xy not in already_found
     ])
 
     # Last trivial check
