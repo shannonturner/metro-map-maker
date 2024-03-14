@@ -29,10 +29,17 @@ SVG_TEMPLATE = Template('''
             {% endif %}
         {% endfor %}
     {% endfor %}
-    {% for station in stations %}
-        {% station_marker station default_station_shape line_size points_by_color stations %}
-        {% station_text station %}
-    {% endfor %}
+{#{% endspaceless %}#}
+</svg>
+''')
+
+STATIONS_SVG_TEMPLATE = Template('''
+{#{% spaceless %}#} {# DEBUG; TODO: UNCOMMENT #}
+{% load metromap_utils %}
+{% for station in stations %}
+    {% station_marker station default_station_shape line_size points_by_color stations %}
+    {% station_text station %}
+{% endfor %}
 {#{% endspaceless %}#}
 </svg>
 ''')
@@ -492,8 +499,9 @@ def get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_s
             to check line direction and station adjacency for diagonal rectangle stations
             and connecting stations
 
-        If stations=True, draw stations;
-            otherwise omit them (nicer for thumbnails)
+        Although stations are drawn separately,
+            the SVG's style will want to know whether they're present,
+            so don't delete stations from the context or the argument
     """
 
     context = {
@@ -506,6 +514,14 @@ def get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_s
     }
 
     return SVG_TEMPLATE.render(Context(context))
+
+def add_stations_to_svg(thumbnail_svg, line_size, default_station_shape, points_by_color, stations):
+
+    """ This allows me to avoid generating the map SVG twice
+        (once for thumbnails, once for stations)
+    """
+
+    return thumbnail_svg.replace('</svg>', STATIONS_SVG_TEMPLATE.render(Context({'stations': stations})))
 
 def find_squares(points_this_color, width=5, already_found=None):
 

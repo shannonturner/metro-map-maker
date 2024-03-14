@@ -242,6 +242,7 @@ class SavedMap(models.Model):
         """
 
         from .mapdata_optimizer import (
+            add_stations_to_svg,
             find_lines,
             find_squares,
             flatten_nested,
@@ -290,7 +291,7 @@ class SavedMap(models.Model):
         thumbnail_svg_file = ContentFile(thumbnail_svg, name=f"t{self.urlhash}.svg")
         self.thumbnail_svg = thumbnail_svg_file
 
-        svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, points_by_color, stations)
+        svg = add_stations_to_svg(thumbnail_svg, line_size, default_station_shape, points_by_color, stations)
         svg_file = ContentFile(svg, name=f"{self.urlhash}.svg")
         self.svg = svg_file
         self.save()
