@@ -244,6 +244,7 @@ class SavedMap(models.Model):
         from .mapdata_optimizer import (
             find_lines,
             find_squares,
+            flatten_nested,
             sort_points_by_color,
             get_svg_from_shapes_by_color,
             LARGEST_SQUARE,
@@ -282,7 +283,7 @@ class SavedMap(models.Model):
                     for sq in squares:
                         points_this_color = [p for p in points_this_color if p not in sq]
 
-            lines, singletons = find_lines(points_this_color)
+            lines, singletons = find_lines(points_this_color, flatten_nested(squares))
             shapes_by_color[color] = {'lines': lines, 'points': singletons, 'square_interior_points': squares}
 
         thumbnail_svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, points_by_color)

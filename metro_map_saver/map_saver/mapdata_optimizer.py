@@ -579,7 +579,7 @@ def find_squares(points_this_color, width=5):
 
     return squares_ext, squares_int
 
-def find_lines(points_this_color):
+def find_lines(points_this_color, square_interior_points=None):
 
     """ Better drawing algorithm,
             returning a small number of lines,
@@ -589,12 +589,17 @@ def find_lines(points_this_color):
     directions = 'E S NE SE SW' # Don't need to draw N, W, NW
     skip_points = {d: list() for d in directions.split()}
 
+    if not square_interior_points:
+        square_interior_points = []
+
     lines = []
     singletons = set()
     not_singletons = set()
 
     for point in points_this_color:
         x, y = point
+        if (x, y) in square_interior_points:
+            continue
         for direction in directions.split():
             if (x, y) in skip_points[direction]:
                 continue
@@ -656,3 +661,10 @@ def find_endpoint_of_line(x, y, points, direction):
         'x1': between[-1][0],
         'y1': between[-1][1],
     }
+
+def flatten_nested(l):
+
+    """ Flattens a nested list (by one level)
+    """
+
+    return list(itertools.chain.from_iterable(l))
