@@ -15,6 +15,9 @@ SVG_TEMPLATE = Template('''
     <style>line { stroke-width: {{ line_size|default:1 }}; fill: none; stroke-linecap: round; stroke-linejoin: round; }</style>
 {% endif %}
     {% for color, shapes in shapes_by_color.items %}
+        {% for square in shapes.square_interior_points %}
+            <rect x="{{ square.0.0|add:-0.5 }}" y="{{ square.0.1|add:0.5 }}" width="{{ square|length|square_root|add:2 }}" height="{{ square|length|square_root|add:2 }}" fill="#{{ color }}" />
+        {% endfor %}
         {% for line in shapes.lines %}
             <line x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#{{ color }}"/>
         {% endfor %}
@@ -24,9 +27,6 @@ SVG_TEMPLATE = Template('''
             {% else %}
                 <circle cx="{{ point.0 }}" cy="{{ point.1 }}" r="{{ point.size|default:1 }}" fill="#{{ color }}" />
             {% endif %}
-        {% endfor %}
-        {% for square in shapes.square_interior_points %}
-            <rect x="{{ square.0.0|add:-0.5 }}" y="{{ square.0.1|add:0.5 }}" width="{{ square|length|square_root|add:2 }}" height="{{ square|length|square_root|add:2 }}" fill="#{{ color }}" />
         {% endfor %}
     {% endfor %}
     {% for station in stations %}
