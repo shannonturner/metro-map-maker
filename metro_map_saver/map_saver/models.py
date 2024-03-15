@@ -282,18 +282,9 @@ class SavedMap(models.Model):
         self.svg = svg_file
         self.save()
 
-        # png_thumbnail = settings.MEDIA_ROOT / get_thumbnail_filepath(self, f'{self.urlhash}.png')
-        # thumbnail_png = draw_png_from_shapes_by_color(shapes_by_color, self.urlhash, map_size, png_thumbnail, stations=False)
-        # self.thumbnail_png = get_thumbnail_filepath(self, f't{self.urlhash}.png')
-
-        # png_filename = settings.MEDIA_ROOT / get_image_filepath(self, f'{self.urlhash}.png')
-        # thumbnail_png = draw_png_from_shapes_by_color(shapes_by_color, self.urlhash, map_size, png_filename, stations=stations)
-        # self.png = get_image_filepath(self, f'{self.urlhash}.png')
-
-        self.save()
-
         t1 = time.time()
 
+        # These report the same time, but the station generation is negligible
         output = f'Wrote images for #{self.pk} ({self.created_at.date()}): {self.thumbnail_svg.path} ({self.thumbnail_svg.size:,} bytes in {t1 - t0:.2f}s)'
         output += f'\nWrote images for #{self.pk} ({self.created_at.date()}):     {self.svg.path} ({self.svg.size:,} bytes in {t1 - t0:.2f}s)'
         return output
