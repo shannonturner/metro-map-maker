@@ -65,16 +65,18 @@ class Command(BaseCommand):
             limit = 0
             self.stdout.write(f"Generating images for ALL maps.")
         else:
-            needs_images = SavedMap.objects.filter(thumbnail_svg=None)
+            needs_images = SavedMap.objects.filter(thumbnail_svg__in=[None, ''])
             limit = limit or 100
             self.stdout.write(f"Generating images and thumbnails for {limit} maps that don't have them.")
 
         needs_images = needs_images.order_by('pk')
-        if limit and not alltime:
-            needs_images = needs_images[:limit]
 
+        count = 0
         t0 = time.time()
         for page in Paginator(needs_images, CHUNK_SIZE):
+            if count >= limit and not alltime:
+                break
+            self.stdout.write(f'Page {page.number} of {page.paginator.num_pages}')
             for mmap in page.object_list:
                 t1 = time.time()
                 errors = []
@@ -94,6 +96,9 @@ class Command(BaseCommand):
                 if dt > 5:
                     logger.warn(f'Generating image for {mmap.urlhash} took a very long time: {dt:.2f}s')
 
+                count += 1
+                if count >= limit and not alltime:
+                    break
 
         t3 = time.time()
         dt = (t3 - t0)
