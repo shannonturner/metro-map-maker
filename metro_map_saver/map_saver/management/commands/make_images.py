@@ -44,8 +44,8 @@ class Command(BaseCommand):
             '--limit',
             type=int,
             dest='limit',
-            default=0,
-            help='Calculate images and thumbnails for this many maps at once. Not in use if --alltime is set.',
+            default=100,
+            help='Only calculate images and thumbnails for this many maps at once. Not in use if --alltime is set.',
         )
         parser.add_argument(
             '-u',
@@ -66,6 +66,7 @@ class Command(BaseCommand):
         if urlhash:
             needs_images = SavedMap.objects.filter(urlhash=urlhash)
             self.stdout.write(f"Generating images and thumbnails for {urlhash}.")
+            limit = 1
         elif start:
             needs_images = SavedMap.objects.filter(pk__gte=start)
             self.stdout.write(f"Re-generating images and thumbnails for {limit} maps starting with PK {start}.")
@@ -77,7 +78,6 @@ class Command(BaseCommand):
             self.stdout.write(f"Generating images for ALL maps.")
         else:
             needs_images = SavedMap.objects.filter(thumbnail_svg__in=[None, ''])
-            limit = limit or 100
             self.stdout.write(f"Generating images and thumbnails for {limit} maps that don't have them.")
 
         needs_images = needs_images.order_by('pk')
