@@ -527,3 +527,12 @@ def static_cache_version(value):
     """
 
     return getmtime(str(settings.BASE_DIR) + value)
+
+@register.simple_tag
+def map_color(color, color_map):
+
+    """ map_color is the verb.
+        Returns the class name of the color
+    """
+
+    return color_map[color]

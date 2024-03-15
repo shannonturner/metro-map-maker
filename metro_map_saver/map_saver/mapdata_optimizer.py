@@ -10,16 +10,18 @@ SVG_TEMPLATE = Template('''
 {#{% spaceless %}#} {# DEBUG; TODO: UNCOMMENT #}
 {% load metromap_utils %}
 {% if stations %}
-    <style>text { font: 1px Helvetica; font-weight: 600; white-space: pre; dominant-baseline: central; } line { stroke-width: {{ line_size|default:1 }}; fill: none; stroke-linecap: round; stroke-linejoin: round; }</style>
+    <style>text { font: 1px Helvetica; font-weight: 600; white-space: pre; dominant-baseline: central; } line { stroke-width: {{ line_size|default:1 }}; fill: none; stroke-linecap: round; stroke-linejoin: round; }{% for hex, class_name in color_map.items %} .{{ class_name }} { stroke: #{{ hex }} }{% endfor %}</style>
 {% else %}
-    <style>line { stroke-width: {{ line_size|default:1 }}; fill: none; stroke-linecap: round; stroke-linejoin: round; }</style>
+    <style>line { stroke-width: {{ line_size|default:1 }}; fill: none; stroke-linecap: round; stroke-linejoin: round; }{% for hex, class_name in color_map.items %} .{{ class_name }} { stroke: #{{ hex }} }{% endfor %}</style>
 {% endif %}
     {% for color, shapes in shapes_by_color.items %}
+        {% comment %} No longer in use; TODO: delete
         {% for square in shapes.square_interior_points %}
             <rect x="{{ square.0.0|addf:'-1.5' }}" y="{{ square.0.1|addf:'-1.5' }}" width="{{ square|length|square_root|add:2 }}" height="{{ square|length|square_root|add:2 }}" fill="#{{ color }}" rx=".5" />
         {% endfor %}
+        {% endcomment %}
         {% for line in shapes.lines %}
-            <line x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#{{ color }}"/>
+            <line class="{% map_color color color_map %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}"/>
         {% endfor %}
         {% for point in shapes.points %}
             {% if default_station_shape == 'rect' %}
@@ -511,6 +513,7 @@ def get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_s
         'stations': stations or [],
         'line_size': line_size,
         'default_station_shape': default_station_shape,
+        'color_map': {color: f'c{index}' for index, color in enumerate(points_by_color.keys())},
     }
 
     return SVG_TEMPLATE.render(Context(context))
