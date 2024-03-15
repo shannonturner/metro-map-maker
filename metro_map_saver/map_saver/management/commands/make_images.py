@@ -81,6 +81,7 @@ class Command(BaseCommand):
             self.stdout.write(f"Generating images and thumbnails for {limit} maps that don't have them.")
 
         needs_images = needs_images.order_by('pk')
+        errors = []
 
         count = 0
         t0 = time.time()
@@ -90,7 +91,6 @@ class Command(BaseCommand):
             self.stdout.write(f'Page {page.number} of {page.paginator.num_pages}')
             for mmap in page.object_list:
                 t1 = time.time()
-                errors = []
 
                 try:
                     self.stdout.write(mmap.generate_images())
