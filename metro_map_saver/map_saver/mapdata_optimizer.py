@@ -524,7 +524,14 @@ def add_stations_to_svg(thumbnail_svg, line_size, default_station_shape, points_
         and when displaying a lot of thumbnails on a screen.
     """
 
-    return thumbnail_svg.replace('</svg>', STATIONS_SVG_TEMPLATE.render(Context({'stations': stations})))
+    context = {
+        'line_size': line_size,
+        'default_station_shape': default_station_shape,
+        'points_by_color': points_by_color,
+        'stations': stations,
+    }
+
+    return thumbnail_svg.replace('</svg>', STATIONS_SVG_TEMPLATE.render(Context(context)))
 
 def find_squares(points_this_color, width=5, already_found=None):
 

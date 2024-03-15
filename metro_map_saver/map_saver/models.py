@@ -254,7 +254,7 @@ class SavedMap(models.Model):
 
         t0 = time.time()
 
-        mapdata = self.data or self.mapdata
+        mapdata = self.data or json.loads(self.mapdata)
         data_version = mapdata['global'].get('data_version', 1)
 
         if mapdata['global'].get('style'):
