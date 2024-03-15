@@ -7,7 +7,7 @@ from .validator import VALID_XY, ALLOWED_MAP_SIZES, ALLOWED_ORIENTATIONS
 
 SVG_TEMPLATE = Template('''
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ canvas_size|default:80 }} {{ canvas_size|default:80 }}">
-{#{% spaceless %}#} {# DEBUG; TODO: UNCOMMENT #}
+{% spaceless %}
 {% load metromap_utils %}
 {% if stations %}
     <style>text { font: 1px Helvetica; font-weight: 600; white-space: pre; dominant-baseline: central; } line { stroke-width: {{ line_size|default:1 }}; fill: none; stroke-linecap: round; stroke-linejoin: round; }{% for hex, class_name in color_map.items %} .{{ class_name }} { stroke: #{{ hex }} }{% endfor %}</style>
@@ -31,18 +31,18 @@ SVG_TEMPLATE = Template('''
             {% endif %}
         {% endfor %}
     {% endfor %}
-{#{% endspaceless %}#}
+{% endspaceless %}
 </svg>
 ''')
 
 STATIONS_SVG_TEMPLATE = Template('''
-{#{% spaceless %}#} {# DEBUG; TODO: UNCOMMENT #}
+{% spaceless %}
 {% load metromap_utils %}
 {% for station in stations %}
     {% station_marker station default_station_shape line_size points_by_color stations %}
     {% station_text station %}
 {% endfor %}
-{#{% endspaceless %}#}
+{% endspaceless %}
 </svg>
 ''')
 
