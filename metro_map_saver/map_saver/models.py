@@ -268,26 +268,12 @@ class SavedMap(models.Model):
         shapes_by_color = {}
         for color in points_by_color:
             points_this_color = points_by_color[color]['xy']
-            squares = []
-            use_squares = line_size >= 0.75 or len(points_this_color) >= USE_SQUARES_THRESHOLD
 
-            if use_squares:
-                pbc = {k: list(v) for k, v in points_by_color[color].items()}
-                for sq_size in range(LARGEST_SQUARE, 2, -1):
-                    exterior, interior = find_squares(pbc, sq_size, flatten_nested(squares))
-                    if exterior and interior:
-                        print(f'color: {color} sq_size: {sq_size} interior: {interior}')
-                        for square in interior:
-                            squares.append(sorted(square))
-
-                if squares:
-                    for sq in squares:
-                        points_this_color = [p for p in points_this_color if p not in sq]
-
-            lines, singletons = find_lines(points_this_color, flatten_nested(squares))
-            shapes_by_color[color] = {'lines': lines, 'points': singletons, 'square_interior_points': squares}
+            lines, singletons = find_lines(points_this_color)
+            shapes_by_color[color] = {'lines': lines, 'points': singletons}
 
         thumbnail_svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, points_by_color, stations)
+
         thumbnail_svg_file = ContentFile(thumbnail_svg, name=f"t{self.urlhash}.svg")
         self.thumbnail_svg = thumbnail_svg_file
 

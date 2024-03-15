@@ -609,32 +609,35 @@ def find_squares(points_this_color, width=5, already_found=None):
 
     return squares_ext, squares_int
 
-def find_lines(points_this_color, square_interior_points=None):
+def find_lines(points_this_color):
 
     """ Better drawing algorithm,
             returning a small number of lines,
             and still has fidelity with classic omnidirectional style
     """
 
-    directions = 'E S NE SE SW' # Don't need to draw N, W, NW
+    directions = 'E S NE SE' # Don't need to draw N, W, NW, SW
     skip_points = {d: list() for d in directions.split()}
-
-    if not square_interior_points:
-        square_interior_points = []
 
     lines = []
     singletons = set()
     not_singletons = set()
 
-    for point in points_this_color:
-        x, y = point
-        print(f'TODO - DEBUG; point: {point}')
-        if point in square_interior_points:
-            print(f'\tIS IN INTERIOR, SKIP')
-            continue
-        for direction in directions.split():
-            if (x, y) in skip_points[direction]:
+    for direction in directions.split():
+        for point in points_this_color:
+            x, y = point
+            print(f'TODO - DEBUG; point: {point}')
+
+            if point in skip_points[direction]:
+                print('SKIP (IN BETWEEN POINTS)')
                 continue
+            if direction not in ('E', 'S') and point in skip_points['E'] and point in skip_points['S']:
+                if (x-1, y-1) in points_this_color and \
+                    (x+1, y+1) in points_this_color and \
+                    (x+1, y-1) in points_this_color and \
+                    (x-1, y+1) in points_this_color:
+                    print(f'SKIP (SURROUNDED)')
+                    continue
             endpoint = find_endpoint_of_line(x, y, points_this_color, direction)
             if endpoint:
                 lines.append((x, y, endpoint['x1'], endpoint['y1']))
@@ -643,13 +646,13 @@ def find_lines(points_this_color, square_interior_points=None):
                 for pt in endpoint['between']:
                     not_singletons.add(pt)
                 skip_points[direction].extend(endpoint['between'])
-            elif (x,y) in not_singletons:
+            elif point in not_singletons:
                 # This might not make a line in this direction,
                 #   but it does connect to a line in SOME direction,
                 #   so it's not a singleton
                 pass
             else:
-                singletons.add((x, y))
+                singletons.add(point)
 
     # Some of the points that we thought were singletons at the time might not be,
     #   if we haven't processed those points yet
