@@ -626,18 +626,9 @@ def find_lines(points_this_color):
     for direction in directions.split():
         for point in points_this_color:
             x, y = point
-            print(f'TODO - DEBUG; point: {point}')
 
             if point in skip_points[direction]:
-                print('SKIP (IN BETWEEN POINTS)')
                 continue
-            if direction not in ('E', 'S') and point in skip_points['E'] and point in skip_points['S']:
-                if (x-1, y-1) in points_this_color and \
-                    (x+1, y+1) in points_this_color and \
-                    (x+1, y-1) in points_this_color and \
-                    (x-1, y+1) in points_this_color:
-                    print(f'SKIP (SURROUNDED)')
-                    continue
             endpoint = find_endpoint_of_line(x, y, points_this_color, direction)
             if endpoint:
                 lines.append((x, y, endpoint['x1'], endpoint['y1']))

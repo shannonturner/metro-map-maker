@@ -482,7 +482,7 @@ class OptimizeMapTest(TestCase):
             (0,0, 0,5),
             (0,0, 5,5),
             (10,4, 14,0),
-            (24,0, 21,3),
+            (21,3, 24,0) # the "SW" line gets rendered; it's NE
         ]
 
         lines, singletons = find_lines(points)
