@@ -32,6 +32,14 @@ class Command(BaseCommand):
             help='(Re-)Calculate images and thumbnails for maps starting with this PK.',
         )
         parser.add_argument(
+            '-e',
+            '--end',
+            type=int,
+            dest='end',
+            default=0,
+            help='Calculate images and thumbnails for maps with a PK lower than this value. Does NOT re-calculate.',
+        )
+        parser.add_argument(
             '-l',
             '--limit',
             type=int,
@@ -51,6 +59,7 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         urlhash = kwargs['urlhash']
         start = kwargs['start']
+        end = kwargs['end']
         limit = kwargs['limit']
         alltime = kwargs.get('alltime')
 
@@ -60,6 +69,8 @@ class Command(BaseCommand):
         elif start:
             needs_images = SavedMap.objects.filter(pk__gte=start)
             self.stdout.write(f"Re-generating images and thumbnails for {limit} maps starting with PK {start}.")
+        elif end:
+            needs_images = SavedMap.objects.filter(pk__lt=end).filter(thumbnail_svg__in=[None, ''])
         elif alltime:
             needs_images = SavedMap.objects.all()
             limit = 0
