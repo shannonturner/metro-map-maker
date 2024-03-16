@@ -12,8 +12,17 @@ logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = """
-        Run on a regular schedule to generate images and thumbnails
-            for maps that don't have them yet.
+        Run on a regular schedule to generate images and thumbnails.
+
+            This really has multiple modes:
+                * alltime, a memory-efficient method meant to generate images the first time,
+                    or re-generate them ALL if I ever made any major rendering changes
+                * ongoing (no args), less memory-efficient but with fewer database hits,
+                    meant to generate maps for the first time automatically on a schedule
+                * urlhash, meant to (re-)generate a single map
+                * start, like alltime but meant to handle picking up from a starting point
+                    (if alltime only partially ran, for example, it's useful to not start over)
+
     """
 
     def add_arguments(self, parser):
@@ -81,7 +90,7 @@ class Command(BaseCommand):
             recalc = True
             self.stdout.write(f"Generating images for ALL maps.")
         else:
-            needs_images = range(1, SavedMap.objects.count() + 1)
+            needs_images = SavedMap.objects.filter(thumbnail_svg__in=[None, ''])
             self.stdout.write(f"Generating images and thumbnails for {limit} maps that don't have them.")
 
         errors = []
@@ -92,11 +101,14 @@ class Command(BaseCommand):
             if count >= limit and not alltime:
                 break
 
-            if urlhash:
+            if not isinstance(needs_images, range):
                 mmaps = page.object_list
             else:
                 # Chunk by PK to save memory, reduce startup time
                 mmaps = SavedMap.objects.filter(pk__in=page.object_list)
+
+            if end:
+                mmaps = mmaps.filter(thumbnail_svg__in=[None, ''])
 
             self.stdout.write(f'Page {page.number} of {page.paginator.num_pages} (Recalc? {recalc})')
             for mmap in mmaps:
