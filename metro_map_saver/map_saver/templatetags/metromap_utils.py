@@ -526,7 +526,7 @@ def static_cache_version(value):
         to bust the static cache
     """
 
-    return getmtime(str(settings.BASE_DIR) + value)
+    return getmtime(str(settings.STATIC_ROOT) + value)
 
 @register.simple_tag
 def map_color(color, color_map):
