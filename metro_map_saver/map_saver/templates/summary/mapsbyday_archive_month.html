@@ -6,7 +6,7 @@
     {{ block.super }}
         {% if previous_month %}
             <li class="navbar-text nav-item">
-                <a href="{% url 'calendar-month' previous_month|date:"Y" previous_month|date:"m" %}" class="nav-link">
+                <a href="{% url 'calendar-month' previous_month|date:"Y" previous_month|date:"m" %}" class="nav-link nav-previous">
                     <i class="bi bi-arrow-left-circle"></i> {{ previous_month|date:"F Y" }}
                 </a>
             </li>
@@ -18,7 +18,7 @@
 
         {% if next_month %}
             <li class="navbar-text nav-item">
-                <a href="{% url 'calendar-month' next_month|date:"Y" next_month|date:"m" %}" class="nav-link">
+                <a href="{% url 'calendar-month' next_month|date:"Y" next_month|date:"m" %}" class="nav-link nav-next">
                     {{ next_month|date:"F Y" }} <i class="bi bi-arrow-right-circle"></i>
                 </a>
             </li>

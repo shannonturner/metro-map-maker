@@ -12,7 +12,7 @@
 
     {% if previous_day %}
         <li class="navbar-text nav-item">
-            <a href="{% url 'calendar-day' previous_day|date:'Y' previous_day|date:'m' previous_day|date:'d' %}" class="nav-link">
+            <a href="{% url 'calendar-day' previous_day|date:'Y' previous_day|date:'m' previous_day|date:'d' %}" class="nav-link nav-previous">
                 <i class="bi bi-arrow-left-circle"></i> {{ previous_day|date:"F j, Y" }}
             </a>
         </li>
@@ -24,7 +24,7 @@
 
     {% if next_day %}
         <li class="navbar-text nav-item">
-            <a href="{% url 'calendar-day' next_day|date:'Y' next_day|date:'m' next_day|date:'d' %}" class="nav-link">
+            <a href="{% url 'calendar-day' next_day|date:'Y' next_day|date:'m' next_day|date:'d' %}" class="nav-link nav-next">
                 {{ next_day|date:"F j, Y" }} <i class="bi bi-arrow-right-circle"></i>
             </a>
         </li>

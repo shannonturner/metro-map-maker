@@ -18,13 +18,13 @@
                     If the first week in a year starts in the previous year (like Monday, December 31, 2018), don't loop back to January 2018.
                 {% endcomment %}
                 <li class="navbar-text nav-item">
-                    <a href="{% url 'calendar-week' previous_week|date:'Y'|add:1 previous_week|date:'W' %}" class="nav-link">
+                    <a href="{% url 'calendar-week' previous_week|date:'Y'|add:1 previous_week|date:'W' %}" class="nav-link nav-previous">
                         {{ previous_week|date:"Y"|add:1 }} Week #{{ previous_week|date:"W" }} <i class="bi bi-arrow-left-circle"></i>
                     </a>
                 </li>
             {% else %}
                 <li class="navbar-text nav-item">
-                    <a href="{% url 'calendar-week' previous_week|date:'Y' previous_week|date:'W' %}" class="nav-link">
+                    <a href="{% url 'calendar-week' previous_week|date:'Y' previous_week|date:'W' %}" class="nav-link nav-previous">
                         {{ previous_week|date:"Y" }} Week #{{ previous_week|date:"W"}} <i class="bi bi-arrow-left-circle"></i>
                     </a>
                 </li>
@@ -44,13 +44,13 @@
                         don't loop back to January 2018.
                 {% endcomment %}
                 <li class="navbar-text nav-item">
-                    <a href="{% url 'calendar-week' next_week|date:'Y'|add:1 next_week|date:'W' %}" class="nav-link">
+                    <a href="{% url 'calendar-week' next_week|date:'Y'|add:1 next_week|date:'W' %}" class="nav-link nav-next">
                         {{ next_week|date:"Y"|add:1 }} Week #{{ next_week|date:"W"}} <i class="bi bi-arrow-right-circle"></i>
                     </a>
                 </li>
             {% else %}
                 <li class="navbar-text nav-item">
-                    <a href="{% url 'calendar-week' next_week|date:'Y' next_week|date:'W' %}" class="nav-link">
+                    <a href="{% url 'calendar-week' next_week|date:'Y' next_week|date:'W' %}" class="nav-link nav-next">
                         {{ next_week|date:"Y" }} Week #{{ next_week|date:"W"}} <i class="bi bi-arrow-right-circle"></i>
                     </a>
                 </li>

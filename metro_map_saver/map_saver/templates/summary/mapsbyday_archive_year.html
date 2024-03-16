@@ -8,7 +8,7 @@
 
         {% if previous_year %}
             <li class="navbar-text nav-item">
-                <a href="{% url 'calendar-year' previous_year|date:"Y" %}" class="nav-link">
+                <a href="{% url 'calendar-year' previous_year|date:"Y" %}" class="nav-link nav-previous">
                     <i class="bi bi-arrow-left-circle"></i> {{ previous_year|date:"Y" }}
                 </a>
             </li>
@@ -20,7 +20,7 @@
 
         {% if next_year %}
             <li class="navbar-text nav-item">
-                <a href="{% url 'calendar-year' next_year|date:"Y" %}" class="nav-link">
+                <a href="{% url 'calendar-year' next_year|date:"Y" %}" class="nav-link nav-next">
                     {{ next_year|date:"Y" }} <i class="bi bi-arrow-right-circle"></i>
                 </a>
             </li>

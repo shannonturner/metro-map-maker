@@ -110,6 +110,28 @@
                     </ul>
                 </li>
             {% endif %}
+
+            <script type="text/javascript">
+                var hasPrev, hasNext
+                $(document).ready(function () {
+                    hasPrev = $('.nav-previous').length > 0
+                    hasNext = $('.nav-next').length > 0
+                })
+
+                document.addEventListener('keydown', function(event) {
+                    if (document.activeElement && document.activeElement.type == 'text') { return }
+
+                    if (hasPrev && event.key == 'ArrowLeft' && !event.metaKey) { // left arrow, except for "go back"
+                      event.preventDefault()
+                      $('a.nav-previous')[0].click()
+                    }
+                    else if (hasNext && event.key == 'ArrowRight' && !event.metaKey) { // right arrow, except for "go forward"
+                      event.preventDefault()
+                      $('a.nav-next')[0].click()
+                    }
+                })
+            </script>
+
             {% endblock breadcrumbs %}
             {% block breadcrumbs_end %}
                 <li class="navbar-text nav-item">
