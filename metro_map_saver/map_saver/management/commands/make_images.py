@@ -6,7 +6,7 @@ import json
 import logging
 import time
 
-CHUNK_SIZE = 1000
+CHUNK_SIZE = 100
 logger = logging.getLogger(__name__)
 
 
@@ -62,25 +62,28 @@ class Command(BaseCommand):
         end = kwargs['end']
         limit = kwargs['limit']
         alltime = kwargs.get('alltime')
+        recalc = False
 
         if urlhash:
             needs_images = SavedMap.objects.filter(urlhash=urlhash)
             self.stdout.write(f"Generating images and thumbnails for {urlhash}.")
             limit = 1
         elif start:
-            needs_images = SavedMap.objects.filter(pk__gte=start)
+            needs_images = range(start, start + limit + 1)
+            recalc = True
             self.stdout.write(f"Re-generating images and thumbnails for {limit} maps starting with PK {start}.")
         elif end:
-            needs_images = SavedMap.objects.filter(pk__lt=end).filter(thumbnail_svg__in=[None, ''])
+            needs_images = range(1, end)
+            self.stdout.write(f"Generating images and thumbnails for {limit} maps up to PK {end}.")
         elif alltime:
-            needs_images = SavedMap.objects.all()
+            needs_images = range(1, SavedMap.objects.count() + 1)
             limit = 0
+            recalc = True
             self.stdout.write(f"Generating images for ALL maps.")
         else:
-            needs_images = SavedMap.objects.filter(thumbnail_svg__in=[None, ''])
+            needs_images = range(1, SavedMap.objects.count() + 1)
             self.stdout.write(f"Generating images and thumbnails for {limit} maps that don't have them.")
 
-        needs_images = needs_images.order_by('pk')
         errors = []
 
         count = 0
@@ -88,8 +91,15 @@ class Command(BaseCommand):
         for page in Paginator(needs_images, CHUNK_SIZE):
             if count >= limit and not alltime:
                 break
-            self.stdout.write(f'Page {page.number} of {page.paginator.num_pages}')
-            for mmap in page.object_list:
+
+            if urlhash:
+                mmaps = page.object_list
+            else:
+                # Chunk by PK to save memory, reduce startup time
+                mmaps = SavedMap.objects.filter(pk__in=page.object_list)
+
+            self.stdout.write(f'Page {page.number} of {page.paginator.num_pages} (Recalc? {recalc})')
+            for mmap in mmaps:
                 t1 = time.time()
 
                 try:
