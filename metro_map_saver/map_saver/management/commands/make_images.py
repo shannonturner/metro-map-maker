@@ -71,7 +71,6 @@ class Command(BaseCommand):
         end = kwargs['end']
         limit = kwargs['limit']
         alltime = kwargs.get('alltime')
-        recalc = False
 
         if urlhash:
             needs_images = SavedMap.objects.filter(urlhash=urlhash).order_by('id')[:limit]
@@ -82,13 +81,11 @@ class Command(BaseCommand):
             #   on staging/prod unless I want to tracemalloc the memory leak
             needs_images = range(1, SavedMap.objects.count() + 1)
             limit = 0
-            recalc = True
             self.stdout.write(f"Generating images for ALL maps.")
         elif start or end:
             start = start or 1
             end = end or (start + limit + 1)
             needs_images = range(start, end)
-            recalc = True
             self.stdout.write(f"Re-generating images and thumbnails for {limit} maps starting with PK {start}.")
         else:
             needs_images = SavedMap.objects.filter(thumbnail_svg__in=[None, '']).order_by('id')[:limit]
@@ -108,7 +105,7 @@ class Command(BaseCommand):
             else:
                 mmaps = page.object_list
 
-            self.stdout.write(f'Page {page.number} of {page.paginator.num_pages} (Recalc? {recalc})')
+            self.stdout.write(f'Page {page.number} of {page.paginator.num_pages}')
             for mmap in mmaps:
                 t1 = time.time()
 

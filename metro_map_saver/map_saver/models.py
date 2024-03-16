@@ -5,6 +5,7 @@ from django.db import models
 from citysuggester.utils import suggest_city
 from taggit.managers import TaggableManager
 
+import datetime
 import json
 import time
 
@@ -281,8 +282,9 @@ class SavedMap(models.Model):
         t1 = time.time()
 
         # These report the same time, but the station generation is negligible
-        output = f'Wrote images for #{self.pk} ({self.created_at.date()}): {self.thumbnail_svg.path} ({self.thumbnail_svg.size:,} bytes in {t1 - t0:.2f}s)'
-        output += f'\nWrote images for #{self.pk} ({self.created_at.date()}):     {self.svg.path} ({self.svg.size:,} bytes in {t1 - t0:.2f}s)'
+        now = datetime.datetime.now().replace(microsecond=0)
+        output = f'[{now}] Wrote images for #{self.pk} ({self.created_at.date()}): {self.thumbnail_svg.path} ({self.thumbnail_svg.size:,} bytes in {t1 - t0:.2f}s)'
+        output += f'\n[{now}] Wrote images for #{self.pk} ({self.created_at.date()}):     {self.svg.path} ({self.svg.size:,} bytes in {t1 - t0:.2f}s)'
         return output
 
     def __str__(self):
