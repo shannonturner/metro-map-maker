@@ -244,12 +244,8 @@ class SavedMap(models.Model):
         from .mapdata_optimizer import (
             add_stations_to_svg,
             find_lines,
-            find_squares,
-            flatten_nested,
             sort_points_by_color,
             get_svg_from_shapes_by_color,
-            LARGEST_SQUARE,
-            USE_SQUARES_THRESHOLD,
         )
 
         t0 = time.time()

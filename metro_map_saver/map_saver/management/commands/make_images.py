@@ -53,7 +53,7 @@ class Command(BaseCommand):
             '--limit',
             type=int,
             dest='limit',
-            default=100,
+            default=CHUNK_SIZE * 5,
             help='Only calculate images and thumbnails for this many maps at once. Not in use if --alltime is set.',
         )
         parser.add_argument(
@@ -74,23 +74,24 @@ class Command(BaseCommand):
         recalc = False
 
         if urlhash:
-            needs_images = SavedMap.objects.filter(urlhash=urlhash)
+            needs_images = SavedMap.objects.filter(urlhash=urlhash).order_by('id')[:limit]
             self.stdout.write(f"Generating images and thumbnails for {urlhash}.")
             limit = 1
-        elif start:
-            needs_images = range(start, start + limit + 1)
-            recalc = True
-            self.stdout.write(f"Re-generating images and thumbnails for {limit} maps starting with PK {start}.")
-        elif end:
-            needs_images = range(1, end)
-            self.stdout.write(f"Generating images and thumbnails for {limit} maps up to PK {end}.")
         elif alltime:
+            # In practice, I probably won't be able to use this
+            #   on staging/prod unless I want to tracemalloc the memory leak
             needs_images = range(1, SavedMap.objects.count() + 1)
             limit = 0
             recalc = True
             self.stdout.write(f"Generating images for ALL maps.")
+        elif start or end:
+            start = start or 1
+            end = end or (start + limit + 1)
+            needs_images = range(start, end)
+            recalc = True
+            self.stdout.write(f"Re-generating images and thumbnails for {limit} maps starting with PK {start}.")
         else:
-            needs_images = SavedMap.objects.filter(thumbnail_svg__in=[None, ''])
+            needs_images = SavedMap.objects.filter(thumbnail_svg__in=[None, '']).order_by('id')[:limit]
             self.stdout.write(f"Generating images and thumbnails for {limit} maps that don't have them.")
 
         errors = []
@@ -101,14 +102,11 @@ class Command(BaseCommand):
             if count >= limit and not alltime:
                 break
 
-            if not isinstance(needs_images, range):
-                mmaps = page.object_list
-            else:
+            if isinstance(needs_images, range):
                 # Chunk by PK to save memory, reduce startup time
                 mmaps = SavedMap.objects.filter(pk__in=page.object_list)
-
-            if end:
-                mmaps = mmaps.filter(thumbnail_svg__in=[None, ''])
+            else:
+                mmaps = page.object_list
 
             self.stdout.write(f'Page {page.number} of {page.paginator.num_pages} (Recalc? {recalc})')
             for mmap in mmaps:
@@ -122,11 +120,11 @@ class Command(BaseCommand):
                 except Exception as exc:
                     self.stdout.write(f'[ERROR] Failed to generate images and thumbnails for #{mmap.id} ({mmap.urlhash}): Exception: {exc}')
                     errors.append(mmap.urlhash)
-                    raise # DEBUG; TODO -- REMOVE
 
                 t2 = time.time()
                 dt = (t2 - t1)
                 if dt > 5:
+                    self.stdout.write(f'Generating image for {mmap.urlhash} took a very long time: {dt:.2f}s')
                     logger.warn(f'Generating image for {mmap.urlhash} took a very long time: {dt:.2f}s')
 
                 count += 1
