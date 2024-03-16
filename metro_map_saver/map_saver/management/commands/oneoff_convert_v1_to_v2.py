@@ -1,9 +1,8 @@
 from django.core.management.base import BaseCommand
+from map_saver.models import SavedMap
 
 import json
 import time
-
-CHUNK_SIZE = 1000
 
 class Command(BaseCommand):
     help = """
@@ -33,8 +32,8 @@ class Command(BaseCommand):
             '--limit',
             type=int,
             dest='limit',
-            default=CHUNK_SIZE * 5,
-            help='Only calculate images and thumbnails for this many maps at once.',
+            default=1000,
+            help='Only process this many maps at once.',
         )
         parser.add_argument(
             '-u',
@@ -46,7 +45,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **kwargs):
-        from map_saver.models import SavedMap
 
         urlhash = kwargs.get('urlhash')
         start = kwargs['start']
@@ -59,13 +57,13 @@ class Command(BaseCommand):
         elif start or end:
             start = start or 1
             end = end or (start + limit + 1)
-            maps_to_update = SavedMap.objects.filter(pk__in=range(start, end))[:limit]
+            maps_to_update = SavedMap.objects.filter(pk__in=range(start, end)).order_by('id')[:limit]
         else:
             maps_to_update = SavedMap.objects.filter(data={}).order_by('id')[:limit]
 
         total = maps_to_update.count()
         self.stdout.write(f'Generating v2 mapdata for {total} maps')
-        count = 0
+
         t0 = time.time()
 
         for saved_map in maps_to_update:
@@ -85,10 +83,6 @@ class Command(BaseCommand):
                 continue
             else:
                 self.stdout.write(f'Generated v2 data for #{saved_map.id}: {saved_map.urlhash} ({saved_map.created_at.date()})')
-
-            count += 1
-            if count >= limit:
-                break
 
         t1 = time.time()
         self.stdout.write(f'Finished in {(t1 - t0)}s')
