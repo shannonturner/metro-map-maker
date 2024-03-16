@@ -85,4 +85,4 @@ class Command(BaseCommand):
                 self.stdout.write(f'Generated v2 data for #{saved_map.id}: {saved_map.urlhash} ({saved_map.created_at.date()})')
 
         t1 = time.time()
-        self.stdout.write(f'Finished in {(t1 - t0)}s')
+        self.stdout.write(f'Finished in {(t1 - t0):.2f}s')
