@@ -540,7 +540,10 @@ def get_station_styles_in_use(stations, default_shape):
             color_variants[style] = {}
 
         if style == 'circles-lg':
-            # Consider: Optimize into 1 call; non-xfer looks equivalent to <circle cx="53" cy="15" r="0.4" stroke="#ec2527" stroke-width="0.2" fill="#fff"/>
+            # Note: I attempted to re-use the wmata style with a nested diff,
+            #   but the color didn't come through, instead it rendered as wmata
+            #   See untracked/svg_nesting_attempt.diff
+            # Consider: Optimize into 1 call; non-xfer looks equivalent to <circle r="0.4" stroke="#ec2527" stroke-width="0.2" fill="#fff"/>
             key = f'clg{suffix}'
             if transfer:
                 color_variants[style][key] = [
