@@ -2685,8 +2685,12 @@ $(document).ready(function() {
     } else {
       $('#tool-new-line-errors').text('');
       $('#rail-line-new').before('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line has-tooltip" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');
-      activeMap['global'] = new Object();
-      activeMap['global']['lines'] = new Object();
+      if (!activeMap['global']) {
+        activeMap['global'] = {"lines": {}}
+      }
+      if (!activeMap['global']['lines']) {
+        activeMap['global']['lines'] = {}
+      }
       $('.rail-line').each(function() {
         if ($(this).attr('id') != 'rail-line-new') {
           // rail-line-
@@ -2764,6 +2768,12 @@ $(document).ready(function() {
         $('#rail-line-change').html('<i class="fa fa-pencil" aria-hidden="true"></i> Edit colors &amp; names')
         $('#cant-save-rail-line-edits').text('')
         $('#tool-change-line-options').hide()
+        // If the line tool is in use, unset it so we don't get a stale color
+        if (activeTool == 'line') {
+          activeTool = 'look'
+          $('#tool-line').attr('style', '')
+          $('#tool-line').removeClass('active')
+        }
       }
     }
     // If replacing the active line, change the active color too
