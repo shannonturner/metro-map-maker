@@ -19,6 +19,9 @@ register = template.Library()
 logger = logging.getLogger(__name__)
 
 # See below for SVG_DEFS
+HAS_VARIANTS = [
+    'circles-lg',
+]
 
 @register.simple_tag
 def station_marker(station, default_shape, line_size, points_by_color, stations):
@@ -42,6 +45,7 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
     transfer = station.get('transfer') == 1
     shape = station.get('style', default_shape)
     color = f"#{station['color']}"
+    suffix = ('-xf-' if transfer else '-') + color.removeprefix('#')
 
     if shape not in ALLOWED_STATION_STYLES:
         logger.error(f"Can't generate SVG for shape: {shape}")
@@ -164,12 +168,7 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
         else:
             svg.append(svg_rect(x, y, width, height, x_offset, y_offset, fill, stroke, stroke_width, radius, rotation))
     elif shape == 'circles-lg':
-        if transfer:
-            svg.append(svg_circle(x, y, 1.2, color))
-            svg.append(svg_circle(x, y, .9, '#fff'))
-        svg.append(svg_circle(x, y, .6, color))
-        svg.append(svg_circle(x, y, .3, '#fff'))
-        # Consider: Optimize into 1 call; non-xfer looks equivalent to <circle cx="53" cy="15" r="0.4" stroke="#ec2527" stroke-width="0.2" fill="#fff"/>
+        svg.append(use_defs(x, y, f'clg{suffix}'))
     elif shape == 'circles-md':
         if transfer and line_size >= 0.5:
             svg.append(svg_circle(x, y, .5, '#fff'))
@@ -521,22 +520,60 @@ def get_station_styles_in_use(stations, default_shape):
             and make the appropriate changes above in station_marker.
 
             May be worth just doing the lowest hanging fruit for now, and optimizing as needed.
-                Best case scenario is a ~15% improvement on very station-heavy maps
     """
 
     styles = set()
+    color_variants = {}
 
     for station in stations:
-        styles.add(station.get('style', default_shape))
+        style = station.get('style', default_shape)
+
+        if style not in HAS_VARIANTS:
+            styles.add(style)
+            continue
+
+        transfer = station.get('transfer') == 1
+        color = station['color']
+        suffix = ('-xf-' if transfer else '-') + color
+
+        if style not in color_variants:
+            color_variants[style] = {}
+
+        if style == 'circles-lg':
+            # Consider: Optimize into 1 call; non-xfer looks equivalent to <circle cx="53" cy="15" r="0.4" stroke="#ec2527" stroke-width="0.2" fill="#fff"/>
+            key = f'clg{suffix}'
+            if transfer:
+                color_variants[style][key] = [
+                    svg_circle(None, None, r, stroke, defs=True)
+                    for r, stroke in zip(
+                        [1.2, .9, .6, .3],
+                        [f'#{color}', '#fff', f'#{color}', '#fff'],
+                    )
+                ]
+            else:
+                color_variants[style][key] = [
+                svg_circle(None, None, r, stroke, defs=True)
+                for r, stroke in zip(
+                    [.6, .3],
+                    [f'#{color}', '#fff'],
+                )
+            ]
 
     svg = []
-    if styles:
+    if styles or color_variants:
         svg.append('<defs>')
-        for style in styles:
-            for variant in SVG_DEFS[style]:
-                svg.append(f'<g id="{variant}">')
-                svg.append(''.join(SVG_DEFS[style][variant]))
-                svg.append('</g>')
+        for style in list(styles) + list(color_variants.keys()):
+            if style in SVG_DEFS:
+                for variant in SVG_DEFS[style]:
+                    svg.append(f'<g id="{variant}">')
+                    svg.append(''.join(SVG_DEFS[style][variant]))
+                    svg.append('</g>')
+
+            if style in color_variants:
+                for variant in color_variants[style]:
+                    svg.append(f'<g id="{variant}">')
+                    svg.append(''.join(color_variants[style][variant]))
+                    svg.append('</g>')
         svg.append('</defs>')
 
     svg = ''.join(svg)
@@ -586,13 +623,15 @@ def map_color(color, color_map):
 SVG_DEFS = {
     'wmata': {
         'wm-xf': [ # WMATA transfer
-            svg_circle(None, None, r, stroke, defs=True) for r, stroke in zip(
+            svg_circle(None, None, r, stroke, defs=True)
+            for r, stroke in zip(
                 [1.2, .9, .6, .3],
                 ['#000', '#fff', '#000', '#fff'],
             )
         ],
         'wm': [ # WMATA
-            svg_circle(None, None, r, stroke, defs=True) for r, stroke in zip(
+            svg_circle(None, None, r, stroke, defs=True)
+            for r, stroke in zip(
                 [.6, .3],
                 ['#000', '#fff'],
             )
