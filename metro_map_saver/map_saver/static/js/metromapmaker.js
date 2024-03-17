@@ -2313,16 +2313,25 @@ $(document).ready(function() {
       $('#tool-line').attr('style', '')
       $('#tool-line').removeClass('active')
     }
-    delete metroMap["global"]
-    metroMap = JSON.stringify(metroMap)
-    for (var a=0; a<allLines.length; a++) {
-      if ($('.rail-line')[a].id != 'rail-line-new') {
-        // Is this line in use at all?
-        if (metroMap.indexOf('"line":"' + $('.rail-line')[a].id.slice(10, 16) + '"') == -1) {
-          linesToDelete.push($('#' + $('.rail-line')[a].id));
-          // Also delete unused lines from the "Add lines this station serves" section
-          linesToDelete.push($('#add-line-' + [a].id));
-          delete activeMap["global"]["lines"][$('.rail-line')[a].id.split("-").slice(2,3)]
+    if (mapDataVersion == 2) {
+      for (var color of allLines) {
+        color = color.id.slice(10, 16)
+        if (!colorInUse(color)) {
+          linesToDelete.push($('#rail-line-' + color))
+        }
+      }
+    } else if (mapDataVersion == 1) {
+      delete metroMap["global"]
+      metroMap = JSON.stringify(metroMap)
+      for (var a=0; a<allLines.length; a++) {
+        if ($('.rail-line')[a].id != 'rail-line-new') {
+          // Is this line in use at all?
+          if (metroMap.indexOf('"line":"' + $('.rail-line')[a].id.slice(10, 16) + '"') == -1) {
+            linesToDelete.push($('#' + $('.rail-line')[a].id));
+            // Also delete unused lines from the "Add lines this station serves" section
+            linesToDelete.push($('#add-line-' + [a].id));
+            delete activeMap["global"]["lines"][$('.rail-line')[a].id.split("-").slice(2,3)]
+          }
         }
       }
     }
@@ -3549,6 +3558,19 @@ function expandToolbox() {
 
 $('#controls-collapse-menu').on('click', collapseToolbox)
 $('#controls-expand-menu').on('click', expandToolbox)
+
+function colorInUse(color) {
+  if (!activeMap || !activeMap['points_by_color'] || !activeMap['points_by_color'][color] || !activeMap['points_by_color'][color]['xys']) {
+    return false
+  }
+  for (var x in activeMap['points_by_color'][color]['xys']) {
+    for (var y in activeMap['points_by_color'][color]['xys'][x]) {
+      if (activeMap['points_by_color'][color]['xys'][x][y] == 1) {
+        return true
+      } // if there's actually a point here, not just one that was deleted
+    } // y
+  } // x
+} // colorInUse(color)
 
 function unfreezeMapControls() {
   // If #tool-export-canvas (screen size: xs) was clicked,
