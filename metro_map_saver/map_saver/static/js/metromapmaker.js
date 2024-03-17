@@ -2308,8 +2308,11 @@ $(document).ready(function() {
     var linesToDelete = [];
     var metroMap = Object.assign({}, activeMap) // make a copy so we can check to see which lines exist
     // If the line tool is in use, unset it so we don't get a stale color
-    if (activeTool == 'line')
+    if (activeTool == 'line') {
       activeTool = 'look'
+      $('#tool-line').attr('style', '')
+      $('#tool-line').removeClass('active')
+    }
     delete metroMap["global"]
     metroMap = JSON.stringify(metroMap)
     for (var a=0; a<allLines.length; a++) {
