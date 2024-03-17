@@ -166,7 +166,7 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
                 height = 1
 
         if not draw_as_connected and shape == 'circles-thin':
-            svg.append(svg_circle(x, y, .5, '#fff', '#000', stroke_width))
+            svg.append(use_defs(x, y, 'ct-xf' if transfer else 'ct'))
         else:
             svg.append(svg_rect(x, y, width, height, x_offset, y_offset, fill, stroke, stroke_width, radius, rotation))
     elif shape in 'circles-lg':
@@ -647,5 +647,9 @@ SVG_DEFS = {
             )
         ],
     },
+    'circles-thin': {
+        'ct-xf': [svg_circle(None, None, .5, '#fff', '#000', .2, defs=True)],
+        'ct': [svg_circle(None, None, .5, '#fff', '#000', .1, defs=True)],
+    }
 }
 
