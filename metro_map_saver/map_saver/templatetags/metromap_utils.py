@@ -18,6 +18,8 @@ register = template.Library()
 
 logger = logging.getLogger(__name__)
 
+# See below for SVG_DEFS
+
 @register.simple_tag
 def station_marker(station, default_shape, line_size, points_by_color, stations):
 
@@ -52,10 +54,9 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
     #   and conditional stroke/fills based on line size
     if shape == 'wmata':
         if transfer:
-            svg.append(svg_circle(x, y, 1.2, '#000'))
-            svg.append(svg_circle(x, y, .9, '#fff'))
-        svg.append(svg_circle(x, y, .6, '#000'))
-        svg.append(svg_circle(x, y, .3, '#fff'))
+            svg.append(use_defs(x, y, 'wm-xf'))
+        else:
+            svg.append(use_defs(x, y, 'wm'))
     elif shape in ALLOWED_CONNECTING_STATIONS:
         # Set generics, and change as needed
         width = 0.5
@@ -195,7 +196,17 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
         mark_safe(svg),
     )
 
-def svg_circle(x, y, r, fill, stroke=None, stroke_width=0.5):
+def use_defs(x, y, svg_def):
+
+    """ For non-connecting stations, save valuable KB and nodes
+        by re-using SVG defs
+    """
+
+    return f'<use x="{x}" y="{y}" href="#{svg_def}"/>'
+
+def svg_circle(x, y, r, fill, stroke=None, stroke_width=0.5, defs=False):
+    if defs:
+        return f'<circle r="{r}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}"/>'
     if stroke:
         return f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}"/>'
     return f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}"/>'
@@ -499,6 +510,41 @@ def station_text(station):
         mark_safe('</text>'),
     )
 
+@register.simple_tag
+def get_station_styles_in_use(stations, default_shape):
+
+    """ Iterate through all stations and determine which ones are in use;
+            this will allow me to add just those station styles to the <defs>
+            in the SVG
+
+        TODO: Expand the number and types of stations defined below in SVG_DEFS,
+            and make the appropriate changes above in station_marker.
+
+            May be worth just doing the lowest hanging fruit for now, and optimizing as needed.
+                Best case scenario is a ~15% improvement on very station-heavy maps
+    """
+
+    styles = set()
+
+    for station in stations:
+        styles.add(station.get('style', default_shape))
+
+    svg = []
+    if styles:
+        svg.append('<defs>')
+        for style in styles:
+            for variant in SVG_DEFS[style]:
+                svg.append(f'<g id="{variant}">')
+                svg.append(''.join(SVG_DEFS[style][variant]))
+                svg.append('</g>')
+        svg.append('</defs>')
+
+    svg = ''.join(svg)
+
+    return format_html(
+        '{}',
+        mark_safe(svg),
+    )
 
 @register.filter
 def square_root(value):
@@ -536,3 +582,21 @@ def map_color(color, color_map):
     """
 
     return color_map[color]
+
+SVG_DEFS = {
+    'wmata': {
+        'wm-xf': [ # WMATA transfer
+            svg_circle(None, None, r, stroke, defs=True) for r, stroke in zip(
+                [1.2, .9, .6, .3],
+                ['#000', '#fff', '#000', '#fff'],
+            )
+        ],
+        'wm': [ # WMATA
+            svg_circle(None, None, r, stroke, defs=True) for r, stroke in zip(
+                [.6, .3],
+                ['#000', '#fff'],
+            )
+        ],
+    },
+}
+
