@@ -2,6 +2,7 @@
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, PermissionDenied
 from django.db.models import Count, F
 from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
 from django.urls import reverse_lazy
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.generic.base import TemplateView
@@ -88,6 +89,8 @@ class HomeView(TemplateView):
                     context['canvas_size'] = saved_map['global']['map_size'] * 20
                 except Exception:
                     context['canvas_size'] = 1600
+
+        context['today'] = timezone.now().date()
 
         return render(request, self.template_name, context)
 
