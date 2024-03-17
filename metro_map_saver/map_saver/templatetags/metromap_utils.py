@@ -21,6 +21,8 @@ logger = logging.getLogger(__name__)
 # See below for SVG_DEFS
 HAS_VARIANTS = [
     'circles-lg',
+    'circles-md',
+    'circles-sm',
 ]
 
 @register.simple_tag
@@ -167,26 +169,12 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
             svg.append(svg_circle(x, y, .5, '#fff', '#000', stroke_width))
         else:
             svg.append(svg_rect(x, y, width, height, x_offset, y_offset, fill, stroke, stroke_width, radius, rotation))
-    elif shape == 'circles-lg':
+    elif shape in 'circles-lg':
         svg.append(use_defs(x, y, f'clg{suffix}'))
     elif shape == 'circles-md':
-        if transfer and line_size >= 0.5:
-            svg.append(svg_circle(x, y, .5, '#fff'))
-            svg.append(svg_circle(x, y, .25, color))
-        elif transfer:
-            svg.append(svg_circle(x, y, .5, color))
-        else:
-            svg.append(svg_circle(x, y, .5, color))
-            svg.append(svg_circle(x, y, .25, '#fff'))
+        svg.append(use_defs(x, y, f'cmd{suffix}'))
     elif shape == 'circles-sm':
-        if transfer and line_size >= 0.5:
-            svg.append(svg_circle(x, y, .4, '#fff'))
-            svg.append(svg_circle(x, y, .2, color))
-        elif transfer:
-            svg.append(svg_circle(x, y, .4, color))
-        else:
-            svg.append(svg_circle(x, y, .4, color))
-            svg.append(svg_circle(x, y, .2, '#fff'))
+        svg.append(use_defs(x, y, f'csm{suffix}'))
 
     svg = ''.join(svg)
 
@@ -205,7 +193,8 @@ def use_defs(x, y, svg_def):
 
 def svg_circle(x, y, r, fill, stroke=None, stroke_width=0.5, defs=False):
     if defs:
-        return f'<circle r="{r}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}"/>'
+        stroke = f' stroke="{stroke}" stroke-width="{stroke_width}"' if stroke else ''
+        return f'<circle r="{r}" fill="{fill}"{stroke}/>'
     if stroke:
         return f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}"/>'
     return f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}"/>'
@@ -510,7 +499,7 @@ def station_text(station):
     )
 
 @register.simple_tag
-def get_station_styles_in_use(stations, default_shape):
+def get_station_styles_in_use(stations, default_shape, line_size):
 
     """ Iterate through all stations and determine which ones are in use;
             this will allow me to add just those station styles to the <defs>
@@ -560,6 +549,24 @@ def get_station_styles_in_use(stations, default_shape):
                     [.6, .3],
                     [f'#{color}', '#fff'],
                 )
+            ]
+        elif style in ('circles-md', 'circles-sm'):
+            if style == 'circles-md':
+                key = 'cmd'
+                radii = [.5, .25]
+            else:
+                key = 'csm'
+                radii = [.4, .2]
+            key = f'{key}{suffix}'
+            if transfer and line_size >= 0.5:
+                colors = ['#fff', f'#{color}']
+            elif transfer:
+                colors = [f'#{color}']
+            else:
+                colors = [f'#{color}', '#fff']
+            color_variants[style][key] = [
+                svg_circle(None, None, r, stroke, defs=True)
+                for r, stroke in zip(radii, colors)
             ]
 
     svg = []
