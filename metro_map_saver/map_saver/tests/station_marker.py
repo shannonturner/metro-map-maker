@@ -1,4 +1,5 @@
 from map_saver.templatetags.metromap_utils import (
+    get_station_styles_in_use,
     station_marker,
 )
 from map_saver.validator import ALLOWED_LINE_WIDTHS
@@ -74,22 +75,31 @@ class StationMarkerTest(TestCase):
         {'xy': (37,1), 'color': '0896d7', 'style': 'rect-round', 'expected': 'singleton', 'line_direction': 'diagonal-ne'},
     ]
 
-    def test_wmata(self, line_color='bd1038', station_color='#000', style='wmata'):
+    def test_wmata(self, line_color='bd1038', station_color='#000', style='wmata', ref='wm'):
 
         """ Confirm the styling of WMATA (Classic) stations
         """
 
+        expected_circles = 6
+        expected_colors = 3
+
         station = {'xy': (1,1), 'style': style, 'color': line_color}
         marker = station_marker(station, 'wmata', 1, {}, {})
-        self.assertEqual(marker.count('<circle cx="1" cy="1"'), 2)
-        self.assertEqual(marker.count('#fff'), 1)
-        self.assertEqual(marker.count(station_color), 1)
+        self.assertEqual(marker, f'<use x="1" y="1" href="#{ref}"/>')
+        svg_defs = get_station_styles_in_use([station], 'circles-thin', .5)
+        self.assertEqual(svg_defs.count('<circle'), expected_circles)
+        self.assertEqual(svg_defs.count(f'fill="{station_color}"'), expected_colors)
+        self.assertEqual(svg_defs.count('fill="#fff"'), expected_colors)
+        self.assertIn(f'<g id="{ref}">', svg_defs)
 
         station['transfer'] = 1
         marker = station_marker(station, 'wmata', 1, {}, {})
-        self.assertEqual(marker.count('<circle cx="1" cy="1"'), 4)
-        self.assertEqual(marker.count('#fff'), 2)
-        self.assertEqual(marker.count(station_color), 2)
+        self.assertEqual(marker, f'<use x="1" y="1" href="#{ref}-xf"/>')
+        svg_defs = get_station_styles_in_use([station], 'circles-thin', .5)
+        self.assertEqual(svg_defs.count('<circle'), expected_circles)
+        self.assertEqual(svg_defs.count(f'fill="{station_color}"'), expected_colors)
+        self.assertEqual(svg_defs.count('fill="#fff"'), expected_colors)
+        self.assertIn(f'<g id="{ref}-xf">', svg_defs)
 
     def test_circles_lg(self):
 
@@ -97,7 +107,28 @@ class StationMarkerTest(TestCase):
             with the line color instead
         """
 
-        self.test_wmata(line_color='bd1038', station_color='#bd1038', style='circles-lg')
+        expected_circles = 2
+        expected_colors = 1
+        line_color = 'bd1038'
+        ref = 'clg'
+
+        station = {'xy': (1,1), 'style': 'circles-lg', 'color': line_color}
+        marker = station_marker(station, 'wmata', 1, {}, {})
+        self.assertEqual(marker, f'<use x="1" y="1" href="#{ref}-{line_color}"/>')
+        svg_defs = get_station_styles_in_use([station], 'circles-thin', .5)
+        self.assertEqual(svg_defs.count('<circle'), expected_circles)
+        self.assertEqual(svg_defs.count(f'fill="#{line_color}"'), expected_colors)
+        self.assertEqual(svg_defs.count('fill="#fff"'), expected_colors)
+        self.assertIn(f'<g id="{ref}-{line_color}">', svg_defs)
+
+        station['transfer'] = 1
+        marker = station_marker(station, 'wmata', 1, {}, {})
+        self.assertEqual(marker, f'<use x="1" y="1" href="#{ref}-xf-{line_color}"/>')
+        svg_defs = get_station_styles_in_use([station], 'circles-thin', .5)
+        self.assertEqual(svg_defs.count('<circle'), expected_circles * 2)
+        self.assertEqual(svg_defs.count(f'fill="#{line_color}"'), expected_colors * 2)
+        self.assertEqual(svg_defs.count('fill="#fff"'), expected_colors * 2)
+        self.assertIn(f'<g id="{ref}-xf-{line_color}">', svg_defs)
 
     def test_circles_md(self):
 
@@ -110,18 +141,24 @@ class StationMarkerTest(TestCase):
         station = {'xy': (1,1), 'style': 'circles-md', 'color': 'bd1038'}
         # Non-transfer
         marker = station_marker(station, 'wmata', 0.25, {}, {})
-        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.5" fill="#bd1038"'), 1)
-        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.25" fill="#fff"'), 1)
+        self.assertEqual(marker, '<use x="1" y="1" href="#cmd-bd1038"/>')
+        svg_defs = get_station_styles_in_use([station], 'circles-thin', .25)
+        self.assertEqual(svg_defs.count('<circle r="0.5" fill="#bd1038"'), 1)
+        self.assertEqual(svg_defs.count('<circle r="0.25" fill="#fff"'), 1)
 
         # Transfer (thin line)
         station['transfer'] = 1
         marker = station_marker(station, 'wmata', 0.25, {}, {})
-        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.5" fill="#bd1038"'), 1)
+        self.assertEqual(marker, '<use x="1" y="1" href="#cmd-xf-bd1038"/>')
+        svg_defs = get_station_styles_in_use([station], 'circles-thin', .25)
+        self.assertEqual(svg_defs.count('<circle r="0.5" fill="#bd1038"'), 1)
 
         # Transfer (thick line)
         marker = station_marker(station, 'wmata', 0.5, {}, {})
-        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.5" fill="#fff"'), 1)
-        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.25" fill="#bd1038"'), 1)
+        self.assertEqual(marker, '<use x="1" y="1" href="#cmd-xf-bd1038"/>')
+        svg_defs = get_station_styles_in_use([station], 'circles-thin', .5)
+        self.assertEqual(svg_defs.count('<circle r="0.5" fill="#fff"'), 1)
+        self.assertEqual(svg_defs.count('<circle r="0.25" fill="#bd1038"'), 1)
 
     def test_circles_sm(self):
 
@@ -134,18 +171,24 @@ class StationMarkerTest(TestCase):
         station = {'xy': (1,1), 'style': 'circles-sm', 'color': 'bd1038'}
         # Non-transfer
         marker = station_marker(station, 'wmata', 0.25, {}, {})
-        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.4" fill="#bd1038"'), 1)
-        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.2" fill="#fff"'), 1)
+        self.assertEqual(marker, '<use x="1" y="1" href="#csm-bd1038"/>')
+        svg_defs = get_station_styles_in_use([station], 'circles-thin', .25)
+        self.assertEqual(svg_defs.count('<circle r="0.4" fill="#bd1038"'), 1)
+        self.assertEqual(svg_defs.count('<circle r="0.2" fill="#fff"'), 1)
 
         # Transfer (thin line)
         station['transfer'] = 1
         marker = station_marker(station, 'wmata', 0.25, {}, {})
-        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.4" fill="#bd1038"'), 1)
+        self.assertEqual(marker, '<use x="1" y="1" href="#csm-xf-bd1038"/>')
+        svg_defs = get_station_styles_in_use([station], 'circles-thin', .25)
+        self.assertEqual(svg_defs.count('<circle r="0.4" fill="#bd1038"'), 1)
 
         # Transfer (thick line)
         marker = station_marker(station, 'wmata', 0.5, {}, {})
-        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.4" fill="#fff"'), 1)
-        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.2" fill="#bd1038"'), 1)
+        self.assertEqual(marker, '<use x="1" y="1" href="#csm-xf-bd1038"/>')
+        svg_defs = get_station_styles_in_use([station], 'circles-thin', .5)
+        self.assertEqual(svg_defs.count('<circle r="0.4" fill="#fff"'), 1)
+        self.assertEqual(svg_defs.count('<circle r="0.2" fill="#bd1038"'), 1)
 
     def test_default_shape(self):
 
@@ -155,8 +198,10 @@ class StationMarkerTest(TestCase):
 
         station = {'xy': (1,1), 'color': 'bd1038'}
         marker = station_marker(station, 'circles-sm', 0.125, {}, {})
-        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.4" fill="#bd1038"'), 1)
-        self.assertEqual(marker.count('<circle cx="1" cy="1" r="0.2" fill="#fff"'), 1)
+        self.assertEqual(marker, '<use x="1" y="1" href="#csm-bd1038"/>')
+        svg_defs = get_station_styles_in_use([station], 'circles-sm', .125)
+        self.assertEqual(svg_defs.count('<circle r="0.4" fill="#bd1038"'), 1)
+        self.assertEqual(svg_defs.count('<circle r="0.2" fill="#fff"'), 1)
 
     def test_circles_thin(self):
 
@@ -181,11 +226,19 @@ class StationMarkerTest(TestCase):
             elif station['expected'] == 'singleton':
                 station['transfer'] = 0
                 marker = station_marker(station, 'circles-thin', 0.125, self.points_by_color, self.stations)
-                self.assertEqual(marker, f'<circle cx="{x}" cy="{y}" r="0.5" fill="#fff" stroke="#000" stroke-width="0.1"/>')
+                self.assertEqual(marker, f'<use x="{x}" y="{y}" href="#ct"/>')
+
+                svg_defs = get_station_styles_in_use([station], 'wmata', .5)
+                self.assertEqual(svg_defs.count('<circle r="0.5" fill="#fff" stroke="#000" stroke-width="0.1"/>'), 1)
+                self.assertIn(f'<g id="ct">', svg_defs)
 
                 station['transfer'] = 1
                 marker = station_marker(station, 'circles-thin', 0.125, self.points_by_color, self.stations)
-                self.assertEqual(marker, f'<circle cx="{x}" cy="{y}" r="0.5" fill="#fff" stroke="#000" stroke-width="0.2"/>')
+                self.assertEqual(marker, f'<use x="{x}" y="{y}" href="#ct-xf"/>')
+
+                svg_defs = get_station_styles_in_use([station], 'wmata', .5)
+                self.assertEqual(svg_defs.count('<circle r="0.5" fill="#fff" stroke="#000" stroke-width="0.2"/>'), 1)
+                self.assertIn(f'<g id="ct-xf">', svg_defs)
 
     def test_rectangles_connected(self):
 
