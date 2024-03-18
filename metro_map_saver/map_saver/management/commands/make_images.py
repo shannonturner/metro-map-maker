@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+from django.db.models import Q
 from map_saver.models import SavedMap
 
 import json
@@ -70,8 +71,11 @@ class Command(BaseCommand):
             needs_images = SavedMap.objects.filter(pk__in=range(start, end))
             self.stdout.write(f"(Re-)Generating images and thumbnails for {limit} maps starting with PK {start}.")
         else:
-            needs_images = SavedMap.objects.filter(thumbnail_svg__in=[None, ''])
-            self.stdout.write(f"Generating images and thumbnails for {limit} maps that don't have them.")
+            # .filter(thumbnail_svg__in=[None, '']) worked great on staging until it didn't;
+            #   then staging would only match on thumbnail_svg=None;
+            #   using Q() objects works equally well on both
+            needs_images = SavedMap.objects.filter(Q(thumbnail_svg=None) | Q(thumbnail_svg=''))
+            self.stdout.write(f"Generating images and thumbnails for up to {limit} maps that don't have them.")
 
         needs_images = needs_images.order_by('id')[:limit]
 
