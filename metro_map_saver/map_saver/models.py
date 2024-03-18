@@ -50,9 +50,9 @@ class SavedMap(models.Model):
     """
 
     urlhash = models.CharField(max_length=8)
-    mapdata = models.TextField() # Consider: Delete after migration to v2 representation
+    mapdata = models.TextField(blank=True) # Consider: Delete after migration to v2 representation
     # v2+ representation of map data
-    data = models.JSONField(default=dict)
+    data = models.JSONField(default=dict, blank=True)
     # gallery_visible: should this be shown in the default view of the Admin Gallery?
     gallery_visible = models.BooleanField(default=True)
     # publicly_visible: should this be shown in the publicly-visible gallery?
@@ -60,10 +60,10 @@ class SavedMap(models.Model):
     publicly_visible = models.BooleanField(default=False)
     name = models.CharField(max_length=255, blank=True, default='')
     thumbnail = models.TextField(blank=True, default='') # Consider: Delete after thumbnail files generation migration
-    thumbnail_svg = models.FileField(upload_to=get_thumbnail_filepath, null=True)
-    thumbnail_png = models.FileField(upload_to=get_thumbnail_filepath, null=True)
-    svg = models.FileField(upload_to=get_image_filepath, null=True)
-    png = models.FileField(upload_to=get_image_filepath, null=True)
+    thumbnail_svg = models.FileField(upload_to=get_thumbnail_filepath, null=True, blank=True)
+    thumbnail_png = models.FileField(upload_to=get_thumbnail_filepath, null=True, blank=True)
+    svg = models.FileField(upload_to=get_image_filepath, null=True, blank=True)
+    png = models.FileField(upload_to=get_image_filepath, null=True, blank=True)
     stations = models.TextField(blank=True, default='')
     station_count = models.IntegerField(default=-1)
     created_at = models.DateTimeField(auto_now_add=True)
