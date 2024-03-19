@@ -316,6 +316,10 @@ class SavedMap(models.Model):
             models.Index(fields=["station_count"]),
             models.Index(fields=["likes"]),
             models.Index(fields=["dislikes"]),
+            models.Index(fields=["svg"]),
+            models.Index(fields=["png"]),
+            models.Index(fields=["thumbnail_svg"]),
+            models.Index(fields=["thumbnail_png"]),
         ]
 
         permissions = (
