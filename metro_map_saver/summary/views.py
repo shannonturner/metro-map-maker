@@ -104,6 +104,7 @@ class MapsByDateMixin:
     queryset = MapsByDay.objects.all()
     date_field = 'day'
     context_object_name = 'maps'
+    allow_empty = True
 
     def group_maps_by_day(self, maps):
 
