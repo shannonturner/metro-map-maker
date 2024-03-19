@@ -868,6 +868,7 @@ class MapsPerDayView(DayArchiveView):
     date_field = 'created_at'
     paginate_by = 50
     context_object_name = 'maps'
+    allow_empty = True
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
