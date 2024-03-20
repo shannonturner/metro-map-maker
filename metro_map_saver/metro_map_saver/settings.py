@@ -169,12 +169,8 @@ USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.11/howto/static-files/
-
-STATIC_ROOT = '/home/shannonturner/metromapmaker.com/public/static/'
-
-# URL to use when referring to static files located in STATIC_ROOT.
+STATIC_ROOT = '/home/sturner/apps/static_metromapmaker/'
 STATIC_URL = '/static/'
 
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = '/home/sturner/apps/static_metromapmaker/media/'
 MEDIA_URL = 'media/'
