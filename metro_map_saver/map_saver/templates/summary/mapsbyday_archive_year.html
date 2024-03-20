@@ -85,11 +85,11 @@
         {% for mb_month in maps_by_month %}
         <div class="col-sm-6 col-md-4 col-xxl-3 mb-3 mt-3"><div class="card h-100 text-center">
             <div class="card-header styling-redline">
-                <h3 class="card-title mt-2">
+                <h2 class="card-title mt-2">
                     <a class="bg-styled" href="{% url 'calendar-month' year.year month_header_links|access_list:forloop.counter0|date:'n' %}">{{ mb_month.grouper }} {{ year.year }}</a>
-                </h3>
+                </h2>
             </div>
-            <div class="card-body d-flex flex-column">
+            <div class="card-body d-flex flex-column p-0">
                 <h1 class="mt-3"><a class="align-self-baseline mb-2" href="{% url 'calendar-month' year.year month_header_links|access_list:forloop.counter0|date:'n' %}">
                     {{ map_count_by_month|access_list:forloop.counter0|intcomma }} maps
                 </a></h1>

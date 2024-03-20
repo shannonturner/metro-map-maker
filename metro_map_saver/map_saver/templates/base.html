@@ -73,10 +73,10 @@
 
         {% block nav-breadcrumbs %}
           <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom sticky-top">
-            <ol class="breadcrumb justify-content-start {% block breadcrumb-classes %}styling-{{ styling_class }}{% endblock breadcrumb-classes %}">
+            <ol class="breadcrumb justify-content-start mb-0 ms-4 {% block breadcrumb-classes %}styling-{{ styling_class }}{% endblock breadcrumb-classes %}">
             {% block breadcrumbs %}
             <li class="nav-item">
-                <a class="navbar-brand nav-link" href="/"><h3 id="title"><span class="M">M</span>etro<span class="M">M</span>ap<span class="M">M</span>aker</h3></a>
+                <a class="navbar-brand nav-link" href="/"><h3 id="title" class="d-flex align-items-center"><span class="M">M</span>etro<span class="M">M</span>ap<span class="M">M</span>aker</h3></a>
             </li>
             <li class="navbar-text nav-item">
                 <a class="nav-link" href="{% url 'public_gallery' %}">My Favorite Maps</a>
