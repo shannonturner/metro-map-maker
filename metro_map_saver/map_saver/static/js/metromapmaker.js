@@ -2318,18 +2318,17 @@ $(document).ready(function() {
         color = color.id.slice(10, 16)
         if (!colorInUse(color)) {
           linesToDelete.push($('#rail-line-' + color))
+          delete activeMap['global']['lines'][color]
         }
       }
     } else if (mapDataVersion == 1) {
-      delete metroMap["global"]
+      delete metroMap["global"] // This is okay, it's a copy of activeMap, and we need to avoid matching what's in ['lines'] when we're doing an indexOf
       metroMap = JSON.stringify(metroMap)
       for (var a=0; a<allLines.length; a++) {
         if ($('.rail-line')[a].id != 'rail-line-new') {
           // Is this line in use at all?
           if (metroMap.indexOf('"line":"' + $('.rail-line')[a].id.slice(10, 16) + '"') == -1) {
             linesToDelete.push($('#' + $('.rail-line')[a].id));
-            // Also delete unused lines from the "Add lines this station serves" section
-            linesToDelete.push($('#add-line-' + [a].id));
             delete activeMap["global"]["lines"][$('.rail-line')[a].id.split("-").slice(2,3)]
           }
         }
