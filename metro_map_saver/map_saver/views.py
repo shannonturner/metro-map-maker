@@ -549,6 +549,8 @@ class MapDataView(TemplateView):
                 mapdata = json.dumps(saved_map.data)
             elif saved_map.mapdata:
                 mapdata = saved_map.mapdata
+            else:
+                mapdata = {}
             context['saved_map'] = mapdata
 
         return render(request, 'MapDataView.html', context)
