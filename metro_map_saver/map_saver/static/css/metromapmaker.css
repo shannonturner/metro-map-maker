@@ -76,7 +76,7 @@ button {
   overflow: auto;
 }
 
-#remix button, #mobile-browse button {
+#remix button, #mobile-browse button, #tool-download-svg {
   height: 6rem;
 }
 
