@@ -11,7 +11,7 @@ SVG_TEMPLATE = Template('''
 {% load metromap_utils %}
 {% if stations %}
     <style>text { font: 1px Helvetica; font-weight: 600; white-space: pre; dominant-baseline: central; } line { stroke-width: {{ line_size|default:1 }}; fill: none; stroke-linecap: round; stroke-linejoin: round; }{% for hex, class_name in color_map.items %} .{{ class_name }} { stroke: #{{ hex }} }{% endfor %}</style>
-    {% get_station_styles_in_use stations default_shape line_size %}
+    {% get_station_styles_in_use stations default_station_shape line_size %}
 {% else %}
     <style>line { stroke-width: {{ line_size|default:1 }}; fill: none; stroke-linecap: round; stroke-linejoin: round; }{% for hex, class_name in color_map.items %} .{{ class_name }} { stroke: #{{ hex }} }{% endfor %}</style>
 {% endif %}
