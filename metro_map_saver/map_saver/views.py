@@ -29,6 +29,7 @@ import os
 import pprint
 import pytz
 import random
+import requests
 import urllib.parse
 
 from taggit.models import Tag
@@ -930,10 +931,24 @@ class RateMapView(FormView, DetailView):
             choice = form.cleaned_data['choice']
             assert choice in ('likes', 'dislikes')
             mmap = SavedMap.objects.filter(urlhash=urlhash)
+            response = requests.post(
+                'https://www.google.com/recaptcha/api/siteverify',
+                data={
+                    'secret': settings.RECAPTCHA_SECRET_KEY,
+                    'response': form.cleaned_data['g-recaptcha-response'],
+                },
+            )
         except Exception as exc:
             pass
         else:
-            mmap.update(**{choice: F(choice) + 1})
+            try:
+                captcha = response.json().get('score', 0)
+                captcha = float(captcha)
+            except Exception:
+                captcha = 0
+            if captcha > 0.5:
+                mmap.update(**{choice: F(choice) + 1})
+
         return super().form_valid(form)
 
 class RandomMapView(RateMapView):

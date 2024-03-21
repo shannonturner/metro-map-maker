@@ -24,10 +24,13 @@
         <div class="d-flex justify-content-evenly align-items-center m-3">
             {% if map.svg %}
 
-                <form action="{% url 'rate' map.urlhash %}" method="post">
+                <form id="like-form" action="{% url 'rate' map.urlhash %}" method="post">
                     <input type="hidden" name="csrfmiddlewaretoken" class="csrf_token">
                     {{ form_like }}
-                    <button type="submit" class="bg-styled styling-redline w-100 fs-4">
+                    <button class="g-recaptcha bg-styled styling-redline w-100 fs-4"
+                        data-sitekey="6LcurJ8pAAAAAAL2AcDczWloXEr3t78Y3Yr0hN0W"
+                        data-callback='submitLike'
+                        data-action='like_map'>
                         {% if map.likes %}
                             <i class="bi bi-heart"></i> {{ map.likes|intcomma }} Likes
                         {% else %}
@@ -36,10 +39,13 @@
                     </button>
                 </form>
 
-                <form action="{% url 'rate' map.urlhash %}" method="post">
+                <form id="dislike-form" action="{% url 'rate' map.urlhash %}" method="post">
                     <input type="hidden" name="csrfmiddlewaretoken" class="csrf_token">
                     {{ form_dislike }}
-                    <button type="submit" class="bg-styled styling-silverline w-100 fs-4">
+                    <button class="g-recaptcha bg-styled styling-silverline w-100 fs-4"
+                        data-sitekey="6LcurJ8pAAAAAAL2AcDczWloXEr3t78Y3Yr0hN0W"
+                        data-callback='submitDislike'
+                        data-action='dislike_map'>
                         {% if map.dislikes %}
                             <i class="bi bi-x-circle"></i> {{ map.dislikes|intcomma }} Dislikes
                         {% else %}
@@ -70,6 +76,15 @@
         $(document).ready(function() {
             $('.csrf_token').val(csrftoken)
         })
+    </script>
+    <script src="https://www.google.com/recaptcha/api.js"></script>
+    <script>
+        function submitLike(token) {
+            document.getElementById("like-form").submit();
+        }
+        function submitDislike(token) {
+            document.getElementById("dislike-form").submit();
+        }
     </script>
 
 {% endblock content %}

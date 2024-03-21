@@ -48,3 +48,8 @@ class RateForm(forms.Form):
 
     choice = forms.ChoiceField(widget=forms.HiddenInput, choices=RATING_CHOICES)
     urlhash = forms.CharField(widget=forms.HiddenInput)
+
+    def clean(self):
+        data = self.cleaned_data
+        data['g-recaptcha-response'] = self.data.get('g-recaptcha-response')
+        return data

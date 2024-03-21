@@ -5,4 +5,5 @@ django-taggit==5.0.1
 mysqlclient==2.2.1
 pymemcache==4.0.0
 pytz==2023.3.post1
+requests==2.31.0
 sqlparse==0.4.4
