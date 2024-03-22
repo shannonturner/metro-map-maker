@@ -1439,6 +1439,7 @@ function autoLoad() {
   } else {
     mapDataVersion = 1
   }
+  compatibilityModeIndicator()
   mapSize = setMapSize(activeMap, mapDataVersion > 1)
   loadMapFromObject(activeMap)
 
