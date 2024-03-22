@@ -353,7 +353,7 @@
       </button>
 
       {% if saved_map.svg %}
-        <a href="{{ saved_map.svg.url }}" download="{{ saved_map.urlhash }}.svg" style="width: 100%;"><button id="tool-download-svg" class="width-100 has-tooltip styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download your map as a print-quality SVG file">
+        <a href="{{ saved_map.svg.url }}" download="{{ saved_map.urlhash }}.svg" style="width: 100%;"><button id="tool-download-svg" class="width-100 has-tooltip styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download the map '{{ saved_map.urlhash }}' as a print-quality SVG file (does not include your edits, if any)">
           <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
           <span class="button-label">Download (SVG)</span>
         </button></a>
