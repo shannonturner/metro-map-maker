@@ -964,6 +964,10 @@ class IdentifyMapView(RecaptchaMixin, FormView):
 
         return HttpResponseRedirect(self.get_success_url(urlhash))
 
+    def form_invalid(self, form):
+        urlhash = form.cleaned_data['urlhash']
+        return HttpResponseRedirect(self.get_success_url(urlhash))
+
 
 class RateMapView(RecaptchaMixin, FormView, DetailView):
     model = SavedMap
@@ -1003,6 +1007,10 @@ class RateMapView(RecaptchaMixin, FormView, DetailView):
                 already_rated = self.request.session.get('rated', [])
                 self.request.session['rated'] = already_rated + [mmap.first().id]
 
+        return HttpResponseRedirect(self.get_success_url(urlhash))
+
+    def form_invalid(self, form):
+        urlhash = form.cleaned_data['urlhash']
         return HttpResponseRedirect(self.get_success_url(urlhash))
 
 class RandomMapView(RateMapView):
