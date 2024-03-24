@@ -78,24 +78,23 @@
                     <div class="already-rated already-disliked fs-4"><i class="bi bi-x-circle"></i> {{ map.dislikes|intcomma }} Dislikes</div>
                 {% endif %}
 
-            {% endif %}
-
-            {% if identify_form %}
-            <button id="show-identify-form" class="bg-styled styling-greenline fs-4"><i class="bi bi-pin-map"></i> Identify City</button>
-            <fieldset id="identify-form-fieldset" style="display: none;">
-                <form id="identify-form" action="{% url 'identify' map.urlhash %}" method="post">
-                    <input type="hidden" name="csrfmiddlewaretoken" class="csrf_token">
-                    {{ identify_form }}
-                    <button class="g-recaptcha bg-styled styling-greenline w-100 fs-4 mt-3"
-                        data-sitekey="6LcurJ8pAAAAAAL2AcDczWloXEr3t78Y3Yr0hN0W"
-                        data-callback='submitIdentify'
-                        data-action='identify_map'>
-                        Submit
-                    </button>
-                </form>
-            </fieldset>
-            {% else %}
-                <div class="already-rated already-identified fs-4"><i class="bi bi-pin-map"></i> Identified</div>
+                {% if identify_form %}
+                <button id="show-identify-form" class="bg-styled styling-greenline fs-4"><i class="bi bi-pin-map"></i> Identify City</button>
+                <fieldset id="identify-form-fieldset" style="display: none;">
+                    <form id="identify-form" action="{% url 'identify' map.urlhash %}" method="post">
+                        <input type="hidden" name="csrfmiddlewaretoken" class="csrf_token">
+                        {{ identify_form }}
+                        <button class="g-recaptcha bg-styled styling-greenline w-100 fs-4 mt-3"
+                            data-sitekey="6LcurJ8pAAAAAAL2AcDczWloXEr3t78Y3Yr0hN0W"
+                            data-callback='submitIdentify'
+                            data-action='identify_map'>
+                            Submit
+                        </button>
+                    </form>
+                </fieldset>
+                {% else %}
+                    <div class="already-rated already-identified fs-4"><i class="bi bi-pin-map"></i> Identified</div>
+                {% endif %}
             {% endif %}
 
             <a href="{% url 'home_map' map.urlhash %}">
@@ -133,6 +132,7 @@
         document.getElementById('show-identify-form').addEventListener('click', function() {
             this.style = 'display: none'
             document.getElementById('identify-form-fieldset').style = ''
+            document.getElementById('id_name').focus()
         })
     </script>
 

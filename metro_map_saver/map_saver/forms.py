@@ -57,7 +57,7 @@ class RateForm(forms.Form):
 class IdentifyForm(forms.ModelForm):
 
     urlhash = forms.CharField(widget=forms.HiddenInput)
-    map_type = forms.ChoiceField(choices=(('', '--------'), *MAP_TYPE_CHOICES))
+    map_type = forms.ChoiceField(choices=(('', '--------'), *MAP_TYPE_CHOICES), required=False)
 
     def clean_name(self):
         name = self.cleaned_data['name'] or ''

@@ -130,7 +130,7 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
-        'LOCATION': 'unix:/home/sturner/memcached.sock',
+        'LOCATION': 'unix:/home/sturner/apps/metromapmaker/memcached.sock',
         "TIMEOUT": 60 * 15,
     }
 }
