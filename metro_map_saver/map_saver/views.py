@@ -365,6 +365,7 @@ class MapSimilarView(TemplateView):
 class CreatorNameMapView(TemplateView):
 
     # @method_decorator(csrf_exempt) # Break glass in case of CSRF failure
+    @method_decorator(never_cache)
     def post(self, request, **kwargs):
 
         """ Allow creators to name / "tag" their maps
@@ -981,6 +982,7 @@ class RateMapView(RecaptchaMixin, FormView, DetailView):
     def get_success_url(self, urlhash):
         return reverse_lazy('rate', args=(urlhash, ))
 
+    @method_decorator(cache_control(max_age=60))
     @method_decorator(ensure_csrf_cookie)
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()

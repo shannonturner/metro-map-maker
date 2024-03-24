@@ -48,7 +48,7 @@ urlpatterns = [
     path('calendar/<int:year>/<int:month>/<int:day>/', map_saver.views.MapsPerDayView.as_view(month_format='%m'), name='calendar-day'),
 
     path('random/', map_saver.views.RandomMapView.as_view(), name='random'),
-    path('sameday/<slug:urlhash>', map_saver.views.SameDayView.as_view(), name='sameday'),
+    path('sameday/<slug:urlhash>', cache_page(60)(map_saver.views.SameDayView.as_view()), name='sameday'),
     path('best/', map_saver.views.HighestRatedMapsView.as_view(), name='best'),
 
     path('credits/', map_saver.views.CreditsView.as_view(), name='credits'),
