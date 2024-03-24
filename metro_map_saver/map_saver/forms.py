@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import SavedMap
+from .models import SavedMap, IdentifyMap, MAP_TYPE_CHOICES
 from .validator import (
     hex64,
     validate_metro_map,
@@ -53,3 +53,29 @@ class RateForm(forms.Form):
         data = self.cleaned_data
         data['g-recaptcha-response'] = self.data.get('g-recaptcha-response')
         return data
+
+class IdentifyForm(forms.ModelForm):
+
+    urlhash = forms.CharField(widget=forms.HiddenInput)
+    map_type = forms.ChoiceField(choices=(('', '--------'), *MAP_TYPE_CHOICES))
+
+    def clean_name(self):
+        name = self.cleaned_data['name'] or ''
+        return name.strip()
+
+    def clean_map_type(self):
+        map_type = self.cleaned_data['map_type'] or ''
+        return map_type.strip()
+
+    def clean(self):
+        data = self.cleaned_data
+        data['g-recaptcha-response'] = self.data.get('g-recaptcha-response')
+        return data
+
+    class Meta:
+        model = IdentifyMap
+        fields = [
+            'urlhash',
+            'name',
+            'map_type',
+        ]

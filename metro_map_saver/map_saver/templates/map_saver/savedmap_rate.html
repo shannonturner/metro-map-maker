@@ -2,6 +2,25 @@
 
 {% load humanize %}
 
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        ul.errorlist { display: none }
+        fieldset#identify-form-fieldset {
+            width: 20%;
+        }
+        fieldset#identify-form-fieldset div {
+            display: flex;
+            align-items: baseline;
+            gap: 1rem;
+        }
+        fieldset#identify-form-fieldset div label {
+            width: 40%;
+        }
+
+    </style>
+{% endblock extrastyle %}
+
 {% block breadcrumbs %}
 
     {{ block.super }}
@@ -24,6 +43,7 @@
         <div class="d-flex justify-content-evenly align-items-center m-3">
             {% if map.svg %}
 
+                {% if form_like and form_dislike %}
                 <form id="like-form" action="{% url 'rate' map.urlhash %}" method="post">
                     <input type="hidden" name="csrfmiddlewaretoken" class="csrf_token">
                     {{ form_like }}
@@ -53,7 +73,29 @@
                         {% endif %}
                     </button>
                 </form>
+                {% else %}
+                    <div class="already-rated already-liked fs-4"><i class="bi bi-heart"></i> {{ map.likes|intcomma }} Likes</div>
+                    <div class="already-rated already-disliked fs-4"><i class="bi bi-x-circle"></i> {{ map.dislikes|intcomma }} Dislikes</div>
+                {% endif %}
 
+            {% endif %}
+
+            {% if identify_form %}
+            <button id="show-identify-form" class="bg-styled styling-greenline fs-4"><i class="bi bi-pin-map"></i> Identify City</button>
+            <fieldset id="identify-form-fieldset" style="display: none;">
+                <form id="identify-form" action="{% url 'identify' map.urlhash %}" method="post">
+                    <input type="hidden" name="csrfmiddlewaretoken" class="csrf_token">
+                    {{ identify_form }}
+                    <button class="g-recaptcha bg-styled styling-greenline w-100 fs-4 mt-3"
+                        data-sitekey="6LcurJ8pAAAAAAL2AcDczWloXEr3t78Y3Yr0hN0W"
+                        data-callback='submitIdentify'
+                        data-action='identify_map'>
+                        Submit
+                    </button>
+                </form>
+            </fieldset>
+            {% else %}
+                <div class="already-rated already-identified fs-4"><i class="bi bi-pin-map"></i> Identified</div>
             {% endif %}
 
             <a href="{% url 'home_map' map.urlhash %}">
@@ -85,6 +127,13 @@
         function submitDislike(token) {
             document.getElementById("dislike-form").submit();
         }
+        function submitIdentify(token) {
+            document.getElementById("identify-form").submit();
+        }
+        document.getElementById('show-identify-form').addEventListener('click', function() {
+            this.style = 'display: none'
+            document.getElementById('identify-form-fieldset').style = ''
+        })
     </script>
 
 {% endblock content %}

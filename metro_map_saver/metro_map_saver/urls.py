@@ -36,6 +36,8 @@ urlpatterns = [
     path('save/', map_saver.views.MapDataView.as_view(), name='save_map'),
     path('load/<slug:urlhash>', map_saver.views.MapDataView.as_view(), name='load_map'),
     path('name/', map_saver.views.CreatorNameMapView.as_view(), name='name_map'),
+    path('rate/<slug:urlhash>', map_saver.views.RateMapView.as_view(), name='rate'),
+    path('identify/<slug:urlhash>', map_saver.views.IdentifyMapView.as_view(), name='identify'),
 
     # Stats, using summary for performance
     path('calendar/', summary.views.MapsPerMonthView.as_view(month_format='%m'), name='calendar'),
@@ -45,7 +47,6 @@ urlpatterns = [
 
     path('calendar/<int:year>/<int:month>/<int:day>/', map_saver.views.MapsPerDayView.as_view(month_format='%m'), name='calendar-day'),
 
-    path('rate/<slug:urlhash>', map_saver.views.RateMapView.as_view(), name='rate'),
     path('random/', map_saver.views.RandomMapView.as_view(), name='random'),
     path('sameday/<slug:urlhash>', map_saver.views.SameDayView.as_view(), name='sameday'),
     path('best/', map_saver.views.HighestRatedMapsView.as_view(), name='best'),

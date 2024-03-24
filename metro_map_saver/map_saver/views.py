@@ -1,6 +1,7 @@
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, PermissionDenied
 from django.db.models import Count, F
+from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.urls import reverse_lazy
@@ -38,9 +39,10 @@ from moderate.models import ActivityLog
 from citysuggester.models import TravelSystem
 from .forms import (
     CreateMapForm,
+    IdentifyForm,
     RateForm,
 )
-from .models import SavedMap
+from .models import SavedMap, IdentifyMap
 from .validator import is_hex, sanitize_string, validate_metro_map, hex64
 
 logger = logging.getLogger(__name__)
@@ -907,7 +909,63 @@ class SameDayView(ListView):
             created_at__lt=this_map.created_at.date() + datetime.timedelta(days=1),
         )
 
-class RateMapView(FormView, DetailView):
+class RecaptchaMixin:
+
+    def is_submission_valid(self, form):
+
+        """ Check whether the submitted form was done by a human
+        """
+
+        try:
+            response = requests.post(
+                'https://www.google.com/recaptcha/api/siteverify',
+                data={
+                    'secret': settings.RECAPTCHA_SECRET_KEY,
+                    'response': form.cleaned_data['g-recaptcha-response'],
+                },
+            ).json()
+        except Exception as exc:
+            pass
+        else:
+            try:
+                is_valid = response.get('success')
+                captcha = response.get('score', 0)
+                captcha = float(captcha)
+            except Exception as exc:
+                captcha = 0
+            return (is_valid and captcha > settings.RECAPTCHA_VALID_THRESHOLD)
+
+class IdentifyMapView(RecaptchaMixin, FormView):
+    model = IdentifyMap
+    form_class = IdentifyForm
+    fields = ['name', 'map_type']
+
+    def get_success_url(self, urlhash):
+        return reverse_lazy('rate', args=(urlhash, ))
+
+    def form_valid(self, form):
+        try:
+            urlhash = form.cleaned_data['urlhash']
+            name = form.cleaned_data['name']
+            map_type = form.cleaned_data['map_type']
+            mmap = SavedMap.objects.filter(urlhash=urlhash).first()
+            is_submission_valid = self.is_submission_valid(form)
+        except Exception as exc:
+            pass
+        else:
+            if is_submission_valid:
+                self.model.objects.create(
+                    saved_map=mmap,
+                    name=name,
+                    map_type=map_type,
+                )
+                already_identified = self.request.session.get('identified', [])
+                self.request.session['identified'] = already_identified + [mmap.id]
+
+        return HttpResponseRedirect(self.get_success_url(urlhash))
+
+
+class RateMapView(RecaptchaMixin, FormView, DetailView):
     model = SavedMap
     context_object_name = 'map'
     slug_field = 'urlhash'
@@ -915,14 +973,19 @@ class RateMapView(FormView, DetailView):
     template_name = 'map_saver/savedmap_rate.html'
 
     form_class = RateForm
-    success_url = reverse_lazy('random')
+
+    def get_success_url(self, urlhash):
+        return reverse_lazy('rate', args=(urlhash, ))
 
     @method_decorator(ensure_csrf_cookie)
     def get(self, request, *args, **kwargs):
         self.object = self.get_object()
         context = self.get_context_data(object=self.object, map=self.object)
-        context['form_like'] = self.form_class(dict(urlhash=self.object.urlhash, choice='likes'))
-        context['form_dislike'] = self.form_class(dict(urlhash=self.object.urlhash, choice='dislikes'))
+        if not self.object.id in request.session.get('rated', []):
+            context['form_like'] = self.form_class(dict(urlhash=self.object.urlhash, choice='likes'))
+            context['form_dislike'] = self.form_class(dict(urlhash=self.object.urlhash, choice='dislikes'))
+        if not self.object.id in request.session.get('identified', []):
+            context['identify_form'] = IdentifyForm(dict(urlhash=self.object.urlhash))
         return self.render_to_response(context)
 
     def form_valid(self, form):
@@ -931,25 +994,16 @@ class RateMapView(FormView, DetailView):
             choice = form.cleaned_data['choice']
             assert choice in ('likes', 'dislikes')
             mmap = SavedMap.objects.filter(urlhash=urlhash)
-            response = requests.post(
-                'https://www.google.com/recaptcha/api/siteverify',
-                data={
-                    'secret': settings.RECAPTCHA_SECRET_KEY,
-                    'response': form.cleaned_data['g-recaptcha-response'],
-                },
-            )
+            is_submission_valid = self.is_submission_valid(form)
         except Exception as exc:
             pass
         else:
-            try:
-                captcha = response.json().get('score', 0)
-                captcha = float(captcha)
-            except Exception:
-                captcha = 0
-            if captcha > 0.5:
+            if is_submission_valid:
                 mmap.update(**{choice: F(choice) + 1})
+                already_rated = self.request.session.get('rated', [])
+                self.request.session['rated'] = already_rated + [mmap.first().id]
 
-        return super().form_valid(form)
+        return HttpResponseRedirect(self.get_success_url(urlhash))
 
 class RandomMapView(RateMapView):
     model = SavedMap

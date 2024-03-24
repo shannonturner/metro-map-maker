@@ -329,3 +329,27 @@ class SavedMap(models.Model):
             ('generate_thumbnail', "Can generate thumbnails for a map"),
             ('edit_publicly_visible', "Can edit a publicly visible map"),
         )
+
+
+MAP_TYPE_CHOICES = (
+    ('real', 'This is a real map of a real transit system'),
+    ('fantasy', 'This is a fantasy map of a real city/transit system'),
+    ('imaginary', 'This is an imaginary place'),
+)
+
+class IdentifyMap(models.Model):
+
+    """ Crowdsourcing where this map is located,
+        and other interesting details
+    """
+
+    saved_map = models.ForeignKey(
+        'SavedMap',
+        on_delete=models.CASCADE,
+        help_text="Which map this identification belongs to",
+    )
+    name = models.CharField(max_length=255)
+    map_type = models.CharField(max_length=64, choices=MAP_TYPE_CHOICES, null=True, blank=True)
+
+    def __str__(self):
+        return f'Identification #{self.id} for Map #{self.saved_map.id} ({self.saved_map.urlhash})'
