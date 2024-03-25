@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.files.base import ContentFile
+from django.core.files.images import ImageFile
 from django.db import models
 
 from citysuggester.utils import suggest_city
@@ -7,6 +8,7 @@ from taggit.managers import TaggableManager
 
 import datetime
 import json
+import subprocess
 import time
 
 
@@ -281,10 +283,27 @@ class SavedMap(models.Model):
 
         t1 = time.time()
 
+        thumbnail_png_filename = self.thumbnail_svg.path.removesuffix('.svg') + '.png'
+        png_filename = self.svg.path.removesuffix('.svg') + '.png'
+
+        subprocess.run([settings.PNG_CONVERSION_APP_PATH, *settings.PNG_CONVERSION_ARGS_THUMBNAIL, thumbnail_png_filename, self.thumbnail_svg.path], capture_output=True)
+
+        subprocess.run([settings.PNG_CONVERSION_APP_PATH, *settings.PNG_CONVERSION_ARGS, png_filename, self.svg.path], capture_output=True)
+
+        with open(thumbnail_png_filename, 'rb') as png_thumbnail_file:
+            self.thumbnail_png = ImageFile(png_thumbnail_file, name=thumbnail_png_filename)
+
+            with open(png_filename, 'rb') as png_file:
+                self.png = ImageFile(png_file, name=png_filename)
+                self.save()
+
+        t2 = time.time()
+
         # These report the same time, but the station generation is negligible
         now = datetime.datetime.now().replace(microsecond=0)
         output = f'[{now}] Wrote images for #{self.pk} ({self.created_at.date()}): {self.thumbnail_svg.path} ({self.thumbnail_svg.size:,} bytes in {t1 - t0:.2f}s)'
         output += f'\n[{now}] Wrote images for #{self.pk} ({self.created_at.date()}):     {self.svg.path} ({self.svg.size:,} bytes in {t1 - t0:.2f}s)'
+        output += f'\n\tWrote PNG thumbnail and file from SVG in {(t2 - t1):.2f}s.'
         return output
 
     def __str__(self):

@@ -177,3 +177,7 @@ STATIC_URL = '/static/'
 
 MEDIA_ROOT = '/home/sturner/apps/static_metromapmaker/media/'
 MEDIA_URL = 'media/'
+
+PNG_CONVERSION_APP_PATH = '/home/sturner/src/squashfs-root/AppRun'
+PNG_CONVERSION_ARGS = ['-w', '1600', '-h', '1600', '--export-filename']
+PNG_CONVERSION_ARGS_THUMBNAIL = ['-w', '160', '-h', '160', '--export-filename']
