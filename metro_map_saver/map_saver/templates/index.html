@@ -20,7 +20,7 @@
     <meta property="og:type" content="website">
     <meta property="og:description" content="Make the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
     {% if saved_map.png %}
-      <meta property="og:image" content="{{ saved_map.png.path }}">
+      <meta property="og:image" content="{{ saved_map.png.url }}">
     {% elif saved_map %}
       <meta property="og:image" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
     {% endif %}
@@ -33,7 +33,7 @@
     <meta name="twitter:description" content="Make the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
     <meta name="twitter:image:src" content="https://metromapmaker.com/static/assets/metromapmaker.png?version=2"> <!-- TODO: Replace w/ better generic promo -->
     {% if saved_map.png %}
-      <meta name="twitter:image:src" content="{{ saved_map.png.path }}">
+      <meta name="twitter:image:src" content="{{ saved_map.png.url }}">
     {% elif saved_map %}
       <meta name="twitter:image:src" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
     {% endif %}
