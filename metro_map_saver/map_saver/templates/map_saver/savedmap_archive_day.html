@@ -94,10 +94,10 @@
                     {% if map.svg %}
                         {# Only show Rate link if you'll be able to see the full SVG #}
                         <a href="{% url 'rate' map.urlhash %}"><i class="bi bi-heart"></i> Rate</a>
-                        <a href="{{ map.svg.url }}" download="metromapmaker-{{ map.urlhash }}.svg"><i class="bi bi-download"></i><i class="bi bi-file-earmark-image"></i> SVG (Print Quality)</a>
+                        <a href="{{ map.svg.url }}" download="metromapmaker-{{ map.urlhash }}.svg"><i class="bi bi-file-earmark-image"></i> SVG (Print)</a>
                     {% endif %}
                     {% if map.png %}
-                        <a href="{{ map.png.url }}" download="metromapmaker-{{ map.urlhash }}.png"><i class="bi bi-download"></i><i class="bi bi-file-earmark-image"></i> PNG (Sharing)</a>
+                        <a href="{{ map.png.url }}" download="metromapmaker-{{ map.urlhash }}.png"><i class="bi bi-file-earmark-image"></i> PNG (Share)</a>
                     {% endif %}
                 </div>
             </div>
