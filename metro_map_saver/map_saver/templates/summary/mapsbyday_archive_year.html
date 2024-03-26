@@ -6,7 +6,7 @@
 {% block breadcrumbs %}
     {{ block.super }}
 
-        {% if previous_year %}
+        {% if previous_year and previous_year|date:"Y"|add:0 > 2016 %}
             <li class="navbar-text nav-item">
                 <a href="{% url 'calendar-year' previous_year|date:"Y" %}" class="nav-link nav-previous">
                     <i class="bi bi-arrow-left-circle"></i> {{ previous_year|date:"Y" }}

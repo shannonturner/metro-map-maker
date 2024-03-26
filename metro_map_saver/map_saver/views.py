@@ -885,6 +885,9 @@ class MapsPerDayView(DayArchiveView):
         if context['day'] < datetime.date(2018, 9, 13):
             context['date_estimate_disclaimer'] = True
 
+        if context['day'] <= datetime.date(2017, 9, 6):
+            context['previous_day'] = False
+
         return context
 
     @method_decorator(cache_control(max_age=60))

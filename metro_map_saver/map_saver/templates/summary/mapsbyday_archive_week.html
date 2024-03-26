@@ -23,11 +23,15 @@
                     </a>
                 </li>
             {% else %}
+                {% if previous_week|date:"Y"|add:0 <= 2017 and previous_week|date:"W"|add:0 <= 35 %}
+                    {# Nothing to see before September 2017 #}
+                {% else %}
                 <li class="navbar-text nav-item">
                     <a href="{% url 'calendar-week' previous_week|date:'Y' previous_week|date:'W' %}" class="nav-link nav-previous">
                         {{ previous_week|date:"Y" }} Week #{{ previous_week|date:"W"}} <i class="bi bi-arrow-left-circle"></i>
                     </a>
                 </li>
+                {% endif %}
             {% endif %}
 
         {% endif %}

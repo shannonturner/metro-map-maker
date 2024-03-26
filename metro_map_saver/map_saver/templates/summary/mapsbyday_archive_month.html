@@ -5,11 +5,15 @@
 {% block breadcrumbs %}
     {{ block.super }}
         {% if previous_month %}
+            {% if previous_month|date:"Y"|add:0 <= 2017 and previous_month|date:"m"|add:0 <= 8 %}
+                {# Nothing to see before September 2017 #}
+            {% else %}
             <li class="navbar-text nav-item">
                 <a href="{% url 'calendar-month' previous_month|date:"Y" previous_month|date:"m" %}" class="nav-link nav-previous">
                     <i class="bi bi-arrow-left-circle"></i> {{ previous_month|date:"F Y" }}
                 </a>
             </li>
+            {% endif %}
         {% endif %}
 
         {% if previous_month and next_month %}
