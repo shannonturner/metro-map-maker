@@ -69,7 +69,7 @@
                 </h2>
             </div>
             <div class="card-body d-flex flex-column text-center p-0">
-                <a href="{% url 'home_map' map.urlhash %}">
+                <a href="{% url 'home_map' map.urlhash %}" class="flex-grow-1 align-self-center d-flex">
                     {% if map.thumbnail_svg and map.thumbnail_png and map.thumbnail_svg.size > 5000 and map.thumbnail_png.size <  map.thumbnail_svg.size %}
                         <img src="{{ map.thumbnail_png.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">
                     {% elif map.thumbnail_svg %}
@@ -77,7 +77,7 @@
                     {% elif map.thumbnail_png %}
                         <img src="{{ map.thumbnail_png.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">
                     {% else %}
-                        (Thumbnail not available)
+                        <div class="align-self-center">(Thumbnail being generated, please check back soon)</div>
                     {% endif %}
                 </a>
 
