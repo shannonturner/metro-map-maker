@@ -122,6 +122,9 @@
     <h3 id="title"><span class="M">M</span>etro<span class="M">M</span>ap<span class="M">M</span>aker</h3>
     <h3 id="autosave-indicator"></h3>
 
+    <!-- Area where I can put maintenance or similar announcements -->
+    <div id="announcement"></div>
+
     <div id="toolbox">
 
       <button id="tool-line" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Draw a rail line on the grid (Keyboard shortcut: D)">
@@ -519,6 +522,23 @@
   <script src='{% static "js/tooltips.min.js" %}' defer="defer"></script>
   <script src='{% static "js/django-csrf.js" %}' defer="defer"></script>
   <script src='{% static "js/mmm-cheatcodes.js" %}' defer="defer"></script>
+
+  <script type="text/javascript">
+    // TODO: Remove this after a few weeks of Metro Map Maker being live
+
+    // How many times has the user closed the "What's New" message?
+    var v6CloseWhatsNewCount = parseInt(window.localStorage.getItem('v6-close-whats-new-count') || 0)
+
+    if (v6CloseWhatsNewCount <= 1) {
+      // They've seen it 0-2 times, show it until they've clicked hide twice
+      $('#announcement').html('<h4 id="whats-new-message" style="text-align: left;">Metro Map Maker is better than ever, with a new look and <a href="{% url "help" %}">lots of new features</a>! <a href="{% url "help" %}">Explore what\'s new</a> or <span id="close-whats-new" style="text-decoration: underline; cursor: pointer;">close this message</span>.</h4>')
+    }
+
+    $('body').on('click', '#close-whats-new', function() {
+      $('#announcement').remove()
+      window.localStorage.setItem('v6-close-whats-new-count', v6CloseWhatsNewCount + 1)
+    })
+  </script>
 
   </body>
 </html>
