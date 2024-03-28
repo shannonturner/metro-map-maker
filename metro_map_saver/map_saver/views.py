@@ -1,6 +1,6 @@
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, PermissionDenied
-from django.db.models import Count, F
+from django.db.models import Count, F, Q
 from django.http import HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
@@ -887,6 +887,12 @@ class MapsPerDayView(DayArchiveView):
 
         if context['day'] <= datetime.date(2017, 9, 6):
             context['previous_day'] = False
+
+        # TODO: Remove this after image generation backfill completes
+        #   and remove the "please be patient" message from savedmap_archive_day.html
+        context['image_generation_backfill'] = SavedMap.objects.filter(
+            Q(thumbnail_svg=None) | Q(thumbnail_svg='')
+        ).count()
 
         return context
 

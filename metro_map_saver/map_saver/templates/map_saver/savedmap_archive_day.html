@@ -60,6 +60,14 @@
         </div>
     {% endif %}
 
+    {% if image_generation_backfill > 100 %}
+        {# TODO -- REMOVE THIS and the query from views.MapsPerDayView ONCE BACKFILL COMPLETES #}
+        <div class="alert alert-warning" role="alert">
+            <p>Metro Map Maker still has about ~{{ image_generation_backfill|intcomma }} maps to generate thumbnails, print-quality images, and sharing images for.</p>
+            <p>Please be patient if you see the message "(Thumbnail being generated, please check back soon)"</p>
+        </div>
+    {% endif %}
+
     <div class="row">
         {% for map in maps %}
         <div class="col-sm-6 col-md-4 col-xxl-3 mb-3 mt-3"><div class="card h-100 text-center">
