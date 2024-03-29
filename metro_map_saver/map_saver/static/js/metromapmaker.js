@@ -2309,13 +2309,13 @@ $(document).ready(function() {
         $('#tool-map-style').trigger('click')
       }
     }
-    else if (event.key == 'ArrowLeft' && !event.metaKey) { // left arrow, except for "go back"
+    else if (event.key == 'ArrowLeft' && (!event.metaKey && !event.altKey)) { // left arrow, except for "go back"
       event.preventDefault(); moveMap('left')
     }
     else if (event.key == 'ArrowUp') { // up arrow
       event.preventDefault(); moveMap('up')
     }
-    else if (event.key == 'ArrowRight' && !event.metaKey) { // right arrow, except for "go forward"
+    else if (event.key == 'ArrowRight' && (!event.metaKey && !event.altKey)) { // right arrow, except for "go forward"
       event.preventDefault(); moveMap('right')
     }
     else if (event.key == 'ArrowDown') { // down arrow

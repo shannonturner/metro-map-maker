@@ -114,11 +114,11 @@
                 document.addEventListener('keydown', function(event) {
                     if (document.activeElement && document.activeElement.type == 'text') { return }
 
-                    if (hasPrev && event.key == 'ArrowLeft' && !event.metaKey) { // left arrow, except for "go back"
+                    if (hasPrev && event.key == 'ArrowLeft' && (!event.metaKey && !event.altKey)) { // left arrow, except for "go back"
                       event.preventDefault()
                       $('a.nav-previous')[0].click()
                     }
-                    else if (hasNext && event.key == 'ArrowRight' && !event.metaKey) { // right arrow, except for "go forward"
+                    else if (hasNext && event.key == 'ArrowRight' && (!event.metaKey && !event.altKey)) { // right arrow, except for "go forward"
                       event.preventDefault()
                       $('a.nav-next')[0].click()
                     }
