@@ -22,7 +22,6 @@ var mapLineWidth = 1
 var mapStationStyle = 'wmata'
 var menuIsCollapsed = false
 var mapSize = undefined // Not the same as gridRows/gridCols, which is the potential size; this gives the current maximum in either axis
-var adjacentPoints = undefined
 
 MMMDEBUG = false
 
@@ -683,31 +682,98 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
   } // if redrawStations
 } // drawArea(x, y, metroMap, redrawStations)
 
-function drawPointsForColor(ctx, metroMap, color) {
-  adjacentPoints = []
-  for (var x in metroMap['points_by_color'][color]['xys']) {
-    for (var y in metroMap['points_by_color'][color]['xys'][x]) {
-      // if (adjacentPoints.indexOf((x + ',' + y)) == -1) {
-        // Conceptually, adjacentPoints has promise, by reducing the number
-        // of expensive calls to .stroke, .closePath, and .beginPath
-        // As currently implemented though, this won't be a very large performance improvement
-        // because points are drawn top -> bottom, and so it doesn't factor in adjacency
-        //  left and right. In other data models prototyped, this would have been more useful,
-        // but the potential gains here would be overshadowed by the losses in switching
-        // to a different means of looking up coordinates.
-        // In my tests, nothing is faster than looking up via [x][y],
-        //  especially when thousands of points are involved.
-      //   ctx.stroke()
-      //   ctx.closePath()
-      //   ctx.beginPath()
-      // If trying again, be sure to conditionally stroke/close/beginPath in drawPoint()
-      // }
-      x = parseInt(x);
-      y = parseInt(y);
-      adjacentPoints = drawPoint(ctx, x, y, metroMap, false, color)
-    } // for y
-  } // for x
-}
+function findLines(color) {
+  // JS implementation of mapdata_optimizer.find_lines
+  if (!activeMap || !activeMap['points_by_color'] || !activeMap['points_by_color'][color] || !activeMap['points_by_color'][color]['xys']) {
+    return
+  }
+
+  var directions = ['E', 'S', 'NE', 'SE']
+  var skipPoints = {
+    "E": new Set(),
+    "S": new Set(),
+    "NE": new Set(),
+    "SE": new Set()
+  }
+
+  var lines = []
+  var singletons = new Set()
+  var notSingletons = new Set()
+
+  for (var direction of directions) {
+    for (var x in activeMap['points_by_color'][color]['xys']) {
+      for (var y in activeMap['points_by_color'][color]['xys'][x]) {
+        var point = x + ',' + y
+        if (skipPoints[direction].has(point)) {
+          continue
+        }
+        var endpoint = findEndpointOfLine(x, y, activeMap['points_by_color'][color]['xys'], direction)
+        if (endpoint) {
+          lines.push([parseInt(x), parseInt(y), endpoint['x1'], endpoint['y1']])
+          notSingletons.add(point)
+          notSingletons.add(endpoint['x1'] + ',' + endpoint['y1'])
+          for (var pt of endpoint['between']) {
+            notSingletons.add(pt)
+            skipPoints[direction].add(pt)
+          }
+        } else if (notSingletons.has(point)) {
+          // This might not make a line in this direction,
+          // but it does make a line in SOME direction,
+          // so it's not a singleton
+        } else {
+          singletons.add(point)
+        } // if endpoint/not singleton/else
+      } // for y
+    } // for x
+  } // for directions
+
+  return {
+    "lines": lines,
+    "singletons": singletons.difference(notSingletons)
+  }
+} // findLines(color)
+
+function findEndpointOfLine(x, y, pointsThisColor, direction) {
+  // JS implementation of mapdata_optimizer.find_endpoint_of_line
+  var between = [x + ',' + y]
+
+  directions = {
+      'E': {'dx': 1, 'dy': 0},
+      'S': {'dx': 0, 'dy': 1},
+      'NE': {'dx': 1, 'dy': -1},
+      'SE': {'dx': 1, 'dy': 1},
+      'SW': {'dx': -1, 'dy': 1},
+  }
+
+  var dx = directions[direction]['dx']
+  var dy = directions[direction]['dy']
+  var x1 = parseInt(x) + dx
+  var y1 = parseInt(y) + dy
+
+  if (!pointsThisColor || !pointsThisColor[x] || !pointsThisColor[x][y]) {
+    return
+  }
+
+  if (!pointsThisColor[x1] || !pointsThisColor[x1][y1]) {
+    return
+  }
+
+  while (pointsThisColor[x1] && pointsThisColor[x1][y1]) {
+    between.push(x1 + ',' + y1)
+    var x1 = parseInt(x1) + dx
+    var y1 = parseInt(y1) + dy
+  }
+
+  var xy = between[between.length-1].split(',')
+  x1 = parseInt(xy[0])
+  y1 = parseInt(xy[1])
+
+  return {
+    "between": between,
+    "x1": x1,
+    "y1": y1
+  }
+} // findEndpointOfLine(x, y, pointsThisColor, direction)
 
 function drawCanvas(metroMap, stationsOnly, clearOnly) {
   t0 = performance.now();
@@ -743,7 +809,23 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
 
   if (mapDataVersion == 2) {
     for (var color in metroMap['points_by_color']) {
-      drawPointsForColor(ctx, metroMap, color)
+      ctx.strokeStyle = '#' + color
+      var linesAndSingletons = findLines(color)
+      var lines = linesAndSingletons["lines"]
+      var singletons = linesAndSingletons["singletons"]
+      for (var line of lines) {
+        ctx.beginPath()
+        moveLineStroke(ctx, line[0], line[1], line[2], line[3])
+        ctx.stroke()
+        ctx.closePath()
+      }
+      for (var s of singletons) {
+        var xy = s.split(',')
+        var x = xy[0]
+        var y = xy[1]
+        ctx.strokeStyle = '#' + color
+        drawPoint(ctx, x, y, metroMap, false, color)
+      }
     }
   } else if (mapDataVersion == 1) {
     for (var x in metroMap) {
@@ -826,12 +908,12 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
 function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth) {
   // Draw a single point at position x, y
 
+  y = parseInt(y)
+
   var color = color || getActiveLine(x, y, metroMap)
   if (!color && activeTool != 'eraser') {
     return // Fixes bug where clearing a map and resizing would sometimes paint undefined spots
   }
-
-  var adjacentPoints = []
 
   ctx.beginPath()
 
@@ -854,7 +936,7 @@ function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth) {
   // Diagonals
   if (coordinateInColor(x + 1, y + 1, metroMap, color)) {
     // Direction: SE
-    adjacentPoints.push(moveLineStroke(ctx, x, y, x+1, y+1))
+    moveLineStroke(ctx, x, y, x+1, y+1)
     // If this southeast line is adjacent to a different color on its east,
     //  redraw these overlapping points later
     if (!redrawOverlappingPoints[x]) {
@@ -869,28 +951,28 @@ function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth) {
     //  by just directly setting/getting singleton.
     // But now that I'm using drawPoint() inside of drawArea(),
     // I can't rely on this shortcut anymore. (only a problem with mapDataVersion 1)
-    adjacentPoints.push(moveLineStroke(ctx, x, y, x-1, y-1))
+    moveLineStroke(ctx, x, y, x-1, y-1)
   } if (coordinateInColor(x + 1, y - 1, metroMap, color)) {
     // Direction: NE
-    adjacentPoints.push(moveLineStroke(ctx, x, y, x+1, y-1))
+    moveLineStroke(ctx, x, y, x+1, y-1)
   }  if (coordinateInColor(x - 1, y + 1, metroMap, color)) {
     // Direction: SW
-    adjacentPoints.push(moveLineStroke(ctx, x, y, x-1, y+1))
+    moveLineStroke(ctx, x, y, x-1, y+1)
   }
 
   // Cardinals
   if (coordinateInColor(x + 1, y, metroMap, color)) {
     // Direction: E
-    adjacentPoints.push(moveLineStroke(ctx, x, y, x+1, y))
+    moveLineStroke(ctx, x, y, x+1, y)
   } if (coordinateInColor(x - 1, y, metroMap, color)) {
     // Direction: W
-    adjacentPoints.push(moveLineStroke(ctx, x, y, x-1, y))
+    moveLineStroke(ctx, x, y, x-1, y)
   } if (coordinateInColor(x, y + 1, metroMap, color)) {
     // Direction: S
-    adjacentPoints.push(moveLineStroke(ctx, x, y, x, y+1))
+    moveLineStroke(ctx, x, y, x, y+1)
   } if (coordinateInColor(x, y - 1, metroMap, color)) {
     // Direction: N
-    adjacentPoints.push(moveLineStroke(ctx, x, y, x, y-1))
+    moveLineStroke(ctx, x, y, x, y-1)
   }
 
   var thisStation = getStation(x, y, metroMap)
@@ -922,8 +1004,6 @@ function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth) {
   } // singleton
 
   ctx.closePath()
-
-  // return adjacentPoints
 } // drawPoint(ctx, x, y, metroMap)
 
 function drawStation(ctx, x, y, metroMap, skipText) {
