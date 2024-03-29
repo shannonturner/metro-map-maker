@@ -37,3 +37,22 @@ function combineMap(urlhash) {
     }
   });
 } // combineMap(urlhash)
+
+// Secret menu
+var mmmMenuClicks = [0,0,0]
+$('h3#title span.M:nth(0)').on('click', function() {
+  mmmMenuClicks[0] = 1
+})
+$('h3#title span.M:nth(1)').on('click', function() {
+  mmmMenuClicks[1] = 1
+})
+$('h3#title span.M:nth(2)').on('click', function() {
+  mmmMenuClicks[2] = 1
+})
+$('h3#title span.M').on('click', function() {
+  if (mmmMenuClicks[0] == 1 && mmmMenuClicks[1] == 1 && mmmMenuClicks[2] == 1) {
+    // TODO: activate something, like extra features
+    //  or stuff that's less generally-useful but might be fun for power users
+    // $('h3#title span.M').css({"background-color": "#00b251"})
+  }
+})
