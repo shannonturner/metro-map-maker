@@ -73,25 +73,28 @@ class HomeView(TemplateView):
         else:
             try:
                 saved_map = SavedMap.objects.get(urlhash=urlhash)
+            except MultipleObjectsReturned:
+                saved_map = SavedMap.objects.filter(urlhash=urlhash).first()
             except Exception:
-                context = {}
-            else:
-                context = {
-                    'saved_map': saved_map,
-                }
-                if saved_map.name:
-                    if saved_map.name.endswith(' (real)'):
-                        context["saved_map_name"] = saved_map.name.rsplit(" (real)")[0]
-                    elif saved_map.name.endswith(' (speculative)'):
-                        context["saved_map_name"] = saved_map.name.rsplit(" (speculative)")[0]
-                    elif saved_map.name.endswith(' (unknown)'):
-                        context["saved_map_name"] = saved_map.name.rsplit(" (unknown)")[0]
-                    else:
-                        context["saved_map_name"] = saved_map.name
-                try:
-                    context['canvas_size'] = saved_map['global']['map_size'] * 20
-                except Exception:
-                    context['canvas_size'] = 1600
+                context = {'today': timezone.now().date()}
+                return render(request, self.template_name, context)
+
+            context = {
+                'saved_map': saved_map,
+            }
+            if saved_map.name:
+                if saved_map.name.endswith(' (real)'):
+                    context["saved_map_name"] = saved_map.name.rsplit(" (real)")[0]
+                elif saved_map.name.endswith(' (speculative)'):
+                    context["saved_map_name"] = saved_map.name.rsplit(" (speculative)")[0]
+                elif saved_map.name.endswith(' (unknown)'):
+                    context["saved_map_name"] = saved_map.name.rsplit(" (unknown)")[0]
+                else:
+                    context["saved_map_name"] = saved_map.name
+            try:
+                context['canvas_size'] = saved_map['global']['map_size'] * 20
+            except Exception:
+                context['canvas_size'] = 1600
 
         context['today'] = timezone.now().date()
 
