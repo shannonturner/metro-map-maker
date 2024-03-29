@@ -108,7 +108,7 @@
     </div>
   </div>
 
-  <div id="canvas-container" class="col-md-9 col-lg-10" style="width: {{ canvas_size|default:1600 }}px; height: {{ canvas_size|default:1600 }}px;{% if saved_map.thumbnail_svg %}background: url('/media/{{ saved_map.thumbnail_svg }}') no-repeat scroll -1px -1px;{% endif %}">
+  <div id="canvas-container" class="col-md-9 col-lg-10" style="width: {{ canvas_size|default:1600 }}px; height: {{ canvas_size|default:1600 }}px;">
     <div id="loading"></div>
     <canvas id='metro-map-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
     <canvas id='metro-map-stations-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
