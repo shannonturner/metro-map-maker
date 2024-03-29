@@ -997,7 +997,10 @@ class RateMapView(RecaptchaMixin, FormView, DetailView):
     @method_decorator(cache_control(max_age=60))
     @method_decorator(ensure_csrf_cookie)
     def get(self, request, *args, **kwargs):
-        self.object = self.get_object()
+        try:
+            self.object = self.get_object()
+        except MultipleObjectsReturned:
+            self.object = SavedMap.objects.filter(urlhash=kwargs.get('urlhash')).earliest('id')
         context = self.get_context_data(object=self.object, map=self.object)
         if not self.object.id in request.session.get('rated', []):
             context['form_like'] = self.form_class(dict(urlhash=self.object.urlhash, choice='likes'))
