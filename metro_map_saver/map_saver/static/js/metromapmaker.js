@@ -727,9 +727,24 @@ function findLines(color) {
     } // for x
   } // for directions
 
+  // COMPATIBILITY: singletons.difference(notSingletons)
+  // is not supported on Edge, Firefox
+  if (typeof singletons.difference == 'function') {
+    var finalSingletons = singletons.difference(notSingletons)
+  } else {
+    var finalSingletons = new Set()
+    for (var s of singletons) {
+      if (!notSingletons.has(s)) {
+        // This point is not in the set of points that are connected to others.
+        // In other words, it's confirmed to be a singleton
+        finalSingletons.add(s)
+      }
+    }
+  } // singletons.difference check
+
   return {
     "lines": lines,
-    "singletons": singletons.difference(notSingletons)
+    "singletons": finalSingletons
   }
 } // findLines(color)
 
