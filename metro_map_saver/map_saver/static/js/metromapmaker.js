@@ -2134,11 +2134,12 @@ function resetRailLineTooltips() {
   var keyboardShortcut = ''
   for (var a=0; a<allLines.length; a++) {
     var line = $('.rail-line')[a].id.slice(10, 16)
-    numLines = a + 1
-    if (numLines < 10) {
-      keyboardShortcut = 'Keyboard shortcut: ' + numLines
-    } else if (numLines == 10) {
-      keyboardShortcut = 'Keyboard shortcut: 0'
+    if (a < 10) {
+      keyboardShortcut = 'Keyboard shortcut: ' + numberKeys[a].replace('Digit', '')
+    } else if (a < 20) {
+      keyboardShortcut = 'Keyboard shortcut: Shift + ' + numberKeys[a].replace('Digit', '')
+    } else if (a < 30) {
+      keyboardShortcut = 'Keyboard shortcut: Alt + ' + numberKeys[a].replace('Digit', '')
     } else {
       keyboardShortcut = '' // remove old tooltips
     }
