@@ -46,6 +46,7 @@ compatibilityModeIndicator()
 const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'] // 1-30; is set up this way to have same functionality on all keyboards
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
+const ALLOWED_SIZES = [80, 120, 160, 200, 240]
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -63,7 +64,7 @@ function resizeGrid(size) {
   if (mapDataVersion == 2) {
     // If the largest grid size changes, I'll need to change it here too
     for (var color in activeMap["points_by_color"]) {
-      for (var x=size;x<240;x++) { // Delete the x-axis outright
+      for (var x=size;x<ALLOWED_SIZES[ALLOWED_SIZES.length-1];x++) { // Delete the x-axis outright
         if (activeMap["points_by_color"][color]['xys'][x]) {
           delete activeMap["points_by_color"][color]['xys'][x]
         }
@@ -72,7 +73,7 @@ function resizeGrid(size) {
         }
       }
       for (var x=0; x<size; x++) {
-        for (var y=0; y<240; y++) { // Handle the y-axis a little differently
+        for (var y=0; y<ALLOWED_SIZES[ALLOWED_SIZES.length-1]; y++) { // Handle the y-axis a little differently
           if (y >= size && activeMap["points_by_color"][color]['xys'][x] && activeMap["points_by_color"][color]['xys'][x][y]) {
             delete activeMap["points_by_color"][color]['xys'][x][y]
           }
@@ -83,12 +84,11 @@ function resizeGrid(size) {
       }
     }
   } else if (mapDataVersion == 1) {
-    // If the largest grid size changes, I'll need to change it here too
-    for (var x=size;x<240;x++) {
+    for (var x=size;x<ALLOWED_SIZES[ALLOWED_SIZES.length-1];x++) {
       delete activeMap[x]
     }
     for (var x=0; x<size; x++) {
-      for (var y=0; y<240; y++) {
+      for (var y=0; y<ALLOWED_SIZES[ALLOWED_SIZES.length-1]; y++) {
         if (y >= size && activeMap[x] && activeMap[x][y]) {
           delete activeMap[x][y]
         }
@@ -1612,19 +1612,15 @@ function setMapSize(metroMapObject, getFromGlobal) {
     highestValue = getMapSize(metroMapObject)
 
     // If adding new map sizes, edit this!
-    if (highestValue >= 200) {
-      gridRows = 240, gridCols = 240;
-    } else if (highestValue >= 160) {
-      gridRows = 200, gridCols = 200;
-    } else if (highestValue >= 120) {
-      gridRows = 160, gridCols = 160;
-    } else if (highestValue >= 80) {
-      gridRows = 120, gridCols = 120;
-    } else {
-      gridRows = 80, gridCols = 80;
+    for (allowedSize of ALLOWED_SIZES) {
+      if (highestValue < allowedSize) {
+        gridRows = allowedSize
+        gridCols = allowedSize
+        metroMapObject['global']['map_size'] = gridRows
+        break
+      }
     }
-    metroMapObject['global']['map_size'] = gridRows
-  }
+  } // if getFromGlobal/else
   
   resizeGrid(gridRows)
 
