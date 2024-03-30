@@ -547,9 +547,7 @@ class MapDataView(TemplateView):
         except ObjectDoesNotExist:
             context['error'] = '[ERROR] The requested map does not exist ({0})'.format(urlhash)
         except MultipleObjectsReturned:
-            context['error'] = '[ERROR] Multiple objects returned ({0}). This should never happen.'.format(urlhash)
-            saved_map = SavedMap.objects.filter(urlhash=urlhash).first()
-            context['saved_map'] = saved_map.mapdata
+            saved_map = SavedMap.objects.filter(urlhash=urlhash).earliest('id')
 
         if not context.get('error'):
             if saved_map.data:
