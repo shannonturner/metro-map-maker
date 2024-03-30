@@ -1611,7 +1611,6 @@ function setMapSize(metroMapObject, getFromGlobal) {
   } else {
     highestValue = getMapSize(metroMapObject)
 
-    // If adding new map sizes, edit this!
     for (allowedSize of ALLOWED_SIZES) {
       if (highestValue < allowedSize) {
         gridRows = allowedSize
@@ -3430,6 +3429,7 @@ function stretchMap(metroMapObject) {
   }
 
   var newMapObject = {};
+  newMapObject['global'] = Object.assign({}, activeMap['global'])
   if (mapDataVersion == 2) {
     newMapObject['points_by_color'] = {}
     for (var color in metroMapObject['points_by_color']) {
@@ -3441,7 +3441,7 @@ function stretchMap(metroMapObject) {
           if (!metroMapObject['points_by_color'][color]['xys'][x][y]) {
             continue
           }
-          if (x * 2 > 239 || y * 2 > 239) {
+          if (x * 2 > ALLOWED_SIZES[ALLOWED_SIZES.length-1]-1 || y * 2 > ALLOWED_SIZES[ALLOWED_SIZES.length-1]-1) {
             continue
           }
           if (!newMapObject['points_by_color'][color]['xys'].hasOwnProperty(x * 2)) {
@@ -3451,8 +3451,6 @@ function stretchMap(metroMapObject) {
         } // for y
       } // for x
     } // for color
-
-    newMapObject["global"] = metroMapObject["global"]
 
     // Set the gridRows and gridCols
     setMapSize(newMapObject)
