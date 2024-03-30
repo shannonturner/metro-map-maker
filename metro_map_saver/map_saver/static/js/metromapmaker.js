@@ -3072,7 +3072,6 @@ function getSurroundingLine(x, y, metroMap) {
     // Diagonal: /
     return getActiveLine(x-1, y+1, metroMap);
   }
-  return false;
 } // getSurroundingLine(x, y, metroMap)
 
 function setAllStationOrientations(metroMap, orientation) {
@@ -3473,19 +3472,16 @@ function stretchMap(metroMapObject) {
     }
 
     // Fill in the newly created in-between spaces
-    for (var color in metroMapObject['points_by_color']) {
-      for (var x=1;x<gridRows;x++) {
-        for (var y=1;y<gridCols;y++) {
-          var surroundingLine = getSurroundingLine(x, y, newMapObject)
-          if (color == surroundingLine) {
-            if (!newMapObject['points_by_color'][color]['xys'].hasOwnProperty(x)) {
-              newMapObject['points_by_color'][color]['xys'][x] = {}
-            }
-            newMapObject['points_by_color'][color]['xys'][x][y] = 1
-          } // if neighboringLine
-        } // for y
-      } // for x
-    } // for color
+    for (var x=1;x<gridRows;x++) {
+      for (var y=1;y<gridCols;y++) {
+        var color = getSurroundingLine(x, y, newMapObject)
+        if (!color) { continue }
+        if (!newMapObject['points_by_color'][color]['xys'].hasOwnProperty(x)) {
+          newMapObject['points_by_color'][color]['xys'][x] = {}
+        }
+        newMapObject['points_by_color'][color]['xys'][x][y] = 1
+      } // for y
+    } // for x
   } else if (mapDataVersion == 1) {
     for (var x in metroMapObject) {
       for (var y in metroMapObject[x]) {
