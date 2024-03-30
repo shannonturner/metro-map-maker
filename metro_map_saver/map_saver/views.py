@@ -75,6 +75,12 @@ class HomeView(TemplateView):
                 saved_map = SavedMap.objects.get(urlhash=urlhash)
             except MultipleObjectsReturned:
                 saved_map = SavedMap.objects.filter(urlhash=urlhash).first()
+            except ObjectDoesNotExist:
+                context = {
+                    'today': timezone.now().date(),
+                    'error': 'Map was not found.',
+                }
+                return render(request, self.template_name, context)
             except Exception:
                 context = {'today': timezone.now().date()}
                 return render(request, self.template_name, context)

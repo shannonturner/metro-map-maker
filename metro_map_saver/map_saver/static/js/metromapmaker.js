@@ -1492,6 +1492,9 @@ function autoLoad() {
     // This is a likely source of v1 mapDataVersions,
     //  so test carefully that v1 still works
     activeMap = JSON.parse(window.localStorage.getItem('metroMap'));
+    if (typeof autoLoadError !== 'undefined') {
+      autoLoadError = autoLoadError + 'Loading your last-edited map.'
+    }
   } else {
     // If no map URLParameter and no locally stored map, default to the WMATA map
     // I think this would be more intuitive than the blank slate,
@@ -1525,6 +1528,13 @@ function autoLoad() {
       bindRailLineEvents()
       drawCanvas()
     })
+    if (typeof autoLoadError !== 'undefined') {
+      autoLoadError = autoLoadError + 'Loading the default map.'
+      $('#announcement').append('<h4 id="autoLoadError" class="bg-warning" style="text-align: left;">' + autoLoadError + '</h4>')
+      setTimeout(function() {
+        $('#autoLoadError').remove()
+      }, 3000)
+    } // autoLoadError
     return
   } // else
 
@@ -1538,8 +1548,12 @@ function autoLoad() {
   mapSize = setMapSize(activeMap, mapDataVersion > 1)
   loadMapFromObject(activeMap)
 
-  // Remove the underpainted SVG
-  $('#canvas-container').css('background', 'unset')
+  if (typeof autoLoadError !== 'undefined') {
+    $('#announcement').append('<h4 id="autoLoadError" class="bg-warning" style="text-align: left;">' + autoLoadError + '</h4>')
+    setTimeout(function() {
+      $('#autoLoadError').remove()
+    }, 3000)
+  } // autoLoadError
 
   setTimeout(function() {
     $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');

@@ -509,6 +509,10 @@
       </script>
     {% endif %}
 
+  {% elif error %} {# Not saved map but error means there's no map for this urlhash. #}
+    <script type="text/javascript">
+      var autoLoadError = 'Map was not found. '
+    </script>
   {% endif %}
 
   <!--
@@ -530,7 +534,7 @@
     var v6CloseWhatsNewCount = parseInt(window.localStorage.getItem('v6-close-whats-new-count') || 0)
     if (v6CloseWhatsNewCount <= 1) {
       // They've seen it 0-2 times, show it until they've clicked hide twice
-      $('#announcement').html('<h4 id="announce-whats-new" style="text-align: left;">Metro Map Maker is better than ever, with a new look and <a href="{% url "help" %}">lots of new features</a>! <a href="{% url "help" %}">Explore what\'s new</a> or <span id="close-whats-new" class="close-announcement" style="text-decoration: underline; cursor: pointer;">close this message</span>.</h4>')
+      $('#announcement').append('<h4 id="announce-whats-new" style="text-align: left;">Metro Map Maker is better than ever, with a new look and <a href="{% url "help" %}">lots of new features</a>! <a href="{% url "help" %}">Explore what\'s new</a> or <span id="close-whats-new" class="close-announcement" style="text-decoration: underline; cursor: pointer;">close this message</span>.</h4>')
     }
 
     // TODO: After removing v6CloseWhatsNew, replace it with howToMMM:
