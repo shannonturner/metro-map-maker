@@ -81,8 +81,11 @@ class HomeView(TemplateView):
                     'error': 'Map was not found.',
                 }
                 return render(request, self.template_name, context)
-            except Exception:
-                context = {'today': timezone.now().date()}
+            except Exception as exc:
+                context = {
+                    'today': timezone.now().date(),
+                    'error': f'This map could not be loaded: {exc}'
+                }
                 return render(request, self.template_name, context)
 
             context = {

@@ -509,9 +509,13 @@
       </script>
     {% endif %}
 
-  {% elif error %} {# Not saved map but error means there's no map for this urlhash. #}
+  {% elif 'Map was not found.' in error %} {# Not saved map but error means there's no map for this urlhash. #}
     <script type="text/javascript">
       var autoLoadError = 'Map was not found. '
+    </script>
+  {% elif error %}
+    <script type="text/javascript">
+      var autoLoadError = 'Cannot load this map. '
     </script>
   {% endif %}
 
