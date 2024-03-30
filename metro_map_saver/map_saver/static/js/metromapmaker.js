@@ -2555,11 +2555,16 @@ $(document).ready(function() {
       'metroMap': savedMap,
       'csrfmiddlewaretoken': csrftoken
     }).done(function(data) {
-      if (data.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
+      if (data.replace(/\n/g, '').indexOf('No points_by_color') > -1) {
+        $('#tool-save-options').html('<h5 class="bg-danger">You can\'t save an empty map.</h5>');
+        $('#tool-save-options').show();
+      }
+      else if (data.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
         $('#tool-save-options').html('<h5 class="bg-danger">Sorry, there was a problem saving your map: ' + data.slice(9) + '</h5>');
         console.log("[WARN] Problem was: " + data)
         $('#tool-save-options').show();
-      } else {
+      }
+      else {
         if (menuIsCollapsed) {
           $('#controls-expand-menu').trigger('click')
         }
@@ -2636,7 +2641,7 @@ $(document).ready(function() {
         $('#hide-save-share-url').click(function() {
           $('#tool-save-options').hide()
         })
-      }
+      } // else (success)
     }).fail(function(data) {
       if (data.status == 400) {
         var message = 'Sorry, your map could not be saved. Did you flood fill the whole map? Use flood fill with the eraser to erase and try again.'
