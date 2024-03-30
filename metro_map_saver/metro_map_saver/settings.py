@@ -41,7 +41,7 @@ LOGGING = {
 ########## EMAIL CONFIGURATION
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
-EMAIL_HOST = 'smtp.webfaction.com'
+EMAIL_HOST = ''
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'metromapmaker'
 EMAIL_HOST_PASSWORD = ''
@@ -49,6 +49,7 @@ EMAIL_SUBJECT_PREFIX = '[metromapmaker] '
 SERVER_EMAIL = 'reports@metromapmaker.com'
 DEFAULT_FROM_EMAIL = 'reports@metromapmaker.com'
 MAILER_LIST = ADMINS
+EMAIL_TIMEOUT = 3
 ########## END EMAIL CONFIGURATION
 
 ALLOWED_HOSTS = [
