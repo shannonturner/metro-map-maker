@@ -204,7 +204,7 @@
           <label for="station-name">Station Name</label>
           <input id="station-name" autocomplete="off" type="text" placeholder="Silver Spring" maxlength="255">
 
-          <div>
+          <div style="width: 100%;">
             <input id="station-transfer" type="checkbox">
             <label for="station-transfer">Transfer Station</label>
           </div>
@@ -296,7 +296,7 @@
           </fieldset>
           <fieldset>
             <legend>Station Orientations</legend>
-            <h5>Changes label orientation for ALL stations at once.</h5>
+            <h5 style="width: 100%;">Changes label orientation for ALL stations at once.</h5>
             <label for="set-all-station-name-orientation-choice">Orientation</label>
             <select id="set-all-station-name-orientation-choice">
               <option value="0">On the right</option>
@@ -348,9 +348,7 @@
           <button id="tool-resize-160" class="resize-grid styled styling-redline">Large (160x160)</button>
           <button id="tool-resize-200" class="resize-grid styled styling-redline">XL (200x200)</button>
           <button id="tool-resize-240" class="resize-grid styled styling-redline">XXL (240x240)</button>
-          <div id="tool-resize-stretch-options">
-            <button id="tool-resize-stretch" class="has-tooltip stretch-grid styled styling-redline" data-toggle="tooltip" data-placement="left" title="Increase the available space between stations so you can add more stations in between.">Stretch Map</button>
-          </div>
+          <button id="tool-resize-stretch" class="has-tooltip stretch-grid styled styling-redline" data-toggle="tooltip" data-placement="left" title="Increase the available space between stations so you can add more stations in between.">Stretch Map</button>
         </fieldset>
       </div>
 

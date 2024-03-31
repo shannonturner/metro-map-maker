@@ -2095,10 +2095,10 @@ function resetResizeButtons(size) {
   })
   $('#tool-resize-' + size).text('Current Size (' + size + 'x' + size + ')');
   if (isMapStretchable(size)) {
-    $('#tool-resize-stretch-options').show()
+    $('#tool-resize-stretch').show()
     $('#tool-resize-stretch').text('Stretch map to ' + size * 2 + 'x' + size * 2)
   } else {
-    $('#tool-resize-stretch-options').hide()
+    $('#tool-resize-stretch').hide()
   }
 } // function resetResizeButtons()
 
@@ -2515,10 +2515,10 @@ $(document).ready(function() {
       $('#tool-resize-options').show();
       $(this).addClass('width-100')
       if (isMapStretchable()) {
-        $('#tool-resize-stretch-options').show()
+        $('#tool-resize-stretch').show()
         $('#tool-resize-stretch').text('Stretch map to ' + gridRows * 2 + 'x' + gridCols * 2)
       } else {
-        $('#tool-resize-stretch-options').hide()
+        $('#tool-resize-stretch').hide()
       }
     }
     $('.tooltip').hide();
