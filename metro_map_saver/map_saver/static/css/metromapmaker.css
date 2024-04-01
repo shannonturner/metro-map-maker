@@ -281,6 +281,7 @@ canvas#grid-canvas, canvas#hover-canvas {
 
 #tool-line-options div {
   flex-grow: 1;
+  width: 100%;
 }
 
 #tool-map-style-options fieldset {
