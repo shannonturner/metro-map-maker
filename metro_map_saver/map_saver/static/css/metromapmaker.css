@@ -281,6 +281,9 @@ canvas#grid-canvas, canvas#hover-canvas {
 
 #tool-line-options div {
   flex-grow: 1;
+}
+
+#tool-line-options div.mmm-help-setting {
   width: 100%;
 }
 
