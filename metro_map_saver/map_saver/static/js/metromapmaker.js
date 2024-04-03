@@ -47,6 +47,7 @@ const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
 const ALLOWED_SIZES = [80, 120, 160, 200, 240]
+const MAX_MAP_SIZE = ALLOWED_SIZES[ALLOWED_SIZES.length-1]
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -64,7 +65,7 @@ function resizeGrid(size) {
   if (mapDataVersion == 2) {
     // If the largest grid size changes, I'll need to change it here too
     for (var color in activeMap["points_by_color"]) {
-      for (var x=size;x<ALLOWED_SIZES[ALLOWED_SIZES.length-1];x++) { // Delete the x-axis outright
+      for (var x=size;x<MAX_MAP_SIZE;x++) { // Delete the x-axis outright
         if (activeMap["points_by_color"][color]['xys'][x]) {
           delete activeMap["points_by_color"][color]['xys'][x]
         }
@@ -73,7 +74,7 @@ function resizeGrid(size) {
         }
       }
       for (var x=0; x<size; x++) {
-        for (var y=0; y<ALLOWED_SIZES[ALLOWED_SIZES.length-1]; y++) { // Handle the y-axis a little differently
+        for (var y=0; y<MAX_MAP_SIZE; y++) { // Handle the y-axis a little differently
           if (y >= size && activeMap["points_by_color"][color]['xys'][x] && activeMap["points_by_color"][color]['xys'][x][y]) {
             delete activeMap["points_by_color"][color]['xys'][x][y]
           }
@@ -84,11 +85,11 @@ function resizeGrid(size) {
       }
     }
   } else if (mapDataVersion == 1) {
-    for (var x=size;x<ALLOWED_SIZES[ALLOWED_SIZES.length-1];x++) {
+    for (var x=size;x<MAX_MAP_SIZE;x++) {
       delete activeMap[x]
     }
     for (var x=0; x<size; x++) {
-      for (var y=0; y<ALLOWED_SIZES[ALLOWED_SIZES.length-1]; y++) {
+      for (var y=0; y<MAX_MAP_SIZE; y++) {
         if (y >= size && activeMap[x] && activeMap[x][y]) {
           delete activeMap[x][y]
         }
@@ -1580,7 +1581,7 @@ function getMapSize(metroMapObject) {
         return Object.keys(metroMapObject['points_by_color'][color]['xys'][key]).length > 0
       }))
       for (var x in metroMapObject['points_by_color'][color]['xys']) {
-        if (thisColorHighestValue >= 200) { // If adding new map sizes, edit this!
+        if (thisColorHighestValue >= ALLOWED_SIZES[ALLOWED_SIZES.length-2]) {
           highestValue = thisColorHighestValue
           break
         }
@@ -1599,7 +1600,7 @@ function getMapSize(metroMapObject) {
       return Object.keys(metroMapObject[key]).length > 0
     }))
     for (var x in metroMapObject) {
-      if (highestValue >= 200) { // If adding new map sizes, edit this!
+      if (highestValue >= ALLOWED_SIZES[ALLOWED_SIZES.length-2]) {
         break
       }
       y = Math.max(...Object.keys(metroMapObject[x]).map(Number).filter(Number.isInteger).filter(
@@ -1652,11 +1653,10 @@ function setMapStyle(metroMap) {
 
 function isMapStretchable(size) {
   // Determine if the map is small enough to be stretched
-  // If changing max map size, change this calculation, too
   if (size) {
-    return size <= 120
+    return size <= MAX_MAP_SIZE / 2
   } else {
-    return (gridRows <= 120 && gridCols <= 120)
+    return (gridRows <= MAX_MAP_SIZE / 2 && gridCols <= MAX_MAP_SIZE / 2)
   }
 }
 
@@ -3460,7 +3460,7 @@ function stretchMap(metroMapObject) {
           if (!metroMapObject['points_by_color'][color]['xys'][x][y]) {
             continue
           }
-          if (x * 2 > ALLOWED_SIZES[ALLOWED_SIZES.length-1]-1 || y * 2 > ALLOWED_SIZES[ALLOWED_SIZES.length-1]-1) {
+          if (x * 2 > MAX_MAP_SIZE-1 || y * 2 > MAX_MAP_SIZE-1) {
             continue
           }
           if (!newMapObject['points_by_color'][color]['xys'].hasOwnProperty(x * 2)) {
