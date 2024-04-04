@@ -270,6 +270,7 @@ canvas#grid-canvas, canvas#hover-canvas {
   margin-top: -0.75rem;
   padding: 0.25rem;
   border: 0.25rem solid #bd1038;
+  width: 100%;
 }
 
 #tool-line-options, div fieldset {
