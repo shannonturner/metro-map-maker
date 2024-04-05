@@ -23,7 +23,7 @@ var mapStationStyle = 'wmata'
 var menuIsCollapsed = false
 var mapSize = undefined // Not the same as gridRows/gridCols, which is the potential size; this gives the current maximum in either axis
 
-MMMDEBUG = true
+var MMMDEBUG = false
 
 if (typeof mapDataVersion === 'undefined') {
     var mapDataVersion = undefined
