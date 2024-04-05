@@ -1465,6 +1465,7 @@ function undo() {
 
   debugUndoRedo();
   if (previousMap) {
+    window.localStorage.setItem('metroMap', previousMap) // Otherwise, undoing and then loading the page before making at least 1 change will result in losing whatever changes were made since the last autoSave
     // Remove all rail lines, they'll be replaced on loadMapFromObject()
     $('.rail-line').remove();
     previousMap = JSON.parse(previousMap)
@@ -1539,7 +1540,7 @@ function autoLoad() {
         compatibilityModeIndicator()
         mapSize = setMapSize(activeMap, mapDataVersion > 1)
         loadMapFromObject(activeMap)
-        saveMapHistory(activeMap)
+        mapHistory.push(JSON.stringify(activeMap)) // See note about saveMapHistory below
         setTimeout(function() {
           $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
         }, 1000);
@@ -1569,7 +1570,10 @@ function autoLoad() {
   compatibilityModeIndicator()
   mapSize = setMapSize(activeMap, mapDataVersion > 1)
   loadMapFromObject(activeMap)
-  saveMapHistory(activeMap)
+  // I'd prefer to use saveMapHistory() here, but
+  //  that has a check to ensure that the map isn't the same as what's in
+  //  localStorage, which this might be.
+  mapHistory.push(JSON.stringify(activeMap))
 
   if (typeof autoLoadError !== 'undefined') {
     $('#announcement').append('<h4 id="autoLoadError" class="bg-warning" style="text-align: left;">' + autoLoadError + '</h4>')
