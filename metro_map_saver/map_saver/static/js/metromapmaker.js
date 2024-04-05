@@ -16,14 +16,14 @@ var hoverY = false;
 var temporaryStation = {};
 var pngUrl = false;
 var mapHistory = []; // A list of the last several map objects
-var maxUndoHistory = 25;
+var MAX_UNDO_HISTORY = 100;
 var currentlyClickingAndDragging = false;
 var mapLineWidth = 1
 var mapStationStyle = 'wmata'
 var menuIsCollapsed = false
 var mapSize = undefined // Not the same as gridRows/gridCols, which is the potential size; this gives the current maximum in either axis
 
-MMMDEBUG = false
+MMMDEBUG = true
 
 if (typeof mapDataVersion === 'undefined') {
     var mapDataVersion = undefined
@@ -425,6 +425,7 @@ function bindGridSquareEvents(event) {
     }
     if (erasedLine && $('#tool-flood-fill').prop('checked')) {
       floodFill(x, y, erasedLine, '')
+      autoSave(activeMap)
       drawCanvas(activeMap)
     } else {
       metroMap = updateMapObject(x, y);
@@ -1418,20 +1419,20 @@ function rgb2hex(rgb) {
 } // rgb2hex(rgb)
 
 function saveMapHistory(metroMap) {
-  // Adds the map to the history, then
-  // Saves the provided metroMap to localStorage
-
-  // Add the metroMap to the history and delete the oldest once there are 10 maps stored
+  // Add the metroMap to the history
+  //  and delete the oldest once there are MAX_UNDO_HISTORY maps stored
   // Map versions are stored from Oldest -------- Newest
-  if (mapHistory.length >= maxUndoHistory) {
+  if (mapHistory.length > MAX_UNDO_HISTORY) {
     mapHistory.shift(); // Remove first item in array
   }
-  // I can't just push metroMap; I need to create a new deep copy of the object and push that
-  //   otherwise all copies of the history will be identical.
-  if (JSON.stringify(mapHistory[mapHistory.length-1]) != JSON.stringify(metroMap)) {
-    // Only save a new history if the map state actually changed
-    mapHistory.push(JSON.parse(JSON.stringify(metroMap)))
+
+  // IMPORTANT: this relies on window.localStorage.setItem('metroMap', metroMap)
+  //  happening AFTER the call to saveMapHistory
+  if (JSON.stringify(metroMap) != window.localStorage.getItem('metroMap')) {
+      mapHistory.push(JSON.stringify(metroMap))
   }
+
+  debugUndoRedo()
 } // saveMapHistory(metroMap)
 
 function autoSave(metroMap) {
@@ -1441,7 +1442,7 @@ function autoSave(metroMap) {
     saveMapHistory(activeMap)
     metroMap = JSON.stringify(metroMap);
   }
-  window.localStorage.setItem('metroMap', metroMap);
+  window.localStorage.setItem('metroMap', metroMap); // IMPORTANT: this must happen after saveMapHistory(activeMap)
   if (!menuIsCollapsed) {
     $('#autosave-indicator').text('Saving locally ...');
     $('#title').hide()
@@ -1454,26 +1455,45 @@ function autoSave(metroMap) {
 
 function undo() {
   // Rewind to an earlier map in the mapHistory
-  // TODO: I think this is buggy, stress-test this
-  //  (or possibly I'm not calling autoSave() in all the places I should)
+  var previousMap = false
   if (mapHistory.length > 1) {
     mapHistory.pop(); // Remove the most recently added item in the history
     previousMap = mapHistory[mapHistory.length-1]
   } else if (mapHistory.length == 1) {
-    previousMap = mapHistory.pop()
-  } else {
-    return // mapHistory.length is < 1
+    previousMap = mapHistory[0]
   }
+
+  debugUndoRedo();
   if (previousMap) {
     // Remove all rail lines, they'll be replaced on loadMapFromObject()
     $('.rail-line').remove();
+    previousMap = JSON.parse(previousMap)
     loadMapFromObject(previousMap)
     setMapSize(previousMap)
     drawCanvas(previousMap)
+    if (previousMap['global'] && previousMap['global']['style']) {
+      mapLineWidth = previousMap['global']['style']['mapLineWidth'] || mapLineWidth || 1
+      mapStationStyle = previousMap['global']['style']['mapStationStyle'] || mapStationStyle || 'wmata'
+    } else {
+      mapLineWidth = 1
+      mapStationStyle = 'wmata'
+    }
     resetResizeButtons(gridCols)
     resetRailLineTooltips()
   }
 } // undo()
+
+function debugUndoRedo() {
+  if (MMMDEBUG) {
+    $('#announcement').html('')
+    for (var i=0;i<mapHistory.length;i++) {
+      var mhDebugMessage = i + ': ' + JSON.stringify(mapHistory[i]).length
+      if (i == 0) { mhDebugMessage = mhDebugMessage + ' [OLDEST]' }
+      else if (i == mapHistory.length - 1) { mhDebugMessage = mhDebugMessage + ' [NEWEST]' }
+      $('#announcement').append('<p>' + mhDebugMessage + '</p>')
+    }
+  }
+}
 
 function getURLParameter(name) {
     return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;
@@ -1519,6 +1539,7 @@ function autoLoad() {
         compatibilityModeIndicator()
         mapSize = setMapSize(activeMap, mapDataVersion > 1)
         loadMapFromObject(activeMap)
+        saveMapHistory(activeMap)
         setTimeout(function() {
           $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
         }, 1000);
@@ -1548,6 +1569,7 @@ function autoLoad() {
   compatibilityModeIndicator()
   mapSize = setMapSize(activeMap, mapDataVersion > 1)
   loadMapFromObject(activeMap)
+  saveMapHistory(activeMap)
 
   if (typeof autoLoadError !== 'undefined') {
     $('#announcement').append('<h4 id="autoLoadError" class="bg-warning" style="text-align: left;">' + autoLoadError + '</h4>')
@@ -1620,6 +1642,8 @@ function setMapSize(metroMapObject, getFromGlobal) {
   // A map with x,y values within 0-79 will shrink to an 80x80 grid even if
   //    the grid has been extended beyond that
 
+  var prevSize = gridRows
+
   if (getFromGlobal) {
     gridRows = metroMapObject['global']['map_size']
     gridCols = metroMapObject['global']['map_size']
@@ -1638,10 +1662,13 @@ function setMapSize(metroMapObject, getFromGlobal) {
   
   resizeGrid(gridRows)
 
-  // Size the canvas container to the nearest multiple of gridCols
-  // #canvas-container height and width must always be the same
-  $('#canvas-container').width(Math.round($('#canvas-container').width() / gridCols) * gridCols)
-  $('#canvas-container').height(Math.round($('#canvas-container').width() / gridRows) * gridRows)
+  if (gridRows != prevSize) {
+    // Only resize the canvas-container if the grid size changed
+    // Size the canvas container to the nearest multiple of gridCols
+    // #canvas-container height and width must always be the same
+    $('#canvas-container').width(Math.round($('#canvas-container').width() / gridCols) * gridCols)
+    $('#canvas-container').height(Math.round($('#canvas-container').width() / gridRows) * gridRows)
+  }
 } // setMapSize(metroMapObject)
 
 function setMapStyle(metroMap) {
@@ -1896,14 +1923,12 @@ function moveMap(direction) {
     } // mapDataVersion check
 
     drawCanvas(activeMap);
-    // If I wanted, I could autoSave(activeMap) here,
-    // but saving the incremental step of each movement
-    // is probably less useful for "oops, undo!" purposes
-    // than undo taking you to the last non-movement save point
+    autoSave(activeMap)
 
     // This is useful because I could call this in a while loop,
     //  and when it returns for being out of bounds I can stop,
-    //  and then could offer to stretch if now possible
+    //  and then could offer to stretch if now possible.
+    // If I do that, I should defer autoSave until it's over, and only do it once.
     return true
 } // moveMap(direction)
 
@@ -2280,6 +2305,9 @@ $(document).ready(function() {
     if (event.key == 'z' && (event.metaKey || event.ctrlKey)) {
       // If Control+Z is pressed
       undo();
+    }if (event.key == 'y' && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault() // Don't open the History menu
+      // TODO: Add Redo feature
     }
     else if ((event.key == 'c') && (!event.metaKey && !event.ctrlKey)) { // C
       $('#controls-collapse-menu').trigger('click')
@@ -2441,6 +2469,7 @@ $(document).ready(function() {
       }
     }
     if (linesToDelete.length > 0) {
+      autoSave(activeMap)
       for (var d=0; d<linesToDelete.length; d++) {
         linesToDelete[d].remove();
       }
@@ -2809,6 +2838,7 @@ $(document).ready(function() {
           }
         }
       });
+      autoSave(activeMap)
     }
     // Re-bind events to .rail-line -- otherwise, newly created lines won't have events
     bindRailLineEvents();
@@ -2875,7 +2905,7 @@ $(document).ready(function() {
           "color": lineColorToChangeTo,
           "name": lineNameToChangeTo
         })
-        $('#rail-line-change').html('<i class="fa fa-pencil" aria-hidden="true"></i> Edit colors &amp; names')
+        $('#rail-line-change').html('Edit colors &amp; names')
         $('#cant-save-rail-line-edits').text('')
         $('#tool-change-line-options').hide()
         // If the line tool is in use, unset it so we don't get a stale color
@@ -2922,6 +2952,7 @@ $(document).ready(function() {
         'mapLineWidth': mapLineWidth
       }
     }
+    autoSave(activeMap)
     drawCanvas()
   })
 
@@ -2938,6 +2969,7 @@ $(document).ready(function() {
         'mapStationStyle': mapStationStyle
       }
     }
+    autoSave(activeMap)
     drawCanvas()
   })
 
@@ -3160,8 +3192,8 @@ function resetAllStationStyles(metroMap) {
   }
 }
 $('#reset-all-station-styles').on('click', function() {
-  autoSave(activeMap)
   resetAllStationStyles(activeMap)
+  autoSave(activeMap)
   drawCanvas()
   setTimeout(function() {
     $('#reset-all-station-styles').removeClass('active')
@@ -3538,7 +3570,7 @@ function stretchMap(metroMapObject) {
   } // mapDataVersion
   
   activeMap = newMapObject
-
+  autoSave(activeMap)
   loadMapFromObject(newMapObject);
   drawCanvas(newMapObject);
   return newMapObject;
