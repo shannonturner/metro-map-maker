@@ -108,7 +108,16 @@
             {% if map.svg %}
                 <img src="{{ map.svg.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}">
             {% else %}
-                Thumbnail not available, but you can <a href="{% url 'home_map' map.urlhash %}">remix this map</a>.
+                {% if image_generation_backfill > 100 %}
+                    {# TODO -- REMOVE THIS and the query from views.MapsPerDayView ONCE BACKFILL COMPLETES #}
+                    <div class="alert alert-warning" role="alert">
+                        <p>Metro Map Maker still has about ~{{ image_generation_backfill|intcomma }} maps to generate thumbnails, print-quality images, and sharing images for.</p>
+                        <p>This is a fast process, but I'm going a bit slower than I otherwise would to avoid overloading my server.</p>
+                        <p>Please be patient while images are being generated. In the meantime, you can <a href="{% url 'home_map' map.urlhash %}">remix this map</a>.</p>
+                    </div>
+                {% else %}
+                    The thumbnail for this map is still generating, but you can <a href="{% url 'home_map' map.urlhash %}">remix this map</a>.
+                {% endif %}
             {% endif %}
         </div>
     </div>

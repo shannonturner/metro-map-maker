@@ -1014,6 +1014,13 @@ class RateMapView(RecaptchaMixin, FormView, DetailView):
             context['form_dislike'] = self.form_class(dict(urlhash=self.object.urlhash, choice='dislikes'))
         if not self.object.id in request.session.get('identified', []):
             context['identify_form'] = IdentifyForm(dict(urlhash=self.object.urlhash))
+
+        # TODO: Remove this after image generation backfill completes
+        #   and remove the "please be patient" message from savedmap_archive_day.html
+        context['image_generation_backfill'] = SavedMap.objects.filter(
+            Q(thumbnail_svg=None) | Q(thumbnail_svg='')
+        ).count()
+
         return self.render_to_response(context)
 
     def form_valid(self, form):
