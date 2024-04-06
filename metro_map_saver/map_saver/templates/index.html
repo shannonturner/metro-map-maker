@@ -81,24 +81,23 @@
                 <span class="button-label">All Maps by Date</span>
               </button>
             </a>
+          {% if not saved_map %}
+            <div id="favorite-maps" class="width-100">
+              <p>Some of my favorites include:</p>
+              <div class="text-center">
+              {% for thumbnail in favorites %}
+                <div>
+                  <a href="{% url 'home_map' thumbnail.urlhash %}">
+                    <img src="{{ thumbnail.thumbnail }}" class="img-responsive center-block" alt="{{ thumbnail.name }}" title="{{ thumbnail.name }}">
+                    <h4>{{ thumbnail.name }}</h4>
+                  </a>
+                </div>
+              {% endfor %}
+              </div>
+            </div> <!-- #favorite-maps -->
+          {% endif %}
         </fieldset>
       </div>
-
-      {% if not saved_map %}
-      <div id="favorite-maps">
-        <h5>Some of my favorites include:</h5>
-        <div class="text-center">
-        {% for thumbnail in favorites %}
-          <div>
-            <a href="/map/{{ thumbnail.urlhash }}">
-              <img src="{{ thumbnail.thumbnail }}" class="img-responsive center-block" alt="{{ thumbnail.name }}" title="{{ thumbnail.name }}">
-              <h4>{{ thumbnail.name }}</h4>
-            </a>
-          </div>
-        {% endfor %}
-        </div>
-      </div> <!-- #favorite-maps -->
-      {% endif %}
 
       <h5 id="mobile-compatibility-warning" class="visible-xs">This works best on desktop; some features may not work as well if you are on a mobile device.</h5>
       <div style="display: flex;gap: 1rem;margin-bottom: 1rem;">
