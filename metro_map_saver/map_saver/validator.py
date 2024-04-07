@@ -83,7 +83,7 @@ def html_dom_id_safe(string):
     """ Returns a string santized of any characters that are not suitable for an HTML DOM's ID
     """
 
-    return re.sub('[^A-Za-z0-9\- \_]', '', string)
+    return re.sub(r'[^A-Za-z0-9\- \_]', '', string)
 
 def get_map_size(highest_xy_seen):
 
@@ -189,7 +189,7 @@ def validate_metro_map_v2(metro_map):
     }
 
     # Points by Color
-    all_points_seen = [] # Must confirm that stations exist on these points
+    all_points_seen = set() # Must confirm that stations exist on these points
     points_skipped = []
     highest_xy_seen = -1 # Because 0 is a point
     valid_points_by_color = {}
@@ -233,7 +233,7 @@ def validate_metro_map_v2(metro_map):
                     continue
 
                 if metro_map['points_by_color'][color]['xys'][x][y] == 1:
-                    all_points_seen.append((x, y))
+                    all_points_seen.add((x, y))
 
                     if int(x) > highest_xy_seen:
                         highest_xy_seen = int(x)
