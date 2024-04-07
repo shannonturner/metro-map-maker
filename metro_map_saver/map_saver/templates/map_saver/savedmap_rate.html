@@ -62,7 +62,7 @@
                 <form id="dislike-form" action="{% url 'rate' map.urlhash %}" method="post" class="d-flex">
                     <input type="hidden" name="csrfmiddlewaretoken" class="csrf_token">
                     {{ form_dislike }}
-                    <button class="g-recaptcha bg-styled styling-silverline w-100 fs-4"
+                    <button class="g-recaptcha bg-styled styling-silverline w-100 fs-4 text-center"
                         data-sitekey="6LcurJ8pAAAAAAL2AcDczWloXEr3t78Y3Yr0hN0W"
                         data-callback='submitDislike'
                         data-action='dislike_map'>
@@ -74,8 +74,8 @@
                     </button>
                 </form>
                 {% else %}
-                    <div class="already-rated already-liked fs-4"><i class="bi bi-heart"></i> {{ map.likes|intcomma }} Likes</div>
-                    <div class="already-rated already-disliked fs-4"><i class="bi bi-x-circle"></i> {{ map.dislikes|intcomma }} Dislikes</div>
+                    <div class="already-rated already-liked fs-4 text-center"><i class="bi bi-heart"></i> {{ map.likes|intcomma }} Likes</div>
+                    <div class="already-rated already-disliked fs-4 text-center"><i class="bi bi-x-circle"></i> {{ map.dislikes|intcomma }} Dislikes</div>
                 {% endif %}
 
                 {% if identify_form %}
