@@ -40,11 +40,11 @@
         <h3 class="card-title mt-2 p-3 styling-redline text-center">
             <a class="text-outline bg-styled" href="{% url 'home_map' map.urlhash %}">Map #{{ map.id|intcomma }}: {{ map.urlhash }} ({{ map.created_at|date:'F j, Y' }})</a>
         </h3>
-        <div class="d-flex justify-content-evenly align-items-center m-3">
+        <div class="d-flex justify-content-evenly align-items-stretch m-3">
             {% if map.svg %}
 
                 {% if form_like and form_dislike %}
-                <form id="like-form" action="{% url 'rate' map.urlhash %}" method="post">
+                <form id="like-form" action="{% url 'rate' map.urlhash %}" method="post" class="d-flex">
                     <input type="hidden" name="csrfmiddlewaretoken" class="csrf_token">
                     {{ form_like }}
                     <button class="g-recaptcha bg-styled styling-redline w-100 fs-4"
@@ -59,7 +59,7 @@
                     </button>
                 </form>
 
-                <form id="dislike-form" action="{% url 'rate' map.urlhash %}" method="post">
+                <form id="dislike-form" action="{% url 'rate' map.urlhash %}" method="post" class="d-flex">
                     <input type="hidden" name="csrfmiddlewaretoken" class="csrf_token">
                     {{ form_dislike }}
                     <button class="g-recaptcha bg-styled styling-silverline w-100 fs-4"
@@ -97,8 +97,8 @@
                 {% endif %}
             {% endif %}
 
-            <a href="{% url 'home_map' map.urlhash %}">
-                <button class="bg-styled styling-blueline fs-4">
+            <a href="{% url 'home_map' map.urlhash %}" class="d-flex">
+                <button class="bg-styled styling-blueline fs-4 align-self-stretch">
                     <i class="bi bi-tools"></i> Remix this map
                 </button>
             </a>
