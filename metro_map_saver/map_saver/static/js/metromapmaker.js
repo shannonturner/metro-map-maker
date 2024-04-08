@@ -2648,9 +2648,9 @@ $(document).ready(function() {
         $('#map-somewhere-else').click(function() {
           $('#name-map').show()
           $('#name-this-map').show()
-          $(this).hide()
+          $(this).parent().hide()
           $('#name-this-map').removeClass();
-          $('#name-this-map').addClass('styling-blueline');
+          $('#name-this-map').addClass('styling-blueline width-100');
           $('#name-this-map').text('Name this map')
         })
         $('#name-this-map').click(function(e) {
