@@ -148,9 +148,7 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
 
                     if line_color not in points_by_color:
                         points_by_color[line_color] = {
-                            'x': [],
-                            'y': [],
-                            'xy': [],
+                            'xy': set(),
                         }
 
                     colors_by_xy[f'{x},{y}'] = line_color
@@ -163,9 +161,7 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
                     if y > highest_seen:
                         highest_seen = y
 
-                    points_by_color[line_color]['x'].append(x)
-                    points_by_color[line_color]['y'].append(y)
-                    points_by_color[line_color]['xy'].append((x, y))
+                    points_by_color[line_color]['xy'].add((x, y))
 
         for x in mapdata['stations']:
             for y in mapdata['stations'][x]:
@@ -480,26 +476,26 @@ def find_lines(points_this_color):
     """
 
     directions = 'E S NE SE' # Don't need to draw N, W, NW, SW
-    skip_points = {d: list() for d in directions.split()}
+    skip_points = {d: set() for d in directions.split()}
 
-    lines = []
+    lines = set()
     singletons = set()
     not_singletons = set()
 
     for direction in directions.split():
-        for point in points_this_color:
+        for point in sorted(points_this_color):
             x, y = point
 
             if point in skip_points[direction]:
                 continue
             endpoint = find_endpoint_of_line(x, y, points_this_color, direction)
             if endpoint:
-                lines.append((x, y, endpoint['x1'], endpoint['y1']))
+                lines.add((x, y, endpoint['x1'], endpoint['y1']))
                 not_singletons.add((x,y))
                 not_singletons.add((endpoint['x1'], endpoint['y1']))
                 for pt in endpoint['between']:
                     not_singletons.add(pt)
-                skip_points[direction].extend(endpoint['between'])
+                    skip_points[direction].add(pt)
             elif point in not_singletons:
                 # This might not make a line in this direction,
                 #   but it does connect to a line in SOME direction,
