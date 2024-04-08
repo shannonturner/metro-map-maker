@@ -43,7 +43,13 @@ from .forms import (
     RateForm,
 )
 from .models import SavedMap, IdentifyMap
-from .validator import is_hex, sanitize_string, validate_metro_map, hex64
+from .validator import (
+    is_hex,
+    sanitize_string,
+    validate_metro_map,
+    hex64,
+    ALLOWED_TAGS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -398,7 +404,7 @@ class CreatorNameMapView(TemplateView):
             else:
                 if this_map.naming_token and this_map.naming_token == naming_token:
                     # This is the original creator of the map; allow them to name the map.
-                    this_map.name = sanitize_string(f'{name} ({tags})' if tags else f'{name}')[:255]
+                    this_map.name = sanitize_string(f'{name} ({tags})' if tags in ALLOWED_TAGS else f'{name}')[:255]
                     this_map.save()
                     context['saved_map'] = 'Success'
                 else:

@@ -16,6 +16,7 @@ ALLOWED_LINE_WIDTHS = [1, 0.75, 0.5, 0.25, 0.125]
 ALLOWED_STATION_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
 ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180]
 ALLOWED_CONNECTING_STATIONS = ['rect', 'rect-round', 'circles-thin']
+ALLOWED_TAGS = ['real', 'speculative', 'unknown'] # TODO: change 'speculative' to 'fantasy' here and everywhere else, it's the more common usage
 
 def is_hex(string):
 
