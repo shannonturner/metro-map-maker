@@ -2314,7 +2314,11 @@ $(document).ready(function() {
       // TODO: Add Redo feature
     }
     else if ((event.key == 'c') && (!event.metaKey && !event.ctrlKey)) { // C
-      $('#controls-collapse-menu').trigger('click')
+      if (menuIsCollapsed) {
+        $('#controls-expand-menu').trigger('click')
+      } else {
+        $('#controls-collapse-menu').trigger('click')
+      }
     }
     else if (event.key == 'd') { // D
       $('#tool-line').trigger('click')
@@ -2342,9 +2346,6 @@ $(document).ready(function() {
     }
     else if (event.key == 's') { // S
       $('#tool-station').trigger('click')
-    }
-    else if ((event.key == 'x') && (!event.metaKey && !event.ctrlKey)) { // X
-      $('#controls-expand-menu').trigger('click')
     }
     else if ((event.key == 'y') && (!event.metaKey && !event.ctrlKey)) { // Y
       if (!menuIsCollapsed) {
