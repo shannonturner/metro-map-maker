@@ -3664,13 +3664,17 @@ function collapseToolbox() {
   $('#controls').addClass('collapsed')
 
   $('#toolbox button span.button-label').hide()
-  $('#title, #remix, #credits, #rail-line-new, #rail-line-change, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-move-options, #tool-resize-all, #tool-resize-options, #tool-map-style, #tool-map-style-options').hide()
+  $('#title, #remix, #credits, #rail-line-new, #tool-new-line-options, #rail-line-change, #tool-change-line-options, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-move-options, #tool-resize-all, #tool-resize-options, #tool-map-style, #tool-map-style-options').hide()
   $('#controls-collapse-menu').hide()
   $('#tool-line-caption-draw').hide()
   $('#tool-eraser-caption-eraser').hide()
   $('#tool-line-caption-fill').hide()
   $('#tool-eraser-caption-fill').hide()
-
+  if ($('#hide-save-share-url').length == 1) {
+    $('#hide-save-share-url').hide()
+  }
+  $('#rail-line-new').children('span').text('Add New Line')
+  $('#rail-line-change').children('span').html('Edit colors &amp; names')
   $('#controls-expand-menu').show()
 }
 
@@ -3702,6 +3706,10 @@ function expandToolbox() {
   } else {
     $('#tool-line-caption-fill').hide()
     $('#tool-eraser-caption-fill').hide()
+  }
+
+  if ($('#hide-save-share-url').length == 1) {
+    $('#hide-save-share-url').show()
   }
 
   $('#controls-collapse-menu').show()
