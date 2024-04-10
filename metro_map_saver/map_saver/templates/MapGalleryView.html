@@ -16,13 +16,6 @@
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
-
     <style>
 
     body {
@@ -226,9 +219,9 @@
 
         <div id="map-container-{{ map.id }}" class="map-container{% if forloop.first %} active-map{% endif %}">
           <a id="download-link-{{ map.id }}" href="#" download="{{ map.urlhash }}.png"></a>
-          <canvas id='metro-map-gallery-canvas-{{ map.id }}' width="1600" height="1600" class="img-responsive map-image"></canvas>
-          <canvas id='metro-map-social-canvas-{{ map.id }}' width="1600" height="1600" class="hidden"></canvas>
-          <canvas id="metro-map-thumbnail-canvas-{{ map.id }}" width="120" height="120" class="hidden"></canvas>
+          {% if map.svg %}
+            <img src="{{ map.svg.url }}" class="img-responsive map-image>">
+          {% endif %}
           <hr class="map-divider">
         </div>
 
@@ -253,8 +246,15 @@
 
   <script src="https://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+  <script src='{% static "js/django-csrf.js" %}'></script>
 
   <script type="text/javascript">
+
+    var csrftoken = getCookie('csrftoken');
+
+  // Happily, most of this is now obseleted by the cutover to SVG
+  // which is great because a lot of it was duplicative of metromapmaker.js
+  // so TODO: remove what I can
 
   String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -684,21 +684,21 @@
   $(document).ready(function() {
     allMaps = {}
     {% for map in saved_maps %}
-      allMaps["{{ map.id }}"] = {% autoescape off %}'{{ map.mapdata }}';{% endautoescape %}
-      mapData = allMaps["{{ map.id }}"]
-      try {
-        mapData = JSON.parse(mapData);
-        galleryGetMapSize(mapData);
-        var canvas = document.getElementById('metro-map-gallery-canvas-' + {{ map.id }});
-        canvas.height = gridSize * preferredGridPixelMultiplier;
-        canvas.width = gridSize * preferredGridPixelMultiplier;
-        galleryExportToCanvas(mapData, {{ map.id }}, 'gallery');
-        galleryExportToCanvas(mapData, {{ map.id }}, 'social');
-        galleryDrawThumbnail(mapData, {{ map.id }});
-        reduceColorDepth('metro-map-thumbnail-canvas-' + {{ map.id }});
-      } catch (e) {
-        console.log("[WARN] Skipping #{{ map.id }} ({{ map.urlhash }}) - bad JSON: " + e)
-      }
+      // allMaps["{{ map.id }}"] = {% autoescape off %}'{{ map.mapdata }}';{% endautoescape %}
+      // mapData = allMaps["{{ map.id }}"]
+      // try {
+      //   mapData = JSON.parse(mapData);
+      //   galleryGetMapSize(mapData);
+      //   var canvas = document.getElementById('metro-map-gallery-canvas-' + {{ map.id }});
+      //   canvas.height = gridSize * preferredGridPixelMultiplier;
+      //   canvas.width = gridSize * preferredGridPixelMultiplier;
+      //   galleryExportToCanvas(mapData, {{ map.id }}, 'gallery');
+      //   galleryExportToCanvas(mapData, {{ map.id }}, 'social');
+      //   galleryDrawThumbnail(mapData, {{ map.id }});
+      //   reduceColorDepth('metro-map-thumbnail-canvas-' + {{ map.id }});
+      // } catch (e) {
+      //   console.log("[WARN] Skipping #{{ map.id }} ({{ map.urlhash }}) - bad JSON: " + e)
+      // }
     {% endfor %}
 
     $('.start-hidden').hide();
@@ -747,7 +747,8 @@
       var thisMapId = $(this).attr('id').slice(5);
       $.post('/admin/action/', {
         "action": "hide",
-        "map": thisMapId
+        "map": thisMapId,
+        'csrfmiddlewaretoken': csrftoken
       }).done(function(data) {
         if (data == 'Success') {
           if (hideMapButton.text() == 'Hide') {
@@ -797,6 +798,7 @@
         "action": "image",
         "map": parseInt(mapId),
         "data": base64ImageData,
+        'csrfmiddlewaretoken': csrftoken
       })
     } // saveSocialSharingImage(mapId)
     {% endif %}
@@ -821,6 +823,7 @@
         "action": "thumbnail",
         "map": parseInt(thisMapId),
         "data": base64thumbnailData,
+        'csrfmiddlewaretoken': csrftoken
       }).done(function(data) {
         if (data == 'Success') {
           if (getThumbnailButton.text() == 'Generate Thumbnail') {
@@ -845,7 +848,8 @@
       $.post('/admin/action/', {
         "action": "name",
         "map": parseInt(thisMapId),
-        "name": mapNameInput.val()
+        "name": mapNameInput.val(),
+        'csrfmiddlewaretoken': csrftoken
       }).done(function(data) {
         if (data == 'Success') {
           if (mapNameInput.val().length > 0) {
@@ -874,7 +878,8 @@
       $.post('/admin/action/', {
         "action": action,
         "map": parseInt(thisMapId),
-        "tag": tag
+        "tag": tag,
+        'csrfmiddlewaretoken': csrftoken
       }).done(function(data) {
         if (data == 'Success') {
           if (action == "addtag") {
