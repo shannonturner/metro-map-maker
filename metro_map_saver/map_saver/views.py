@@ -886,7 +886,7 @@ class MapsPerDayView(DayArchiveView):
     """ Display the maps created this day
     """
 
-    queryset = SavedMap.objects.defer(*SavedMap.DEFER_FIELDS).all()
+    queryset = SavedMap.objects.defer(*SavedMap.DEFER_FIELDS).all().exclude(tags__slug='calendar-hidden')
     date_field = 'created_at'
     paginate_by = 50
     context_object_name = 'maps'
