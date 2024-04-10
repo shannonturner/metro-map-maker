@@ -1,34 +1,55 @@
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, PermissionDenied
-from django.db.models import Count
-from django.shortcuts import render
+from django.db.models import Count, F, Q
+from django.http import HttpResponseRedirect
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
+from django.urls import reverse_lazy
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.generic.base import TemplateView
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import FormView
+from django.views.generic.list import ListView
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.utils.decorators import method_decorator
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.gzip import gzip_page
-from django.views.decorators.cache import cache_page, never_cache
+from django.views.decorators.cache import cache_page, never_cache, cache_control
 from django.conf import settings
+from django.views.generic.dates import (
+    DayArchiveView,
+)
 
 import base64
 import datetime
 import difflib
-import hashlib
 import json
 import logging
 import os
 import pprint
 import pytz
 import random
+import requests
 import urllib.parse
 
 from taggit.models import Tag
 
 from moderate.models import ActivityLog
 from citysuggester.models import TravelSystem
-from .models import SavedMap
-from .validator import is_hex, sanitize_string, validate_metro_map, hex64
+from .forms import (
+    CreateMapForm,
+    IdentifyForm,
+    RateForm,
+)
+from .models import SavedMap, IdentifyMap
+from .validator import (
+    is_hex,
+    sanitize_string,
+    validate_metro_map,
+    hex64,
+    ALLOWED_TAGS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +58,10 @@ class HomeView(TemplateView):
     template_name = 'index.html'
 
     @method_decorator(gzip_page)
+    @method_decorator(ensure_csrf_cookie)
     def get(self, request, **kwargs):
-        if not request.GET.get('map'):
+        urlhash = kwargs.get('urlhash', request.GET.get('map'))
+        if not urlhash:
             # Only show favorite thumbnails if we're NOT loading a specific map,
             #   otherwise that wastes a bit of bandwidth and pagespeed
             #   which is especially important since this only shows on mobile
@@ -55,22 +78,40 @@ class HomeView(TemplateView):
             }
         else:
             try:
-                saved_map = SavedMap.objects.get(urlhash=request.GET.get('map'))
-            except Exception:
-                context = {}
-            else:
+                saved_map = SavedMap.objects.get(urlhash=urlhash)
+            except MultipleObjectsReturned:
+                saved_map = SavedMap.objects.filter(urlhash=urlhash).first()
+            except ObjectDoesNotExist:
                 context = {
-                    'saved_map': saved_map,
+                    'today': timezone.now().date(),
+                    'error': 'Map was not found.',
                 }
-                if saved_map.name:
-                    if saved_map.name.endswith(' (real)'):
-                        context["saved_map_name"] = saved_map.name.rsplit(" (real)")[0]
-                    elif saved_map.name.endswith(' (speculative)'):
-                        context["saved_map_name"] = saved_map.name.rsplit(" (speculative)")[0]
-                    elif saved_map.name.endswith(' (unknown)'):
-                        context["saved_map_name"] = saved_map.name.rsplit(" (unknown)")[0]
-                    else:
-                        context["saved_map_name"] = saved_map.name
+                return render(request, self.template_name, context)
+            except Exception as exc:
+                context = {
+                    'today': timezone.now().date(),
+                    'error': f'This map could not be loaded: {exc}'
+                }
+                return render(request, self.template_name, context)
+
+            context = {
+                'saved_map': saved_map,
+            }
+            if saved_map.name:
+                if saved_map.name.endswith(' (real)'):
+                    context["saved_map_name"] = saved_map.name.rsplit(" (real)")[0]
+                elif saved_map.name.endswith(' (speculative)'):
+                    context["saved_map_name"] = saved_map.name.rsplit(" (speculative)")[0]
+                elif saved_map.name.endswith(' (unknown)'):
+                    context["saved_map_name"] = saved_map.name.rsplit(" (unknown)")[0]
+                else:
+                    context["saved_map_name"] = saved_map.name
+            try:
+                context['canvas_size'] = saved_map['global']['map_size'] * 20
+            except Exception:
+                context['canvas_size'] = 1600
+
+        context['today'] = timezone.now().date()
 
         return render(request, self.template_name, context)
 
@@ -81,6 +122,11 @@ class PublicGalleryView(TemplateView):
 
     @method_decorator(gzip_page)
     def get(self, request, **kwargs):
+        return super().get(request, **kwargs)
+
+    def get_context_data(self, *args, **kwargs):
+
+        context = super().get_context_data(*args, **kwargs)
 
         tags = [
             'favorite',
@@ -93,10 +139,15 @@ class PublicGalleryView(TemplateView):
         thumbnails = SavedMap.objects.filter(publicly_visible=True) \
             .values('thumbnail', 'name', 'urlhash')
 
-        context = {tag:thumbnails.filter(tags__slug=tag).order_by('name') for tag in tags}
+        for tag in tags:
+            context[tag] = thumbnails.filter(tags__slug=tag).order_by('name')
         context['favorite'] = context['favorite'].order_by('?')[:8]
 
-        return render(request, self.template_name, context)
+        from summary.models import MapsByDay
+        mbd = MapsByDay.objects.all()
+        context['map_count'] = sum(m.maps for m in mbd)
+
+        return context
 
 class ThumbnailGalleryView(TemplateView):
 
@@ -331,6 +382,8 @@ class MapSimilarView(TemplateView):
 
 class CreatorNameMapView(TemplateView):
 
+    # @method_decorator(csrf_exempt) # Break glass in case of CSRF failure
+    @method_decorator(never_cache)
     def post(self, request, **kwargs):
 
         """ Allow creators to name / "tag" their maps
@@ -351,7 +404,7 @@ class CreatorNameMapView(TemplateView):
             else:
                 if this_map.naming_token and this_map.naming_token == naming_token:
                     # This is the original creator of the map; allow them to name the map.
-                    this_map.name = sanitize_string(f'{name} ({tags})' if tags else f'{name}')[:255]
+                    this_map.name = sanitize_string(f'{name} ({tags})' if tags in ALLOWED_TAGS else f'{name}')[:255]
                     this_map.save()
                     context['saved_map'] = 'Success'
                 else:
@@ -509,44 +562,61 @@ class MapDataView(TemplateView):
         except ObjectDoesNotExist:
             context['error'] = '[ERROR] The requested map does not exist ({0})'.format(urlhash)
         except MultipleObjectsReturned:
-            context['error'] = '[ERROR] Multiple objects returned ({0}). This should never happen.'.format(urlhash)
-            saved_map = SavedMap.objects.filter(urlhash=urlhash).first()
-            context['saved_map'] = saved_map.mapdata
-        else:
-            context['saved_map'] = saved_map.mapdata
+            saved_map = SavedMap.objects.filter(urlhash=urlhash).earliest('id')
+
+        if not context.get('error'):
+            if saved_map.data:
+                mapdata = json.dumps(saved_map.data)
+            elif saved_map.mapdata:
+                mapdata = saved_map.mapdata
+            else:
+                mapdata = {}
+            context['saved_map'] = mapdata
 
         return render(request, 'MapDataView.html', context)
 
+    # @method_decorator(csrf_exempt) # Break glass in case of CSRF failure
     @method_decorator(never_cache)
     def post(self, request, **kwargs):
         mapdata = request.POST.get('metroMap')
 
         context = {}
 
-        try:
-            mapdata = validate_metro_map(mapdata)
-        except AssertionError as e:
-            # Anything that appears before the first colon will be internal-only;
-            #   everything else is user-facing.
-            context['error'] = '[ERROR] {0}'.format(' '.join(str(e).split(':')[1:]))
-            logger.error('[ERROR] [FAILEDVALIDATION] ({0}); mapdata: {1}'.format(e, mapdata))
-        else:
-            urlhash = hex64(hashlib.sha256(str(mapdata).encode('utf-8')).hexdigest()[:12])
+        form = CreateMapForm({'mapdata': mapdata})
+        if form.is_valid():
+            mapdata = form.cleaned_data['mapdata']
+            urlhash = form.cleaned_data['urlhash']
+            naming_token = form.cleaned_data['naming_token']
+            data_version = form.cleaned_data['data_version']
             try:
                 # Doesn't override the saved map if it already exists.
                 saved_map = SavedMap.objects.only('urlhash').get(urlhash=urlhash)
                 context['saved_map'] = f'{urlhash},'
             except ObjectDoesNotExist:
-                saved_map = SavedMap.objects.create(**{
-                    'urlhash': urlhash,
-                    'mapdata': json.dumps(mapdata),
-                    'naming_token': hashlib.sha256('{0}'.format(random.randint(1, 100000)).encode('utf-8')).hexdigest(),
+                if data_version == 2:
+                    saved_map = SavedMap.objects.create(**{
+                        'urlhash': urlhash,
+                        'data': mapdata,
+                        'naming_token': naming_token,
                     })
-                context['saved_map'] = f'{saved_map.urlhash},{saved_map.naming_token}'
+                else:
+                    saved_map = SavedMap.objects.create(**{
+                        'urlhash': urlhash,
+                        'mapdata': json.dumps(mapdata),
+                        'naming_token': naming_token,
+                    })
+                context['saved_map'] = f'{urlhash},{naming_token}'
             except MultipleObjectsReturned:
                 # This should never happen, but it happened once
                 # Perhaps this was due to a race condition?
                 context['saved_map'] = f'{urlhash},'
+        else:
+            # Anything that appears before the first colon will be internal-only;
+            #   everything else is user-facing.
+            errors = form.errors.get('mapdata', [])
+            errors = '[ERROR] {0}'.format(' '.join(str(errors).split(':')[1:]).split('</')[0])
+            context['error'] = errors
+            logger.error('[ERROR] [FAILEDVALIDATION] ({0}); mapdata: {1}'.format(errors, mapdata))
 
         return render(request, 'MapDataView.html', context)
 
@@ -810,3 +880,211 @@ class MapsByDateView(TemplateView):
         }
 
         return render(request, 'MapsByDateView.json', context)
+
+class MapsPerDayView(DayArchiveView):
+
+    """ Display the maps created this day
+    """
+
+    queryset = SavedMap.objects.defer(*SavedMap.DEFER_FIELDS).all().exclude(tags__slug='calendar-hidden')
+    date_field = 'created_at'
+    paginate_by = 50
+    context_object_name = 'maps'
+    allow_empty = True
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        FIRST_YEAR = 2017
+        context['all_years'] = range(datetime.datetime.now().year, (FIRST_YEAR - 1), -1)
+
+        if context['day'] < datetime.date(2018, 9, 13):
+            context['date_estimate_disclaimer'] = True
+
+        if context['day'] <= datetime.date(2017, 9, 6):
+            context['previous_day'] = False
+
+        # TODO: Remove this after image generation backfill completes
+        #   and remove the "please be patient" message from savedmap_archive_day.html
+        context['image_generation_backfill'] = SavedMap.objects.filter(
+            Q(thumbnail_svg=None) | Q(thumbnail_svg='')
+        ).count()
+
+        return context
+
+    @method_decorator(cache_control(max_age=60))
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+class SameDayView(ListView):
+
+    """ Show all maps created on the same day as a given URLhash,
+            which can be especially useful for finding prior versions of the same map
+    """
+
+    model = SavedMap
+    context_object_name = 'maps'
+
+    def get_queryset(self):
+        urlhash = self.request.path_info.split('/')[-1]
+        this_map = get_object_or_404(SavedMap, urlhash=urlhash)
+
+        # I'd use __date here, but then SQL won't use the index on created_at
+        return super().get_queryset().defer(*SavedMap.DEFER_FIELDS).filter(
+            created_at__gte=this_map.created_at.date(),
+            created_at__lt=this_map.created_at.date() + datetime.timedelta(days=1),
+        )
+
+class RecaptchaMixin:
+
+    def is_submission_valid(self, form):
+
+        """ Check whether the submitted form was done by a human
+        """
+
+        try:
+            response = requests.post(
+                'https://www.google.com/recaptcha/api/siteverify',
+                data={
+                    'secret': settings.RECAPTCHA_SECRET_KEY,
+                    'response': form.cleaned_data['g-recaptcha-response'],
+                },
+            ).json()
+        except Exception as exc:
+            pass
+        else:
+            try:
+                is_valid = response.get('success')
+                captcha = response.get('score', 0)
+                captcha = float(captcha)
+            except Exception as exc:
+                captcha = 0
+            return (is_valid and captcha > settings.RECAPTCHA_VALID_THRESHOLD)
+
+class IdentifyMapView(RecaptchaMixin, FormView):
+    model = IdentifyMap
+    form_class = IdentifyForm
+    fields = ['name', 'map_type']
+
+    def get_success_url(self, urlhash):
+        return reverse_lazy('rate', args=(urlhash, ))
+
+    def form_valid(self, form):
+        try:
+            urlhash = form.cleaned_data['urlhash']
+            name = form.cleaned_data['name']
+            map_type = form.cleaned_data['map_type']
+            mmap = SavedMap.objects.filter(urlhash=urlhash).first()
+            is_submission_valid = self.is_submission_valid(form)
+        except Exception as exc:
+            pass
+        else:
+            if is_submission_valid:
+                self.model.objects.create(
+                    saved_map=mmap,
+                    name=name,
+                    map_type=map_type,
+                )
+                already_identified = self.request.session.get('identified', [])
+                self.request.session['identified'] = already_identified + [mmap.id]
+
+        return HttpResponseRedirect(self.get_success_url(urlhash))
+
+    def form_invalid(self, form):
+        urlhash = form.cleaned_data['urlhash']
+        return HttpResponseRedirect(self.get_success_url(urlhash))
+
+
+class RateMapView(RecaptchaMixin, FormView, DetailView):
+    model = SavedMap
+    context_object_name = 'map'
+    slug_field = 'urlhash'
+    slug_url_kwarg = 'urlhash'
+    template_name = 'map_saver/savedmap_rate.html'
+
+    form_class = RateForm
+
+    def get_success_url(self, urlhash):
+        return reverse_lazy('rate', args=(urlhash, ))
+
+    @method_decorator(cache_control(max_age=60))
+    @method_decorator(ensure_csrf_cookie)
+    def get(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+        except MultipleObjectsReturned:
+            self.object = SavedMap.objects.filter(urlhash=kwargs.get('urlhash')).earliest('id')
+        context = self.get_context_data(object=self.object, map=self.object)
+        if not self.object.id in request.session.get('rated', []):
+            context['form_like'] = self.form_class(dict(urlhash=self.object.urlhash, choice='likes'))
+            context['form_dislike'] = self.form_class(dict(urlhash=self.object.urlhash, choice='dislikes'))
+        if not self.object.id in request.session.get('identified', []):
+            context['identify_form'] = IdentifyForm(dict(urlhash=self.object.urlhash))
+
+        # TODO: Remove this after image generation backfill completes
+        #   and remove the "please be patient" message from savedmap_archive_day.html
+        context['image_generation_backfill'] = SavedMap.objects.filter(
+            Q(thumbnail_svg=None) | Q(thumbnail_svg='')
+        ).count()
+
+        return self.render_to_response(context)
+
+    def form_valid(self, form):
+        try:
+            urlhash = form.cleaned_data['urlhash']
+            choice = form.cleaned_data['choice']
+            assert choice in ('likes', 'dislikes')
+            mmap = SavedMap.objects.filter(urlhash=urlhash)
+            is_submission_valid = self.is_submission_valid(form)
+        except Exception as exc:
+            pass
+        else:
+            if is_submission_valid:
+                mmap.update(**{choice: F(choice) + 1})
+                already_rated = self.request.session.get('rated', [])
+                self.request.session['rated'] = already_rated + [mmap.first().id]
+
+        return HttpResponseRedirect(self.get_success_url(urlhash))
+
+    def form_invalid(self, form):
+        urlhash = form.cleaned_data['urlhash']
+        return HttpResponseRedirect(self.get_success_url(urlhash))
+
+class RandomMapView(RateMapView):
+    model = SavedMap
+    context_object_name = 'map'
+    template_name = 'map_saver/savedmap_rate.html'
+
+    @method_decorator(never_cache)
+    @method_decorator(ensure_csrf_cookie)
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    def get_object(self, *args, **kwargs):
+        pks = SavedMap.objects.all().values_list('pk', flat=True)
+        return SavedMap.objects.get(pk=random.choice(pks))
+
+
+class HighestRatedMapsView(ListView):
+    model = SavedMap
+    paginate_by = 100
+    context_object_name = 'maps'
+
+    def get_queryset(self):
+        queryset = super().get_queryset().filter(
+            likes__gt=0,
+        ).defer(*SavedMap.DEFER_FIELDS).order_by('-likes')
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['showing_best'] = True
+        return context
+
+
+class CreditsView(TemplateView):
+    template_name = 'credits.html'
+
+class HelpView(TemplateView):
+    template_name = 'help.html'
+

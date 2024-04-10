@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+
+{% block extrastyle %}
+<style>
+.map-calendar-day-mark { width: 30%; }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+
+        {% if previous_week %}
+
+            {% if previous_week|date:"W" == '1' and previous_week|date:"Y" != week|date:"Y" %}
+                {% comment %}
+                    If the first week in a year starts in the previous year (like Monday, December 31, 2018), don't loop back to January 2018.
+                {% endcomment %}
+                <li class="navbar-text nav-item">
+                    <a href="{% url 'calendar-week' previous_week|date:'Y'|add:1 previous_week|date:'W' %}" class="nav-link nav-previous">
+                        {{ previous_week|date:"Y"|add:1 }} Week #{{ previous_week|date:"W" }} <i class="bi bi-arrow-left-circle"></i>
+                    </a>
+                </li>
+            {% else %}
+                {% if previous_week|date:"Y"|add:0 <= 2017 and previous_week|date:"W"|add:0 <= 35 %}
+                    {# Nothing to see before September 2017 #}
+                {% else %}
+                <li class="navbar-text nav-item">
+                    <a href="{% url 'calendar-week' previous_week|date:'Y' previous_week|date:'W' %}" class="nav-link nav-previous">
+                        {{ previous_week|date:"Y" }} Week #{{ previous_week|date:"W"}} <i class="bi bi-arrow-left-circle"></i>
+                    </a>
+                </li>
+                {% endif %}
+            {% endif %}
+
+        {% endif %}
+
+        {% if previous_week and next_week %}
+            <span class="fs-3 navbar-text nav-item">|</span>
+        {% endif %}
+
+        {% if next_week %}
+
+            {% if next_week|date:"W" == '1' and next_week|date:"Y" == week|date:"Y" %}
+                {% comment %}
+                    If the first week in a year starts in the previous year (like Monday, December 31, 2018),
+                        don't loop back to January 2018.
+                {% endcomment %}
+                <li class="navbar-text nav-item">
+                    <a href="{% url 'calendar-week' next_week|date:'Y'|add:1 next_week|date:'W' %}" class="nav-link nav-next">
+                        {{ next_week|date:"Y"|add:1 }} Week #{{ next_week|date:"W"}} <i class="bi bi-arrow-right-circle"></i>
+                    </a>
+                </li>
+            {% else %}
+                <li class="navbar-text nav-item">
+                    <a href="{% url 'calendar-week' next_week|date:'Y' next_week|date:'W' %}" class="nav-link nav-next">
+                        {{ next_week|date:"Y" }} Week #{{ next_week|date:"W"}} <i class="bi bi-arrow-right-circle"></i>
+                    </a>
+                </li>
+            {% endif %}
+        {% endif %}
+    </div>
+{% endblock breadcrumbs %}
+
+{% block content %}
+
+    <h3 class="visible-xs styling-redline bg-styled p-3">
+        {% if week|date:'W'|add:0 == 1 and week|date:'Y' < next_week|date:'Y' %}
+            {{ week|date:'Y'|add:1 }}
+        {% else %}
+            {{ week|date:'Y' }}
+        {% endif %}
+
+        Week #{{ week|date:"W"}} ({{ maps_count|intcomma }} maps)
+    </h3>
+
+    <div id="list" class="visible-xs">
+        <table class="table table-striped table-light align-middle">
+            <tbody>
+                {% for map in maps %}
+                    <tr>
+                        <th scope="col">
+                            <a href="{% url 'calendar-day' map.day|date:'Y' map.day|date:'m' map.day|date:'d' %}">{{ map.day|date:"F j, Y" }}</a>
+                        </th>
+                        <td>
+                            <a href="{% url 'calendar-day' map.day|date:'Y' map.day|date:'m' map.day|date:'d' %}">{{ map.maps|intcomma }} maps</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="calendar" class="hidden-xs">
+        <h3 class="styling-redline bg-styled p-3 text-center">
+            {% if week|date:'W'|add:0 == 1 and week|date:'Y' < next_week|date:'Y' %}
+                {{ week|date:'Y'|add:1 }}
+            {% else %}
+                {{ week|date:'Y' }}
+            {% endif %}
+
+            Week #{{ week|date:"W" }} ({{ maps_count|intcomma }} maps)
+        </h3>
+        <table border="0" cellpadding="0" cellspacing="0" class="map-calendar w-100 mt-3 mb-3 text-center">
+            <tbody>
+                <tr>
+                    <th class="mon map-calendar-weekday">Mon</th>
+                    <th class="tue map-calendar-weekday">Tue</th>
+                    <th class="wed map-calendar-weekday">Wed</th>
+                    <th class="thu map-calendar-weekday">Thu</th>
+                    <th class="fri map-calendar-weekday">Fri</th>
+                    <th class="sat map-calendar-weekday">Sat</th>
+                    <th class="sun map-calendar-weekday">Sun</th>
+                </tr>
+            <tr>
+                {% for map in maps %}
+                    <td class="{% cycle 'mon' 'tue' 'wed' 'thu' 'fri' 'sat' 'sun' %} map-calendar-day day-{{ forloop.counter }}">
+                        <div class="map-calendar-day-mark">
+                            <a href="{% url 'calendar-day' map.day|date:'Y' map.day|date:'m' map.day|date:'d' %}">{{ map.day|date:'n/j' }}</a>
+                        </div>
+                        <div class="map-calendar-data p-1 m-1">
+                            <h1><a href="{% url 'calendar-day' map.day|date:'Y' map.day|date:'m' map.day|date:'d' %}">
+                                {{ map.maps|intcomma }}
+                            </a></h1>
+                        </div>
+                    </td>
+                {% endfor %}
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+{% endblock content %}

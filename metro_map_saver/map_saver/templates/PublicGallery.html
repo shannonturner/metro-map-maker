@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-{% load static %}
+{% load static humanize %}
 
 <html lang="en">
   <head>
@@ -62,6 +62,8 @@
     <h2><span class="M">M</span>etro <span class="M">M</span>ap <span class="M">M</span>aker Gallery</h2>
     <h4>Here are some of my favorite maps created by MetroMapMaker.com visitors like you! <b>Click any map to begin remixing it!</b></h4>
 
+    <a href="{% url 'calendar' %}"><h4>View all {{ map_count|intcomma }} maps created, by date</h4></a>
+
     <a name="favorite-maps" class="anchor"></a>
     <hr>
 
@@ -72,7 +74,7 @@
 
         {% for thumbnail in favorite %}
         <div class="col-sm-2 col-md-1pt5">
-          <a href="/?map={{ thumbnail.urlhash }}">
+          <a href="/map/{{ thumbnail.urlhash }}">
             <img src="{{ thumbnail.thumbnail }}" class="img-responsive" alt="{{ thumbnail.name }}" title="{{ thumbnail.name }}">
             <h4>{{ thumbnail.name }}</h4>
           </a>
@@ -92,7 +94,7 @@
 
         {% for thumbnail in real %}
         <div class="col-sm-2 col-md-1pt5">
-          <a href="/?map={{ thumbnail.urlhash }}">
+          <a href="/map/{{ thumbnail.urlhash }}">
             <img src="{{ thumbnail.thumbnail }}" class="img-responsive" alt="{{ thumbnail.name }}" title="{{ thumbnail.name }}">
             <h4>{{ thumbnail.name }}</h4>
           </a>
@@ -116,7 +118,7 @@
 
         <!-- {% for thumbnail in speculative %}
         <div class="col-sm-2 col-md-1pt5">
-          <a href="/?map={{ thumbnail.urlhash }}">
+          <a href="/map/{{ thumbnail.urlhash }}">
             <img src="{{ thumbnail.thumbnail }}" class="img-responsive" alt="{{ thumbnail.name }}" title="{{ thumbnail.name }}">
             <h4>{{ thumbnail.name }}</h4>
           </a>
@@ -143,7 +145,7 @@
 
         <!-- {% for thumbnail in unknown %}
         <div class="col-sm-2 col-md-1pt5">
-          <a href="/?map={{ thumbnail.urlhash }}">
+          <a href="/map/{{ thumbnail.urlhash }}">
             <img src="{{ thumbnail.thumbnail }}" class="img-responsive" alt="{{ thumbnail.name }}" title="{{ thumbnail.name }}">
             <h4>{{ thumbnail.name }}</h4>
           </a>

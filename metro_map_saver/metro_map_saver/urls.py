@@ -22,10 +22,12 @@ from django.views.decorators.cache import cache_page, never_cache
 
 import map_saver.views
 import moderate.views
+import summary.views
 
 urlpatterns = [
     # Main page; only caches for 15 minutes so you don't have to wait a full day for static asset updates
     path('', cache_page(60 * 15)(map_saver.views.HomeView.as_view()), name='home'),
+    path('map/<slug:urlhash>', cache_page(60 * 15)(map_saver.views.HomeView.as_view()), name='home_map'),
 
     # Public Gallery
     path('gallery/', map_saver.views.PublicGalleryView.as_view(), name='public_gallery'),
@@ -34,10 +36,23 @@ urlpatterns = [
     path('save/', map_saver.views.MapDataView.as_view(), name='save_map'),
     path('load/<slug:urlhash>', map_saver.views.MapDataView.as_view(), name='load_map'),
     path('name/', map_saver.views.CreatorNameMapView.as_view(), name='name_map'),
+    path('rate/<slug:urlhash>', map_saver.views.RateMapView.as_view(), name='rate'),
+    path('identify/<slug:urlhash>', map_saver.views.IdentifyMapView.as_view(), name='identify'),
 
-    # Admin and Moderation
-    path('admin/', admin.site.urls),
-    path('accounts/login/', auth_views.LoginView.as_view()),
+    # Stats, using summary for performance
+    path('calendar/', summary.views.MapsPerMonthView.as_view(month_format='%m'), name='calendar'),
+    path('calendar/<int:year>/', summary.views.MapsPerYearView.as_view(), name='calendar-year'),
+    path('calendar/<int:year>/<int:month>/', summary.views.MapsPerMonthView.as_view(month_format='%m'), name='calendar-month'),
+    path('calendar/<int:year>/week/<int:week>/', summary.views.MapsPerWeekView.as_view(year_format='%G', week_format='%V'), name='calendar-week'),
+
+    path('calendar/<int:year>/<int:month>/<int:day>/', map_saver.views.MapsPerDayView.as_view(month_format='%m'), name='calendar-day'),
+
+    path('random/', map_saver.views.RandomMapView.as_view(), name='random'),
+    path('sameday/<slug:urlhash>', cache_page(60)(map_saver.views.SameDayView.as_view()), name='sameday'),
+    path('best/', map_saver.views.HighestRatedMapsView.as_view(), name='best'),
+
+    path('credits/', map_saver.views.CreditsView.as_view(), name='credits'),
+    path('help/', map_saver.views.HelpView.as_view(), name='help'),
 
     # Admin HQ
     path('admin/home/', never_cache(map_saver.views.AdminHomeView.as_view()), name='admin_home'),
@@ -66,10 +81,17 @@ urlpatterns = [
 
     # Thumbnails
     path('admin/thumbnail/<slug:tag>/', map_saver.views.ThumbnailGalleryView.as_view(), name='thumbnail_tag'),
+
+    # Admin and Moderation
+    path('admin/', admin.site.urls),
+    path('accounts/login/', auth_views.LoginView.as_view()),
 ]
 
 if settings.DEBUG:
+    from django.conf.urls.static import static
     import debug_toolbar
+
     urlpatterns = [
         path('__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns
+    ] + urlpatterns + \
+    static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

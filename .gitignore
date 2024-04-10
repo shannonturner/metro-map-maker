@@ -1,6 +1,7 @@
 *.pyc
 bin/
 lib/
+media/
 include/
 .DS_Store
 .Python

@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="styling-redline ps-5 pe-5 row">
+    <div class="col-sm-2">
+    <img class="rounded-circle m-3 ms-5" src="https://shannonvturner.com/images/ShannonTurner-4c.jpg" width="120" height="120">
+    </div>
+    <div class="col-sm-8 d-flex align-items-center">
+        <h1 class="bg-styled mt-0 mb-0">Hi! I hope you're enjoying creating with Metro Map Maker as much as I enjoy building it and seeing the maps you've made.</h1>
+    </div>
+    <div class="col-sm-2"></div>
+</div>
+
+<div class="container mt-5 mb-5">
+<div class="row">
+    <div class="col-sm-4">
+        <div class="card h-100 text-center">
+            <div class="card-header styling-greenline border-bottom-0">
+                <h2 class="bg-styled mt-3">Support</h2>
+            </div>
+            <div class="card-body d-flex flex-column text-left p-0">
+                <p class="p-3 pb-0 mb-0" style="border-left: 4px solid #00b251; border-right: 4px solid #00b251;">
+                    Metro Map Maker is free, but if you'd like to help support its development, offset server costs, or just show your appreciation, you can buy me a Metro trip on Ko-fi :)
+                </p>
+                <iframe id='kofiframe' src='https://ko-fi.com/shannonturner/?hidefeed=true&widget=true&embed=true&preview=true' style='border:none;width:100%;padding:4px;background:#00b251;padding-top:0;' height='712' title='shannonturner'></iframe>
+                <div class="card-footer d-flex justify-content-evenly">
+                    <a href="https://ko-fi.com/shannonturner" target="_blank" rel="noopener">ko-fi.com/shannonturner</a>
+                </div>
+            </div>
+        </div> <!-- /.card -->
+    </div> <!-- /.col-sm-3 -->
+
+    <div class="col-sm-8">
+        <div class="row">
+            <div class="col">
+                <div class="card h-100 text-center">
+                    <div class="card-header styling-blueline border-bottom-0">
+                        <h2 class="bg-styled mt-3">Media</h2>
+                    </div>
+                    <div class="card-body d-flex flex-column text-center p-0">
+                        <a href="https://web.archive.org/web/20170908021845/http://dcist.com/2017/09/metro_map_maker_helps_you_build_you.php" target="_blank" rel="noopener">
+                            <img src="https://staging.metromapmaker.com/media/images/6/wxtIWRy8.svg">
+                        </a>
+                        <div class="card-footer d-flex justify-content-evenly">
+                            <a href="https://web.archive.org/web/20170908021845/http://dcist.com/2017/09/metro_map_maker_helps_you_build_you.php" target="_blank" rel="noopener">Metro Map Maker Helps You Build The WMATA Of Your Dreams (DCist)</a>
+                        </div>
+                    </div>
+                </div> <!-- /.card -->
+            </div> <!-- /.col -->
+            <div class="col">
+                <div class="card text-center">
+                    <div class="card-header styling-orangeline border-bottom-0">
+                        <h2 class="bg-styled mt-3">Contact</h2>
+                    </div>
+                    <div class="card-body d-flex flex-column text-left p-0">
+                        <div class="p-3">
+                            <p>
+                                Have an idea for how to make Metro Map Maker better? <a href="mailto:hello@shannonvturner.com">Let me know!</a>
+                            </p>
+
+                            <p>
+                                Found a bug in Metro Map Maker? <a href="mailto:hello@shannonvturner.com">Let me know!</a>
+                            </p>
+
+                            <p>
+                                Did you make a cool map? <a href="mailto:hello@shannonvturner.com">I want to see!</a>
+                            </p>
+                        </div>
+                        <div class="card-footer d-flex justify-content-evenly">
+                            <a href="mailto:hello@shannonvturner.com">Contact me</a>
+                        </div>
+                    </div>
+                </div> <!-- /.card -->
+                <div class="card mt-3 text-center">
+                    <div class="card-header styling-silverline border-bottom-0">
+                        <h2 class="bg-styled mt-3">Learn</h2>
+                    </div>
+                    <div class="card-body d-flex flex-column text-left p-0">
+                        <div class="p-3">
+                            <p>
+                                Metro Map Maker is open source software, so you can <a href="https://github.com/shannonturner/metro-map-maker" target="_blank" rel="noopener">look at the code</a> to learn how it works behind the scenes.
+                            </p>
+                            <p>
+                                I'm considering creating a set of educational materials focused on how Metro Map Maker was built, how I created and then fixed specific bugs, and so on. If this is something you'd be interested in, <a href="mailto:hello@shannonvturner.com">let me know</a>.
+                            </p>
+                        </div>
+                        <div class="card-footer d-flex justify-content-evenly">
+                            <a href="https://github.com/shannonturner/metro-map-maker" target="_blank" rel="noopener">Source code</a>
+                        </div>
+                    </div>
+                </div> <!-- /.card -->
+            </div> <!-- /.col -->
+            </div> <!-- /.col -->
+        </div> <!-- /.row -->
+        <!-- Template for more content -->
+        <div class="row d-none">
+            <div class="col">
+                <div class="card h-100 text-center">
+                    <div class="card-header styling-silverline">
+                        <h2 class="bg-styled mt-3"></h2>
+                    </div>
+                    <div class="card-body d-flex flex-column text-center p-0">
+                        <div class="p-3">
+                            <div class="card-footer d-flex justify-content-evenly">
+                            </div>
+                        </div>
+                    </div>
+                </div> <!-- /.card -->
+            </div> <!-- /.col -->
+        </div> <!-- /.row -->
+    </div> <!-- /.col-sm-9 -->
+</div> <!-- /.row -->
+</div> <!-- /.container -->
+{% endblock content %}

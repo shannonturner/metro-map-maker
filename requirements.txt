@@ -1,7 +1,9 @@
-django==2.2.13
-django-debug-toolbar==1.11
-django-taggit==0.24.0
-python-memcached==1.59
-mysqlclient==2.0.1
-pytz==2017.2
-sqlparse==0.2.4
+asgiref==3.7.2
+Django==5.0.1
+django-debug-toolbar==4.2.0
+django-taggit==5.0.1
+mysqlclient==2.2.1
+pymemcache==4.0.0
+pytz==2023.3.post1
+requests==2.31.0
+sqlparse==0.4.4

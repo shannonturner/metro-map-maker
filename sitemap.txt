@@ -1,2 +1,5 @@
 https://metromapmaker.com
-https://metromapmaker.com/gallery
+https://metromapmaker.com/gallery/
+https://metromapmaker.com/calendar/
+https://metromapmaker.com/credits/
+https://metromapmaker.com/help/

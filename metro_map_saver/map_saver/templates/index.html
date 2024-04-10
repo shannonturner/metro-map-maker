@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-{% load static %}
+{% load static metromap_utils %}
 
 <html lang="en">
   <head>
@@ -8,7 +8,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Build the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
+    <meta name="description" content="Make the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
 
     {% if saved_map and saved_map.name and not saved_map.naming_token %}
     <meta property="og:title" content="{{ saved_map.name }} - Metro Map Maker">
@@ -16,29 +16,32 @@
     <meta property="og:title" content="Metro Map Maker">
     {% endif %}
     <meta property="og:site_name" content="Metro Map Maker">
-    <meta property="og:url" content="https://metromapmaker.com{% if saved_map %}/?map={{ saved_map.urlhash }}{% endif %}">
+    <meta property="og:url" content="https://metromapmaker.com{% if saved_map %}/map/{{ saved_map.urlhash }}{% endif %}">
     <meta property="og:type" content="website">
-    <meta property="og:description" content="Build the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
-    {% if saved_map %}
-    <meta property="og:image" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
+    <meta property="og:description" content="Make the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
+    {% if saved_map.png %}
+      <meta property="og:image" content="{{ saved_map.png.url }}">
+    {% elif saved_map %}
+      <meta property="og:image" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
     {% endif %}
-    <meta property="og:image" content="https://metromapmaker.com/static/assets/metromapmaker.png?version=2">
+    <meta property="og:image" content="https://metromapmaker.com/static/assets/metromapmaker.png?version=3">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="https://metromapmaker.com">
     <meta name="twitter:creator" content="@svthmc">
     <meta name="twitter:title" content="Metro Map Maker">
-    <meta name="twitter:description" content="Build the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
-    <meta name="twitter:image:src" content="https://metromapmaker.com/static/assets/metromapmaker.png?version=2">
-    {% if saved_map %}
-    <meta name="twitter:image:src" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
+    <meta name="twitter:description" content="Make the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
+    <meta name="twitter:image:src" content="https://metromapmaker.com/static/assets/metromapmaker.png?version=3">
+    {% if saved_map.png %}
+      <meta name="twitter:image:src" content="{{ saved_map.png.url }}">
+    {% elif saved_map %}
+      <meta name="twitter:image:src" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
     {% endif %}
 
     <title>Metro Map Maker</title>
 
     <link rel="icon" href="{% static 'assets/favicon.ico' %}?version=2">
-    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' %}?version=20210225">
-    <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'css/metromapmaker.css' as mmmcss %}{{ mmmcss }}?version={{ 'css/metromapmaker.css'|static_cache_version }}">
 
   </head>
 
@@ -60,69 +63,78 @@
 
   <div id="mobile-header" class="visible-xs text-left row">
     <div class="col-lg-10 col-offset-1">
-      <h3 class="text-center"><span class="M">M</span>etro <span class="M">M</span>ap <span class="M">M</span>aker</h3>
-      <h5>Build the Metro map of your dreams, save, and share with friends!</h5>
-      <a href="gallery/"><h4><b>Check out maps created by visitors like you!</b></h4></a>
-      {% if not saved_map %}
-      <div id="favorite-maps">
-        <h5>Some of my favorites include:</h5>
-        <div class="text-center">
-        {% for thumbnail in favorites %}
-          <div>
-            <a href="/?map={{ thumbnail.urlhash }}">
-              <img src="{{ thumbnail.thumbnail }}" class="img-responsive center-block" alt="{{ thumbnail.name }}" title="{{ thumbnail.name }}">
-              <h4>{{ thumbnail.name }}</h4>
+      {# Prevent these turning red for v1; using .mobile instead of .visible-xs because .visible-xs is display:block #}
+      <h3><span class="M mobile">M</span>etro <span class="M mobile">M</span>ap <span class="M mobile">M</span>aker</h3>
+      <h5>Make the Metro map of your dreams, save, and share with friends!</h5>
+      <div id="mobile-browse">
+        <fieldset>
+          <legend>Browse Maps created by visitors like you</legend>
+            <a href="{% url 'public_gallery' %}" class="width-100">
+              <button class="styled styling-blueline width-100">
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#postage-heart"/></svg>
+                <span class="button-label">My Favorites</span>
+              </button>
             </a>
-          </div>
-        {% endfor %}
-        </div>
-      </div> <!-- #favorite-maps -->
-      {% endif %}
+            <a href="{% url 'calendar' %}" class="width-100">
+              <button class="styled styling-blueline width-100">
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#calendar-date"/></svg>
+                <span class="button-label">All Maps by Date</span>
+              </button>
+            </a>
+          {% if not saved_map %}
+            <div id="favorite-maps" class="width-100">
+              <p>Some of my favorites include:</p>
+              <div class="text-center">
+              {% for thumbnail in favorites %}
+                <div>
+                  <a href="{% url 'home_map' thumbnail.urlhash %}">
+                    <img src="{{ thumbnail.thumbnail }}" class="img-responsive center-block" alt="{{ thumbnail.name }}" title="{{ thumbnail.name }}">
+                    <h4>{{ thumbnail.name }}</h4>
+                  </a>
+                </div>
+              {% endfor %}
+              </div>
+            </div> <!-- #favorite-maps -->
+          {% endif %}
+        </fieldset>
+      </div>
 
-      <h5 id="toolbox-mobile-hint" class="hidden-xs">All the tools you need are below the grid.</h5>
+      <h5 id="mobile-compatibility-warning" class="visible-xs">This works best on desktop; some features may not work as well if you are on a mobile device.</h5>
+      <div style="display: flex;gap: 1rem;margin-bottom: 1rem;">
+        <button id="try-on-mobile" class="styled styling-silverline visible-xs">Edit this map anyway</button>
+        <button id="i-am-on-desktop" class="styled styling-redline visible-xs">I am on desktop</button>
+      </div>
     </div>
   </div>
 
-  <div id="canvas-container" class="col-md-9 col-lg-10">
+  <div id="canvas-container" class="col-md-9 col-lg-10" style="width: {{ canvas_size|default:1600 }}px; height: {{ canvas_size|default:1600 }}px;">
     <div id="loading"></div>
-    <canvas id='metro-map-canvas' width="1600" height="1600"></canvas>
-    <canvas id='metro-map-stations-canvas' width="1600" height="1600"></canvas>
-    <canvas id='grid-canvas' width="1600" height="1600"></canvas>
-    <canvas id="hover-canvas" width="1600" height="1600"></canvas>
-    <a id="metro-map-image-download-link" class="start-hidden" rel="noopener" starget="_blank"></a>
-    <img id="metro-map-image" class="img-responsive start-hidden" alt="">
+    <canvas id='metro-map-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
+    <canvas id='metro-map-stations-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
+    <canvas id='grid-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
+    <canvas id="hover-canvas" width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
+    <a id="metro-map-image-download-link" rel="noopener" target="_blank"></a>
+    <img id="metro-map-image" class="img-responsive" alt="">
   </div>
-
-  <h5 id="mobile-compatibility-warning" class="visible-xs">This works best on desktop; some features may not work correctly on your mobile device.</h5>
-  <button id="try-on-mobile" class="btn btn-info visible-xs">Edit this map on mobile anyway</button>
 
   <div id="controls" class="col-md-3 col-lg-2 text-left hidden-xs">
     <h3 id="title"><span class="M">M</span>etro<span class="M">M</span>ap<span class="M">M</span>aker</h3>
+    <h3 id="autosave-indicator"></h3>
+
+    <!-- Area where I can put maintenance or similar announcements -->
+    <div id="announcement"></div>
 
     <div id="toolbox">
 
-      <button id="tool-line" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Draw a rail line on the grid (Keyboard shortcut: D)"><i class="fa fa-pencil" aria-hidden="true"></i><i class="fa fa-subway" aria-hidden="true"></i> <b><u>D</u></b>raw Rail Line</button>
-      <div id="tool-line-options" class="start-hidden" style="display: none;">
-        <button id="rail-line-bd1038" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 1">Red Line</button>
-        <button id="rail-line-df8600" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 2">Orange Line</button>
-        <button id="rail-line-f0ce15" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 3">Yellow Line</button>
-        <button id="rail-line-00b251" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 4">Green Line</button>
-        <button id="rail-line-0896d7" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 5">Blue Line</button>
-        <button id="rail-line-662c90" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 6">Purple Line</button>
-        <button id="rail-line-a2a2a2" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 7">Silver Line</button>
-        <button id="rail-line-000000" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 8">Logo</button>
-        <button id="rail-line-79bde9" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 9">Rivers</button>
-        <button id="rail-line-cfe4a7" class="rail-line original-rail-line" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: 0">Parks</button>
-        <button id="rail-line-new" class="btn">+ Add New Line</button>
-        <div id="tool-new-line-options" class="text-left start-hidden">
-          <h4 id="tool-new-line-errors" class="bg-danger"></h4>
-          <h4>Color of this line</h4>
-          <input id="new-rail-line-color" type="color">
+      <button id="tool-line" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Draw a rail line on the grid (Keyboard shortcut: D)">
+          <svg id="tool-line-icon-pencil" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pencil"/></svg>
+          <span id="tool-line-caption-draw" class="button-label"><b><u>D</u></b>raw</span>
 
-          <h4>Name of this line</h4>
-          <input id="new-rail-line-name" autocomplete="off" type="text" placeholder="Blue Line" maxlength="100">
-          <button id="create-new-rail-line" class="btn btn-success">Save this new line</button>
-        </div>
+          <svg id="tool-line-icon-paint-bucket" width="16" height="16" style="display: none;"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#paint-bucket"/></svg>
+          <span id="tool-line-caption-fill" class="button-label" style="display: none;"><b><u>F</u></b>ill</span>
+      </button>
+      <div id="tool-line-options" style="display: none;">
+
         <div id="straight-line-assist-options" class="mmm-help-setting">
           <input id="straight-line-assist" type="checkbox" checked="true">
           <label for="straight-line-assist" class="mmm-help-setting has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: G">
@@ -135,124 +147,415 @@
             Flood fill instead of draw. Use Control+Z to undo.
           </label>
         </div>
-        <hr>
-        <button id="rail-line-change" class="btn"><i class="fa fa-pencil" aria-hidden="true"></i> Edit colors &amp; names</button>
-        <div id="tool-change-line-options" class="text-left start-hidden">
-          <select id="tool-lines-to-change">
+
+        <button id="rail-line-new" class="styled styling-redline width-100">
+          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#plus-circle"/></svg>
+          <span>Add New Line</span>
+        </button>
+        <div id="tool-new-line-options" class="text-left" style="display: none">
+          <fieldset>
+            <legend>Add New Rail Line</legend>
+            <label for="new-rail-line-color">Color of this line</label>
+            <input id="new-rail-line-color" type="color">
+
+            <label for="new-rail-line-name">Name of this line</label>
+            <input id="new-rail-line-name" autocomplete="off" type="text" placeholder="Blue Line" maxlength="100">
+
+            <p id="tool-new-line-errors" class="bg-danger"></p>
+            <button id="create-new-rail-line" class="styled styling-redline width-100">Save this new line</button>
+          </fieldset>
+        </div>
+
+        <button id="rail-line-change" class="styled styling-redline width-100">
+          <span>Edit colors &amp; names</span>
+        </button>
+        <div id="tool-change-line-options" class="text-left" style="display: none;">
+          <fieldset>
+            <legend>Edit Rail Line</legend>
+            <select id="tool-lines-to-change">
               <option>Edit which rail line?</option>
+            </select>
+            <label for="change-line-color" style="display: none;">Color of this line</label>
+            <input id="change-line-color" type="color">
+            
+            <label for="change-line-name" style="display: none;">Name of this line</label>
+            <input id="change-line-name" autocomplete="off" type="text" maxlength="100">
+            <p id="cant-save-rail-line-edits" class="bg-danger"></p>
+            <button id="save-rail-line-edits" class="styled styling-redline width-100">Save edits to this line</button>
+          </fieldset>
+        </div>
+        <button id="rail-line-delete" class="styled styling-silverline width-100">
+          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#trash"/></svg>
+          <span class="button-label">Delete Unused Lines</span>
+        </button>
+      </div>
+
+      <button id="tool-station" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Place a station on an existing rail line, or select an existing station (Keyboard shortcut: S)">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pin-map"/></svg>
+        <span class="button-label"><b><u>S</u></b>tation</span>
+      </button>
+      <div id="tool-station-options" class="text-left" style="display: none;">
+        <fieldset>
+          <legend>Add / Edit Station</legend>
+          <input id="station-coordinates-x" type="hidden">
+          <input id="station-coordinates-y" type="hidden">
+
+          <label for="station-name">Station Name</label>
+          <input id="station-name" autocomplete="off" type="text" placeholder="Silver Spring" maxlength="255">
+
+          <div style="width: 100%;">
+            <input id="station-transfer" type="checkbox">
+            <label for="station-transfer">Transfer Station</label>
+          </div>
+
+          <label for="station-name-orientation">Station Name Orientation</label>
+          <select id="station-name-orientation">
+            <option value="0">On the right</option>
+            <option value="180">On the left</option>
+            <option value="-45">Above-right, 45&deg;</option>
+            <option value="45">Below-right, 45&deg;</option>
+            <option value="135">Below-left, 45&deg;</option>
+            <option value="-135">Above-left, 45&deg;</option>
+            <option value="90">Above, 90&deg;</option>
+            <option value="-90">Below, 90&deg;</option>
           </select>
-          <h4>Color of this line</h4>
-          <input id="change-line-color" type="color">
-          <h4>Name of this line</h4>
-          <input id="change-line-name" autocomplete="off" type="text" maxlength="100">
-          <h5 id="cant-save-rail-line-edits" class="bg-warning"></h5>
-          <button id="save-rail-line-edits" class="btn btn-success">Save edits to this line</button>
-        </div>
-        <button id="rail-line-delete" class="btn">- Delete Unused Lines</button>
-      </div>
-      
-      <button id="tool-station" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Place a station on an existing rail line, or select an existing station (Keyboard shortcut: S)"><i class="fa fa-map-pin" aria-hidden="true"></i> Add/Edit <b><u>S</u></b>tation</button>
-      <div id="tool-station-options" class="text-left start-hidden" style="display: none;">
-        <h4>Station Name</h4>
-        <input id="station-coordinates-x" type="hidden">
-        <input id="station-coordinates-y" type="hidden">
-        <input id="station-name" autocomplete="off" type="text" placeholder="Silver Spring" maxlength="255">
-        <div style="margin: 10px;">
-          <input id="station-transfer" type="checkbox"> <label for="station-transfer">Transfer Station</label>
-        </div>
-        <h4>Station Name Orientation</h4>
-        <h5>In relation to the station marker, where should the name begin?</h5>
-        <select id="station-name-orientation">
-          <option value="0">On the right</option>
-          <option value="180">On the left</option>
-          <option value="-45">Above-right, 45&deg;</option>
-          <option value="45">Below-right, 45&deg;</option>
-          <option value="135">Below-left, 45&deg;</option>
-          <option value="-135">Above-left, 45&deg;</option>
-          <option value="90">Above, 90&deg;</option>
-          <option value="-90">Below, 90&deg;</option>
-        </select>
-        <h4 id="station-on-lines-title" class="station-rail-lines">This station is on these rail lines:</h4>
-        <div id="station-on-lines" class="station-rail-lines"></div>
-        <h4 id="add-other-lines" class="station-rail-lines">Add other lines this station serves:</h4>
-        <div id="station-other-lines" class="station-rail-lines"></div>
-      </div>
-      <button id="tool-eraser" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station (Keyboard shortcut: E)"><i class="fa fa-eraser" aria-hidden="true"></i> <b><u>E</u></b>raser</button>
-      <div id="tool-eraser-options" class="text-center bg-danger start-hidden"></div>
-      <button id="tool-download-image" class="btn btn-info has-tooltip hidden-xs" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
-      <button id="tool-export-canvas" class="btn btn-info has-tooltip visible-xs" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends"><i class="fa fa-file-image-o" aria-hidden="true"></i> Download as image</button>
-      <div id="export-canvas-help" class="text-left start-hidden" style="display: none;">
-        <h5><b>Tap and hold the map to save as an image, or right click the map and click "Save Image As".</b></h5>
-        <h5>Or click "Edit map" to continue editing your map.</h5>
-        <h5>Happy with your map? Be sure to click Save &amp; Share map and it might be <a href="https://metromapmaker.com/gallery" rel="noopener" target="_blank">featured in the gallery</a>!</h5>
-      </div>
-      <button id="tool-save-map" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Create a unique, shareable URL for your map"><i class="fa fa-share" aria-hidden="true"></i> Save &amp; Share map</button>
-      <div id="tool-save-options" class="text-left start-hidden"></div>
-      <button id="tool-grid" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Just hides the grid but you can still edit the map; to download your map click Download as image (Keyboard shortcut: H)"><i class="fa fa-table" aria-hidden="true"></i> <b><u>H</u></b>ide grid</button>
-      <div id="tool-zoom-controls" class="row">
-        <div class="col-xs-6" id="zoom-in-container">
-        <button id="tool-zoom-in" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: +"><i class="fa fa-search-plus" aria-hidden="true"></i> Zoom +</button>
-        </div>
-        <div class="col-xs-6" id="zoom-out-container">
-        <button id="tool-zoom-out" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: -"><i class="fa fa-search-minus" aria-hidden="true"></i> Zoom -</button>
-        </div>
-      </div>
-      <button id="snap-controls-left" class="btn btn-info has-tooltip start-hidden" data-toggle="tooltip" data-placement="left" title="Move all controls to the left side of the screen" style="display: none;"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Snap controls to left</button>
-      <button id="snap-controls-right" class="btn btn-info has-tooltip start-hidden" data-toggle="tooltip" data-placement="left" title="Move all controls to the right side of the screen" style="display: none;"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Snap controls to right</button>
-      <button id="tool-move-all" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Recenter your Metro map (Keyboard shortcuts: Arrow keys)"><i class="fa fa-arrows" aria-hidden="true"></i> Move map</button>
-      <div id="tool-move-options" class="text-left start-hidden" style="display: none;">
-        <h5>Be careful! If you move your map out of bounds, you'll lose your work.</h5>
-        <button id="tool-move-up" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Up arrow"><i class="fa fa-chevron-circle-up" aria-hidden="true"></i> Move everything up</button>
-        <button id="tool-move-left" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Left arrow"><i class="fa fa-chevron-circle-left" aria-hidden="true"></i> Move everything left</button>
-        <button id="tool-move-right" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Right arrow"><i class="fa fa-chevron-circle-right" aria-hidden="true"></i> Move everything right</button>
-        <button id="tool-move-down" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Down arrow"><i class="fa fa-chevron-circle-down" aria-hidden="true"></i> Move everything down</button>
-      </div>
-      <button id="tool-resize-all" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Resize the grid, allowing you to make larger maps"><i class="fa fa-expand" aria-hidden="true"></i> Resize grid</button>
-      <div id="tool-resize-options" class="text-left start-hidden" style="display: none;">
-        <h5>Be careful! If your map is large and you resize it to be smaller, you'll lose your work. <b>Use Control+Z to undo.</b></h5>
-        <button id="tool-resize-80" class="btn btn-info resize-grid">Standard (80x80)</button>
-        <button id="tool-resize-120" class="btn btn-info resize-grid">Large (120x120)</button>
-        <button id="tool-resize-160" class="btn btn-info resize-grid">Extra Large (160x160)</button>
-        <button id="tool-resize-200" class="btn btn-info resize-grid">XXL (200x200)</button>
-        <button id="tool-resize-240" class="btn btn-info resize-grid">XXXL (240x240)</button>
-        <div id="tool-resize-stretch-options" class="start-hidden">
-          <button id="tool-resize-stretch" class="btn btn-info has-tooltip stretch-grid" data-toggle="tooltip" data-placement="left" title="Increase the available space between stations so you can add more stations in between.">Stretch Map</button>
-        </div>
+
+          <label for="station-style">Style</label>
+          <select id="station-style">
+            <option value="">(Use Default)</option>
+            <option value="wmata">Metro (Classic)</option>
+            <option value="rect">Rectangles</option>
+            <option value="rect-round">Round Rectangles</option>
+            <option value="circles-thin">Circles (Thin)</option>
+            <option value="circles-lg">Circles (Large)</option>
+            <option value="circles-md">Circles (Medium)</option>
+            <option value="circles-sm">Circles (Small)</option>
+          </select>
+        </fieldset>
       </div>
 
-      <hr>
-      <button id="tool-clear-map" class="btn btn-info has-tooltip" data-toggle="tooltip" data-placement="left" title="Be careful: this will delete your map"><i class="fa fa-trash-o" aria-hidden="true"></i> Clear map</button>
-      <hr>
-      <div id="autosave-indicator"></div>
+      <button id="tool-eraser" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station (Keyboard shortcut: E)">
+        <svg id="tool-eraser-icon-eraser" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#eraser"/></svg>
+        <span id="tool-eraser-caption-eraser" class="button-label"><b><u>E</u></b>rase</span>
 
-      <hr>
-      <div id="remix">
-        <a href="/gallery/"><h5><b>Browse maps created by visitors like you</b></h5></a>
+        <svg id="tool-eraser-icon-paint-bucket" width="16" height="16" style="display: none;"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#paint-bucket"/></svg>
+        <span id="tool-eraser-caption-fill" class="button-label" style="font-size: 80%; display: none;">Eraser Fill</span>
+      </button>
+
+      <button id="tool-map-style" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Change Style of Lines and Stations (Keyboard shortcut: Y)">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#palette"/></svg>
+        <span class="button-label">St<b><u>y</u></b>le</span>
+      </button>
+      <div id="tool-map-style-options" class="text-left" style="display: none;">
+          <fieldset>
+            <legend>Map Line Size</legend>
+            <button id="tool-map-style-line-1000" class="map-style-line styled styling-redline width-100" data-line-width-divisor="1">Metro (Classic)</button>
+            <button id="tool-map-style-line-750" class="map-style-line styled styling-redline width-100" data-line-width-divisor="">75%</button>
+            <button id="tool-map-style-line-500" class="map-style-line styled styling-redline width-100" data-line-width-divisor="2">50%</button>
+            <button id="tool-map-style-line-250" class="map-style-line styled styling-redline width-100" data-line-width-divisor="4">25%</button>
+            <button id="tool-map-style-line-125" class="map-style-line styled styling-redline width-100" data-line-width-divisor="8">12.5%</button>
+          </fieldset>
+          <fieldset>
+            <legend>Station Shape</legend>
+            <h5>Change the shape of all stations that don't have a specific shape.</h5>
+
+            <!-- I like the look of these buttons not having width-100 better,
+                  though it looks a little awkward when there's an odd number of options.
+            -->
+
+            <button id="tool-map-style-station-wmata" class="map-style-station styled styling-redline" data-station-style="wmata">
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-wmata"/></svg></span>
+              <span class="style-description">Metro (Classic)</span>
+            </button>
+            <button id="tool-map-style-station-rect" class="map-style-station styled styling-redline" data-station-style="rect">
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-rect"/></svg></span>
+              <span class="style-description">Rect.</span>
+            </button>
+            <button id="tool-map-style-station-rect-round" class="map-style-station styled styling-redline" data-station-style="rect-round">
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-rect-round"/></svg></span>
+              <span class="style-description">Round Rect.</span>
+            </button>
+            <button id="tool-map-style-station-circles-thin" class="map-style-station styled styling-redline" data-station-style="circles-thin">
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-circles-thin"/></svg></span>
+              <span class="style-description">Circles (Thin)</span>
+            </button>
+            <button id="tool-map-style-station-circles-lg" class="map-style-station styled styling-redline" data-station-style="circles-lg">
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-circles-lg"/></svg></span>
+              <span class="style-description">Circles (Large)</span>
+            </button>
+            <button id="tool-map-style-station-circles-md" class="map-style-station styled styling-redline" data-station-style="circles-md">
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-circles-md"/></svg></span>
+              <span class="style-description">Circles (Medium)</span>
+            </button>
+            <button id="tool-map-style-station-circles-sm" class="map-style-station styled styling-redline" data-station-style="circles-sm">
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-circles-sm"/></svg></span>
+              <span class="style-description">Circles (Small)</span>
+            </button>
+            <button id="reset-all-station-styles" class="styled styling-redline width-100">Reset to default</button>
+          </fieldset>
+          <fieldset>
+            <legend>Station Orientations</legend>
+            <h5 style="width: 100%;">Changes label orientation for ALL stations at once.</h5>
+            <label for="set-all-station-name-orientation-choice">Orientation</label>
+            <select id="set-all-station-name-orientation-choice">
+              <option value="0">On the right</option>
+              <option value="180">On the left</option>
+              <option value="-45">Above-right, 45&deg;</option>
+              <option value="45">Below-right, 45&deg;</option>
+              <option value="135">Below-left, 45&deg;</option>
+              <option value="-135">Above-left, 45&deg;</option>
+              <option value="90">Above, 90&deg;</option>
+              <option value="-90">Below, 90&deg;</option>
+            </select>
+            <button id="set-all-station-name-orientation" class="styled styling-redline width-100">Set orientations</button>
+          </fieldset>
       </div>
 
-      <hr>
-      <div id="credits">
-        <h5>Created by <a href="https://shannonvturner.com" rel="noopener" target="_blank">Shannon Turner</a></h5>
-        <h6>By using MetroMapMaker, you place maps you make in the public domain.</h6>
+      <button id="tool-move-all" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Recenter your Metro map (Keyboard shortcuts: Arrow keys)">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-move"/></svg>
+        <span class="button-label" style="font-size: 75%">Move map</span>
+      </button>
+      <div id="tool-move-options" class="text-left" style="display: none;">
+        <fieldset>
+          <legend>Move Map</legend>
+          <h5 id="tool-move-v1-warning" style="display: none;">Be careful! If you move your map out of bounds, you'll lose your work. (In the next version of Metro Map Maker, you'll be prevented from going out of bounds.)</h5> <!-- "In the next version" is a bit of a misnomer, but hard to communicate which data model you're on since I'm trying hard to keep everything backwards-compatible -->
+          <button id="tool-move-up" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Up arrow">
+            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-up-circle"/></svg> Move everything up</span>
+          </button>
+          <button id="tool-move-left" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Left arrow">
+            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-left-circle"/></svg> Move everything left</span>
+          </button>
+          <button id="tool-move-right" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Right arrow">
+            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-right-circle"/></svg> Move everything right</span>
+          </button>
+          <button id="tool-move-down" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Down arrow">
+            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-down-circle"/></svg> Move everything down</span>
+          </button>
+        </fieldset>
       </div>
+
+      <button id="tool-resize-all" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Resize the grid, allowing you to make larger maps">
+        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-angle-expand"/></svg>
+        <span class="button-label">Resize</span>
+      </button>
+      <div id="tool-resize-options" class="text-left" style="display: none;">
+        <fieldset>
+          <legend>Resize Map</legend>
+          <h5>Be careful! If your map is large and you resize it to be smaller, you'll lose your work. <b>Use Control+Z to undo.</b></h5>
+          <button id="tool-resize-80" class="resize-grid styled styling-redline">Small (80x80)</button>
+          <button id="tool-resize-120" class="resize-grid styled styling-redline">Medium (120x120)</button>
+          <button id="tool-resize-160" class="resize-grid styled styling-redline">Large (160x160)</button>
+          <button id="tool-resize-200" class="resize-grid styled styling-redline">XL (200x200)</button>
+          <button id="tool-resize-240" class="resize-grid styled styling-redline">XXL (240x240)</button>
+          <button id="tool-resize-stretch" class="has-tooltip stretch-grid styled styling-redline" data-toggle="tooltip" data-placement="left" title="Increase the available space between stations so you can add more stations in between.">Stretch Map</button>
+        </fieldset>
+      </div>
+
+      <button id="tool-download-image" class="width-100 has-tooltip hidden-xs styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
+        <span class="button-label">Download {% if saved_map.svg %}(PNG){% endif %}</span>
+      </button>
+
+      {% if saved_map.svg %}
+        <a href="{{ saved_map.svg.url }}" download="{{ saved_map.urlhash }}.svg" style="width: 100%;"><button id="tool-download-svg" class="width-100 has-tooltip styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download the map '{{ saved_map.urlhash }}' as a print-quality SVG file (does not include your edits, if any)">
+          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
+          <span class="button-label">Download (SVG)</span>
+        </button></a>
+      {% endif %}
+
+      <!-- Download button when on mobile -->
+      <button id="tool-export-canvas" class="width-100 has-tooltip visible-xs styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
+        <span class="button-label">Download</span>
+      </button>
+
+      <div id="export-canvas-help" class="text-left" style="display: none;">
+        <fieldset>
+          <h5><b>On mobile, downloading maps works differently. Tap and hold the map to save as an image, or right click the map and click "Save Image As".</b></h5>
+          <h5>Click the "Download" button again to go back to editing your map.</h5>
+          <h5>Happy with your map? Be sure to click Save &amp; Share map and it might be <a href="https://metromapmaker.com/gallery" rel="noopener" target="_blank">featured in the gallery</a>!</h5>
+        </fieldset>
+      </div>
+
+      <button id="tool-save-map" class="width-100 has-tooltip styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Create a unique, shareable URL for your map">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#save"/></svg>
+        <span class="button-label">Save &amp; Share</span>
+      </button>
+      <div id="tool-save-options" class="text-left" style="display: none;"></div>
+
+      <button id="tool-grid" class="has-tooltip styled styling-greenline width-100" data-toggle="tooltip" data-placement="left" title="Just hides the grid but you can still edit the map; to download your map click Download as image (Keyboard shortcut: H)">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#grid"/></svg>
+        <span class="button-label"><b><u>H</u></b>ide grid</span>
+      </button>
+
+      <button id="tool-zoom-in" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: +">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#zoom-in"/></svg>
+        <span class="button-label">Zoom <b>+</b></span>
+      </button>
+      <button id="tool-zoom-out" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: -">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#zoom-out"/></svg>
+        <span class="button-label">Zoom <b>-</b></span>
+      </button>
+
+      <button id="snap-controls-left" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move all controls to the left side of the screen (Keyboard shortcut: [)">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-left-circle"/></svg>
+        <span class="button-label" style="font-size: 80%;">Move controls</span>
+      </button>
+      <button id="snap-controls-right" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move all controls to the right side of the screen (Keyboard shortcut: ])" style="display: none;">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-right-circle"/></svg>
+        <span class="button-label" style="font-size: 80%;">Move controls</span>
+      </button>
+
+      <button id="controls-collapse-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Collapse menu and only show icons. Only the most commonly-used controls and options are shown when collapsed. (Keyboard shortcut: C)">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-collapse-vertical"/></svg>
+        <span class="button-label"><b><u>C</b></u>ollapse</span>
+      </button>
+
+      <button id="controls-expand-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Expand Menu (Keyboard shortcut: C)" style="display: none;">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-expand-vertical"/></svg>
+      </button>
+
+      {% comment %}
+      Hide for now, consider revisiting later
+      <button id="controls-dock-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move controls to top, right, bottom, or left of screen">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#window-desktop"/></svg>
+        <span class="button-label">Dock</span> <!-- TODO: this should replace "snap controls to left" and cycle between top,right,bottom,left (clockwise) -->
+      </button>
+      {% endcomment %}
+
+      <button id="tool-clear-map" class="has-tooltip styled styling-silverline width-100" data-toggle="tooltip" data-placement="left" title="Be careful: this will delete your map">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#trash"/></svg>
+        <span class="button-label">Clear map</span>
+      </button>
 
     </div> <!-- #toolbox -->
+
+      <div id="remix">
+        <fieldset>
+          <legend>Browse & Remix</legend>
+            <a href="{% url 'public_gallery' %}" class="width-100">
+              <button class="has-tooltip styled styling-blueline width-100" data-toggle="tooltip" data-placement="left" title="These are some of my favorite maps made by visitors like you">
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#postage-heart"/></svg>
+                <span class="button-label">My Favorites</span>
+              </button>
+            </a>
+            <a href="{% url 'calendar' %}" class="width-100">
+              <button class="has-tooltip styled styling-blueline width-100" data-toggle="tooltip" data-placement="left" title="All Metro Maps ever made by visitors like you">
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#calendar-date"/></svg>
+                <span class="button-label">All Maps by Date</span>
+              </button>
+            </a>
+            {% if saved_map %}
+              <a href="{% url 'calendar-day' saved_map.created_at.year saved_map.created_at.month saved_map.created_at.day %}" class="width-100">
+                <button class="has-tooltip styled styling-blueline width-100" data-toggle="tooltip" data-placement="left" title="Browse maps made on the same date as this map">
+                  <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#calendar-date"/></svg>
+                  <span class="button-label">{{ saved_map.created_at.date }}</span>
+                </button>
+              </a>
+            {% else %}
+              <a href="{% url 'calendar-day' today.year today.month today.day %}" class="width-100">
+                <button class="has-tooltip styled styling-blueline width-100" data-toggle="tooltip" data-placement="left" title="Browse maps made today">
+                  <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#calendar-date"/></svg>
+                  <span class="button-label">Maps made today</span>
+                </button>
+              </a>
+            {% endif %}
+            <a href="{% url 'help' %}" class="width-100">
+              <button class="has-tooltip styled styling-greenline width-100" data-toggle="tooltip" data-placement="left" title="New to Metro Map Maker? Get help on how to get started">
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#life-preserver"/></svg>
+                <span class="button-label">Help</span>
+              </button>
+            </a>
+        </fieldset>
+      </div>
+
+      <div id="credits">
+        <h5>Created by <a href="{% url 'credits' %}">Shannon Turner</a></h5>
+        <h6>By using MetroMapMaker, you place maps you make in the <a href="https://en.wikipedia.org/wiki/Public_domain" rel="noopener" target="_blank">public domain</a>.</h6>
+      </div>
 
   </div> <!-- #controls -->
 
 </div> <!-- #main-container -->
 
-  <script src="https://code.jquery.com/jquery-3.4.1.min.js"
-  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-  crossorigin="anonymous"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
   {% if saved_map %}
-  <script>
-    var savedMapData = {% autoescape off %}{{ saved_map.mapdata }}{% endautoescape %}
-    {% if saved_map_name %}window.sessionStorage.setItem('userGivenMapName', "{{ saved_map_name }}"){% endif %}
-  </script>
+
+    {% if saved_map.data %}
+      {{ saved_map.data|json_script:"mapdata_v2" }}
+      <script type="text/javascript">
+        var savedMapData =  document.getElementById('mapdata_v2').textContent
+        savedMapData = JSON.parse(savedMapData)
+        var mapDataVersion = 2
+      </script>
+    {% elif saved_map.mapdata %}
+      {{ saved_map.mapdata|json_script:"mapdata_v1" }}
+      <script type="text/javascript">
+        // So nice we have to JSON.parse() twice :-/
+        var savedMapData =  document.getElementById('mapdata_v1').textContent
+        savedMapData = JSON.parse(JSON.parse(savedMapData))
+        var mapDataVersion = 1
+      </script>
+    {% endif %}
+
+    {% if saved_map_name %}
+      {{ saved_map_name|json_script:"saved_map_name" }}
+      <script type="text/javascript">
+        var userGivenMapName = document.getElementById('saved_map_name').textContent
+        window.sessionStorage.setItem('userGivenMapName', JSON.parse(userGivenMapName))
+      </script>
+    {% endif %}
+
+  {% elif 'Map was not found.' in error %} {# Not saved map but error means there's no map for this urlhash. #}
+    <script type="text/javascript">
+      var autoLoadError = 'Map was not found. '
+    </script>
+  {% elif error %}
+    <script type="text/javascript">
+      var autoLoadError = 'Cannot load this map. '
+    </script>
   {% endif %}
-  <script src='{% static "js/metromapmaker.js" %}?version=20220925'></script>
-  <script src='{% static "js/tooltips.min.js" %}' defer=""></script>
+
+  <!--
+    For a human-readable version of the Javascript, see https://metromapmaker.com{% static "js/metromapmaker.js" %}
+  -->
+  {% if debug %}
+    <script src='{% static "js/metromapmaker.js" as mmmjs %}{{ mmmjs }}?version={{ "js/metromapmaker.js"|static_cache_version }}' async></script>
+  {% else %}
+    <script src='{% static "js/metromapmaker.min.js" %}{{ mmmjs }}?version={{ "js/metromapmaker.min.js"|static_cache_version }}' async></script>
+  {% endif %}
+  <script src='{% static "js/tooltips.min.js" %}' defer="defer"></script>
+  <script src='{% static "js/django-csrf.js" %}' defer="defer"></script>
+  <script src='{% static "js/mmm-cheatcodes.js" %}' defer="defer"></script>
+
+  <script type="text/javascript">
+    // TODO: Remove the "what's new" after a few weeks of Metro Map Maker being live, and replace with "how to"
+
+    // How many times has the user closed the "What's New" message?
+    var v6CloseWhatsNewCount = parseInt(window.localStorage.getItem('v6-close-whats-new-count') || 0)
+    if (v6CloseWhatsNewCount <= 1) {
+      // They've seen it 0-2 times, show it until they've clicked hide twice
+      $('#announcement').append('<h4 id="announce-whats-new" style="text-align: left;">Metro Map Maker is better than ever, with a new look and <a href="{% url "help" %}">lots of new features</a>! <a href="{% url "help" %}">Explore what\'s new</a> or <span id="close-whats-new" class="close-announcement" style="text-decoration: underline; cursor: pointer;">close this message</span>.</h4>')
+    }
+
+    // TODO: After removing v6CloseWhatsNew, replace it with howToMMM:
+
+    // var howToMMMCount = parseInt(window.localStorage.getItem('how-to-mmm-count') || 0)
+    // if (howToMMMCount < 1) {
+    //   // How to make maps: only show until they've clicked hide once
+    //   $('#announcement').append('<h4 id="announce-how-to" style="text-align: left;"><a href="{% url "help" %}">[Video] How to make maps with Metro Map Maker</a> <span id="close-how-to-mmm" class="close-announcement" style="text-decoration: underline; cursor: pointer;">Close this message</span>')
+    // }
+
+    $('body').on('click', '#close-whats-new', function() {
+      $('#announce-whats-new').remove()
+      window.localStorage.setItem('v6-close-whats-new-count', v6CloseWhatsNewCount + 1)
+    })
+
+    // $('body').on('click', '#close-how-to-mmm', function() {
+    //   $('#announce-how-to').remove()
+    //   window.localStorage.setItem('how-to-mmm-count', howToMMMCount + 1)
+    // })
+  </script>
 
   </body>
 </html>

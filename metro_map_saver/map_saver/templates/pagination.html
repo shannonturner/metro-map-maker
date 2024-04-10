@@ -1,0 +1,35 @@
+{% if page_obj.has_previous or page_obj.has_next %}
+    <div class="pagination d-flex align-items-center justify-content-evenly m-2">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">
+                    <button class="btn bg-styled styling-blueline fs-5 m-2">
+                        <i class="bi bi-skip-backward"></i>First
+                    </button>
+                </a>
+                <a href="?page={{ page_obj.previous_page_number }}">
+                    <button class="btn bg-styled styling-blueline fs-5 m-2">
+                        <i class="bi bi-rewind"></i> Previous
+                    </button>
+                </a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">
+                    <button class="btn bg-styled styling-blueline fs-5 m-2">
+                        <i class="bi bi-fast-forward"></i> Next
+                    </button>
+                </a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">
+                    <button class="btn bg-styled styling-blueline fs-5 m-2">
+                        <i class="bi bi-skip-forward"></i> Last
+                    </button>
+                </a>
+            {% endif %}
+        </span>
+    </div>
+{% endif %}

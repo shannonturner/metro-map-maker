@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+
+{% block breadcrumbs %}
+
+    {{ block.super }}
+
+    <li class="navbar-text nav-item">
+        <a href="{% url 'calendar-week' day|date:'Y' day|date:'W' %}" class="nav-link">Maps this Week</a>
+    </li>
+
+    {% if previous_day %}
+        <li class="navbar-text nav-item">
+            <a href="{% url 'calendar-day' previous_day|date:'Y' previous_day|date:'m' previous_day|date:'d' %}" class="nav-link nav-previous">
+                <i class="bi bi-arrow-left-circle"></i> {{ previous_day|date:"F j, Y" }}
+            </a>
+        </li>
+    {% endif %}
+
+    {% if previous_day and next_day %}
+        <span class="navbar-text nav-item">|</span>
+    {% endif %}
+
+    {% if next_day %}
+        <li class="navbar-text nav-item">
+            <a href="{% url 'calendar-day' next_day|date:'Y' next_day|date:'m' next_day|date:'d' %}" class="nav-link nav-next">
+                {{ next_day|date:"F j, Y" }} <i class="bi bi-arrow-right-circle"></i>
+            </a>
+        </li>
+    {% endif %}
+
+{% endblock breadcrumbs %}
+
+{% block content %}
+
+    <h3 class="styling-redline bg-styled p-3 text-center" style="margin-left: -0.75rem; margin-right: -0.75rem;">
+        {{ day|date:"F d, Y" }}
+        {% if page_obj.has_previous or page_obj.has_next %}
+            ({{ maps.count|intcomma }} of {{ page_obj.paginator.count|intcomma }} maps)
+        {% else %}
+            ({{ maps.count|intcomma }} maps)
+        {% endif %}
+    </h3>
+
+    {% include "pagination.html" %}
+
+    {% if date_estimate_disclaimer %}
+        <div class="alert alert-info" role="alert">
+            <p>
+              Although Metro Map Maker officially launched in September 2017,
+              I didn't include a <code>created_at</code> field on maps until September 13, 2018.
+            </p>
+            <p>
+                I made efforts to determine how many maps had been created by those dates based on historical records, but they're only estimates based on the known number of maps on a certain date.
+            </p>
+            <p>
+                For example, there were 606 maps created by April 11, 2018 (218 days since launch), so I divided those 606 maps roughly evenly across all 218 days.
+            </p>
+        </div>
+    {% endif %}
+
+    {% if image_generation_backfill > 100 %}
+        {# TODO -- REMOVE THIS and the query from views.MapsPerDayView ONCE BACKFILL COMPLETES #}
+        <div class="alert alert-warning" role="alert">
+            <p>Metro Map Maker still has about ~{{ image_generation_backfill|intcomma }} maps to generate thumbnails, print-quality images, and sharing images for.</p>
+            <p>Please be patient if you see the message "(Thumbnail being generated, please check back soon)"</p>
+        </div>
+    {% endif %}
+
+    <div class="row">
+        {% for map in maps %}
+        <div class="col-sm-6 col-md-4 col-xxl-3 mb-3 mt-3"><div class="card h-100 text-center">
+            <div class="card-header styling-{% cycle 'red' 'orange' 'yellow' 'green' 'blue' 'purple' 'silver' %}line">
+                <h2 class="card-title mt-2">
+                    <a class="text-outline bg-styled" href="{% url 'home_map' map.urlhash %}">Map #{{ map.id|intcomma }}: {{ map.urlhash }}</a>
+                </h2>
+            </div>
+            <div class="card-body d-flex flex-column text-center p-0">
+                {% if map.thumbnail_svg or map.thumbnail_png %}
+                    <a href="{% url 'rate' map.urlhash %}" class="flex-grow-1 align-self-center d-flex">
+                {% else %}
+                    <a href="{% url 'home_map' map.urlhash %}" class="flex-grow-1 align-self-center d-flex">
+                {% endif %}
+                    {% if map.thumbnail_svg and map.thumbnail_png and map.thumbnail_svg.size > 5000 and map.thumbnail_png.size <  map.thumbnail_svg.size %}
+                        <img src="{{ map.thumbnail_png.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">
+                    {% elif map.thumbnail_svg %}
+                        <img src="{{ map.thumbnail_svg.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">
+                    {% elif map.thumbnail_png %}
+                        <img src="{{ map.thumbnail_png.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">
+                    {% else %}
+                        <div class="align-self-center">(Thumbnail being generated, please check back soon)</div>
+                    {% endif %}
+                </a>
+
+                <a href="{% url 'home_map' map.urlhash %}">
+                    {% if map.name %}
+                        <h4>{{ map.name }}</h4>
+                    {% else %}
+                        <h4>(No name)</h4>
+                    {% endif %}
+                </a>
+
+                <div class="card-footer d-flex justify-content-evenly">
+                    <a href="{% url 'home_map' map.urlhash %}"><i class="bi bi-tools"></i> Remix</a>
+                    {% if map.svg %}
+                        {# Only show Rate link if you'll be able to see the full SVG #}
+                        <a href="{% url 'rate' map.urlhash %}"><i class="bi bi-heart"></i> Rate</a>
+                        <a href="{{ map.svg.url }}" download="metromapmaker-{{ map.urlhash }}.svg"><i class="bi bi-file-earmark-image"></i> SVG (Print)</a>
+                    {% endif %}
+                    {% if map.png %}
+                        <a href="{{ map.png.url }}" download="metromapmaker-{{ map.urlhash }}.png"><i class="bi bi-file-earmark-image"></i> PNG (Share)</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div></div>
+        {% endfor %}
+    </div>
+
+    <hr>
+
+    {% include "pagination.html" %}
+
+{% endblock content %}

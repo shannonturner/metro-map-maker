@@ -1,0 +1,90 @@
+table.map-calendar tbody tr:nth-child(1), table.map-calendar tbody tr:nth-child(2) {
+    height: 2rem;
+}
+th.map-calendar-month {
+    font-size: 150%; font-weight: 400; margin: 1rem 0;
+}
+.map-calendar-event {
+    border-radius: 0.5rem;
+}
+
+.map-calendar-day {
+    width: 10rem;
+    height: 12rem;
+    border: 1px solid;
+    vertical-align: top;
+    padding: 0.5rem;
+}
+
+.map-calendar-day-mark {
+    width: 20%;
+    text-align: center;
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
+    margin: -0.5rem 0 0 -0.5rem;
+}
+
+.map-calendar-data {
+    text-align: center;
+    font-size: 150%;
+}
+
+.styling-redline {
+    background-color: #bd1038;
+}
+.styling-orangeline {
+    background-color: #df8600;
+}
+.styling-yellowline {
+    background-color: #f0ce15;
+}
+.styling-greenline {
+    background-color: #00b251;
+}
+.styling-blueline {
+    background-color: #0896d7;
+}
+.styling-purpleline {
+    background-color: #662c90;
+}
+.styling-silverline {
+    background-color: #a2a2a2;
+}
+
+.bg-styled {
+    color: white;
+}
+.bg-styled-black {
+    color: #333;
+}
+.text-outline {
+    text-shadow: -1px -1px 0 #333, 1px -1px 0 #333, -1px 1px 0 #333, 1px 1px 0 #333;
+    letter-spacing: 0.125rem;
+}
+
+.already-rated {
+    background-color: white;
+    padding: 0.25rem;
+}
+.already-liked {
+    color: #bd1038;
+    border: 0.5rem solid rgba(189, 16, 38, 1)
+}
+.already-disliked {
+    color: #666;
+    border: 0.5rem solid rgba(102, 102, 102, .4)
+}
+.already-identified {
+    color: #00b251;
+    border: 0.5rem solid rgba(0, 178, 81, 1);
+}
+
+.nav-item {
+    line-height: 3.5rem;
+    margin: 0 0.5rem;
+    font-size: 1.5rem;
+}
+
+.nav-item li {
+    font-size: 1.5rem;
+}
