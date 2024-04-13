@@ -44,12 +44,21 @@ class Command(BaseCommand):
             help='Generate mapdata for only one map in particular.',
         )
 
+        parser.add_argument(
+            '--ongoing',
+            action='store_true',
+            dest='ongoing',
+            default=False,
+            help='Run ongoing to ensure v1-created maps get converted to v2 in real time',
+        )
+
     def handle(self, *args, **kwargs):
 
         urlhash = kwargs.get('urlhash')
         start = kwargs['start']
         end = kwargs['end']
         limit = kwargs['limit']
+        ongoing = kwargs.get('ongoing')
 
         if urlhash:
             limit = total = 1
@@ -57,7 +66,10 @@ class Command(BaseCommand):
         elif start or end:
             start = start or 1
             end = end or (start + limit + 1)
-            maps_to_update = SavedMap.objects.filter(pk__in=range(start, end)).order_by('id')[:limit]
+            maps_to_update = SavedMap.objects.filter(pk__in=range(start, end))
+            if ongoing:
+                maps_to_update = maps_to_update.filter(data={})
+            maps_to_update = maps_to_update.order_by('id')[:limit]
         else:
             maps_to_update = SavedMap.objects.filter(data={}).order_by('id')[:limit]
 
