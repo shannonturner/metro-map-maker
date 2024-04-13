@@ -994,6 +994,10 @@ class IdentifyMapView(RecaptchaMixin, FormView):
         urlhash = form.cleaned_data['urlhash']
         return HttpResponseRedirect(self.get_success_url(urlhash))
 
+    def get(self, request, *args, **kwargs):
+        urlhash = kwargs.get('urlhash')
+        return HttpResponseRedirect(self.get_success_url(urlhash))
+
 
 class RateMapView(RecaptchaMixin, FormView, DetailView):
     model = SavedMap
