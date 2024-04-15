@@ -54,11 +54,20 @@ class Command(BaseCommand):
             help='Calculate images and thumbnails for only one map in particular.',
         )
 
+        parser.add_argument(
+            '--latest',
+            action='store_true',
+            dest='latest',
+            default=False,
+            help='Run another instance of this to keep the latest maps up to date while the backfill is ongoing',
+        )
+
     def handle(self, *args, **kwargs):
         urlhash = kwargs['urlhash']
         start = kwargs['start']
         end = kwargs['end']
         limit = kwargs['limit']
+        latest = kwargs['latest']
 
         if urlhash:
             limit = total = 1
@@ -77,7 +86,13 @@ class Command(BaseCommand):
             needs_images = SavedMap.objects.filter(Q(thumbnail_svg=None) | Q(thumbnail_svg=''))
             self.stdout.write(f"Generating images and thumbnails for up to {limit} maps that don't have them.")
 
-        needs_images = needs_images.order_by('id')[:limit]
+        if latest:
+            order_by = '-id'
+            needs_images = needs_images.filter(pk__gte=191000) # XXX: Hardcoded, but it's fine for now
+        else:
+            order_by = 'id'
+
+        needs_images = needs_images.order_by(order_by)[:limit]
 
         errors = []
         t0 = time.time()
