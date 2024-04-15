@@ -28,6 +28,14 @@ Made something cool?
 ---------------------
 I'd love to see it! [Say hi!](mailto:hello@shannonvturner.com?subject=Metro+Map+Maker)
 
+Love Metro Map Maker? [Let me know!](mailto:hello@shannonvturner.com?subject=Metro+Map+Maker)
+
+Have an idea for how to make Metro Map Maker better? [Tell me about it!](mailto:hello@shannonvturner.com?subject=Metro+Map+Maker)
+
+Found a bug in Metro Map Maker? [Let me know about it!](mailto:hello@shannonvturner.com?subject=Metro+Map+Maker)
+
+Support my development: [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q4VUH8R)
+
 Check it out
 -------------
 This metro map was made with https://metromapmaker.com:
