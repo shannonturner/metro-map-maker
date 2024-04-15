@@ -34,7 +34,7 @@ Have an idea for how to make Metro Map Maker better? [Tell me about it!](mailto:
 
 Found a bug in Metro Map Maker? [Let me know about it!](mailto:hello@shannonvturner.com?subject=Metro+Map+Maker)
 
-Support my development: [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q4VUH8R)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Q5Q4VUH8R)
 
 Check it out
 -------------
