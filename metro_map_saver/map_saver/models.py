@@ -290,12 +290,9 @@ class SavedMap(models.Model):
 
         subprocess.run([settings.PNG_CONVERSION_APP_PATH, *settings.PNG_CONVERSION_ARGS, png_filename, self.svg.path], capture_output=True)
 
-        with open(thumbnail_png_filename, 'rb') as png_thumbnail_file:
-            self.thumbnail_png = ImageFile(png_thumbnail_file, name=thumbnail_png_filename)
-
-            with open(png_filename, 'rb') as png_file:
-                self.png = ImageFile(png_file, name=png_filename)
-                self.save()
+        self.thumbnail_png = thumbnail_png_filename.removeprefix(settings.MEDIA_ROOT)
+        self.png = png_filename.removeprefix(settings.MEDIA_ROOT)
+        self.save()
 
         t2 = time.time()
 
