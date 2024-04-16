@@ -46,7 +46,7 @@ compatibilityModeIndicator()
 const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'] // 1-30; is set up this way to have same functionality on all keyboards
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
-const ALLOWED_SIZES = [80, 120, 160, 200, 240]
+const ALLOWED_SIZES = [80, 120, 160, 200, 240, 360]
 const MAX_MAP_SIZE = ALLOWED_SIZES[ALLOWED_SIZES.length-1]
 
 String.prototype.replaceAll = function(search, replacement) {
@@ -2107,22 +2107,11 @@ function resetResizeButtons(size) {
   $('.resize-grid').each(function() {
     if ($(this).html().split(' ')[0] == 'Current') {
       var resizeButtonSize = $(this).attr('id').split('-').slice(2);
-      var resizeButtonLabel = '(' + resizeButtonSize + 'x' + resizeButtonSize + ')';
-      if (resizeButtonSize == 80) {
-        resizeButtonLabel = 'Small ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 120) {
-        resizeButtonLabel = 'Medium ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 160) {
-        resizeButtonLabel = 'Large ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 200) {
-        resizeButtonLabel = 'Extra Large ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 240) {
-        resizeButtonLabel = 'XXL ' + resizeButtonLabel;
-      }
-      $(this).html(resizeButtonLabel);
+      var resizeButtonLabel = resizeButtonSize + 'x' + resizeButtonSize;
+      $(this).text(resizeButtonLabel);
     }
   })
-  $('#tool-resize-' + size).text('Current Size (' + size + 'x' + size + ')');
+  $('#tool-resize-' + size).text('Current size (' + size + 'x' + size + ')');
   if (isMapStretchable(size)) {
     $('#tool-resize-stretch').show()
     $('#tool-resize-stretch').text('Stretch map to ' + size * 2 + 'x' + size * 2)
@@ -2771,17 +2760,11 @@ $(document).ready(function() {
 
     $('.resize-grid').each(function() {
       var resizeButtonSize = $(this).attr('id').split('-').slice(2);
-      var resizeButtonLabel = '(' + resizeButtonSize + 'x' + resizeButtonSize + ')';
-      if (resizeButtonSize == 80) {
-        resizeButtonLabel = 'Current Size ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 120) {
-        resizeButtonLabel = 'Medium ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 160) {
-        resizeButtonLabel = 'Large ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 200) {
-        resizeButtonLabel = 'XL ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 240) {
-        resizeButtonLabel = 'XXL ' + resizeButtonLabel;
+      var resizeButtonLabel = resizeButtonSize + ' x ' + resizeButtonSize;
+      if (resizeButtonSize == ALLOWED_SIZES[0]) {
+        resizeButtonLabel = resizeButtonLabel + ' (Current size)';
+      } else {
+        resizeButtonLabel = resizeButtonLabel;
       }
       $(this).html(resizeButtonLabel);
     })

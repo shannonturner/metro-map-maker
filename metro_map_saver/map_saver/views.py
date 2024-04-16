@@ -49,6 +49,7 @@ from .validator import (
     validate_metro_map,
     hex64,
     ALLOWED_TAGS,
+    ALLOWED_MAP_SIZES,
 )
 
 logger = logging.getLogger(__name__)
@@ -112,6 +113,7 @@ class HomeView(TemplateView):
                 context['canvas_size'] = 1600
 
         context['today'] = timezone.now().date()
+        context['ALLOWED_MAP_SIZES'] = ALLOWED_MAP_SIZES
 
         return render(request, self.template_name, context)
 
