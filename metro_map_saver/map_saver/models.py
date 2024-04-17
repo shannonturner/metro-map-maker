@@ -129,20 +129,6 @@ class SavedMap(models.Model):
         else:
             return 0
 
-    @property
-    def _publicly_visible(self):
-        # New maps won't have an ID; can't access tags until a map has an ID
-        if not self.id:
-            return
-        return all([
-            self.gallery_visible,
-            self.name,
-            self.thumbnail,
-        ]) and (
-            set([tag.slug for tag in self.tags.all()]).intersection(set(PUBLICLY_VISIBLE_TAGS)) \
-            and not set([tag.slug for tag in self.tags.all()]).intersection(set(EXCLUDED_TAGS))
-        )
-
     def convert_mapdata_v1_to_v2(self):
 
         """ Convert mapdata (classic) from v1 to v2
@@ -309,10 +295,6 @@ class SavedMap(models.Model):
     def save(self, *args, **kwargs):
         self.name = self.name.strip()
         self.thumbnail = self.thumbnail.strip()
-        if self._publicly_visible:
-            self.publicly_visible = True
-        else:
-            self.publicly_visible = False
         super().save(*args, **kwargs)
 
     DEFER_FIELDS = (
@@ -342,7 +324,7 @@ class SavedMap(models.Model):
             ('hide_map', "Can set a map's gallery_visible to hidden"),
             ('name_map', "Can set a map's name"),
             ('tag_map', "Can change the tags associated with a map"),
-            ('generate_thumbnail', "Can generate thumbnails for a map"),
+            ('generate_thumbnail', "Can generate thumbnails for a map"), # Now that generating thumbnails is handled differently, should replace
             ('edit_publicly_visible', "Can edit a publicly visible map"),
         )
 

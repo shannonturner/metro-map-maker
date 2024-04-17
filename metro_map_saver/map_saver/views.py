@@ -136,8 +136,7 @@ class PublicGalleryView(TemplateView):
             # 'unknown',
         ]
 
-        thumbnails = SavedMap.objects.filter(publicly_visible=True) \
-            .values('thumbnail', 'name', 'urlhash')
+        thumbnails = SavedMap.objects.defer('mapdata', 'data', 'stations').filter(publicly_visible=True)
 
         for tag in tags:
             context[tag] = thumbnails.filter(tags__slug=tag).order_by('name')
@@ -155,8 +154,7 @@ class ThumbnailGalleryView(TemplateView):
     def get(self, request, **kwargs):
 
         thumbnails = SavedMap.objects \
-            .filter(gallery_visible=True) \
-            .exclude(thumbnail__exact='') \
+            .filter(publicly_visible=True) \
             .exclude(name__exact='') \
             .exclude(tags__slug='reviewed')
 
@@ -169,7 +167,7 @@ class ThumbnailGalleryView(TemplateView):
             thumbnails = thumbnails.order_by('name')
 
         context = {
-            'thumbnails': thumbnails.values('thumbnail', 'name', 'urlhash')
+            'thumbnails': thumbnails.defer('mapdata', 'data', 'stations'),
         }
         return render(request, 'thumbnails.html', context)
 
@@ -431,6 +429,7 @@ class MapAdminActionView(TemplateView):
             'thumbnail',
             'image',
             'name',
+            'publish',
         )
         context = {}
 
@@ -477,6 +476,9 @@ class MapAdminActionView(TemplateView):
                     name = request.POST.get('name')
                     this_map.name = name
                     this_map.naming_token = '' # This map can no longer be named by the end user
+                    this_map.save()
+                elif action == 'publish' and request.user.has_perm('map_saver.generate_thumbnail'):
+                    this_map.publicly_visible = not this_map.publicly_visible
                     this_map.save()
                 else:
                     raise PermissionDenied
@@ -904,12 +906,6 @@ class MapsPerDayView(DayArchiveView):
         if context['day'] <= datetime.date(2017, 9, 6):
             context['previous_day'] = False
 
-        # TODO: Remove this after image generation backfill completes
-        #   and remove the "please be patient" message from savedmap_archive_day.html
-        context['image_generation_backfill'] = SavedMap.objects.filter(
-            Q(thumbnail_svg=None) | Q(thumbnail_svg='')
-        ).count()
-
         return context
 
     @method_decorator(cache_control(max_age=60))
@@ -1024,12 +1020,6 @@ class RateMapView(RecaptchaMixin, FormView, DetailView):
             context['form_dislike'] = self.form_class(dict(urlhash=self.object.urlhash, choice='dislikes'))
         if not self.object.id in request.session.get('identified', []):
             context['identify_form'] = IdentifyForm(dict(urlhash=self.object.urlhash))
-
-        # TODO: Remove this after image generation backfill completes
-        #   and remove the "please be patient" message from savedmap_archive_day.html
-        context['image_generation_backfill'] = SavedMap.objects.filter(
-            Q(thumbnail_svg=None) | Q(thumbnail_svg='')
-        ).count()
 
         return self.render_to_response(context)
 

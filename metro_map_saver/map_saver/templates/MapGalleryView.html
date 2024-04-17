@@ -150,7 +150,7 @@
                 {% endfor %}
               {% endif %}
               {% if permissions.generate_thumbnail %}
-              <button id="thumbnail-{{ map.id }}" class="get-thumbnail {% if map.thumbnail %}btn-success{% else %}btn-info{% endif %}">{% if map.thumbnail %}Thumbnail: {% widthratio map.thumbnail|length 1024 1 %}kb{% else %}Generate Thumbnail{% endif %}</button>
+              <button id="publish-{{ map.id }}" class="publish {% if map.publicly_visible %}btn-success{% else %}btn-info{% endif %}">{% if map.publicly_visible %}Remove from Gallery{% else %}Add to Gallery{% endif %}</button>
               {% endif %}
 
               <span class="vertical-divider"></span>
@@ -804,36 +804,24 @@
     {% endif %}
 
     {% if permissions.generate_thumbnail %}
-    $('.get-thumbnail').click(function() {
+    $('.publish').click(function() {
       var getThumbnailButton = $(this);
       var thisMapId = $(this).attr('id').split('-').slice(1, 2);
 
-      if (getThumbnailButton.text() == 'Generate Thumbnail') {
-        // No thumbnail exists -> generate one
-        var base64thumbnailData = document.getElementById('metro-map-thumbnail-canvas-' + thisMapId).toDataURL();
-        {% if request.user.is_superuser %}
-        saveSocialSharingImage(thisMapId)
-        {% endif %}
-      } else {
-        // Thumbnail exists -> delete it
-        base64thumbnailData = '';
-      }
-
       $.post('/admin/action/', {
-        "action": "thumbnail",
+        "action": "publish",
         "map": parseInt(thisMapId),
-        "data": base64thumbnailData,
         'csrfmiddlewaretoken': csrftoken
       }).done(function(data) {
         if (data == 'Success') {
-          if (getThumbnailButton.text() == 'Generate Thumbnail') {
+          if (getThumbnailButton.text() == 'Add to Gallery') {
             getThumbnailButton.addClass('btn-success');
             getThumbnailButton.removeClass('btn-info');
-            getThumbnailButton.text('Thumbnail: ' + Math.round(base64thumbnailData.length / 1024) + 'kb');
+            getThumbnailButton.text('Remove from Gallery');
           } else {
             getThumbnailButton.removeClass('btn-success');
             getThumbnailButton.addClass('btn-info');
-            getThumbnailButton.text('Generate Thumbnail');
+            getThumbnailButton.text('Add to Gallery');
           }
         }
       })

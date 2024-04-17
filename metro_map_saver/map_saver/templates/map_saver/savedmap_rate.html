@@ -39,6 +39,9 @@
 
         <h3 class="card-title mt-2 p-3 styling-redline text-center">
             <a class="text-outline bg-styled" href="{% url 'home_map' map.urlhash %}">Map #{{ map.id|intcomma }}: {{ map.urlhash }} ({{ map.created_at|date:'F j, Y' }})</a>
+            {% if user.is_staff %}
+                <a href="{% url 'direct' map.urlhash %}" class="text-outline text-right bg-styled">[Admin]</a>
+            {% endif %}
         </h3>
         <div class="d-flex justify-content-evenly align-items-stretch m-3">
             {% if map.svg %}
@@ -108,16 +111,7 @@
             {% if map.svg %}
                 <img src="{{ map.svg.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}">
             {% else %}
-                {% if image_generation_backfill > 100 %}
-                    {# TODO -- REMOVE THIS and the query from views.MapsPerDayView ONCE BACKFILL COMPLETES #}
-                    <div class="alert alert-warning" role="alert">
-                        <p>Metro Map Maker still has about ~{{ image_generation_backfill|intcomma }} maps to generate thumbnails, print-quality images, and sharing images for.</p>
-                        <p>This is a fast process, but I'm going a bit slower than I otherwise would to avoid overloading my server.</p>
-                        <p>Please be patient while images are being generated. In the meantime, you can <a href="{% url 'home_map' map.urlhash %}">remix this map</a>.</p>
-                    </div>
-                {% else %}
-                    The thumbnail for this map is still generating, but you can <a href="{% url 'home_map' map.urlhash %}">remix this map</a>.
-                {% endif %}
+                The thumbnail for this map is still generating (check back in a couple of minutes), but you can <a href="{% url 'home_map' map.urlhash %}">remix this map</a>.
             {% endif %}
         </div>
     </div>
