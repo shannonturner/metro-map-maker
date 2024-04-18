@@ -2589,6 +2589,15 @@ $(document).ready(function() {
     autoSave(savedMap);
     var saveMapURL = '/save/';
     csrftoken = getCookie('csrftoken');
+    // Disable button (and re-enable it shortly thereafter
+    $('#tool-save-map').prop('disabled', 'disabled')
+    $('#tool-save-map span').text('Saving ...')
+    setTimeout(function() {
+      // Re-enable it after 1 second no matter what,
+      //  but the visual cue ("Saving ...")
+      //  won't change until the map is actually saved
+      $('#tool-save-map').prop('disabled', false)
+    }, 1000)
     $.post( saveMapURL, {
       'metroMap': savedMap,
       'csrfmiddlewaretoken': csrftoken
@@ -2690,6 +2699,10 @@ $(document).ready(function() {
       }
       $('#tool-save-options').html('<h5 class="text-left bg-warning">' + message + '</h5>');
       $('#tool-save-options').show();
+    }).always(function() {
+      setTimeout(function() {
+        $('#tool-save-map span').text('Save & Share')
+      }, 350) // A short delay looks nicer than immediate
     });
     $('.tooltip').hide();
   }); // $('#tool-save-map').click()
@@ -2748,6 +2761,8 @@ $(document).ready(function() {
       "points_by_color": {},
       "stations": {},
     }
+
+    activeMap['global']['map_size'] = 80
 
     drawGrid()
     snapCanvasToGrid()
