@@ -137,6 +137,10 @@ function snapCanvasToGrid() {
   // like on page load, map resize, or zoom in/out, 
   // the #metro-map-canvas size needs to be updated as well so they overlap
 
+  // Safari struggles with performance above 3600 (even on desktop); in my tests, it barely works at all
+  // Chrome can handle higher sizes easily; in my tests, 7200 was fine.
+  // Increasing this improves the image sharpness at larger map sizes,
+  //  because the gridPixelMultiplier gets larger
   var MAX_CANVAS_SIZE = 3600
   /* HEY: You've tried SO many times to optimize canvas performance
       and have thought "the best optimization is a smaller canvas"
@@ -151,7 +155,6 @@ function snapCanvasToGrid() {
   if (canvas.height / gridCols != preferredGridPixelMultiplier) {
     // Maintain a nice, even gridPixelMultiplier so the map looks uniform at every size
     // On iPhone for Safari, canvases larger than 4096x4096 would crash, so cap it
-    //  (this really only affects maps at 240x240)
     // Note: Now capping this at 3600x3600, which will affect maps 200x200 and above;
     //  because I noticed some highly detailed maps failed to load on iPhone for Safari
     //  with the same symptoms as before
