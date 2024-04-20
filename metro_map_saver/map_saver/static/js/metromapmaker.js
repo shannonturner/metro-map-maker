@@ -46,7 +46,7 @@ compatibilityModeIndicator()
 const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'] // 1-30; is set up this way to have same functionality on all keyboards
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
-const ALLOWED_SIZES = [80, 120, 160, 200, 240]
+const ALLOWED_SIZES = [80, 120, 160, 200, 240, 360]
 const MAX_MAP_SIZE = ALLOWED_SIZES[ALLOWED_SIZES.length-1]
 
 String.prototype.replaceAll = function(search, replacement) {
@@ -137,6 +137,10 @@ function snapCanvasToGrid() {
   // like on page load, map resize, or zoom in/out, 
   // the #metro-map-canvas size needs to be updated as well so they overlap
 
+  // Safari struggles with performance above 3600 (even on desktop); in my tests, it barely works at all
+  // Chrome can handle higher sizes easily; in my tests, 7200 was fine.
+  // Increasing this improves the image sharpness at larger map sizes,
+  //  because the gridPixelMultiplier gets larger
   var MAX_CANVAS_SIZE = 3600
   /* HEY: You've tried SO many times to optimize canvas performance
       and have thought "the best optimization is a smaller canvas"
@@ -151,7 +155,6 @@ function snapCanvasToGrid() {
   if (canvas.height / gridCols != preferredGridPixelMultiplier) {
     // Maintain a nice, even gridPixelMultiplier so the map looks uniform at every size
     // On iPhone for Safari, canvases larger than 4096x4096 would crash, so cap it
-    //  (this really only affects maps at 240x240)
     // Note: Now capping this at 3600x3600, which will affect maps 200x200 and above;
     //  because I noticed some highly detailed maps failed to load on iPhone for Safari
     //  with the same symptoms as before
@@ -2107,22 +2110,11 @@ function resetResizeButtons(size) {
   $('.resize-grid').each(function() {
     if ($(this).html().split(' ')[0] == 'Current') {
       var resizeButtonSize = $(this).attr('id').split('-').slice(2);
-      var resizeButtonLabel = '(' + resizeButtonSize + 'x' + resizeButtonSize + ')';
-      if (resizeButtonSize == 80) {
-        resizeButtonLabel = 'Small ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 120) {
-        resizeButtonLabel = 'Medium ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 160) {
-        resizeButtonLabel = 'Large ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 200) {
-        resizeButtonLabel = 'Extra Large ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 240) {
-        resizeButtonLabel = 'XXL ' + resizeButtonLabel;
-      }
-      $(this).html(resizeButtonLabel);
+      var resizeButtonLabel = resizeButtonSize + 'x' + resizeButtonSize;
+      $(this).text(resizeButtonLabel);
     }
   })
-  $('#tool-resize-' + size).text('Current Size (' + size + 'x' + size + ')');
+  $('#tool-resize-' + size).text('Current size (' + size + 'x' + size + ')');
   if (isMapStretchable(size)) {
     $('#tool-resize-stretch').show()
     $('#tool-resize-stretch').text('Stretch map to ' + size * 2 + 'x' + size * 2)
@@ -2600,6 +2592,15 @@ $(document).ready(function() {
     autoSave(savedMap);
     var saveMapURL = '/save/';
     csrftoken = getCookie('csrftoken');
+    // Disable button (and re-enable it shortly thereafter
+    $('#tool-save-map').prop('disabled', 'disabled')
+    $('#tool-save-map span').text('Saving ...')
+    setTimeout(function() {
+      // Re-enable it after 1 second no matter what,
+      //  but the visual cue ("Saving ...")
+      //  won't change until the map is actually saved
+      $('#tool-save-map').prop('disabled', false)
+    }, 1000)
     $.post( saveMapURL, {
       'metroMap': savedMap,
       'csrfmiddlewaretoken': csrftoken
@@ -2701,6 +2702,10 @@ $(document).ready(function() {
       }
       $('#tool-save-options').html('<h5 class="text-left bg-warning">' + message + '</h5>');
       $('#tool-save-options').show();
+    }).always(function() {
+      setTimeout(function() {
+        $('#tool-save-map span').text('Save & Share')
+      }, 350) // A short delay looks nicer than immediate
     });
     $('.tooltip').hide();
   }); // $('#tool-save-map').click()
@@ -2760,6 +2765,8 @@ $(document).ready(function() {
       "stations": {},
     }
 
+    activeMap['global']['map_size'] = 80
+
     drawGrid()
     snapCanvasToGrid()
     lastStrokeStyle = undefined;
@@ -2771,17 +2778,11 @@ $(document).ready(function() {
 
     $('.resize-grid').each(function() {
       var resizeButtonSize = $(this).attr('id').split('-').slice(2);
-      var resizeButtonLabel = '(' + resizeButtonSize + 'x' + resizeButtonSize + ')';
-      if (resizeButtonSize == 80) {
-        resizeButtonLabel = 'Current Size ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 120) {
-        resizeButtonLabel = 'Medium ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 160) {
-        resizeButtonLabel = 'Large ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 200) {
-        resizeButtonLabel = 'XL ' + resizeButtonLabel;
-      } else if (resizeButtonSize == 240) {
-        resizeButtonLabel = 'XXL ' + resizeButtonLabel;
+      var resizeButtonLabel = resizeButtonSize + ' x ' + resizeButtonSize;
+      if (resizeButtonSize == ALLOWED_SIZES[0]) {
+        resizeButtonLabel = resizeButtonLabel + ' (Current size)';
+      } else {
+        resizeButtonLabel = resizeButtonLabel;
       }
       $(this).html(resizeButtonLabel);
     })

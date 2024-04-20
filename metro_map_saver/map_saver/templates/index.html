@@ -342,11 +342,11 @@
         <fieldset>
           <legend>Resize Map</legend>
           <h5>Be careful! If your map is large and you resize it to be smaller, you'll lose your work. <b>Use Control+Z to undo.</b></h5>
-          <button id="tool-resize-80" class="resize-grid styled styling-redline">Small (80x80)</button>
-          <button id="tool-resize-120" class="resize-grid styled styling-redline">Medium (120x120)</button>
-          <button id="tool-resize-160" class="resize-grid styled styling-redline">Large (160x160)</button>
-          <button id="tool-resize-200" class="resize-grid styled styling-redline">XL (200x200)</button>
-          <button id="tool-resize-240" class="resize-grid styled styling-redline">XXL (240x240)</button>
+          {% for allowed_size in ALLOWED_MAP_SIZES %}
+            <button id="tool-resize-{{ allowed_size }}" class="resize-grid styled styling-redline">
+              {{ allowed_size }}x{{ allowed_size }}
+            </button>
+          {% endfor %}
           <button id="tool-resize-stretch" class="has-tooltip stretch-grid styled styling-redline" data-toggle="tooltip" data-placement="left" title="Increase the available space between stations so you can add more stations in between.">Stretch Map</button>
         </fieldset>
       </div>

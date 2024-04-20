@@ -9,7 +9,7 @@ from django.forms import ValidationError
 
 logger = logging.getLogger(__name__)
 
-ALLOWED_MAP_SIZES = [80, 120, 160, 200, 240]
+ALLOWED_MAP_SIZES = [80, 120, 160, 200, 240, 360]
 MAX_MAP_SIZE = ALLOWED_MAP_SIZES[-1]
 VALID_XY = [str(x) for x in range(MAX_MAP_SIZE)]
 ALLOWED_LINE_WIDTHS = [1, 0.75, 0.5, 0.25, 0.125]
