@@ -70,13 +70,13 @@
         <fieldset>
           <legend>Browse Maps created by visitors like you</legend>
             <a href="{% url 'public_gallery' %}" class="width-100">
-              <button class="styled styling-blueline width-100">
+              <button class="styled styling-blueline width-100 mobile-browse">
                 <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#postage-heart"/></svg>
                 <span class="button-label">My Favorites</span>
               </button>
             </a>
             <a href="{% url 'calendar' %}" class="width-100">
-              <button class="styled styling-blueline width-100">
+              <button class="styled styling-blueline width-100 mobile-browse">
                 <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#calendar-date"/></svg>
                 <span class="button-label">All Maps by Date</span>
               </button>

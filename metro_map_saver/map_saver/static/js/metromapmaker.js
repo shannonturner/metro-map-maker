@@ -2740,7 +2740,7 @@ $(document).ready(function() {
       $("#metro-map-image").attr("src", imageData);
       $("#metro-map-image").show();
       $('#export-canvas-help').show();
-      $('button').attr('disabled', true);
+      $('button:not(.mobile-browse)').attr('disabled', true);
       $(this).attr('disabled', false);
 
       $(this).attr('title', "Go back to editing your map").tooltip('fixTitle').tooltip('show');
