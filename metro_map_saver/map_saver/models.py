@@ -86,6 +86,8 @@ class SavedMap(models.Model):
     suggested_city = models.CharField(max_length=255, blank=True, default='')
     suggested_city_overlap = models.IntegerField(default=-1)
 
+    map_size = models.IntegerField(default=-1)
+
     tags = TaggableManager(blank=True)
 
     def _suggest_city(self, overlap=None):
@@ -312,6 +314,7 @@ class SavedMap(models.Model):
             models.Index(fields=["publicly_visible"]),
             models.Index(fields=["created_at"]),
             models.Index(fields=["station_count"]),
+            models.Index(fields=["name"]),
             models.Index(fields=["likes"]),
             models.Index(fields=["dislikes"]),
             models.Index(fields=["svg"]),
