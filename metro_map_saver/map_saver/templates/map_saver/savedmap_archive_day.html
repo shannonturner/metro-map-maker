@@ -62,53 +62,8 @@
 
     <div class="row">
         {% for map in maps %}
-        <div class="col-sm-6 col-md-4 col-xxl-3 mb-3 mt-3"><div class="card h-100 text-center">
-            <div class="card-header styling-{% cycle 'red' 'orange' 'yellow' 'green' 'blue' 'purple' 'silver' %}line">
-                <h2 class="card-title mt-2">
-                    <a class="text-outline bg-styled" href="{% url 'home_map' map.urlhash %}">Map #{{ map.id|intcomma }}: {{ map.urlhash }}</a>
-                    {% if user.is_staff %}
-                        <a href="{% url 'direct' map.urlhash %}" class="text-outline text-right bg-styled">[Admin]</a>
-                    {% endif %}
-                </h2>
-            </div>
-            <div class="card-body d-flex flex-column text-center p-0">
-                {% if map.thumbnail_svg or map.thumbnail_png %}
-                    <a href="{% url 'rate' map.urlhash %}" class="flex-grow-1 align-self-center d-flex">
-                {% else %}
-                    <a href="{% url 'home_map' map.urlhash %}" class="flex-grow-1 align-self-center d-flex">
-                {% endif %}
-                    {% if map.thumbnail_svg and map.thumbnail_png and map.thumbnail_svg.size > 5000 and map.thumbnail_png.size <  map.thumbnail_svg.size %}
-                        <img src="{{ map.thumbnail_png.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">
-                    {% elif map.thumbnail_svg %}
-                        <img src="{{ map.thumbnail_svg.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">
-                    {% elif map.thumbnail_png %}
-                        <img src="{{ map.thumbnail_png.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">
-                    {% else %}
-                        <div class="align-self-center">(Thumbnail being generated, please check back soon)</div>
-                    {% endif %}
-                </a>
-
-                <a href="{% url 'home_map' map.urlhash %}">
-                    {% if map.name %}
-                        <h4>{{ map.name }}</h4>
-                    {% else %}
-                        <h4>(No name)</h4>
-                    {% endif %}
-                </a>
-
-                <div class="card-footer d-flex justify-content-evenly">
-                    <a href="{% url 'home_map' map.urlhash %}"><i class="bi bi-tools"></i> Remix</a>
-                    {% if map.svg %}
-                        {# Only show Rate link if you'll be able to see the full SVG #}
-                        <a href="{% url 'rate' map.urlhash %}"><i class="bi bi-heart"></i> Rate</a>
-                        <a href="{{ map.svg.url }}" download="metromapmaker-{{ map.urlhash }}.svg"><i class="bi bi-file-earmark-image"></i> SVG (Print)</a>
-                    {% endif %}
-                    {% if map.png %}
-                        <a href="{{ map.png.url }}" download="metromapmaker-{{ map.urlhash }}.png"><i class="bi bi-file-earmark-image"></i> PNG (Share)</a>
-                    {% endif %}
-                </div>
-            </div>
-        </div></div>
+            {% cycle 'red' 'orange' 'yellow' 'green' 'blue' 'purple' 'silver' as cycle_color silent %}
+            {% include "map_saver/map_card.html" with map=map cycle_color=cycle_color %}
         {% endfor %}
     </div>
 
