@@ -914,6 +914,27 @@ class MapsPerDayView(DayArchiveView):
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
 
+class CityView(ListView):
+
+    """ Show all maps for a given city
+    """
+
+    context_object_name = 'maps'
+    paginate_by = 50
+
+    def get_queryset(self):
+        queryset = SavedMap.objects.all().defer(*SavedMap.DEFER_FIELDS)
+        city = self.kwargs.get('city')
+        if city:
+            queryset = queryset.filter(name__startswith=city)
+        return queryset.order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['showing_city'] = self.kwargs.get('city')
+        return context
+
+
 class SameDayView(ListView):
 
     """ Show all maps created on the same day as a given URLhash,
