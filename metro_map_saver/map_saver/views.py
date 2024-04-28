@@ -51,6 +51,7 @@ from .validator import (
     ALLOWED_TAGS,
     ALLOWED_MAP_SIZES,
 )
+from .common_cities import CITIES
 
 logger = logging.getLogger(__name__)
 
@@ -924,7 +925,7 @@ class CityView(ListView):
 
     def get_queryset(self):
         queryset = SavedMap.objects.all().defer(*SavedMap.DEFER_FIELDS)
-        city = self.kwargs.get('city')
+        city = self.kwargs.get('city').title()
         if city:
             queryset = queryset.filter(name__startswith=city)
         return queryset.order_by('-created_at')
@@ -1105,3 +1106,16 @@ class CreditsView(TemplateView):
 class HelpView(TemplateView):
     template_name = 'help.html'
 
+class CityListView(TemplateView):
+    template_name = 'city_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = {'cities': CITIES}
+        return context
+
+    def post(self, request, *args, **kwargs):
+        city = request.POST.get('city')
+        if city:
+            return HttpResponseRedirect(reverse_lazy('city', args=(city, )))
+        else:
+            return super().get(request, *args, **kwargs)
