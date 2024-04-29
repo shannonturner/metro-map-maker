@@ -1,4 +1,4 @@
-
+from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned, PermissionDenied
 from django.db.models import Count, F, Q
 from django.http import HttpResponseRedirect
@@ -934,6 +934,13 @@ class CityView(ListView):
         context = super().get_context_data(**kwargs)
         context['showing_city'] = self.kwargs.get('city')
         return context
+
+    def get(self, request, *args, **kwargs):
+        city = kwargs.get('city', '').strip()
+        if len(city) < 3:
+            messages.add_message(request, messages.INFO, "Please enter at least 3 letters for your search.")
+            return HttpResponseRedirect(reverse_lazy('city-list'))
+        return super().get(request, *args, **kwargs)
 
 
 class SameDayView(ListView):

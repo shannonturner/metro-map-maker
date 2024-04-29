@@ -141,7 +141,7 @@
       <div id="content-start" class="content container-fluid" tabindex="-1">
         {% block messages %}
           {% if messages %}
-            <ul class="messagelist">
+            <ul class="messagelist p-3" style="list-style: none;">
                 {% for message in messages %}
                     <li{% if message.tags %} class="alert alert-{{ message.tags }}{% if 'error' in message.tags %} alert-danger{% endif %}"{% endif %}>{{ message|capfirst }}</li>
                 {% endfor %}

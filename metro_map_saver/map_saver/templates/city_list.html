@@ -18,7 +18,7 @@
 
     <div class="row text-center mt-3">
         <form method="POST">
-            <input type="text" name="city" placeholder="Washington" class="w-50">
+            <input type="text" name="city" placeholder="Washington" class="w-50" minlength="3">
             {% csrf_token %}
             <button type="submit" class="bg-styled styling-blueline"><i class="bi bi-search"></i> Search</button>
         </form>
