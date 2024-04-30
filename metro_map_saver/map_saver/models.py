@@ -60,7 +60,7 @@ class SavedMap(models.Model):
     # publicly_visible: should this be shown in the publicly-visible gallery?
     #   (using this to improve speed and reduce query complexity)
     publicly_visible = models.BooleanField(default=False)
-    name = models.CharField(max_length=255, blank=True, default='')
+    name = models.CharField(max_length=255, blank=True, default='', help_text='User-provided (or admin-provided) name for a map. When user-provided, contains tags like (real).')
     thumbnail = models.TextField(blank=True, default='') # Consider: Delete after thumbnail files generation migration
     thumbnail_svg = models.FileField(upload_to=get_thumbnail_filepath, null=True, blank=True)
     thumbnail_png = models.FileField(upload_to=get_thumbnail_filepath, null=True, blank=True)
@@ -83,10 +83,19 @@ class SavedMap(models.Model):
     #   this would also mean that renaming a TravelSystem wouldn't
     #   require re-saving maps with that suggested_city to prevent 500 errors in the admin
     #   (though I don't re-name TravelSystems often)
-    suggested_city = models.CharField(max_length=255, blank=True, default='')
+    suggested_city = models.CharField(max_length=255, blank=True, default='', help_text='Suggested name for this map based on station name overlap with real, existing Metro systems.')
     suggested_city_overlap = models.IntegerField(default=-1)
 
     map_size = models.IntegerField(default=-1)
+
+    city = models.ForeignKey(
+        'City',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        help_text='The city (location) this map refers to. Differs from name and suggested_city by being the standard, canonical name of a city.',
+    )
+
 
     tags = TaggableManager(blank=True)
 
@@ -354,3 +363,16 @@ class IdentifyMap(models.Model):
 
     def __str__(self):
         return f'Identification #{self.id} for Map #{self.saved_map.id} ({self.saved_map.urlhash})'
+
+class City(models.Model):
+
+
+    """ The standardized name of a location,
+        useful for aggregating queries for the Maps by City view,
+        and grouping Montreal with Montréal.
+    """
+
+    name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return f'City: {self.name}'

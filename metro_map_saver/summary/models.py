@@ -19,3 +19,18 @@ class MapsByDay(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['day'], name='unique_mapsbyday_day'),
         ]
+
+class MapsByCity(models.Model):
+
+    """ How many maps were created by city,
+            plus one map that's featured
+    """
+
+    city = models.ForeignKey('map_saver.City', on_delete=models.CASCADE)
+    maps = models.IntegerField()
+    featured = models.ForeignKey('map_saver.SavedMap', null=True, on_delete=models.SET_NULL)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['city'], name='unique_mapsbycity_city'),
+        ]
