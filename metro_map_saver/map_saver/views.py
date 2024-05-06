@@ -416,6 +416,9 @@ class CreatorNameMapView(TemplateView):
 
         return render(request, 'MapDataView.html', context)
 
+    def get(self, request, **kwargs):
+        return render(request, 'MapDataView.html', {}) # noop, don't alert on bots
+
 
 class MapAdminActionView(TemplateView):
 
