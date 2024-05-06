@@ -358,6 +358,7 @@ class SavedMap(models.Model):
             models.Index(fields=["created_at"]),
             models.Index(fields=["station_count"]),
             models.Index(fields=["name"]),
+            models.Index(fields=["suggested_city"]),
             models.Index(fields=["likes"]),
             models.Index(fields=["dislikes"]),
             models.Index(fields=["svg"]),
