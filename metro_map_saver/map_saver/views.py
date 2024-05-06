@@ -607,6 +607,7 @@ class MapDataView(TemplateView):
                     'naming_token': naming_token,
                     'station_count': len(stations),
                     'stations': ','.join(stations),
+                    'map_size': mapdata.get('global', {}).get('map_size', -1) or -1,
                 }
                 if data_version == 2:
                     map_details['data'] = mapdata
