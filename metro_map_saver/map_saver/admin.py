@@ -5,6 +5,7 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import SavedMap
+from .models import SavedMap, City
 
 admin.site.register(SavedMap)
+admin.site.register(City)
