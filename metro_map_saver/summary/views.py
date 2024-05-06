@@ -260,7 +260,7 @@ class CityListView(TemplateView):
     template_name = 'city_list.html'
 
     def get_context_data(self, **kwargs):
-        context = {'cities': MapsByCity.objects.prefetch_related('city', 'featured').all()}
+        context = {'cities': MapsByCity.objects.prefetch_related('city', 'featured').all().order_by('-maps')}
         return context
 
     def post(self, request, *args, **kwargs):
