@@ -927,11 +927,14 @@ class CityView(ListView):
     def get_queryset(self):
         queryset = SavedMap.objects.all().defer(*SavedMap.DEFER_FIELDS)
         city = self.kwargs.get('city').title()
-        try:
-            queryset = queryset.filter(city__name=city)
-        except Exception:
-            if city:
-                queryset = queryset.filter(name__startswith=city)
+        if city == 'Unspecified':
+            queryset = queryset.filter(city__exact=None)
+        else:
+            try:
+                queryset = queryset.filter(city__name=city)
+            except Exception:
+                if city:
+                    queryset = queryset.filter(name__startswith=city)
         return queryset.order_by('-created_at')
 
     def get_context_data(self, **kwargs):

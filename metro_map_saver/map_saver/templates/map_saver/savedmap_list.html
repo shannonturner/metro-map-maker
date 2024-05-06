@@ -15,9 +15,26 @@
     {% if showing_best or showing_city %}
         <h3 class="card-title mt-2 p-3 bg-styled styling-redline text-center">
             {% if showing_best %}Highest-Rated Maps
-            {% elif showing_city %}{{ page_obj.paginator.count|intcomma }} Maps of {{ showing_city|title }}
+            {% elif showing_city %}
+                {% if showing_city|title == 'Unspecified' %}
+                    {{ page_obj.paginator.count|intcomma }} Uncategorized Maps
+                {% else %}
+                    {{ page_obj.paginator.count|intcomma }} Maps of {{ showing_city|title }}
+                {% endif %}
             {% endif %}
         </h3>
+
+        {% if showing_city and showing_city|title == 'Unspecified' %}
+            <div class="alert alert-info mt-3" role="alert">
+                <p>
+                    These are maps whose city isn't categorized yet, but some of these might be of cities you recognize.
+                </p>
+                <p>
+                    Categorizing maps is a lot of work, but you can help by liking and identifying maps (click the <i class="bi bi-heart"></i> Rate link) on maps.
+                </p>
+            </div>
+        {% endif %}
+
         {% include "pagination.html" %}
     {% endif %}
 
