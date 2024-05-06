@@ -81,6 +81,12 @@
                 <span class="button-label">All Maps by Date</span>
               </button>
             </a>
+            <a href="{% url 'city-list' %}" class="width-100">
+              <button class="styled styling-blueline width-100 mobile-browse">
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pin-map"/></svg>
+                <span class="button-label">All Maps by City</span>
+              </button>
+            </a>
           {% if not saved_map %}
             <div id="favorite-maps" class="width-100">
               <p>Some of my favorites include:</p>
@@ -443,6 +449,12 @@
               <button class="has-tooltip styled styling-blueline width-100" data-toggle="tooltip" data-placement="left" title="All Metro Maps ever made by visitors like you">
                 <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#calendar-date"/></svg>
                 <span class="button-label">All Maps by Date</span>
+              </button>
+            </a>
+            <a href="{% url 'city-list' %}" class="width-100">
+              <button class="has-tooltip styled styling-blueline width-100" data-toggle="tooltip" data-placement="left" title="All Metro Maps ever made by vistors like you, grouped by their city">
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pin-map"/></svg>
+                <span class="button-label">All Maps by City</span>
               </button>
             </a>
             {% if saved_map %}
