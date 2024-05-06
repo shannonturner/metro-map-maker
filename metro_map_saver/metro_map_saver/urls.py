@@ -47,7 +47,7 @@ urlpatterns = [
 
     path('calendar/<int:year>/<int:month>/<int:day>/', map_saver.views.MapsPerDayView.as_view(month_format='%m'), name='calendar-day'),
 
-    path('city/', map_saver.views.CityListView.as_view(), name='city-list'),
+    path('city/', summary.views.CityListView.as_view(), name='city-list'),
     path('city/<str:city>/', map_saver.views.CityView.as_view(), name='city'),
 
     path('random/', map_saver.views.RandomMapView.as_view(), name='random'),

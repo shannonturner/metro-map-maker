@@ -2,6 +2,7 @@ from django.http import Http404
 from django.shortcuts import render, reverse
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
+from django.views.generic.base import TemplateView
 from django.views.generic.dates import (
     YearArchiveView,
     MonthArchiveView,
@@ -9,7 +10,7 @@ from django.views.generic.dates import (
     DayArchiveView,
 )
 
-from summary.models import MapsByDay
+from summary.models import MapsByDay, MapsByCity
 
 import calendar
 import datetime
@@ -254,3 +255,17 @@ class MapsPerWeekView(MapsByDateMixin, WeekArchiveView):
         context = super().get_context_data(*args, **kwargs)
 
         return context
+
+class CityListView(TemplateView):
+    template_name = 'city_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = {'cities': MapsByCity.objects.all()}
+        return context
+
+    def post(self, request, *args, **kwargs):
+        city = request.POST.get('city')
+        if city:
+            return HttpResponseRedirect(reverse_lazy('city', args=(city, )))
+        else:
+            return super().get(request, *args, **kwargs)

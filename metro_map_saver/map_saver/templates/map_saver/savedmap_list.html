@@ -15,7 +15,7 @@
     {% if showing_best or showing_city %}
         <h3 class="card-title mt-2 p-3 bg-styled styling-redline text-center">
             {% if showing_best %}Highest-Rated Maps
-            {% elif showing_city %}Maps of {{ showing_city|title }}
+            {% elif showing_city %}{{ page_obj.paginator.count|intcomma }} Maps of {{ showing_city|title }}
             {% endif %}
         </h3>
         {% include "pagination.html" %}

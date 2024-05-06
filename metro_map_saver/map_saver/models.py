@@ -108,6 +108,19 @@ class SavedMap(models.Model):
 
         return suggest_city(set(self.stations.lower().split(',')), overlap)
 
+    @staticmethod
+    def get_suggested_city(stations):
+        city = ''
+        overlap = -1
+        suggested_city = suggest_city(set(stations))
+        if suggested_city:
+            try:
+                city = suggested_city[0][0].split("(")[0].strip()
+                overlap = suggested_city[0][1]
+            except Exception:
+                pass
+        return city, overlap
+
     def _get_stations(self):
 
         """ Returns a set of station names from a given mapdata
@@ -139,6 +152,27 @@ class SavedMap(models.Model):
             return self.stations.count(',')
         else:
             return 0
+
+    @staticmethod
+    def get_stations(data=None, data_version=2):
+        stations = set()
+
+        if data_version == 2 and data:
+            for x in data.get('stations', {}):
+                for y in data['stations'][x]:
+                    stations.add(data['stations'][x][y].get('name', '').lower())
+        elif data_version == 1 and data:
+            for x in data:
+                for y in data[x]:
+                    try:
+                        int(x)
+                        int(y)
+                    except Exception:
+                        continue
+                    if 'station' in data[x][y]:
+                        stations.add(data[x][y]['station'].get('name', '').lower())
+
+        return stations
 
     def convert_mapdata_v1_to_v2(self):
 

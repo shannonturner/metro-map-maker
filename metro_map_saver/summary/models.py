@@ -27,10 +27,13 @@ class MapsByCity(models.Model):
     """
 
     city = models.ForeignKey('map_saver.City', on_delete=models.CASCADE)
-    maps = models.IntegerField()
+    maps = models.IntegerField(null=True)
     featured = models.ForeignKey('map_saver.SavedMap', null=True, on_delete=models.SET_NULL)
 
     class Meta:
         constraints = [
             models.UniqueConstraint(fields=['city'], name='unique_mapsbycity_city'),
         ]
+
+    def __str__(self):
+        return self.city.name

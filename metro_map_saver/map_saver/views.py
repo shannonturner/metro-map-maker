@@ -42,7 +42,7 @@ from .forms import (
     IdentifyForm,
     RateForm,
 )
-from .models import SavedMap, IdentifyMap
+from .models import SavedMap, IdentifyMap, City
 from .validator import (
     is_hex,
     sanitize_string,
@@ -598,18 +598,19 @@ class MapDataView(TemplateView):
                 saved_map = SavedMap.objects.only('urlhash').get(urlhash=urlhash)
                 context['saved_map'] = f'{urlhash},'
             except ObjectDoesNotExist:
+                stations = SavedMap.get_stations(mapdata, data_version)
+                map_details = {
+                    'urlhash': urlhash,
+                    'naming_token': naming_token,
+                    'station_count': len(stations),
+                    'stations': ','.join(stations),
+                }
                 if data_version == 2:
-                    saved_map = SavedMap.objects.create(**{
-                        'urlhash': urlhash,
-                        'data': mapdata,
-                        'naming_token': naming_token,
-                    })
+                    map_details['data'] = mapdata
                 else:
-                    saved_map = SavedMap.objects.create(**{
-                        'urlhash': urlhash,
-                        'mapdata': json.dumps(mapdata),
-                        'naming_token': naming_token,
-                    })
+                    map_details['mapdata'] = json.dumps(mapdata)
+
+                saved_map = SavedMap.objects.create(**map_details)
                 context['saved_map'] = f'{urlhash},{naming_token}'
             except MultipleObjectsReturned:
                 # This should never happen, but it happened once
@@ -926,8 +927,11 @@ class CityView(ListView):
     def get_queryset(self):
         queryset = SavedMap.objects.all().defer(*SavedMap.DEFER_FIELDS)
         city = self.kwargs.get('city').title()
-        if city:
-            queryset = queryset.filter(name__startswith=city)
+        try:
+            queryset = queryset.filter(city__name=city)
+        except Exception:
+            if city:
+                queryset = queryset.filter(name__startswith=city)
         return queryset.order_by('-created_at')
 
     def get_context_data(self, **kwargs):
@@ -1112,17 +1116,3 @@ class CreditsView(TemplateView):
 
 class HelpView(TemplateView):
     template_name = 'help.html'
-
-class CityListView(TemplateView):
-    template_name = 'city_list.html'
-
-    def get_context_data(self, **kwargs):
-        context = {'cities': CITIES}
-        return context
-
-    def post(self, request, *args, **kwargs):
-        city = request.POST.get('city')
-        if city:
-            return HttpResponseRedirect(reverse_lazy('city', args=(city, )))
-        else:
-            return super().get(request, *args, **kwargs)

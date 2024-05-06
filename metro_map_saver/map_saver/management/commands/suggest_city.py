@@ -75,7 +75,8 @@ class Command(BaseCommand):
                 mmap.suggested_city_overlap = suggested_city[0][1]
                 self.stdout.write(f'#{mmap.id}: {mmap.urlhash} ({mmap.created_at.date()}) might be {mmap.suggested_city} ({mmap.suggested_city_overlap} stations in common)')
             else:
-                mmap.suggested_city_overlap = 0
+                mmap.suggested_city_overlap = 0 # Note: Main problem with this is if I add more cities / systems later, I'll need to re-check.
+                # Consider instead leaving this as -1
                 self.stdout.write(f'#{mmap.id}: {mmap.urlhash} ({mmap.created_at.date()}) did not match any cities currently in the system.')
             mmap.save()
 

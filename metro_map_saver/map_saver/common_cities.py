@@ -21,7 +21,6 @@ CITIES = (
     'Minecraft',
     'Budapest',
     'Perth',
-    'MSP',
     'Dublin',
     'Moscow',
     'Seoul',
