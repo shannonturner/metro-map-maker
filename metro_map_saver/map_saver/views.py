@@ -750,19 +750,14 @@ class AdminHomeView(TemplateView):
             publicly_visible=True,
         )
 
-        # Note: even though I have a stored field for suggested_city,
-        # it's still valuable to check the calculated value below
-        # since I'm overriding the overlap parameter
         for real_map in maps_tagged_real:
             if real_map.name in travel_system_names or \
-            real_map.suggested_city in travel_system_names or \
-            real_map._suggest_city(overlap=int(real_map.station_count * 0.8)):
+            real_map.suggested_city in travel_system_names:
                 travel_system_has_real_map.add(real_map.name)
 
         for speculative_map in maps_tagged_speculative:
             if speculative_map.name in travel_system_names or \
-            speculative_map.suggested_city in travel_system_names or \
-            speculative_map._suggest_city(overlap=int(speculative_map.station_count * 0.4)):
+            speculative_map.suggested_city in travel_system_names:
                 travel_system_has_speculative_map.add(speculative_map.name)
 
         travel_system_names = set(travel_system_names)

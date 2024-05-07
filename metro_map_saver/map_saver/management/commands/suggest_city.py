@@ -1,6 +1,10 @@
 from django.core.management.base import BaseCommand
 
-from citysuggester.utils import MINIMUM_STATION_OVERLAP
+from citysuggester.utils import (
+    load_systems,
+    suggest_city,
+    MINIMUM_STATION_OVERLAP,
+)
 from map_saver.models import SavedMap
 
 import time
@@ -43,6 +47,7 @@ class Command(BaseCommand):
             default=False,
             help='Suggest cities for only one map in particular.',
         )
+        # TODO: Add a re-check feature to check suggested_city_overlap=-2 (see below)
 
     def handle(self, *args, **kwargs):
         urlhash = kwargs['urlhash']
@@ -68,15 +73,20 @@ class Command(BaseCommand):
         self.stdout.write(f'Checking {needs_suggestions.count()} maps for suggested cities ...')
         t0 = time.time()
 
+        # Pre-load the travelsystems to save setup time
+        travel_systems = load_systems()
+
         for mmap in needs_suggestions:
-            suggested_city = mmap._suggest_city()
+            suggested_city = suggest_city(set(mmap.stations.lower().split(',')), systems=travel_systems)
             if suggested_city:
                 mmap.suggested_city = suggested_city[0][0].split("(")[0].strip()
                 mmap.suggested_city_overlap = suggested_city[0][1]
                 self.stdout.write(f'#{mmap.id}: {mmap.urlhash} ({mmap.created_at.date()}) might be {mmap.suggested_city} ({mmap.suggested_city_overlap} stations in common)')
             else:
-                mmap.suggested_city_overlap = 0 # Note: Main problem with this is if I add more cities / systems later, I'll need to re-check.
-                # Consider instead leaving this as -1
+                # If I leave it as -1, it'll re-check every time even if I haven't added new TravelSystems.
+                # If I set to 0, I might not realize I should check it again when I've added more TravelSystems.
+                # -2 seems like a good choice to indicate it's not -1, but it's not a plausible result from already checking either.
+                mmap.suggested_city_overlap = -2
                 self.stdout.write(f'#{mmap.id}: {mmap.urlhash} ({mmap.created_at.date()}) did not match any cities currently in the system.')
             mmap.save()
 

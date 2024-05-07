@@ -24,7 +24,7 @@ def load_systems():
     return systems
 
 
-def suggest_city(map_stations, station_overlap=MINIMUM_STATION_OVERLAP):
+def suggest_city(map_stations, station_overlap=MINIMUM_STATION_OVERLAP, systems=None):
 
     """ Given a set of stations from a map,
         suggest a city it might be located in
@@ -33,10 +33,8 @@ def suggest_city(map_stations, station_overlap=MINIMUM_STATION_OVERLAP):
 
     possible_cities = {}
 
-    if not station_overlap:
-        station_overlap = MINIMUM_STATION_OVERLAP
-
-    systems = load_systems()
+    if not systems:
+        systems = load_systems()
 
     for name, system_stations in systems.items():
         common_stations = system_stations.intersection(map_stations)
