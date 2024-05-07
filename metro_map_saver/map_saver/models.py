@@ -350,6 +350,7 @@ class SavedMap(models.Model):
             models.Index(fields=["station_count"]),
             models.Index(fields=["name"]),
             models.Index(fields=["suggested_city"]),
+            models.Index(fields=["suggested_city_overlap"]), # Useful for summarize_city
             models.Index(fields=["likes"]),
             models.Index(fields=["dislikes"]),
             models.Index(fields=["svg"]),
