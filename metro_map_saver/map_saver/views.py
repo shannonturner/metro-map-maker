@@ -847,6 +847,11 @@ class MapsByDateView(TemplateView):
             created_at__lte=end_date,
             created_at__gt=start_date
         )
+        # TODO: Convert to use MapsByDay
+        # saved_maps_by_date = MapsByDay.objects.filter(
+        #     day__lte=end_date,
+        #     day__gt=start_date
+        # )
 
         maps_count = saved_maps_by_date.count()
 
