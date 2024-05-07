@@ -1,5 +1,6 @@
-from django.http import Http404
+from django.http import Http404, HttpResponseRedirect
 from django.shortcuts import render, reverse
+from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_control
 from django.views.generic.base import TemplateView
