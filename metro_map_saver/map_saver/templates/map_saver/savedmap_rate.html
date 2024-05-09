@@ -2,6 +2,8 @@
 
 {% load humanize %}
 
+{% block title %}Rate Map #{{ map.id|intcomma }} - Metro Map Maker{% endblock title %}
+
 {% block extrastyle %}
     {{ block.super }}
     <style>
