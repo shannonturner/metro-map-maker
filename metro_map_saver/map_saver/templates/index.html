@@ -38,7 +38,14 @@
       <meta name="twitter:image:src" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
     {% endif %}
 
-    <title>Metro Map Maker</title>
+    <title>
+      {% if saved_map and saved_map.name %}
+        {{ saved_map.name }} ({{ saved_map.urlhash }}) -
+      {% elif saved_map %}
+        {{ saved_map.urlhash }} -
+      {% endif %}
+      Metro Map Maker
+    </title>
 
     <link rel="icon" href="{% static 'assets/favicon.ico' %}?version=2">
     <link rel="stylesheet" href="{% static 'css/metromapmaker.css' as mmmcss %}{{ mmmcss }}?version={{ 'css/metromapmaker.css'|static_cache_version }}">
