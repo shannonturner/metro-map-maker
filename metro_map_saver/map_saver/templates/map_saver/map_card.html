@@ -33,6 +33,9 @@
                 {% if map.map_size > -1 %}
                     <span class="badge styling-blueline m-2"><i class="bi bi-map"></i> Size: {{ map.map_size }}</span>
                 {% endif %}
+                {% if user.is_staff %}
+                    <span class="badge styling-greenline m-2"><i class="bi bi-code"></i> Data Version: {{ map.data.global.data_version }}</span>
+                {% endif %}
             </div>
         </div>
 
