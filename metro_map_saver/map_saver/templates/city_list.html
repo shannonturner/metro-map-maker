@@ -2,6 +2,8 @@
 
 {% load humanize %}
 
+{% block title %}Maps by City - Metro Map Maker{% endblock title %}
+
 {% block breadcrumbs %}
     {{ block.super }}
 
@@ -61,7 +63,7 @@
                     <div class="card-footer d-flex justify-content-evenly">
                         <p class="mb-0">
                             <a href="{% url 'city' city.city.name %}" class="">
-                                {{ city.maps }} maps
+                                {{ city.maps|intcomma }} maps
                             </a>
                         </p>
                     </div>
