@@ -2,6 +2,16 @@
 
 {% load humanize %}
 
+{% block title %}
+    {% if showing_best %}Highest-Rated Maps
+    {% elif showing_city %}
+        {% if showing_city|title == 'Unspecified' %}Uncategorized Maps
+        {% else %} {{ showing_city|title }}
+        {% endif %}
+    {% endif %}
+    - Metro Map Maker
+{% endblock title %}
+
 {% block breadcrumbs %}
     {{ block.super }}
 
