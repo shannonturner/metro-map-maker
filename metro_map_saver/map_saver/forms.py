@@ -5,6 +5,7 @@ from .validator import (
     hex64,
     validate_metro_map,
     validate_metro_map_v2,
+    validate_metro_map_v3,
 )
 
 import hashlib
@@ -24,7 +25,10 @@ class CreateMapForm(forms.Form):
         mapdata = self.cleaned_data['mapdata']
 
         data_version = mapdata.get('global', {}).get('data_version', 1)
-        if data_version == 2:
+        if data_version == 3:
+            mapdata = validate_metro_map_v3(mapdata)
+            mapdata['global']['data_version'] = 3
+        elif data_version == 2:
             mapdata = validate_metro_map_v2(mapdata)
             mapdata['global']['data_version'] = 2
         else:

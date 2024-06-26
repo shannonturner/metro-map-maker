@@ -49,6 +49,8 @@ from .validator import (
     validate_metro_map,
     hex64,
     ALLOWED_TAGS,
+    ALLOWED_LINE_WIDTHS,
+    ALLOWED_LINE_STYLES,
     ALLOWED_MAP_SIZES,
 )
 from .common_cities import CITIES
@@ -115,6 +117,8 @@ class HomeView(TemplateView):
 
         context['today'] = timezone.now().date()
         context['ALLOWED_MAP_SIZES'] = ALLOWED_MAP_SIZES
+        context['ALLOWED_LINE_WIDTHS'] = [w * 100 for w in ALLOWED_LINE_WIDTHS]
+        context['ALLOWED_LINE_STYLES'] = ALLOWED_LINE_STYLES
 
         return render(request, self.template_name, context)
 
@@ -609,7 +613,7 @@ class MapDataView(TemplateView):
                     'stations': ','.join(stations),
                     'map_size': mapdata.get('global', {}).get('map_size', -1) or -1,
                 }
-                if data_version == 2:
+                if data_version >= 2:
                     map_details['data'] = mapdata
                 else:
                     map_details['mapdata'] = json.dumps(mapdata)

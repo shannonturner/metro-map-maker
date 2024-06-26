@@ -13,10 +13,18 @@ ALLOWED_MAP_SIZES = [80, 120, 160, 200, 240, 360]
 MAX_MAP_SIZE = ALLOWED_MAP_SIZES[-1]
 VALID_XY = [str(x) for x in range(MAX_MAP_SIZE)]
 ALLOWED_LINE_WIDTHS = [1, 0.75, 0.5, 0.25, 0.125]
+ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dense', 'dotted']
 ALLOWED_STATION_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
-ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180]
+ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1]
 ALLOWED_CONNECTING_STATIONS = ['rect', 'rect-round', 'circles-thin']
 ALLOWED_TAGS = ['real', 'speculative', 'unknown'] # TODO: change 'speculative' to 'fantasy' here and everywhere else, it's the more common usage
+
+ALLOWED_LINE_WIDTH_STYLES = []
+for allowed_width in ALLOWED_LINE_WIDTHS:
+    for allowed_style in ALLOWED_LINE_STYLES:
+        # Yes, I can use this in an import;
+        # ALLOWED_LINE_WIDTH_STYLES has been populated
+        ALLOWED_LINE_WIDTH_STYLES.append(f'{allowed_width}-{allowed_style}')
 
 def is_hex(string):
 
@@ -96,6 +104,248 @@ def get_map_size(highest_xy_seen):
         if highest_xy_seen < allowed_size:
             return allowed_size
     return ALLOWED_MAP_SIZES[-1]
+
+def validate_metro_map_v3(metro_map):
+
+    """ Validate the MetroMap object, allowing mixing and matching line widths/styles.
+
+        Main difference from v2 is points by color has an additional layer: the width+style,
+            and drops the xy/xys intermediate key
+    """
+
+    validated_metro_map = {
+        'global': {
+            'data_version': 3,
+            'lines': {},
+            'style': {},
+        },
+        'points_by_color': {},
+        'stations': {},
+    }
+
+    if not metro_map.get('points_by_color'):
+        raise ValidationError(f"[VALIDATIONFAILED] 3-01: No points_by_color")
+
+    if not isinstance(metro_map['points_by_color'], dict):
+        raise ValidationError(f"[VALIDATIONFAILED] 3-02: points_by_color must be dict, is: {type(metro_map['points_by_color']).__name__}")
+
+    # Infer missing lines in global from points_by_color
+    # It's not pretty, and the lines could fail to validate for other reasons, but it's graceful.
+    inferred_lines = False
+    if not metro_map.get('global') or not metro_map.get('global', {}).get('lines'):
+        inferred_lines = True
+        metro_map['global'] = {
+            'lines': {
+                color: {'displayName': color}
+                for color in metro_map['points_by_color']
+            }
+        }
+    else:
+        if not isinstance(metro_map['global']['lines'], dict):
+            metro_map['global']['lines'] = {}
+        if set(metro_map['global']['lines'].keys()) != set(metro_map['points_by_color'].keys()):
+            for color in metro_map['points_by_color']:
+                if color in metro_map['global']['lines']:
+                    continue
+                metro_map['global']['lines'][color] = {'displayName': color}
+
+    valid_lines = []
+    # Allow HTML color names to be used, but convert them to hex values
+    metro_map['global']['lines'] = {
+        html_color_name_fragments.get(line.strip()) or line: data
+        for line, data in
+        metro_map['global']['lines'].items()
+    }
+
+    invalid_lines = []
+
+    remove_lines = {}
+    for line in metro_map['global']['lines']:
+        if not is_hex(line):
+            # Allow malformed invalid lines to be skipped so the rest of the map will validate
+            invalid_lines.append(line)
+        if not len(line) == 6:
+            # We know it's hex by this point, we can fix length
+            if len(line) == 3:
+                new_line = ''.join([line[0] * 2, line[1] * 2, line[2] * 2])
+            elif len((line * 6)[:6]) <= 6:
+                new_line = (line * 6)[:6]
+            else:
+                new_line = line[:6]
+            remove_lines[new_line] = line
+
+    for new_line, line in remove_lines.items():
+        metro_map['global']['lines'][new_line] = metro_map['global']['lines'].pop(line)
+
+    for line in metro_map['global']['lines']:
+
+        if line in invalid_lines:
+            continue
+
+        # Transformations to the display name could result in a non-unique display name, but it doesn't actually matter.
+        display_name = metro_map['global']['lines'][line].get('displayName', 'Rail Line')
+        if not isinstance(display_name, str) or len(display_name) < 1:
+            display_name = 'Rail Line'
+        elif len(display_name) > 255:
+            display_name = display_name[:255]
+
+        valid_lines.append(line)
+        validated_metro_map['global']['lines'][line] = {
+            'displayName': sanitize_string(display_name)
+        }
+
+    line_width = metro_map['global'].get('style', {}).get('mapLineWidth', 1)
+    if line_width not in ALLOWED_LINE_WIDTHS:
+        line_width = ALLOWED_LINE_WIDTHS[0]
+
+    line_style = metro_map['global'].get('style', {}).get('mapLineStyle', 'solid')
+    if line_style not in ALLOWED_LINE_STYLES:
+        line_style = ALLOWED_LINE_STYLES[0]
+
+    station_style = metro_map['global'].get('style', {}).get('mapStationStyle', 'wmata')
+    if station_style not in ALLOWED_STATION_STYLES:
+        station_style = ALLOWED_STATION_STYLES[0]
+
+    validated_metro_map['global']['style'] = {
+        'mapLineWidth': line_width,
+        'mapLineStyle': line_style,
+        'mapStationStyle': station_style,
+    }
+
+    # Points by Color
+    all_points_seen = set() # Must confirm that stations exist on these points
+    points_skipped = []
+    highest_xy_seen = -1 # Because 0 is a point
+    valid_points_by_color = {}
+    for color in metro_map['points_by_color']:
+        if color not in validated_metro_map['global']['lines']:
+            points_skipped.append(f'Color {color} not in global')
+            continue
+
+        if not isinstance(metro_map['points_by_color'][color], dict):
+            points_skipped.append(f'BAD LINE WIDTH/STYLE at {color} (non-dict)')
+            continue
+
+        for line_width_style in metro_map['points_by_color'][color]:
+
+            if not isinstance(metro_map['points_by_color'][color][line_width_style], dict):
+                points_skipped.append(f'BAD COORDS at {color} for {line_width_style}')
+                continue
+
+            if line_width_style not in ALLOWED_LINE_WIDTH_STYLES:
+                points_skipped.append(f'BAD LINE WIDTH/STYLE at {color}: {line_width_style}')
+
+            for x in metro_map['points_by_color'][color][line_width_style]:
+                if not isinstance(metro_map['points_by_color'][color][line_width_style][x], dict):
+                    points_skipped.append(f'BAD X at {color}: {x}')
+                    continue
+
+                if not x.isdigit():
+                    points_skipped.append(f'NONINT X at {color}: {x}')
+                    continue
+
+                if int(x) < 0 or int(x) >= MAX_MAP_SIZE:
+                    points_skipped.append(f'OOB X at {color}: {x}')
+                    continue
+
+                for y in metro_map['points_by_color'][color][line_width_style][x]:
+
+                    if not y.isdigit():
+                        points_skipped.append(f'NONINT Y at {color}: {x},{y}')
+                        continue
+
+                    if int(y) < 0 or int(y) >= MAX_MAP_SIZE:
+                        points_skipped.append(f'OOB Y at {color}: {x},{y}')
+                        continue
+
+                    if (x, y) in all_points_seen:
+                        # Already seen in another color
+                        points_skipped.append(f'SKIPPING {color} POINT {x},{y}, ALREADY SEEN')
+                        continue
+
+                    if metro_map['points_by_color'][color][line_width_style][x][y] == 1:
+                        # Originally I'd considered setting the line width / style at the [x][y],
+                        #   but I think it's better recorded at points_by_color[color][line_width_style]
+                        all_points_seen.add((x, y))
+
+                        if int(x) > highest_xy_seen:
+                            highest_xy_seen = int(x)
+
+                        if int(y) > highest_xy_seen:
+                            highest_xy_seen = int(y)
+
+                        if not valid_points_by_color.get(color):
+                            valid_points_by_color[color] = {line_width_style: {}}
+                        elif not valid_points_by_color[color].get(line_width_style):
+                            valid_points_by_color[color][line_width_style] = {}
+
+                        if not valid_points_by_color[color][line_width_style].get(x):
+                            valid_points_by_color[color][line_width_style][x] = {}
+
+                        valid_points_by_color[color][line_width_style][x][y] = 1
+
+    validated_metro_map['points_by_color'] = valid_points_by_color
+    if points_skipped:
+        logger.warn(f'Points skipped: {len(points_skipped)} Details: {points_skipped}')
+
+    # Stations
+    stations_skipped = []
+    valid_stations = {}
+    if metro_map.get('stations') and isinstance(metro_map['stations'], dict):
+        for x in metro_map['stations']:
+            if not isinstance(metro_map['stations'][x], dict):
+                stations_skipped.append(f'STA BAD X: {x}')
+                continue
+            for y in metro_map['stations'][x]:
+                if not isinstance(metro_map['stations'][x][y], dict):
+                    stations_skipped.append(f'STA BAD Y: {y}')
+                    continue
+
+                if (x, y) not in all_points_seen:
+                    stations_skipped.append(f'STA BAD POS: {x},{y}')
+                    continue
+
+                station_name = sanitize_string_without_html_entities(metro_map['stations'][x][y].get('name', '_') or '_')
+                if len(station_name) < 1:
+                    station_name = '_'
+                elif len(station_name) > 255:
+                    station_name = station_name[:255]
+
+                station = {'name': station_name}
+
+                try:
+                    station_orientation = int(metro_map['stations'][x][y].get('orientation', ALLOWED_ORIENTATIONS[0]))
+                except Exception:
+                    station_orientation = ALLOWED_ORIENTATIONS[0]
+
+                if station_orientation not in ALLOWED_ORIENTATIONS:
+                    station_orientation = ALLOWED_ORIENTATIONS[0]
+                station['orientation'] = station_orientation
+
+                station_style = metro_map['stations'][x][y].get('style')
+                if station_style and station_style in ALLOWED_STATION_STYLES:
+                    station['style'] = station_style
+
+                if metro_map['stations'][x][y].get('transfer'):
+                    station['transfer'] = 1
+
+                # This station is valid, add it
+                if not valid_stations.get(x):
+                    valid_stations[x] = {}
+
+                valid_stations[x][y] = station
+    validated_metro_map['stations'] = valid_stations
+
+    if stations_skipped:
+        logger.warn(f'Stations skipped: {len(stations_skipped)} Details: {stations_skipped}')
+
+    if highest_xy_seen == -1:
+        raise ValidationError(f"[VALIDATIONFAILED] 3-00: This map has no points drawn. If this is in error, please contact the admin.")
+
+    validated_metro_map['global']['map_size'] = get_map_size(highest_xy_seen)
+
+    return validated_metro_map
+
 
 def validate_metro_map_v2(metro_map):
 
