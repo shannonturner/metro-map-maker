@@ -2556,7 +2556,10 @@ $(document).ready(function() {
     size = $(this).attr('id').split('-').slice(2);
     // Indicate which size the map is now sized to, and reset any other buttons
     resetResizeButtons(size)
-    resizeGrid(size);
+    if (activeMap && activeMap['global'] && activeMap['global']['map_size']) {
+        activeMap['global']['map_size'] = parseInt(size)
+    }
+    setMapSize(activeMap, true)
     activeTool = lastToolUsed; // Reset tool after drawing the grid to avoid undefined behavior when eraser was the last-used tool
   }); // .resize-grid.click()
   $('#tool-resize-stretch').click(function() {
