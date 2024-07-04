@@ -19,6 +19,12 @@ ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1]
 ALLOWED_CONNECTING_STATIONS = ['rect', 'rect-round', 'circles-thin']
 ALLOWED_TAGS = ['real', 'speculative', 'unknown'] # TODO: change 'speculative' to 'fantasy' here and everywhere else, it's the more common usage
 
+# TODO: ALLOWED_LABEL DETAILS
+# ALLOWED_LABEL_SHAPES = []
+# ALLOWED_LABEL_TEXT_LENGTH = {}
+# ALLOWED_LABEL_TEXT_COLORS = []
+# ALLOWED_LABEL_BG_COLORS = []
+
 ALLOWED_LINE_WIDTH_STYLES = []
 for allowed_width in ALLOWED_LINE_WIDTHS:
     for allowed_style in ALLOWED_LINE_STYLES:
@@ -338,6 +344,8 @@ def validate_metro_map_v3(metro_map):
 
     if stations_skipped:
         logger.warn(f'Stations skipped: {len(stations_skipped)} Details: {stations_skipped}')
+
+    # TODO: Add support for labels
 
     if highest_xy_seen == -1:
         raise ValidationError(f"[VALIDATIONFAILED] 3-00: This map has no points drawn. If this is in error, please contact the admin.")

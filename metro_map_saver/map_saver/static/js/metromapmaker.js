@@ -17,7 +17,8 @@ var temporaryStation = {};
 var temporaryLabel = {};
 var pngUrl = false;
 var mapHistory = []; // A list of the last several map objects
-var MAX_UNDO_HISTORY = 100;
+var mapRedoHistory = [];
+var MAX_UNDO_HISTORY = 100; // Will reuse this for REDO as well
 var currentlyClickingAndDragging = false;
 var mapLineWidth = 1
 var mapLineStyle = 'solid'
@@ -1728,13 +1729,6 @@ function drawLabel(ctx, x, y, metroMap, indicatorColor) {
       ctx.closePath();
       ctx.stroke()
       ctx.fill()
-    } else if (label["shape"] == 'oval') {
-      // TODO: Delete oval as an option if I can't make it look good
-      ctx.beginPath()
-      ctx.ellipse((x * gridPixelMultiplier), (y * gridPixelMultiplier), textWidth, gridPixelMultiplier * 1.5, 0, 0, 360)
-      ctx.closePath()
-      ctx.stroke()
-      ctx.fill()
     } else if (label["shape"] == 'square') {
       shapeArgs = [(x - 0.5) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, gridPixelMultiplier, gridPixelMultiplier]
       ctx.strokeRect(...shapeArgs)
@@ -1801,6 +1795,8 @@ function saveMapHistory(metroMap) {
   //  happening AFTER the call to saveMapHistory
   if (JSON.stringify(metroMap) != window.localStorage.getItem('metroMap')) {
       mapHistory.push(JSON.stringify(metroMap))
+      $('span#undo-buffer-count').text('(' + mapHistory.length + ')')
+      $('#tool-undo').prop('disabled', false)
   }
 
   debugUndoRedo()
@@ -1814,6 +1810,9 @@ function autoSave(metroMap) {
     metroMap = JSON.stringify(metroMap);
   }
   window.localStorage.setItem('metroMap', metroMap); // IMPORTANT: this must happen after saveMapHistory(activeMap)
+  mapRedoHistory = [] // Clear the redo buffer
+  $('#tool-redo').prop('disabled', true)
+  $('span#redo-buffer-count').text('')
   if (!menuIsCollapsed) {
     $('#autosave-indicator').text('Saving locally ...');
     $('#title').hide()
@@ -1824,22 +1823,12 @@ function autoSave(metroMap) {
   }
 } // autoSave(metroMap)
 
-function undo() {
-  // Rewind to an earlier map in the mapHistory
-  var previousMap = false
-  if (mapHistory.length > 1) {
-    mapHistory.pop(); // Remove the most recently added item in the history
-    previousMap = mapHistory[mapHistory.length-1]
-  } else if (mapHistory.length == 1) {
-    previousMap = mapHistory[0]
-  }
-
-  debugUndoRedo();
+function loadMapFromUndoRedo(previousMap) {
   if (previousMap) {
     window.localStorage.setItem('metroMap', previousMap) // Otherwise, undoing and then loading the page before making at least 1 change will result in losing whatever changes were made since the last autoSave
     // Remove all rail lines, they'll be replaced on loadMapFromObject()
     $('.rail-line').remove();
-    previousMap = JSON.parse(previousMap)
+    var previousMap = JSON.parse(previousMap)
     loadMapFromObject(previousMap)
     setMapSize(previousMap)
     drawCanvas(previousMap)
@@ -1852,8 +1841,61 @@ function undo() {
     }
     resetResizeButtons(gridCols)
     resetRailLineTooltips()
+  } // if (previousMap)
+} // loadMapFromUndoRedo(previousMap)
+
+function undo() {
+  // Rewind to an earlier map in the mapHistory
+  var previousMap = false
+  if (mapHistory.length > 1) {
+    var currentMap = mapHistory.pop(); // Remove the most recently added item in the history
+    previousMap = mapHistory[mapHistory.length-1]
+    $('span#undo-buffer-count').text('(' + mapHistory.length + ')')
+  } else if (mapHistory.length == 1) {
+    previousMap = mapHistory[0]
+    $('span#undo-buffer-count').text('')
+    $('#tool-redo').prop('disabled', true)
   }
+
+  if (mapRedoHistory.length > MAX_UNDO_HISTORY) {
+    mapRedoHistory.shift()
+  }
+  if ((currentMap || previousMap) != mapRedoHistory[mapRedoHistory.length-1]) {
+    mapRedoHistory.push(currentMap || previousMap)
+  } else {
+    return
+  }
+  $('#tool-redo').prop('disabled', false)
+  $('span#redo-buffer-count').text('(' + mapRedoHistory.length + ')')
+
+  debugUndoRedo();
+  loadMapFromUndoRedo(previousMap)
 } // undo()
+
+function redo() {
+  // After undoing, redo will allow you to undo the undo
+  console.log('redo!')
+  var previousMap = false
+  if (mapRedoHistory.length >= 1) {
+    previousMap = mapRedoHistory.pop()
+    mapHistory.push(previousMap)
+  }
+
+
+  $('span#undo-buffer-count').text('(' + mapHistory.length + ')')
+  if (!previousMap) {
+    $('span#redo-buffer-count').text('')
+    return
+  }
+
+  if (mapRedoHistory.length == 0) {
+    $('span#redo-buffer-count').text('')
+  } else {
+    $('span#redo-buffer-count').text('(' + mapRedoHistory.length + ')')
+  }
+
+  loadMapFromUndoRedo(previousMap)
+} // redo()
 
 function debugUndoRedo() {
   if (MMMDEBUG && MMMDEBUG_UNDO) {
@@ -2795,7 +2837,7 @@ $(document).ready(function() {
       undo();
     }if (event.key == 'y' && (event.metaKey || event.ctrlKey)) {
       event.preventDefault() // Don't open the History menu
-      // TODO: Add Redo feature
+      redo();
     }
     else if ((event.key == 'c') && (!event.metaKey && !event.ctrlKey)) { // C
       if (menuIsCollapsed) {
@@ -3278,7 +3320,7 @@ $(document).ready(function() {
     activeMap['global']['map_size'] = 80
 
     snapCanvasToGrid()
-    drawGrid() // TODO: PREVIOUSLY, THIS HAPPENED BEFORE SNAP CANVAS -- MAY25 ADDED AFTER SO IT WOULD DRAW CORRECTLY, CONFIRM IT'S RIGHT
+    drawGrid()
     lastStrokeStyle = undefined;
     drawCanvas(activeMap, false, true)
     drawCanvas(activeMap, true, true)
@@ -4410,3 +4452,6 @@ $('#tool-ruler').on('click', function() {
   }
   drawGrid()
 })
+
+$('#tool-undo').on('click', undo)
+$('#tool-redo').on('click', redo)

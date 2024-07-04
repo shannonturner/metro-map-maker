@@ -284,6 +284,11 @@
         <span class="button-label">St<b><u>y</u></b>le</span>
       </button>
 
+      {% comment %}
+
+        REDUCE THE SCOPE OF v7.0 BY PUNTING LABELS TO LATER,
+          SO YOU HAVE MORE TIME TO GET THEM RIGHT
+
       <button id="tool-label" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Add a label anywhere on the map (Keyboard shortcut: L)">
         <svg id="tool-label-icon-tags" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#tags"/></svg>
         <span class="button-label"><b><u>L</u></b>abel</span>
@@ -300,10 +305,10 @@
 
           <label for="label-shape">Shape</label>
           <select id="label-shape" name="label-shape">
+              TODO : Refactor to use the ALLOWED_* for this and other label options
             <option value="rect">Rectangle</option>
             <option value="rect-round">Rounded Rectangle</option>
             <option value="circle">Circle</option>
-            <option value="oval">Oval</option> <!-- TODO: DELETE IF I CAN'T GET IT TO LOOK GOOD -->
             <option value="square">Square</option>
           </select>
 
@@ -321,6 +326,8 @@
           <input id="label-bg-color" type="color">
         </fieldset>
       </div>
+
+      {% endcomment %}
 
       <div id="tool-map-style-options" class="text-left" style="display: none;">
           <fieldset>
@@ -427,6 +434,15 @@
           <button id="tool-resize-stretch" class="has-tooltip stretch-grid styled styling-redline" data-toggle="tooltip" data-placement="left" title="Increase the available space between stations so you can add more stations in between.">Stretch Map</button>
         </fieldset>
       </div>
+
+      <button id="tool-undo" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Undo a recent change to the map.">
+        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-angle-expand"/></svg>
+        <span class="button-label">Undo <span id="undo-buffer-count"></span></span>
+      </button>
+      <button id="tool-redo" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Redo a recent change you just undid.">
+        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-angle-expand"/></svg>
+        <span class="button-label">Redo <span id="redo-buffer-count"></span></span>
+      </button>
 
       <button id="tool-download-image" class="width-100 has-tooltip hidden-xs styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
