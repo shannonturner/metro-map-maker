@@ -632,6 +632,10 @@ def map_color(color, color_map):
 
     return color_map[color]
 
+@register.filter
+def underscore_to_space(value):
+    return value.replace('_', ' ')
+
 SVG_DEFS = {
     'wmata': {
         'wm-xf': [ # WMATA transfer

@@ -4373,29 +4373,22 @@ function setLineStyle(style, ctx) {
   } else if (style == 'dashed') {
     pattern = [gridPixelMultiplier, gridPixelMultiplier * 1.5]
     ctx.lineCap = 'square'
-  } else if (style == 'dotted') {
-    // Consider deleting this; I'm not sure it's all that useful
-    // pattern = [1, gridPixelMultiplier * 1.5]
-    // ctx.lineCap = 'round'
-
-    // Looks good
-    pattern = [gridPixelMultiplier * 0.5, gridPixelMultiplier * 1.25]
-    ctx.lineCap = 'square'
-
-    // pattern = [2,1]
-    pattern = [gridPixelMultiplier * 1.25, gridPixelMultiplier]
+  } else if (style == 'dotted_dense') {
     ctx.lineCap = 'butt'
-
-    // My fav
-    pattern = [gridPixelMultiplier, gridPixelMultiplier / 4]
-
-    // LEAVING OFF, MONDAY 27 @ 11:02: PLAY WITH THESE, TRY DIFF OPTIONS SO I CAN SEE THEM ALL SIDE BY SIDE
     pattern = [gridPixelMultiplier / 2, gridPixelMultiplier / 4]
-
-
-  } else if (style == 'dense') {
+  } else if (style == 'dotted') {
+    ctx.lineCap = 'butt'
+    pattern = [gridPixelMultiplier / 2, gridPixelMultiplier / 2]
+  } else if (style == 'dense_thick') {
+    pattern = [2, 2]
+    ctx.lineCap = 'butt'
+  } else if (style == 'dense_thin') {
     pattern = [1, 1]
     ctx.lineCap = 'butt'
+  } else {
+    // Safety: fallback to solid
+    pattern = []
+    ctx.lineCap = 'round'
   }
   ctx.setLineDash(pattern)
 } // setLineStyle(style, ctx)

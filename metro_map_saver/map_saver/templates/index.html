@@ -157,7 +157,7 @@
         <div id="flood-fill-options" class="mmm-help-setting">
           <input id="tool-flood-fill" type="checkbox">
           <label for="tool-flood-fill" class="mmm-help-setting has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: F">
-            Flood fill instead of draw. Use Control+Z to undo.
+            Flood fill instead of draw
           </label>
         </div>
 
@@ -178,7 +178,7 @@
           <fieldset>
             <legend>Line Style</legend>
             {% for line_style in ALLOWED_LINE_STYLES %}
-              <button class="styled styling-redline line-style-choice-style width-25" data-linestyle="{{ line_style }}">{{ line_style|title }}</button>
+              <button class="styled styling-redline line-style-choice-style width-25" data-linestyle="{{ line_style }}">{{ line_style|title|underscore_to_space }}</button>
             {% endfor %}
           </fieldset>
         </div>
@@ -425,7 +425,7 @@
       <div id="tool-resize-options" class="text-left" style="display: none;">
         <fieldset>
           <legend>Resize Map</legend>
-          <h5>Be careful! If your map is large and you resize it to be smaller, you'll lose your work. <b>Use Control+Z to undo.</b></h5>
+          <h5>Be careful! If your map is large and you resize it to be smaller, you'll lose your work.</h5>
           {% for allowed_size in ALLOWED_MAP_SIZES %}
             <button id="tool-resize-{{ allowed_size }}" class="resize-grid styled styling-redline">
               {{ allowed_size }}x{{ allowed_size }}
@@ -435,12 +435,12 @@
         </fieldset>
       </div>
 
-      <button id="tool-undo" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Undo a recent change to the map.">
-        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-angle-expand"/></svg>
+      <button id="tool-undo" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Undo a recent change to the map. (Keyboard shortcut: Control + Z, or Command + Z on Mac)">
+        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#undo"/></svg>
         <span class="button-label">Undo <span id="undo-buffer-count"></span></span>
       </button>
-      <button id="tool-redo" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Redo a recent change you just undid.">
-        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-angle-expand"/></svg>
+      <button id="tool-redo" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Redo a recent change you just undid. (Keyboard shortcut: Control + Y, or Command + Y on Mac)">
+        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#redo"/></svg>
         <span class="button-label">Redo <span id="redo-buffer-count"></span></span>
       </button>
 
