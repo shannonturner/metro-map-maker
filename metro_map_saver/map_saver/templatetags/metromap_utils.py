@@ -5,6 +5,7 @@ from django.utils.safestring import mark_safe
 
 from map_saver.validator import (
     ALLOWED_ORIENTATIONS,
+    ALLOWED_LINE_STYLES,
     ALLOWED_STATION_STYLES,
     ALLOWED_CONNECTING_STATIONS,
     is_hex,
@@ -595,6 +596,66 @@ def get_station_styles_in_use(stations, default_shape, line_size):
         mark_safe(svg),
     )
 
+@register.simple_tag
+def get_line_width_styles_for_svg_style(shapes_by_color):
+
+    """ Given a set of shapes_by_color,
+            get the unique line widths and styles
+    """
+
+    widths = set()
+    styles = set()
+
+    for color in shapes_by_color:
+        for width_style in shapes_by_color[color]:
+            width, style = width_style.split('-')
+            widths.add(width)
+            styles.add(style)
+
+    css_styles = []
+    for width in widths:
+        if width in SVG_STYLES:
+            css_styles.append(f".{SVG_STYLES[width]['class']} {{ {SVG_STYLES[width]['style']} }}")
+
+    for style in styles:
+        if style in SVG_STYLES:
+            css_styles.append(f".{SVG_STYLES[style]['class']} {{ {SVG_STYLES[style]['style']} }}")
+
+    css_styles = ''.join(css_styles)
+
+    return format_html(
+        '{}',
+        mark_safe(css_styles),
+    )
+
+@register.simple_tag
+def get_line_class_from_width_style(width_style, line_size):
+
+    """ Given a width_style and line_size, return the appropriate CSS class(es)
+            necessary for this line (if any)
+    """
+
+    classes = []
+
+    width, style = width_style.split('-')
+    line_size = str(line_size)
+    if width == line_size:
+        pass # No class necessary; it's the default
+    elif width in SVG_STYLES:
+        classes.append(SVG_STYLES[width]['class'])
+
+    if style == ALLOWED_LINE_STYLES[0]:
+        pass # No class necessary; it's the default (solid)
+    elif style in SVG_STYLES:
+        classes.append(SVG_STYLES[style]['class'])
+
+    classes = ' '.join(classes)
+
+    return format_html(
+        '{}',
+        mark_safe(classes)
+    )
+
 @register.filter
 def square_root(value):
     return sqrt(value)
@@ -659,3 +720,15 @@ SVG_DEFS = {
     }
 }
 
+SVG_STYLES = {
+    'dashed': {"class": "l1", "style": "stroke-dasharray: 1 1.5; stroke-linecap: square;"},
+    'dotted': {"class": "l2", "style": "stroke-dasharray: .5 .5; stroke-linecap: butt;"},
+    'dotted_dense': {"class": "l3", "style": "stroke-dasharray: .5 .25; stroke-linecap: butt;"},
+    'dense_thin': {"class": "l4", "style": "stroke-dasharray: .05 .05; stroke-linecap: butt;"},
+    'dense_thick': {"class": "l5", "style": "stroke-dasharray: .1 .1; stroke-linecap: butt;"},
+    '1': {"class": "w1", "style": "stroke-width: 1;"},
+    '0.75': {"class": "w2", "style": "stroke-width: .75;"},
+    '0.5': {"class": "w3", "style": "stroke-width: .5;"},
+    '0.25': {"class": "w4", "style": "stroke-width: .25;"},
+    '0.125': {"class": "w5", "style": "stroke-width: .125;"},
+}

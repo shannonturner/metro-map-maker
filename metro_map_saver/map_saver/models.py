@@ -287,13 +287,21 @@ class SavedMap(models.Model):
 
         points_by_color, stations, map_size = sort_points_by_color(mapdata, data_version=data_version)
         shapes_by_color = {}
-        for color in points_by_color:
-            points_this_color = points_by_color[color]['xy']
+        if data_version <= 2:
+            for color in points_by_color:
+                points_this_color = points_by_color[color]['xy']
 
-            lines, singletons = find_lines(points_this_color)
-            shapes_by_color[color] = {'lines': lines, 'points': singletons}
+                lines, singletons = find_lines(points_this_color)
+                shapes_by_color[color] = {'lines': lines, 'points': singletons}
+        elif data_version >= 3:
+            for color in points_by_color:
+                shapes_by_color[color] = {}
+                for width_style in points_by_color[color]:
+                    points_this_color_width_style = points_by_color[color][width_style]
+                    lines, singletons = find_lines(points_this_color_width_style)
+                    shapes_by_color[color][width_style] = {'lines': lines, 'points': singletons}
 
-        thumbnail_svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, points_by_color, stations)
+        thumbnail_svg = get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, points_by_color, stations, data_version)
 
         thumbnail_svg_file = ContentFile(thumbnail_svg, name=f"t{self.urlhash}.svg")
         self.thumbnail_svg = thumbnail_svg_file
