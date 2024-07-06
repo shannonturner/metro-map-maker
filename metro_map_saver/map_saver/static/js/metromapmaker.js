@@ -564,7 +564,7 @@ function bindGridSquareEvents(event) {
     } else {
       var redrawStations = false;
     }
-    // TODO: Check if there is a label here, and if so, redraw Labels after erasing
+    // NOT YET IMPLEMENTED: Check if there is a label here, and if so, redraw Labels after erasing
     if (getLabel(x, y, activeMap)) {
       var redrawLabels = true
     } else {
@@ -1684,7 +1684,7 @@ function drawLabel(ctx, x, y, metroMap, indicatorColor) {
   } else if (indicatorColor && !label) {
     // This is an indicator only,
     // let's see if a placeholder looks nice?
-    label = { // DEBUG
+    label = {
       'text': 'Label',
       'shape': $('#label-shape').val(),
       'text-color': '#333333'
@@ -1702,9 +1702,10 @@ function drawLabel(ctx, x, y, metroMap, indicatorColor) {
   }
   var labelShapeHeight = gridPixelMultiplier
 
-  // TODO: Consider different font size or weight maybe
-  // TODO: Consider a different horizontal placement for the text
-  // TODO: Consider different circle sizes
+  // NOT YET IMPLEMENTED:
+  //  Consider different font size or weight maybe
+  //  Consider a different horizontal placement for the text
+  //  Consider different circle sizes
 
   if (label["bg-color"] || indicatorColor) {
     if (indicatorColor) {
@@ -4339,16 +4340,29 @@ $('#controls-collapse-menu').on('click', collapseToolbox)
 $('#controls-expand-menu').on('click', expandToolbox)
 
 function colorInUse(color) {
-  if (!activeMap || !activeMap['points_by_color'] || !activeMap['points_by_color'][color] || !activeMap['points_by_color'][color]['xys']) {
+  if (!activeMap || !activeMap['points_by_color'] || !activeMap['points_by_color'][color]) {
     return false
   }
-  for (var x in activeMap['points_by_color'][color]['xys']) {
-    for (var y in activeMap['points_by_color'][color]['xys'][x]) {
-      if (activeMap['points_by_color'][color]['xys'][x][y]) { // TODO -- NEED TO MAKE V3 COMPATIBLE
-        return true
-      } // if there's actually a point here, not just one that was deleted
-    } // y
-  } // x
+  if (mapDataVersion == 3) {
+    for (var lineWidthStyle in activeMap['points_by_color'][color]) {
+      for (var x in activeMap['points_by_color'][color][lineWidthStyle]) {
+        for (var y in activeMap['points_by_color'][color][lineWidthStyle][x]) {
+          if (activeMap['points_by_color'][color][lineWidthStyle][x][y]) {
+            return true
+          } // if there's actually a point here, not just one that was deleted
+        } // y
+      } // x
+    } // lineWidthStyle
+  } else if (mapDataVersion == 2) {
+    if (!activeMap['points_by_color'][color]['xys']) { return }
+    for (var x in activeMap['points_by_color'][color]['xys']) {
+      for (var y in activeMap['points_by_color'][color]['xys'][x]) {
+        if (activeMap['points_by_color'][color]['xys'][x][y]) {
+          return true
+        } // if there's actually a point here, not just one that was deleted
+      } // y
+    } // x
+  } // mapDataVersion
 } // colorInUse(color)
 
 $('.line-style-choice-width').on('click', function() {
