@@ -460,6 +460,8 @@ def station_text(station):
     else:
         x_val = station['xy'][0] + 0.75
 
+    y_val = station['xy'][1]
+
     if station['orientation'] == 0:
         # Right
         pass
@@ -493,8 +495,22 @@ def station_text(station):
             transform = ''
         else:
             transform = f' transform="rotate({station["orientation"]} {station["xy"][0]}, {station["xy"][1]})"'
+    elif station['orientation'] == 1:
+        text_anchor = ' text-anchor="middle"'
+        x_val = station['xy'][0]
+        if station.get('transfer'):
+            y_val = y_val - 1.75
+        else:
+            y_val = y_val - 1.25
+    elif station['orientation'] == -1:
+        text_anchor = ' text-anchor="middle"'
+        x_val = station['xy'][0]
+        if station.get('transfer'):
+            y_val = y_val + 1.75
+        else:
+            y_val = y_val + 1.25
 
-    text = f'''<text x="{x_val}" y="{station['xy'][1]}"{text_anchor}{transform}>'''
+    text = f'''<text x="{x_val}" y="{y_val}"{text_anchor}{transform}>'''
 
     return format_html(
         '{}{}{}',
