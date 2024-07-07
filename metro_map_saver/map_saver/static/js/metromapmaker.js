@@ -243,14 +243,18 @@ function coordinateInColor(x, y, metroMap, color, lineWidthStyle) {
   return false
 } // coordinateInColor(x, y, metroMap, color)
 
-function getActiveLine(x, y, metroMap) {
+function getActiveLine(x, y, metroMap, returnLineWidthStyle) {
   // Given an x, y coordinate pair, return the hex code for the line you're on.
   // Use this to retrieve the line for a given point on a map.
   if (mapDataVersion == 3 && metroMap["global"]["lines"]) {
     for (var color in metroMap["points_by_color"]) {
       for (var lineWidthStyle in metroMap["points_by_color"][color]) {
         if (coordinateInColor(x, y, metroMap, color, lineWidthStyle)) {
-          return color
+          if (returnLineWidthStyle) {
+            return [color, lineWidthStyle]
+          } else {
+            return color
+          }
         }
       }
     }
@@ -273,7 +277,7 @@ function getActiveLine(x, y, metroMap) {
     return undefined;
   }
   return false;
-} // getActiveLine(x, y, metroMap)
+} // getActiveLine(x, y, metroMap, returnLineWidthStyle)
 
 function getStation(x, y, metroMap) {
   // Given an x, y coordinate pair, return the station object
@@ -3657,7 +3661,7 @@ $(document).ready(function() {
 }); // document.ready()
 
 // Cheat codes / Advanced map manipulations
-function getSurroundingLine(x, y, metroMap) {
+function getSurroundingLine(x, y, metroMap, returnLineWidthStyle) {
   // Returns a line color only if x,y has two neighbors
   //  with the same color going in the same direction
   // Important: this can't return early if there's no point at x, y
@@ -3672,18 +3676,18 @@ function getSurroundingLine(x, y, metroMap) {
 
   if (getActiveLine(x-1, y, metroMap) && (getActiveLine(x-1, y, metroMap) == getActiveLine(x+1, y, metroMap))) {
     // Left and right match
-    return getActiveLine(x-1, y, metroMap);
+    return getActiveLine(x-1, y, metroMap, returnLineWidthStyle);
   } else if (getActiveLine(x, y-1, metroMap) && (getActiveLine(x, y-1, metroMap) == getActiveLine(x, y+1, metroMap))) {
     // Top and bottom match
-    return getActiveLine(x, y-1, metroMap);
+    return getActiveLine(x, y-1, metroMap, returnLineWidthStyle);
   } else if (getActiveLine(x-1, y-1, metroMap) && (getActiveLine(x-1, y-1, metroMap) == getActiveLine(x+1, y+1, metroMap))) {
     // Diagonal: \
-    return getActiveLine(x-1, y-1, metroMap);
+    return getActiveLine(x-1, y-1, metroMap, returnLineWidthStyle);
   } else if (getActiveLine(x-1, y+1, metroMap) && (getActiveLine(x-1, y+1, metroMap) == getActiveLine(x+1, y-1, metroMap))) {
     // Diagonal: /
-    return getActiveLine(x-1, y+1, metroMap);
+    return getActiveLine(x-1, y+1, metroMap, returnLineWidthStyle);
   }
-} // getSurroundingLine(x, y, metroMap)
+} // getSurroundingLine(x, y, metroMap, returnLineWidthStyle)
 
 function setAllStationOrientations(metroMap, orientation) {
   // Set all station orientations to a certain direction
@@ -4043,8 +4047,8 @@ function stretchMap(metroMapObject) {
   if (mapDataVersion == 3) {
     newMapObject['points_by_color'] = {}
     for (var color in metroMapObject['points_by_color']) {
+      newMapObject['points_by_color'][color] = {}
       for (var lineWidthStyle in metroMapObject['points_by_color'][color]) {
-        newMapObject['points_by_color'][color] = {}
         newMapObject['points_by_color'][color][lineWidthStyle] = {}
         for (var x in metroMapObject['points_by_color'][color][lineWidthStyle]) {
           for (var y in metroMapObject['points_by_color'][color][lineWidthStyle][x]) {
@@ -4088,17 +4092,18 @@ function stretchMap(metroMapObject) {
     // Fill in the newly created in-between spaces
     for (var x=1;x<gridRows;x++) {
       for (var y=1;y<gridCols;y++) {
-        var color = getSurroundingLine(x, y, newMapObject)
-        if (!color) { continue }
-          // ************** AAAAAAAAAA
-          // TODO (mdv3): probably need to get lineWidthStyle from getSurroundingLine to make this work
-          // ************** AAAAAAAAAA
-          // ************** AAAAAAAAAA
-          // ************** AAAAAAAAAA
-        if (!newMapObject['points_by_color'][color]['xys'].hasOwnProperty(x)) {
-          newMapObject['points_by_color'][color]['xys'][x] = {}
+        var colorLineWidthStyle = getSurroundingLine(x, y, newMapObject, true)
+        if (!colorLineWidthStyle) { continue }
+        var color = colorLineWidthStyle[0]
+        var lineWidthStyle = colorLineWidthStyle[1]
+        // TODO: stretching _Zco941M gives kiz6hQ8Y -- pretty much everything is gone
+        if (!newMapObject['points_by_color'][color][lineWidthStyle]) {
+          newMapObject['points_by_color'][color][lineWidthStyle] = {}
         }
-        newMapObject['points_by_color'][color]['xys'][x][y] = 1
+        if (!newMapObject['points_by_color'][color][lineWidthStyle].hasOwnProperty(x)) {
+          newMapObject['points_by_color'][color][lineWidthStyle][x] = {}
+        }
+        newMapObject['points_by_color'][color][lineWidthStyle][x][y] = 1
       } // for y
     } // for x
   } else if (mapDataVersion == 2) {
