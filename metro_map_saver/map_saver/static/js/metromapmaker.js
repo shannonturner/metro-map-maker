@@ -769,6 +769,11 @@ function drawGrid() {
     ctx.stroke()
     ctx.closePath()
   }
+  if (!rulerStep) {
+    $('#ruler-step').text('off')
+  } else {
+    $('#ruler-step').text(rulerStep)
+  }
 } // drawGrid()
 
 function getRedrawSection(x, y, metroMap, redrawRadius) {
@@ -1923,6 +1928,7 @@ function autoLoad() {
   // 1. from a URL parameter 'map' with a valid map hash
   // 2. from a map object saved in localStorage
   // 3. If neither 1 or 2, load a preset map (WMATA)
+  rulerStep = parseInt(window.localStorage.getItem('metroMapRulerStep') || rulerStep) || false
 
   // Load from the savedMapData injected into the index.html template
   if (typeof savedMapData !== 'undefined') {
@@ -2887,7 +2893,7 @@ $(document).ready(function() {
         $('#tool-map-style').trigger('click')
       }
     }
-    else if (event.key == 'r') { // R
+    else if (event.key == 'r' && (!event.metaKey && !event.altKey)) { // R, except for Refresh
       $('#tool-ruler').trigger('click')
     }
     else if (event.key == 'ArrowLeft' && (!event.metaKey && !event.altKey)) { // left arrow, except for "go back"
@@ -4458,11 +4464,7 @@ $('#tool-ruler').on('click', function() {
   } else {
     rulerStep = RULER_STEPS[currentStep + 1]
   }
-  if (!rulerStep) {
-    $('#ruler-step').text('off')
-  } else {
-    $('#ruler-step').text(rulerStep)
-  }
+  window.localStorage.setItem('metroMapRulerStep', rulerStep);
   drawGrid()
 })
 
