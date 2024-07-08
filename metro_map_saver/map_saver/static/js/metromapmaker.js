@@ -2214,8 +2214,8 @@ function updateMapObject(x, y, key, data) {
     }
   } else if (mapDataVersion == 2 && activeTool == 'line') {
     // If the map was cleared, let's make sure we can add to it
-    if (!metroMap['points_by_color'][data] || !metroMap['points_by_color'][data]["xys"]) {
-      metroMap['points_by_color'][data] = {"xys": {}}
+    if (!metroMap['points_by_color'][data] || !metroMap['points_by_color'][data]['xys']) {
+      metroMap['points_by_color'][data] = {'xys': {}}
     }
   }
 
@@ -2361,8 +2361,9 @@ function moveMap(direction) {
       var newPointsByColor = {}
       var newStations = {}
       for (var color in activeMap['points_by_color']) {
+        newPointsByColor[color] = {}
         for (var lineWidthStyle in activeMap['points_by_color'][color]) {
-          newPointsByColor[color] = {'xys': {}}
+          newPointsByColor[color][lineWidthStyle] = {}
           for (var x in activeMap['points_by_color'][color][lineWidthStyle]) {
             for (var y in activeMap['points_by_color'][color][lineWidthStyle][x]) {
               x = parseInt(x);
