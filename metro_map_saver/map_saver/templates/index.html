@@ -169,7 +169,7 @@
 
         <div id="line-style-options" class="text-left">
           <fieldset>
-            <legend>Line Width</legend>
+            <legend>Line Size</legend>
             <p>TK message about how if you want to set for the default map, see style -- will also need to add a button to set ALL line widths</p>
             {% for line_width in ALLOWED_LINE_WIDTHS %}
               <button class="styled styling-redline line-style-choice-width width-25" data-linewidth="{{ line_width }}">{{ line_width }}%</button>
@@ -390,6 +390,8 @@
               <option value="-135">Above-left, 45&deg;</option>
               <option value="90">Above, 90&deg;</option>
               <option value="-90">Below, 90&deg;</option>
+              <option value="1">Above</option>
+              <option value="-1">Below</option>
             </select>
             <button id="set-all-station-name-orientation" class="styled styling-redline width-100">Set orientations</button>
           </fieldset>
