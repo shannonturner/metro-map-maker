@@ -803,9 +803,7 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
   var canvas = document.getElementById('metro-map-canvas');
   var ctx = canvas.getContext('2d', {alpha: false});
   gridPixelMultiplier = canvas.width / gridCols;
-  var fontSize = 20;
-  if (gridPixelMultiplier > 20)
-    fontSize = gridPixelMultiplier
+  fontSize = gridPixelMultiplier
 
   var redrawRadius = 1;
 
