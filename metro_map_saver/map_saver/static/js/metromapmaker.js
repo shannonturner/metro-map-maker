@@ -1180,6 +1180,7 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
 function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth) {
   // Draw a single point at position x, y
 
+  x = parseInt(x)
   y = parseInt(y)
 
   var color = color || getActiveLine(x, y, metroMap)
