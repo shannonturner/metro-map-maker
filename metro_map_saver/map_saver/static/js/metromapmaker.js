@@ -4378,6 +4378,8 @@ function colorInUse(color) {
 
 $('.line-style-choice-width').on('click', function() {
   $('.line-style-choice-width').removeClass('active')
+  $('.line-style-choice-width.active-mapstyle').removeClass('active-mapstyle')
+  $(this).addClass('active-mapstyle')
   $(this).addClass('active')
   activeLineWidth = $(this).attr('data-linewidth') / 100
   activeLineWidthStyle = activeLineWidth + '-' + activeLineStyle
@@ -4385,6 +4387,8 @@ $('.line-style-choice-width').on('click', function() {
 
 $('.line-style-choice-style').on('click', function() {
   $('.line-style-choice-style').removeClass('active')
+  $('.line-style-choice-style.active-mapstyle').removeClass('active-mapstyle')
+  $(this).addClass('active-mapstyle')
   $(this).addClass('active')
   activeLineStyle = $(this).attr('data-linestyle')
   activeLineWidthStyle = activeLineWidth + '-' + activeLineStyle
