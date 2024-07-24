@@ -3521,6 +3521,9 @@ $(document).ready(function() {
         'mapLineWidth': mapLineWidth
       }
     }
+    if (mapDataVersion >= 3) {
+      restyleAllLines(mapLineWidth)
+    }
     autoSave(activeMap)
     drawCanvas()
   })
@@ -4473,3 +4476,23 @@ $('#tool-ruler').on('click', function() {
 
 $('#tool-undo').on('click', undo)
 $('#tool-redo').on('click', redo)
+
+function restyleAllLines(toWidth, toStyle) {
+    var newMapObject = {"points_by_color": {}}
+    newMapObject["stations"] = Object.assign({}, activeMap["stations"])
+    newMapObject["global"] = Object.assign({}, activeMap["global"])
+    for (var color in activeMap["points_by_color"]) {
+      for (var lws in activeMap["points_by_color"][color]) {
+        var lw = lws.split('-')[0]
+        var ls = lws.split('-')[1]
+        var newLws = (toWidth || lw) + '-' + (toStyle || ls)
+        if (!newMapObject["points_by_color"][color]) {
+          newMapObject["points_by_color"][color] = {}
+        }
+        newMapObject["points_by_color"][color][newLws] = Object.assign({}, activeMap["points_by_color"][color][lws])
+      } // lws
+    } // color
+    activeMap = newMapObject
+    autoSave(activeMap)
+    drawCanvas(activeMap)
+} // restyleAllLines(toWidth, toStyle)
