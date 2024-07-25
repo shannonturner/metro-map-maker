@@ -4489,7 +4489,13 @@ function restyleAllLines(toWidth, toStyle) {
         if (!newMapObject["points_by_color"][color]) {
           newMapObject["points_by_color"][color] = {}
         }
-        newMapObject["points_by_color"][color][newLws] = Object.assign({}, activeMap["points_by_color"][color][lws])
+        if (!newMapObject["points_by_color"][color][newLws]) {
+          newMapObject["points_by_color"][color][newLws] = {}
+        }
+        newMapObject["points_by_color"][color][newLws] = Object.assign(
+          newMapObject["points_by_color"][color][newLws],
+          activeMap["points_by_color"][color][lws]
+        )
       } // lws
     } // color
     activeMap = newMapObject
