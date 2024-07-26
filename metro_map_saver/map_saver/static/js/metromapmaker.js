@@ -39,14 +39,15 @@ if (typeof mapDataVersion === 'undefined') {
 }
 function compatibilityModeIndicator() {
   // Visual cue to indicate that this is in compatibility mode
+  // It may be most helpful if the versions progress in ROYGBV order, with black being up to date
   if (mapDataVersion == 1) {
     // At a glance, this helps me to see whether I'm on v1 or v2
-    $('.M:not(.mobile)').css({"background-color": "#bd1038"})
+    $('.M:not(.mobile)').css({"background-color": "#bd1038"}) // red
     $('#title').css({"color": "#bd1038"})
     $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
   } else if (mapDataVersion == 2) {
-    $('.M:not(.mobile)').css({"background-color": "#0896d7"})
-    $('#title').css({"color": "#0896d7"})
+    $('.M:not(.mobile)').css({"background-color": "#df8600"}) // orange
+    $('#title').css({"color": "#df8600"})
     $('#tool-move-v1-warning').attr('style', 'display: none')
   } else {
     $('.M:not(.mobile)').css({"background-color": "#000"})
@@ -4483,8 +4484,10 @@ function restyleAllLines(toWidth, toStyle) {
     newMapObject["global"] = Object.assign({}, activeMap["global"])
     for (var color in activeMap["points_by_color"]) {
       for (var lws in activeMap["points_by_color"][color]) {
-        var lw = lws.split('-')[0]
-        var ls = lws.split('-')[1]
+        if (mapDataVersion >= 3) {
+          var lw = lws.split('-')[0]
+          var ls = lws.split('-')[1]
+        }
         var newLws = (toWidth || lw) + '-' + (toStyle || ls)
         if (!newMapObject["points_by_color"][color]) {
           newMapObject["points_by_color"][color] = {}
@@ -4498,7 +4501,62 @@ function restyleAllLines(toWidth, toStyle) {
         )
       } // lws
     } // color
+    if (mapDataVersion == 2) {
+      // Upgrade from v2 to v3 is complete
+      mapDataVersion = 3
+      newMapObject["global"]["data_version"] = 3
+      compatibilityModeIndicator()
+    }
     activeMap = newMapObject
     autoSave(activeMap)
     drawCanvas(activeMap)
 } // restyleAllLines(toWidth, toStyle)
+
+function upgradeMapDataVersion() {
+  // Upgrades to the highest mapDataVersion possible.
+  if (mapDataVersion == 1) {
+    var newMapObject = {
+      "points_by_color": {},
+      "stations": {},
+    }
+    newMapObject["global"] = Object.assign({}, activeMap["global"])
+    for (var x in activeMap) {
+      for (var y in activeMap[x]) {
+        var color = activeMap[x][y]["line"]
+        if (!color) { continue }
+        if (!newMapObject["points_by_color"][color]) {
+          newMapObject["points_by_color"][color] = {"xys": {}}
+        }
+        if (!newMapObject["points_by_color"][color]["xys"][x]) {
+          newMapObject["points_by_color"][color]["xys"][x] = {}
+        }
+        newMapObject["points_by_color"][color]["xys"][x][y] = 1
+        if (activeMap[x][y]["station"]) {
+          if (!newMapObject["stations"][x]) {
+            newMapObject["stations"][x] = {}
+          }
+          newMapObject["stations"][x][y] = Object.assign({}, activeMap[x][y]["station"])
+        } // if station
+      } // for y
+    } // for x
+    // Upgrade from v1 to v2 is complete
+    mapDataVersion = 2
+    newMapObject["global"]["data_version"] = 2
+    activeMap = newMapObject
+    compatibilityModeIndicator()
+  } // mapDataVersion 1
+  if (mapDataVersion == 2) {
+    var toWidth = 1
+    var toStyle = 'solid'
+    if (activeMap["global"] && activeMap["global"]["style"] && activeMap["global"]["style"]["mapLineWidth"]) {
+      toWidth = activeMap["global"]["style"]["mapLineWidth"]
+    }
+    if (activeMap["global"] && activeMap["global"]["style"] && activeMap["global"]["style"]["mapLineStyle"]) {
+      toStyle = activeMap["global"]["style"]["mapLineStyle"]
+    }
+    restyleAllLines(toWidth, toStyle)
+  }
+  // Delete undo/redo history, because I don't want to be able to downgrade to a lower mapDataVersion by undoing
+  mapHistory = []
+  mapRedoHistory = []
+} // upgradeMapDataVersion
