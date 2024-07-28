@@ -363,16 +363,13 @@ function makeLine(x, y, deferSave) {
   // BEFORE actually placing the line
   // The first call to drawArea() will erase the redrawSection
   // The second call actually draws the points
-  // drawArea(x, y, activeMap, true);
+  drawArea(x, y, activeMap, true);
   var color = rgb2hex(activeToolOption).slice(1, 7);
   metroMap = updateMapObject(x, y, "line", color);
   if (!deferSave) {
     autoSave(metroMap);
   }
-  // drawArea(x, y, metroMap);
-  // SVT: TRYING TO SEE WHETHER CALLING DRAWCANVAS IS FEASIBLE HERE.
-  // FIRST, COMMENTING OUT BOTH CALLS TO DRAWAREA.
-  drawCanvas(metroMap)
+  drawArea(x, y, metroMap);
 }
 
 function makeStation(x, y) {
