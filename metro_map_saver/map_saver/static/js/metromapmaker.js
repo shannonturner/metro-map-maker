@@ -363,13 +363,15 @@ function makeLine(x, y, deferSave) {
   // BEFORE actually placing the line
   // The first call to drawArea() will erase the redrawSection
   // The second call actually draws the points
-  drawArea(x, y, activeMap, true);
+  
+  // drawArea(x, y, activeMap, true); // SVT -- UNCOMMENT THIS 
   var color = rgb2hex(activeToolOption).slice(1, 7);
   metroMap = updateMapObject(x, y, "line", color);
   if (!deferSave) {
     autoSave(metroMap);
   }
-  drawArea(x, y, metroMap);
+  // drawArea(x, y, metroMap);
+  drawCanvas(metroMap)
 }
 
 function makeStation(x, y) {
@@ -558,6 +560,11 @@ function bindGridSquareEvents(event) {
     // I need to check for the old line and station
     // BEFORE actually doing the erase operations
     var erasedLine = getActiveLine(x, y, activeMap);
+    if (!erasedLine) {
+      // Erasing nothing, there's nothing to do here
+      return // SVT -- IS THIS RIGHT?
+    }
+
     if (getStation(x, y, activeMap) || getLabel(x, y, activeMap)) {
       // XXX: Labels share the stations canvas;
       // if I ever change that I'll want to have a separate
@@ -579,7 +586,8 @@ function bindGridSquareEvents(event) {
     } else {
       metroMap = updateMapObject(x, y);
       autoSave(metroMap);
-      drawArea(x, y, metroMap, erasedLine, redrawStations, );
+      // drawArea(x, y, metroMap, erasedLine, redrawStations);
+      drawCanvas(metroMap)
     }
   } else if (activeTool == 'station') {
     makeStation(x, y)
@@ -812,9 +820,24 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
   ctx.lineWidth = gridPixelMultiplier * activeLineWidth;
   ctx.lineCap = 'round';
 
+  debugger;
+
   if (activeTool == 'eraser') {
     if (erasedLine) {
-      drawPoint(ctx, x, y, metroMap, erasedLine);
+      // drawPoint(ctx, x, y, metroMap, erasedLine);
+      // -------------------------------------------
+      if (mapDataVersion >= 3) {
+        var thisLineColorWidthStyle = getActiveLine(x, y, metroMap, true)
+        if (thisLineColorWidthStyle) {
+          var thisColor = thisLineColorWidthStyle[0]
+          var thisLineWidthStyle = thisLineColorWidthStyle[1]
+          var thisLineWidth = thisLineWidthStyle.split('-')[0]
+          var thisLineStyle = thisLineWidthStyle.split('-')[1]
+          drawPoint(ctx, x, y, metroMap, erasedLine, thisColor, thisLineWidth, thisLineStyle)
+        }
+      } else {
+        drawPoint(ctx, x, y, metroMap, erasedLine);
+      }
     } // if erasedLine
   } // if activeTool == 'eraser'
 
@@ -829,9 +852,35 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
         // When drawing lines, we call drawArea() twice.
         // First call: erase all the squares in the redrawSection
         // Second call: re-draw all the squares
-        drawPoint(ctx, x, y, metroMap, getActiveLine(x,y, metroMap));
+        // drawPoint(ctx, x, y, metroMap, getActiveLine(x,y, metroMap));
+        // ---------------------------------------
+        if (mapDataVersion >= 3) {
+          var thisLineColorWidthStyle = getActiveLine(x, y, metroMap, true)
+          if (thisLineColorWidthStyle) {
+            var thisColor = thisLineColorWidthStyle[0]
+            var thisLineWidthStyle = thisLineColorWidthStyle[1]
+            var thisLineWidth = thisLineWidthStyle.split('-')[0]
+            var thisLineStyle = thisLineWidthStyle.split('-')[1]
+            drawPoint(ctx, x, y, metroMap, erasedLine, thisColor, thisLineWidth, thisLineStyle)
+          }
+        } else {
+          drawPoint(ctx, x, y, metroMap, getActiveLine(x,y, metroMap));
+        }
       } else {
-        drawPoint(ctx, x, y, metroMap);
+        // drawPoint(ctx, x, y, metroMap);
+        // ------------------------------------------
+        if (mapDataVersion >= 3) {
+          var thisLineColorWidthStyle = getActiveLine(x, y, metroMap, true)
+          if (thisLineColorWidthStyle) {
+            var thisColor = thisLineColorWidthStyle[0]
+            var thisLineWidthStyle = thisLineColorWidthStyle[1]
+            var thisLineWidth = thisLineWidthStyle.split('-')[0]
+            var thisLineStyle = thisLineWidthStyle.split('-')[1]
+            drawPoint(ctx, x, y, metroMap, erasedLine, thisColor, thisLineWidth, thisLineStyle)
+          }
+        } else {
+          drawPoint(ctx, x, y, metroMap);
+        } // else (mdv < 3)
       } // else (of if activeTool is line and first pass)
     } // for y
   } // for x
@@ -1175,7 +1224,7 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
   if (MMMDEBUG) { console.log('drawCanvas finished in ' + (t1 - t0) + 'ms') }
 } // drawCanvas(metroMap)
 
-function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth) {
+function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth, lineStyle) {
   // Draw a single point at position x, y
 
   x = parseInt(x)
@@ -1184,6 +1233,13 @@ function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth) {
   var color = color || getActiveLine(x, y, metroMap)
   if (!color && activeTool != 'eraser') {
     return // Fixes bug where clearing a map and resizing would sometimes paint undefined spots
+  }
+
+  if (x == 15 && y == 4) {
+    debugger;
+    // LEAVING OFF: The problem here is that although I clicked erase on (16,4),
+    // erasedLine is undefined
+    // and activeLineStyle is solid, even though that's not correct for (15,4)
   }
 
   ctx.beginPath()
@@ -1202,14 +1258,20 @@ function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth) {
     color = erasedLine;
   }
   else {
-    ctx.lineWidth = (gridPixelMultiplier * activeLineWidth)
-    setLineStyle(activeLineStyle, ctx)
+    ctx.lineWidth = (gridPixelMultiplier * (lineWidth || activeLineWidth))
+    setLineStyle(lineStyle || activeLineStyle, ctx)
   }
 
   singleton = true;
 
+  if (lineWidth && lineStyle) {
+    var thisLineWidthStyle = lineWidth + '-' + lineStyle
+  } else {
+    var thisLineWidthStyle = activeLineWidthStyle
+  }
+
   // Diagonals
-  if (coordinateInColor(x + 1, y + 1, metroMap, color, activeLineWidthStyle)) {
+  if (coordinateInColor(x + 1, y + 1, metroMap, color, thisLineWidthStyle)) {
     // Direction: SE
     moveLineStroke(ctx, x, y, x+1, y+1)
     // If this southeast line is adjacent to a different color on its east,
@@ -1218,7 +1280,7 @@ function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth) {
       redrawOverlappingPoints[x] = {}
     }
     redrawOverlappingPoints[x][y] = true
-  } if (coordinateInColor(x - 1, y - 1, metroMap, color, activeLineWidthStyle)) {
+  } if (coordinateInColor(x - 1, y - 1, metroMap, color, thisLineWidthStyle)) {
     // Direction: NW
     // Since the drawing goes left -> right, top -> bottom,
     //  I don't need to draw NW if I've drawn SE
@@ -1227,25 +1289,25 @@ function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth) {
     // But now that I'm using drawPoint() inside of drawArea(),
     // I can't rely on this shortcut anymore. (only a problem with mapDataVersion 1)
     moveLineStroke(ctx, x, y, x-1, y-1)
-  } if (coordinateInColor(x + 1, y - 1, metroMap, color, activeLineWidthStyle)) {
+  } if (coordinateInColor(x + 1, y - 1, metroMap, color, thisLineWidthStyle)) {
     // Direction: NE
     moveLineStroke(ctx, x, y, x+1, y-1)
-  }  if (coordinateInColor(x - 1, y + 1, metroMap, color, activeLineWidthStyle)) {
+  }  if (coordinateInColor(x - 1, y + 1, metroMap, color, thisLineWidthStyle)) {
     // Direction: SW
     moveLineStroke(ctx, x, y, x-1, y+1)
   }
 
   // Cardinals
-  if (coordinateInColor(x + 1, y, metroMap, color, activeLineWidthStyle)) {
+  if (coordinateInColor(x + 1, y, metroMap, color, thisLineWidthStyle)) {
     // Direction: E
     moveLineStroke(ctx, x, y, x+1, y)
-  } if (coordinateInColor(x - 1, y, metroMap, color, activeLineWidthStyle)) {
+  } if (coordinateInColor(x - 1, y, metroMap, color, thisLineWidthStyle)) {
     // Direction: W
     moveLineStroke(ctx, x, y, x-1, y)
-  } if (coordinateInColor(x, y + 1, metroMap, color, activeLineWidthStyle)) {
+  } if (coordinateInColor(x, y + 1, metroMap, color, thisLineWidthStyle)) {
     // Direction: S
     moveLineStroke(ctx, x, y, x, y+1)
-  } if (coordinateInColor(x, y - 1, metroMap, color, activeLineWidthStyle)) {
+  } if (coordinateInColor(x, y - 1, metroMap, color, thisLineWidthStyle)) {
     // Direction: N
     moveLineStroke(ctx, x, y, x, y-1)
   }
