@@ -359,20 +359,41 @@ function bindRailLineEvents() {
 } // bindRailLineEvents()
 
 function makeLine(x, y, deferSave) {
-  // I need to clear the redrawArea first
-  // BEFORE actually placing the line
-  // The first call to drawArea() will erase the redrawSection
-  // The second call actually draws the points
-  
-  // drawArea(x, y, activeMap, true); // SVT -- UNCOMMENT THIS 
+  if (mapDataVersion == 1) { drawArea(x, y, activeMap, true) }
   var color = rgb2hex(activeToolOption).slice(1, 7);
   metroMap = updateMapObject(x, y, "line", color);
   if (!deferSave) {
     autoSave(metroMap);
   }
-  // drawArea(x, y, metroMap);
-  drawCanvas(metroMap)
-}
+  if (mapDataVersion >= 2) {
+    redrawCanvasForColor(color)
+  } else if (mapDataVersion == 1) {
+    drawArea(x, y, activeMap)
+  }
+} // makeLine(x, y, deferSave)
+
+function redrawCanvasForColor(color) {
+  var t0 = performance.now()
+  // Clear the main canvas
+  drawCanvas(false, false, true)
+
+  // Only redraw the current color; the others we can use as-is
+  drawColor(color)
+
+  // Draw all of the colors onto the newly-cleared canvas
+  var canvas = document.getElementById('metro-map-canvas');
+  var ctx = canvas.getContext('2d', {alpha: true});
+  for (var color in activeMap["points_by_color"]) {
+    var colorCanvas = document.getElementById('metro-map-color-canvas-' + color)
+    ctx.drawImage(colorCanvas, 0, 0); // Layer the stations on top of the canvas
+  }
+
+  // Redraw the stations canvas too, in case any stations were deleted or edited nearby
+  drawCanvas(activeMap, true)
+
+  var t1 = performance.now()
+  if (MMMDEBUG) { console.log('redrawCanvasForColor finished in ' + (t1 - t0) + 'ms') }
+} // redrawCanvasForColor
 
 function makeStation(x, y) {
   // Use a temporary station and don't write to activeMap unless it actually has data
@@ -553,7 +574,12 @@ function bindGridSquareEvents(event) {
       var replacementColor = rgb2hex(activeToolOption).slice(1, 7);
       floodFill(x, y, initialColor, replacementColor)
       autoSave(activeMap)
-      drawCanvas(activeMap)
+      if (mapDataVersion >= 2) {
+        drawColor(initialColor)
+        redrawCanvasForColor(replacementColor)
+      } else if (mapDataVersion == 1) {
+        drawCanvas(activeMap)
+      }
     } else
       makeLine(x, y)
   } else if (activeTool == 'eraser') {
@@ -562,7 +588,7 @@ function bindGridSquareEvents(event) {
     var erasedLine = getActiveLine(x, y, activeMap);
     if (!erasedLine) {
       // Erasing nothing, there's nothing to do here
-      return // SVT -- IS THIS RIGHT?
+      return
     }
 
     if (getStation(x, y, activeMap) || getLabel(x, y, activeMap)) {
@@ -582,12 +608,19 @@ function bindGridSquareEvents(event) {
     if (erasedLine && $('#tool-flood-fill').prop('checked')) {
       floodFill(x, y, erasedLine, '')
       autoSave(activeMap)
-      drawCanvas(activeMap)
+      if (mapDataVersion >= 2) {
+        redrawCanvasForColor(erasedLine)
+      } else if (mapDataVersion == 1) {
+        drawCanvas(activeMap)
+      }
     } else {
       metroMap = updateMapObject(x, y);
       autoSave(metroMap);
-      // drawArea(x, y, metroMap, erasedLine, redrawStations);
-      drawCanvas(metroMap)
+      if (mapDataVersion >= 2) {
+        redrawCanvasForColor(erasedLine)
+      } else if (mapDataVersion == 1) {
+        drawArea(x, y, metroMap, erasedLine, redrawStations);
+      }
     }
   } else if (activeTool == 'station') {
     makeStation(x, y)
@@ -820,24 +853,9 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
   ctx.lineWidth = gridPixelMultiplier * activeLineWidth;
   ctx.lineCap = 'round';
 
-  debugger;
-
   if (activeTool == 'eraser') {
     if (erasedLine) {
-      // drawPoint(ctx, x, y, metroMap, erasedLine);
-      // -------------------------------------------
-      if (mapDataVersion >= 3) {
-        var thisLineColorWidthStyle = getActiveLine(x, y, metroMap, true)
-        if (thisLineColorWidthStyle) {
-          var thisColor = thisLineColorWidthStyle[0]
-          var thisLineWidthStyle = thisLineColorWidthStyle[1]
-          var thisLineWidth = thisLineWidthStyle.split('-')[0]
-          var thisLineStyle = thisLineWidthStyle.split('-')[1]
-          drawPoint(ctx, x, y, metroMap, erasedLine, thisColor, thisLineWidth, thisLineStyle)
-        }
-      } else {
-        drawPoint(ctx, x, y, metroMap, erasedLine);
-      }
+      drawPoint(ctx, x, y, metroMap, erasedLine);
     } // if erasedLine
   } // if activeTool == 'eraser'
 
@@ -852,35 +870,9 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
         // When drawing lines, we call drawArea() twice.
         // First call: erase all the squares in the redrawSection
         // Second call: re-draw all the squares
-        // drawPoint(ctx, x, y, metroMap, getActiveLine(x,y, metroMap));
-        // ---------------------------------------
-        if (mapDataVersion >= 3) {
-          var thisLineColorWidthStyle = getActiveLine(x, y, metroMap, true)
-          if (thisLineColorWidthStyle) {
-            var thisColor = thisLineColorWidthStyle[0]
-            var thisLineWidthStyle = thisLineColorWidthStyle[1]
-            var thisLineWidth = thisLineWidthStyle.split('-')[0]
-            var thisLineStyle = thisLineWidthStyle.split('-')[1]
-            drawPoint(ctx, x, y, metroMap, erasedLine, thisColor, thisLineWidth, thisLineStyle)
-          }
-        } else {
-          drawPoint(ctx, x, y, metroMap, getActiveLine(x,y, metroMap));
-        }
+        drawPoint(ctx, x, y, metroMap, getActiveLine(x,y, metroMap));
       } else {
-        // drawPoint(ctx, x, y, metroMap);
-        // ------------------------------------------
-        if (mapDataVersion >= 3) {
-          var thisLineColorWidthStyle = getActiveLine(x, y, metroMap, true)
-          if (thisLineColorWidthStyle) {
-            var thisColor = thisLineColorWidthStyle[0]
-            var thisLineWidthStyle = thisLineColorWidthStyle[1]
-            var thisLineWidth = thisLineWidthStyle.split('-')[0]
-            var thisLineStyle = thisLineWidthStyle.split('-')[1]
-            drawPoint(ctx, x, y, metroMap, erasedLine, thisColor, thisLineWidth, thisLineStyle)
-          }
-        } else {
-          drawPoint(ctx, x, y, metroMap);
-        } // else (mdv < 3)
+        drawPoint(ctx, x, y, metroMap);
       } // else (of if activeTool is line and first pass)
     } // for y
   } // for x
@@ -940,6 +932,67 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
     } // mapDataVersion
   } // if redrawStations
 } // drawArea(x, y, metroMap, redrawStations)
+
+function drawColor(color) {
+  // Draws only a single color
+  var colorCanvas = document.getElementById('metro-map-color-canvas-' + color)
+  if (!colorCanvas) {
+    var mmCanvas = document.getElementById('metro-map-canvas')
+    var colorCanvasContainer = document.getElementById('color-canvas-container')
+    var colorCanvas = document.createElement("canvas")
+    colorCanvas.id =  "metro-map-color-canvas-" + color
+    colorCanvas.classList = 'hidden'
+    colorCanvas.width = mmCanvas.width
+    colorCanvas.height = mmCanvas.height
+    colorCanvasContainer.appendChild(colorCanvas)
+  }
+  var ctx = colorCanvas.getContext('2d', {alpha: true})
+  ctx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
+  if (mapDataVersion == 3) {
+    for (var lineWidthStyle in activeMap['points_by_color'][color]) {
+      ctx.strokeStyle = '#' + color
+      var linesAndSingletons = findLines(color, lineWidthStyle)
+      var lines = linesAndSingletons["lines"]
+      var singletons = linesAndSingletons["singletons"]
+      for (var line of lines) {
+        ctx.beginPath()
+
+        ctx.lineWidth = lineWidthStyle.split('-')[0] * gridPixelMultiplier
+        var thisLineStyle = lineWidthStyle.split('-')[1]
+        setLineStyle(thisLineStyle, ctx)
+
+        moveLineStroke(ctx, line[0], line[1], line[2], line[3])
+        ctx.stroke()
+        ctx.closePath()
+      }
+      for (var s of singletons) {
+        var xy = s.split(',')
+        var x = xy[0]
+        var y = xy[1]
+        ctx.strokeStyle = '#' + color
+        drawPoint(ctx, x, y, activeMap, false, color)
+      }
+    } // lineWidthStyle
+  } else if (mapDataVersion == 2) {
+    ctx.strokeStyle = '#' + color
+    var linesAndSingletons = findLines(color)
+    var lines = linesAndSingletons["lines"]
+    var singletons = linesAndSingletons["singletons"]
+    for (var line of lines) {
+      ctx.beginPath()
+      moveLineStroke(ctx, line[0], line[1], line[2], line[3])
+      ctx.stroke()
+      ctx.closePath()
+    }
+    for (var s of singletons) {
+      var xy = s.split(',')
+      var x = xy[0]
+      var y = xy[1]
+      ctx.strokeStyle = '#' + color
+      drawPoint(ctx, x, y, metroMap, false, color)
+    } // singletons
+  } // mapDataVersion
+} // drawColor(ctx, color)
 
 function findLines(color, lineWidthStyle) {
   // JS implementation of mapdata_optimizer.find_lines
@@ -1090,30 +1143,9 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
 
   if (mapDataVersion == 3) {
     for (var color in metroMap['points_by_color']) {
-      for (var lineWidthStyle in metroMap['points_by_color'][color]) {
-        ctx.strokeStyle = '#' + color
-        var linesAndSingletons = findLines(color, lineWidthStyle)
-        var lines = linesAndSingletons["lines"]
-        var singletons = linesAndSingletons["singletons"]
-        for (var line of lines) {
-          ctx.beginPath()
-
-          ctx.lineWidth = lineWidthStyle.split('-')[0] * gridPixelMultiplier
-          var thisLineStyle = lineWidthStyle.split('-')[1]
-          setLineStyle(thisLineStyle, ctx)
-
-          moveLineStroke(ctx, line[0], line[1], line[2], line[3])
-          ctx.stroke()
-          ctx.closePath()
-        }
-        for (var s of singletons) {
-          var xy = s.split(',')
-          var x = xy[0]
-          var y = xy[1]
-          ctx.strokeStyle = '#' + color
-          drawPoint(ctx, x, y, metroMap, false, color)
-        }
-      } // lineWidthStyle
+      drawColor(color)
+      var colorCanvas = document.getElementById('metro-map-color-canvas-' + color)
+      ctx.drawImage(colorCanvas, 0, 0); // Layer the stations on top of the canvas
     } // color
   } else if (mapDataVersion == 2) {
     for (var color in metroMap['points_by_color']) {
@@ -1233,13 +1265,6 @@ function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth, lineStyle)
   var color = color || getActiveLine(x, y, metroMap)
   if (!color && activeTool != 'eraser') {
     return // Fixes bug where clearing a map and resizing would sometimes paint undefined spots
-  }
-
-  if (x == 15 && y == 4) {
-    debugger;
-    // LEAVING OFF: The problem here is that although I clicked erase on (16,4),
-    // erasedLine is undefined
-    // and activeLineStyle is solid, even though that's not correct for (15,4)
   }
 
   ctx.beginPath()

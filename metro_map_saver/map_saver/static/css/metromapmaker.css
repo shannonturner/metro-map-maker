@@ -189,6 +189,10 @@ body {
   font-family: Helvetica, Arial, sans-serif;
 }
 
+.hidden {
+  display: none;
+}
+
 #title, #autosave-indicator {
   color: black;
   font-size: 2rem;
@@ -504,3 +508,4 @@ select {
 #shareable-map-link {
   word-break: break-word;
 }
+
