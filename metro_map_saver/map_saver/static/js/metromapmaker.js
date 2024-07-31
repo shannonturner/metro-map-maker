@@ -975,6 +975,8 @@ function drawColor(color) {
     } // lineWidthStyle
   } else if (mapDataVersion == 2) {
     ctx.strokeStyle = '#' + color
+    ctx.lineWidth = activeMap['global']['style']['mapLineWidth'] * gridPixelMultiplier
+    ctx.lineCap = 'round';
     var linesAndSingletons = findLines(color)
     var lines = linesAndSingletons["lines"]
     var singletons = linesAndSingletons["singletons"]
@@ -989,7 +991,7 @@ function drawColor(color) {
       var x = xy[0]
       var y = xy[1]
       ctx.strokeStyle = '#' + color
-      drawPoint(ctx, x, y, metroMap, false, color)
+      drawPoint(ctx, x, y, activeMap, false, color)
     } // singletons
   } // mapDataVersion
 } // drawColor(ctx, color)
@@ -1141,32 +1143,12 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
   ctx.lineWidth = mapLineWidth * gridPixelMultiplier
   ctx.lineCap = 'round';
 
-  if (mapDataVersion == 3) {
+  if (mapDataVersion >= 2) {
     for (var color in metroMap['points_by_color']) {
       drawColor(color)
       var colorCanvas = document.getElementById('metro-map-color-canvas-' + color)
       ctx.drawImage(colorCanvas, 0, 0); // Layer the stations on top of the canvas
     } // color
-  } else if (mapDataVersion == 2) {
-    for (var color in metroMap['points_by_color']) {
-      ctx.strokeStyle = '#' + color
-      var linesAndSingletons = findLines(color)
-      var lines = linesAndSingletons["lines"]
-      var singletons = linesAndSingletons["singletons"]
-      for (var line of lines) {
-        ctx.beginPath()
-        moveLineStroke(ctx, line[0], line[1], line[2], line[3])
-        ctx.stroke()
-        ctx.closePath()
-      }
-      for (var s of singletons) {
-        var xy = s.split(',')
-        var x = xy[0]
-        var y = xy[1]
-        ctx.strokeStyle = '#' + color
-        drawPoint(ctx, x, y, metroMap, false, color)
-      }
-    }
   } else if (mapDataVersion == 1) {
     for (var x in metroMap) {
       for (var y in metroMap[x]) {
