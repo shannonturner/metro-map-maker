@@ -935,6 +935,11 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
 
 function drawColor(color) {
   // Draws only a single color
+  if (!color) {
+    // When flood filling on an empty area, the initial color is undefined,
+    //  so end here -- there's nothing to do.
+    return
+  }
   var colorCanvas = document.getElementById('metro-map-color-canvas-' + color)
   if (!colorCanvas) {
     var mmCanvas = document.getElementById('metro-map-canvas')
