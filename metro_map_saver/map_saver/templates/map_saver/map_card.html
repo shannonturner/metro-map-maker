@@ -34,7 +34,7 @@
                     <span class="badge styling-blueline m-2"><i class="bi bi-map"></i> Size: {{ map.map_size }}</span>
                 {% endif %}
                 {% if user.is_staff %}
-                    <span class="badge styling-greenline m-2"><i class="bi bi-code"></i> Data Version: {{ map.data.global.data_version }}</span>
+                    <span class="badge styling-greenline m-2"><i class="bi bi-code"></i> Data Version: {{ map.data.global.data_version|default:1 }}</span>
                     {# TODO: Consider displaying city here, falling back to suggested_city. But I'll want to use select_related or prefetch_related on the view end to avoid lots of extra queries if I add city. #}
                     {% if map.suggested_city %}
                         <span class="badge styling-redline m-2"><i class="bi bi-pin-map"></i> Suggested City: {{ map.suggested_city }} ({{ map.suggested_city_overlap }})</span>
