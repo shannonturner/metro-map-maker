@@ -27,7 +27,7 @@ HAS_VARIANTS = [
 ]
 
 @register.simple_tag
-def station_marker(station, default_shape, line_size, points_by_color, stations):
+def station_marker(station, default_shape, line_size, points_by_color, stations, data_version):
 
     """ Generate the SVG shape for a station based on
             whether it's a transfer station and what its shape is.
@@ -76,7 +76,16 @@ def station_marker(station, default_shape, line_size, points_by_color, stations)
         else:
             radius = False
 
-        line_direction = get_line_direction(x, y, color, points_by_color)
+        # What is the line width/style for this line?
+        if data_version >= 3:
+            line_width_style = station['line_width_style']
+            line_size, line_style = line_width_style.split('-')
+            line_size = float(line_size)
+        else:
+            # line_width and style are set globally in data_version 2
+            line_width_style = None
+
+        line_direction = get_line_direction(x, y, color, points_by_color, line_width_style)
         station_direction = get_connected_stations(x, y, stations)
         draw_as_connected = False
 
@@ -211,7 +220,7 @@ def svg_rect(x, y, w, h, x_offset, y_offset, fill, stroke=None, stroke_width=0.2
         return f'<rect x="{x + x_offset}" y="{y + y_offset}" width="{w}" height="{h}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}"{rx}{rot}/>'
     return f'<rect x="{x + x_offset}" y="{y + y_offset}" width="{w}" height="{h}" fill="{fill}"{rx}{rot}/>'
 
-def get_line_direction(x, y, color, points_by_color):
+def get_line_direction(x, y, color, points_by_color, line_width_style=None):
 
     """ Returns which direction this line is going in,
         to help draw the positioning of rectangle stations
@@ -219,14 +228,21 @@ def get_line_direction(x, y, color, points_by_color):
 
     color = color.removeprefix('#')
 
-    NW = (x-1, y-1) in points_by_color[color]['xy']
-    NE = (x+1, y-1) in points_by_color[color]['xy']
-    SW = (x-1, y+1) in points_by_color[color]['xy']
-    SE = (x+1, y+1) in points_by_color[color]['xy']
-    N = (x, y-1) in points_by_color[color]['xy']
-    E = (x+1, y) in points_by_color[color]['xy']
-    S = (x, y+1) in points_by_color[color]['xy']
-    W = (x-1, y) in points_by_color[color]['xy']
+    if not line_width_style:
+        # 'xy' isn't a valid value for a line width/style;
+        #   but it's a compatibility measure for data_version == 2,
+        #   which used that key in the same position as data_version == 3's
+        #   line width and style.
+        line_width_style = 'xy'
+
+    NW = (x-1, y-1) in points_by_color[color][line_width_style]
+    NE = (x+1, y-1) in points_by_color[color][line_width_style]
+    SW = (x-1, y+1) in points_by_color[color][line_width_style]
+    SE = (x+1, y+1) in points_by_color[color][line_width_style]
+    N = (x, y-1) in points_by_color[color][line_width_style]
+    E = (x+1, y) in points_by_color[color][line_width_style]
+    S = (x, y+1) in points_by_color[color][line_width_style]
+    W = (x-1, y) in points_by_color[color][line_width_style]
 
     if W and E:
         return 'horizontal'

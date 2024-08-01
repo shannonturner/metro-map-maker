@@ -306,7 +306,7 @@ class SavedMap(models.Model):
         thumbnail_svg_file = ContentFile(thumbnail_svg, name=f"t{self.urlhash}.svg")
         self.thumbnail_svg = thumbnail_svg_file
 
-        svg = add_stations_to_svg(thumbnail_svg, line_size, default_station_shape, points_by_color, stations)
+        svg = add_stations_to_svg(thumbnail_svg, line_size, default_station_shape, points_by_color, stations, data_version)
         svg_file = ContentFile(svg, name=f"{self.urlhash}.svg")
         self.svg = svg_file
         self.save()
