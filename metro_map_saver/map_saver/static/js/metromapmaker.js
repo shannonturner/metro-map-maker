@@ -248,6 +248,9 @@ function getActiveLine(x, y, metroMap, returnLineWidthStyle) {
   // Given an x, y coordinate pair, return the hex code for the line you're on.
   // Use this to retrieve the line for a given point on a map.
   if (mapDataVersion == 3 && metroMap["global"]["lines"]) {
+    // TODO: I can avoid looping over colors and styles by keeping a v1-style
+    // mapping of all of the points, like:
+    // [10][20] = {"color": "bd1038", "line_width": 0.25, "line_style": "solid"}
     for (var color in metroMap["points_by_color"]) {
       for (var lineWidthStyle in metroMap["points_by_color"][color]) {
         if (coordinateInColor(x, y, metroMap, color, lineWidthStyle)) {
@@ -1496,7 +1499,17 @@ function drawCircleStation(ctx, x, y, metroMap, isTransferStation, stationCircle
 }
 
 function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, strokeColor, fillColor, radius, isIndicator) {
-  var lineColor = '#' + getActiveLine(x, y, metroMap)
+  var lineColorWidthStyle = getActiveLine(x, y, metroMap, true)
+  if (mapDataVersion == 3) {
+    var lineColor = '#' + lineColorWidthStyle[0]
+    var lineWidth = lineColorWidthStyle[1].split('-')[0]
+  } else if (mapDataVersion == 2) {
+    var lineColor = '#' + lineColorWidthStyle
+    var lineWidth = mapLineWidth
+  } else if (mapDataVersion == 1) {
+    var lineColor = '#' + lineColorWidthStyle
+    var lineWidth = 1
+  }
   var lineDirection = getLineDirection(x, y, metroMap)["direction"]
 
   var rectArgs = []
@@ -1507,7 +1520,7 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
   var width = gridPixelMultiplier
   var height = gridPixelMultiplier
 
-  if (mapLineWidth >= 0.5 && lineDirection != 'singleton') {
+  if (lineWidth >= 0.5 && lineDirection != 'singleton') {
     // If the lines are thick and this POINT isn't a singleton,
     //  the rectangles should be black/white so they can be legible
     ctx.strokeStyle = '#000000'
@@ -1562,7 +1575,7 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     if (lineDirection == 'singleton') {
       // Keep original width
       ctx.strokeStyle = '#000000'
-      if (mapLineWidth < 0.5 && (mapStationStyle == 'rect-round' || thisStation && thisStation['style'] == 'rect-round')) {
+      if (lineWidth < 0.5 && (mapStationStyle == 'rect-round' || thisStation && thisStation['style'] == 'rect-round')) {
         ctx.fillStyle = lineColor
       }
     } else if (!isTransferStation) {
