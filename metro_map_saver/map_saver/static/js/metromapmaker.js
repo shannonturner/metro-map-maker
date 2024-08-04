@@ -4470,6 +4470,9 @@ $('.line-style-choice-width').on('click', function() {
   $(this).addClass('active')
   activeLineWidth = $(this).attr('data-linewidth') / 100
   activeLineWidthStyle = activeLineWidth + '-' + activeLineStyle
+  if (activeToolOption) {
+    activeTool = 'line'
+  }
 })
 
 $('.line-style-choice-style').on('click', function() {
@@ -4479,6 +4482,9 @@ $('.line-style-choice-style').on('click', function() {
   $(this).addClass('active')
   activeLineStyle = $(this).attr('data-linestyle')
   activeLineWidthStyle = activeLineWidth + '-' + activeLineStyle
+  if (activeToolOption) {
+    activeTool = 'line'
+  }
 })
 
 function setLineStyle(style, ctx) {
