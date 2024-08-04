@@ -959,16 +959,15 @@ function drawColor(color) {
   if (mapDataVersion == 3) {
     for (var lineWidthStyle in activeMap['points_by_color'][color]) {
       ctx.strokeStyle = '#' + color
+      var thisLineWidth = lineWidthStyle.split('-')[0] * gridPixelMultiplier
+      var thisLineStyle = lineWidthStyle.split('-')[1]
       var linesAndSingletons = findLines(color, lineWidthStyle)
       var lines = linesAndSingletons["lines"]
       var singletons = linesAndSingletons["singletons"]
       for (var line of lines) {
         ctx.beginPath()
-
-        ctx.lineWidth = lineWidthStyle.split('-')[0] * gridPixelMultiplier
-        var thisLineStyle = lineWidthStyle.split('-')[1]
+        ctx.lineWidth = thisLineWidth
         setLineStyle(thisLineStyle, ctx)
-
         moveLineStroke(ctx, line[0], line[1], line[2], line[3])
         ctx.stroke()
         ctx.closePath()
@@ -978,7 +977,7 @@ function drawColor(color) {
         var x = xy[0]
         var y = xy[1]
         ctx.strokeStyle = '#' + color
-        drawPoint(ctx, x, y, activeMap, false, color)
+        drawPoint(ctx, x, y, activeMap, false, color, thisLineWidth, thisLineStyle)
       }
     } // lineWidthStyle
   } else if (mapDataVersion == 2) {
