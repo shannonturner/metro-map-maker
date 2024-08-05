@@ -363,12 +363,16 @@ function bindRailLineEvents() {
 
 function makeLine(x, y, deferSave) {
   if (mapDataVersion == 1) { drawArea(x, y, activeMap, true) }
+    else if (mapDataVersion >= 2) {
+      var previousColor = getActiveLine(x, y, activeMap)
+    }
   var color = rgb2hex(activeToolOption).slice(1, 7);
   metroMap = updateMapObject(x, y, "line", color);
   if (!deferSave) {
     autoSave(metroMap);
   }
   if (mapDataVersion >= 2) {
+    redrawCanvasForColor(previousColor)
     redrawCanvasForColor(color)
   } else if (mapDataVersion == 1) {
     drawArea(x, y, activeMap)
