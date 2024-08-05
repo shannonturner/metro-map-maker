@@ -2667,21 +2667,21 @@ function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
       } else {
         updateMapObject(x1, y, "line", replacementColor);
       }
-      if(!spanAbove && y > 0 && getActiveLine(x1, y-1, activeMap) == initialColor)
+      if(!spanAbove && y > 0 && ((!initialColor && !getActiveLine(x1, y-1, activeMap)) || coordinateInColor(x1, y-1, activeMap, initialColor, lws)))
       {
         coords.push(x1, y - 1);
         spanAbove = 1;
       }
-      else if(spanAbove && y > 0 && getActiveLine(x1, y-1, activeMap) != initialColor)
+      else if(spanAbove && y > 0 && ((!initialColor && !getActiveLine(x1, y-1, activeMap)) || !coordinateInColor(x1, y-1, activeMap, initialColor, lws)))
       {
         spanAbove = 0;
       }
-      if(!spanBelow && y < gridRows - 1 && getActiveLine(x1, y+1, activeMap) == initialColor)
+      if(!spanBelow && y < gridRows - 1 && ((!initialColor && !getActiveLine(x1, y+1, activeMap)) || coordinateInColor(x1, y+1, activeMap, initialColor, lws)))
       {
         coords.push(x1, y + 1);
         spanBelow = 1;
       }
-      else if(spanBelow && y < gridRows - 1 && getActiveLine(x1, y+1, activeMap) != initialColor)
+      else if(spanBelow && y < gridRows - 1 && ((!initialColor && !getActiveLine(x1, y+1, activeMap)) || !coordinateInColor(x1, y+1, activeMap, initialColor, lws)))
       {
         spanBelow = 0;
       }
