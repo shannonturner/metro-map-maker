@@ -3872,21 +3872,28 @@ $('#reset-all-station-styles').on('click', function() {
   }, 500)
 })
 
+function combineLineColorWidthStyle(value) {
+  if (typeof value === 'object') { // mapDataVersion >= 3
+    return value.join('-')
+  }
+  return value
+}
+
 function getLineDirection(x, y, metroMap) {
   // Returns which direction this line is going in,
   // to help draw the positioning of new-style stations
   x = parseInt(x)
   y = parseInt(y)
 
-  origin = getActiveLine(x, y, metroMap)
-  NW = getActiveLine(x-1, y-1, metroMap)
-  NE = getActiveLine(x+1, y-1, metroMap)
-  SW = getActiveLine(x-1, y+1, metroMap)
-  SE = getActiveLine(x+1, y+1, metroMap)
-  N = getActiveLine(x, y-1, metroMap)
-  E = getActiveLine(x+1, y, metroMap)
-  S = getActiveLine(x, y+1, metroMap)
-  W = getActiveLine(x-1, y, metroMap)
+  origin = combineLineColorWidthStyle(getActiveLine(x, y, metroMap, (mapDataVersion >= 3)))
+  NW = combineLineColorWidthStyle(getActiveLine(x-1, y-1, metroMap, (mapDataVersion >= 3)))
+  NE = combineLineColorWidthStyle(getActiveLine(x+1, y-1, metroMap, (mapDataVersion >= 3)))
+  SW = combineLineColorWidthStyle(getActiveLine(x-1, y+1, metroMap, (mapDataVersion >= 3)))
+  SE = combineLineColorWidthStyle(getActiveLine(x+1, y+1, metroMap, (mapDataVersion >= 3)))
+  N = combineLineColorWidthStyle(getActiveLine(x, y-1, metroMap, (mapDataVersion >= 3)))
+  E = combineLineColorWidthStyle(getActiveLine(x+1, y, metroMap, (mapDataVersion >= 3)))
+  S = combineLineColorWidthStyle(getActiveLine(x, y+1, metroMap, (mapDataVersion >= 3)))
+  W = combineLineColorWidthStyle(getActiveLine(x-1, y, metroMap, (mapDataVersion >= 3)))
 
   info = {
     "direction": false,
