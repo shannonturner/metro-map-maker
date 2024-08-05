@@ -349,7 +349,7 @@ function bindRailLineEvents() {
       })
     }
     if ($('#tool-flood-fill').prop('checked')) {
-      floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), activeToolOption, true)
+      floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap, (mapDataVersion >= 3)), activeToolOption, true)
       $('#tool-line-icon-pencil').hide()
       $('#tool-line-icon-paint-bucket').show()
     } else {
@@ -575,7 +575,7 @@ function bindGridSquareEvents(event) {
     if ($('#tool-flood-fill').prop('checked')){
       var initialColor = getActiveLine(x, y, activeMap)
       var replacementColor = rgb2hex(activeToolOption).slice(1, 7);
-      floodFill(x, y, initialColor, replacementColor)
+      floodFill(x, y, getActiveLine(x, y, activeMap, (mapDataVersion >= 3)), replacementColor)
       autoSave(activeMap)
       if (mapDataVersion >= 2) {
         drawColor(initialColor)
@@ -609,7 +609,7 @@ function bindGridSquareEvents(event) {
       var redrawLabels = false
     }
     if (erasedLine && $('#tool-flood-fill').prop('checked')) {
-      floodFill(x, y, erasedLine, '')
+      floodFill(x, y, getActiveLine(x, y, activeMap, (mapDataVersion >= 3)), '')
       autoSave(activeMap)
       if (mapDataVersion >= 2) {
         redrawCanvasForColor(erasedLine)
@@ -651,7 +651,7 @@ function bindGridSquareMouseover(event) {
     } else {
       indicatorColor = '#ffffff'
     }
-    floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), indicatorColor, true)
+    floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap, (mapDataVersion >= 3)), indicatorColor, true)
   }
   if (mouseIsDown && (activeTool == 'line' || activeTool == 'eraser')) {
     dragX = event.pageX
@@ -2613,8 +2613,20 @@ function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
   //  drawing all the points when dealing with large areas
   // N2H: Right now, this doesn't floodFill along diagonals,
   //  but I also don't want it to bleed beyond the diagonals
-  if (initialColor == replacementColor)
+
+  if (mapDataVersion >= 3 && initialColor) {
+    var lws = initialColor[1]
+    initialColor = initialColor[0]
+  } else {
+    var lws = false
+  }
+
+  // Prevent infinite loops, but allow replacing the same color if the style is different
+  if (initialColor == replacementColor && mapDataVersion >= 3 && lws == activeLineWidthStyle) {
     return
+  } else if (initialColor == replacementColor && mapDataVersion < 3) {
+    return
+  }
 
   if (!x || !y)
     return
@@ -2635,11 +2647,11 @@ function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
     y = coords.pop()
     x = coords.pop()
     x1 = x;
-    while(x1 >= 0 && getActiveLine(x1, y, activeMap) == initialColor)
+    while (x1 >= 0 && ((!getActiveLine(x, y, activeMap) && !getActiveLine(x1, y, activeMap)) || coordinateInColor(x1, y, activeMap, initialColor, lws)))
       x1--;
     x1++;
     spanAbove = spanBelow = 0;
-    while(x1 < gridCols && getActiveLine(x1, y, activeMap) == initialColor)
+    while(x1 < gridCols && ((!initialColor && !getActiveLine(x1, y, activeMap)) || coordinateInColor(x1, y, activeMap, initialColor, lws)))
     {
       if (hoverIndicator) {
         if (ignoreCoords && ignoreCoords[x1] && ignoreCoords[x1][y])
@@ -2832,7 +2844,7 @@ function setFloodFillUI() {
         indicatorColor = activeToolOption
       else
         indicatorColor = '#ffffff'
-      floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap), indicatorColor, true)
+      floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap, (mapDataVersion >= 3)), indicatorColor, true)
     }
   } else {
     $('#tool-line-icon-pencil').show()
