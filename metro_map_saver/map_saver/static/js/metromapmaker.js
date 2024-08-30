@@ -391,7 +391,7 @@ function redrawCanvasForColor(color) {
   var canvas = document.getElementById('metro-map-canvas');
   var ctx = canvas.getContext('2d', {alpha: true});
   for (var color in activeMap["points_by_color"]) {
-    var colorCanvas = document.getElementById('metro-map-color-canvas-' + color)
+    var colorCanvas = createColorCanvasIfNeeded(color)
     ctx.drawImage(colorCanvas, 0, 0); // Layer the stations on top of the canvas
   }
 
@@ -947,17 +947,7 @@ function drawColor(color) {
     //  so end here -- there's nothing to do.
     return
   }
-  var colorCanvas = document.getElementById('metro-map-color-canvas-' + color)
-  if (!colorCanvas) {
-    var mmCanvas = document.getElementById('metro-map-canvas')
-    var colorCanvasContainer = document.getElementById('color-canvas-container')
-    var colorCanvas = document.createElement("canvas")
-    colorCanvas.id =  "metro-map-color-canvas-" + color
-    colorCanvas.classList = 'hidden'
-    colorCanvas.width = mmCanvas.width
-    colorCanvas.height = mmCanvas.height
-    colorCanvasContainer.appendChild(colorCanvas)
-  }
+  var colorCanvas = createColorCanvasIfNeeded(color)
   var ctx = colorCanvas.getContext('2d', {alpha: true})
   ctx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
   if (mapDataVersion == 3) {
@@ -1006,6 +996,21 @@ function drawColor(color) {
     } // singletons
   } // mapDataVersion
 } // drawColor(ctx, color)
+
+function createColorCanvasIfNeeded(color) {
+  var colorCanvas = document.getElementById('metro-map-color-canvas-' + color)
+  if (!colorCanvas) {
+    var mmCanvas = document.getElementById('metro-map-canvas')
+    var colorCanvasContainer = document.getElementById('color-canvas-container')
+    var colorCanvas = document.createElement("canvas")
+    colorCanvas.id =  "metro-map-color-canvas-" + color
+    colorCanvas.classList = 'hidden'
+    colorCanvas.width = mmCanvas.width
+    colorCanvas.height = mmCanvas.height
+    colorCanvasContainer.appendChild(colorCanvas)
+  }
+  return colorCanvas
+} // createColorCanvasIfNeeded(color)
 
 function findLines(color, lineWidthStyle) {
   // JS implementation of mapdata_optimizer.find_lines
