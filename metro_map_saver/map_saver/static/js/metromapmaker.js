@@ -3080,6 +3080,9 @@ $(document).ready(function() {
       if (!$('#tool-station').hasClass('width-100')) {
         $(this).removeClass('width-100')
       }
+      // Also reset the + Add New Line button
+      $('#rail-line-new span').text('Add New Line')
+      $('#tool-new-line-options').hide()
     } else {
       $('#tool-line-options').show();
       $(this).addClass('width-100')
