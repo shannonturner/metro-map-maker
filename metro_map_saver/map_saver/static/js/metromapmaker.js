@@ -3582,7 +3582,7 @@ $(document).ready(function() {
           "color": lineColorToChangeTo,
           "name": lineNameToChangeTo
         })
-        $('#rail-line-change').html('Edit colors &amp; names')
+        $('#rail-line-change span').html('Edit colors &amp; names')
         $('#cant-save-rail-line-edits').text('')
         $('#tool-change-line-options').hide()
         // If the line tool is in use, unset it so we don't get a stale color
