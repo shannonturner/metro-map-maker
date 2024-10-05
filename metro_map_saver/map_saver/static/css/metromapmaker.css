@@ -312,8 +312,13 @@ canvas#grid-canvas, canvas#hover-canvas {
   border: 0.5rem solid transparent;
 }
 
+#controls.collapsed #line-color-options {
+  overflow-x: clip;
+}
+
 #controls.collapsed button.rail-line {
-  width: 6rem;
+  margin-left: -0.75rem;
+  overflow-wrap: break-word;
 }
 
 #tool-line-options button.rail-line:hover {

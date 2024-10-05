@@ -4409,7 +4409,7 @@ function collapseToolbox() {
   $('#controls').addClass('collapsed')
 
   $('#toolbox button span.button-label').hide()
-  $('#title, #remix, #credits, #rail-line-new, #tool-new-line-options, #rail-line-change, #tool-change-line-options, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-move-options, #tool-resize-all, #tool-resize-options, #tool-map-style, #tool-map-style-options, #name-map, #name-this-map').hide()
+  $('#title, #remix, #credits, #rail-line-new, #tool-new-line-options, #line-style-options, #rail-line-change, #tool-change-line-options, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-move-options, #tool-resize-all, #tool-resize-options, #tool-map-style, #tool-map-style-options, #name-map, #name-this-map').hide()
   $('#controls-collapse-menu').hide()
   $('#tool-line-caption-draw').hide()
   $('#tool-eraser-caption-eraser').hide()
@@ -4441,7 +4441,7 @@ function expandToolbox() {
   }
 
   $('#toolbox button span.button-label').show()
-  $('#title, #remix, #credits, #rail-line-new, #rail-line-change, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-resize-all, #tool-map-style').show()
+  $('#title, #remix, #credits, #rail-line-new, #line-style-options, #rail-line-change, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-resize-all, #tool-map-style').show()
 
   $('#tool-move-all, #tool-resize-all').removeClass('width-100')
 
