@@ -321,6 +321,10 @@ canvas#grid-canvas, canvas#hover-canvas {
   overflow-wrap: break-word;
 }
 
+#controls.collapsed .hide-when-collapsed {
+  display: none;
+}
+
 #tool-line-options button.rail-line:hover {
   border: 0.5rem solid rgba(255, 255, 255, 0.3);
 }

@@ -164,7 +164,7 @@
 
         <div id="line-color-options" class="text-left">
           <fieldset>
-            <legend>Line Color</legend>
+            <legend><span class="hide-when-collapsed">Line</span> Color</legend>
           </fieldset>
         </div>
 
@@ -231,19 +231,19 @@
       </button>
       <div id="tool-station-options" class="text-left" style="display: none;">
         <fieldset>
-          <legend>Add / Edit Station</legend>
+          <legend>Add / Edit <span class="hide-when-collapsed">Station</span></legend>
           <input id="station-coordinates-x" type="hidden">
           <input id="station-coordinates-y" type="hidden">
 
-          <label for="station-name">Station Name</label>
+          <label for="station-name"><span class="hide-when-collapsed">Station</span> Name</label>
           <input id="station-name" autocomplete="off" type="text" placeholder="Silver Spring" maxlength="255">
 
           <div style="width: 100%;">
             <input id="station-transfer" type="checkbox">
-            <label for="station-transfer">Transfer Station</label>
+            <label for="station-transfer">Transfer <span class="hide-when-collapsed">Station</span></label>
           </div>
 
-          <label for="station-name-orientation">Station Name Orientation</label>
+          <label for="station-name-orientation"><span class="hide-when-collapsed">Station Name</span> Orientation</label>
           <select id="station-name-orientation">
             <option value="0">On the right</option>
             <option value="180">On the left</option>
