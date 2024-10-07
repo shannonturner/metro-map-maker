@@ -137,6 +137,11 @@ function resizeGrid(size) {
   drawGrid()
   lastStrokeStyle = undefined; // Prevent odd problem where snapping canvas to grid would cause lines to paint with an undefined color (singletons were unaffected)
 
+  // Resize the color canvases too, otherwise any previously existing canvases won't allow drawing on the new boundaries
+  for (var color in activeMap["points_by_color"]) {
+    createColorCanvasIfNeeded(color, true)
+  }
+
   drawCanvas(activeMap)
 } // resizeGrid(size)
 
@@ -363,16 +368,19 @@ function bindRailLineEvents() {
 
 function makeLine(x, y, deferSave) {
   if (mapDataVersion == 1) { drawArea(x, y, activeMap, true) }
-    else if (mapDataVersion >= 2) {
-      var previousColor = getActiveLine(x, y, activeMap)
-    }
+  else if (mapDataVersion >= 2) {
+    var previousColor = getActiveLine(x, y, activeMap)
+  }
   var color = rgb2hex(activeToolOption).slice(1, 7);
   metroMap = updateMapObject(x, y, "line", color);
   if (!deferSave) {
     autoSave(metroMap);
   }
   if (mapDataVersion >= 2) {
-    redrawCanvasForColor(previousColor)
+    if (previousColor) {
+      // If there's nothing here previously, we don't need to clear/redraw
+      redrawCanvasForColor(previousColor)
+    }
     redrawCanvasForColor(color)
   } else if (mapDataVersion == 1) {
     drawArea(x, y, activeMap)
@@ -997,7 +1005,7 @@ function drawColor(color) {
   } // mapDataVersion
 } // drawColor(ctx, color)
 
-function createColorCanvasIfNeeded(color) {
+function createColorCanvasIfNeeded(color, resize) {
   var colorCanvas = document.getElementById('metro-map-color-canvas-' + color)
   if (!colorCanvas) {
     var mmCanvas = document.getElementById('metro-map-canvas')
@@ -1008,6 +1016,11 @@ function createColorCanvasIfNeeded(color) {
     colorCanvas.width = mmCanvas.width
     colorCanvas.height = mmCanvas.height
     colorCanvasContainer.appendChild(colorCanvas)
+  }
+  if (resize) {
+    var mmCanvas = document.getElementById('metro-map-canvas')
+    colorCanvas.width = mmCanvas.width
+    colorCanvas.height = mmCanvas.height
   }
   return colorCanvas
 } // createColorCanvasIfNeeded(color)
@@ -4407,6 +4420,8 @@ function collapseToolbox() {
   if (menuIsCollapsed) { return }
   menuIsCollapsed = true
   $('#controls').addClass('collapsed')
+
+  // TODO: Can replace all of these hide/shows here and in expandToolbox with editing index.html to use the .hide-when-collapsed class
 
   $('#toolbox button span.button-label').hide()
   $('#title, #remix, #credits, #rail-line-new, #tool-new-line-options, #line-style-options, #rail-line-change, #tool-change-line-options, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-move-options, #tool-resize-all, #tool-resize-options, #tool-map-style, #tool-map-style-options, #name-map, #name-this-map').hide()
