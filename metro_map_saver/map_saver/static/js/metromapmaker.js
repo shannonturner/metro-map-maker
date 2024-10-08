@@ -2096,6 +2096,19 @@ function autoLoad() {
   } else {
     mapDataVersion = 1
   }
+
+  // Helpful for debugging / troubleshooting backwards compatibility modes
+  var desiredMapDataVersion = parseInt(getURLParameter('mapDataVersion'))
+  if (MMMDEBUG && desiredMapDataVersion >= mapDataVersion) {
+    upgradeMapDataVersion(desiredMapDataVersion)
+  } else {
+    try {
+      upgradeMapDataVersion()
+    } catch (e) {
+      console.warn('Error when trying to upgradeMapDataVersion(): ' + e)
+    }
+  }
+
   compatibilityModeIndicator()
   mapSize = setMapSize(activeMap, mapDataVersion > 1)
   loadMapFromObject(activeMap)
@@ -4647,9 +4660,10 @@ function restyleAllLines(toWidth, toStyle) {
     drawCanvas(activeMap)
 } // restyleAllLines(toWidth, toStyle)
 
-function upgradeMapDataVersion() {
+function upgradeMapDataVersion(desiredMapDataVersion) {
   // Upgrades to the highest mapDataVersion possible.
   if (mapDataVersion == 1) {
+    if (desiredMapDataVersion && desiredMapDataVersion == 1) { return }
     var newMapObject = {
       "points_by_color": {},
       "stations": {},
@@ -4681,6 +4695,7 @@ function upgradeMapDataVersion() {
     compatibilityModeIndicator()
   } // mapDataVersion 1
   if (mapDataVersion == 2) {
+    if (desiredMapDataVersion && desiredMapDataVersion == 2) { return }
     var toWidth = 1
     var toStyle = 'solid'
     if (activeMap["global"] && activeMap["global"]["style"] && activeMap["global"]["style"]["mapLineWidth"]) {
