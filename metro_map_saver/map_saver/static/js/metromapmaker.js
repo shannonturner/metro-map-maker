@@ -1989,7 +1989,6 @@ function undo() {
 
 function redo() {
   // After undoing, redo will allow you to undo the undo
-  console.log('redo!')
   var previousMap = false
   if (mapRedoHistory.length >= 1) {
     previousMap = mapRedoHistory.pop()
@@ -4663,7 +4662,12 @@ function restyleAllLines(toWidth, toStyle) {
 function upgradeMapDataVersion(desiredMapDataVersion) {
   // Upgrades to the highest mapDataVersion possible.
   if (mapDataVersion == 1) {
-    if (desiredMapDataVersion && desiredMapDataVersion == 1) { return }
+    if (desiredMapDataVersion && desiredMapDataVersion == 1) {
+      // Hide features not yet available
+      $('#line-style-options').hide()
+      $('#tool-map-style, #tool-map-style-options').hide()
+      return
+    }
     var newMapObject = {
       "points_by_color": {},
       "stations": {},
@@ -4695,7 +4699,11 @@ function upgradeMapDataVersion(desiredMapDataVersion) {
     compatibilityModeIndicator()
   } // mapDataVersion 1
   if (mapDataVersion == 2) {
-    if (desiredMapDataVersion && desiredMapDataVersion == 2) { return }
+    if (desiredMapDataVersion && desiredMapDataVersion == 2) {
+      // Hide features not yet available
+      $('#line-style-options').hide()
+      return
+    }
     var toWidth = 1
     var toStyle = 'solid'
     if (activeMap["global"] && activeMap["global"]["style"] && activeMap["global"]["style"]["mapLineWidth"]) {
