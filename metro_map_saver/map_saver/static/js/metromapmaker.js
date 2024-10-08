@@ -4433,7 +4433,7 @@ function collapseToolbox() {
   menuIsCollapsed = true
   $('#controls').addClass('collapsed')
 
-  // TODO: Can replace all of these hide/shows here and in expandToolbox with editing index.html to use the .hide-when-collapsed class
+  // TODO: Can replace most of these hide/shows here and in expandToolbox with editing index.html to use the .hide-when-collapsed class
 
   $('#toolbox button span.button-label').hide()
   $('#title, #remix, #credits, #rail-line-new, #tool-new-line-options, #line-style-options, #rail-line-change, #tool-change-line-options, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-move-options, #tool-resize-all, #tool-resize-options, #tool-map-style, #tool-map-style-options, #name-map, #name-this-map').hide()
@@ -4468,7 +4468,19 @@ function expandToolbox() {
   }
 
   $('#toolbox button span.button-label').show()
-  $('#title, #remix, #credits, #rail-line-new, #line-style-options, #rail-line-change, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-resize-all, #tool-map-style').show()
+  $('#title, #remix, #credits, #rail-line-new, #rail-line-change, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-resize-all').show()
+
+  // -----------------------------------------------
+  // Not all features are available in every version
+
+  if (mapDataVersion >= 2) {
+    $('#tool-map-style').show()
+  }
+
+  if (mapDataVersion >= 3) {
+    $('#line-style-options').show()
+  }
+  // -----------------------------------------------
 
   $('#tool-move-all, #tool-resize-all').removeClass('width-100')
 
