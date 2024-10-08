@@ -646,8 +646,8 @@ function bindGridSquareEvents(event) {
 
 function bindGridSquareMouseover(event) {
   if (MMMDEBUG) {
-    // $('#title').text([event.pageX, event.pageY, getCanvasXY(event.pageX, event.pageY)]) // useful when debugging
-    $('#title').text(['XY: ' + getCanvasXY(event.pageX, event.pageY)]) // useful when debugging
+    // $('#title').text([event.pageX, event.pageY, getCanvasXY(event.pageX, event.pageY)])
+    $('#title').text(['XY: ' + getCanvasXY(event.pageX, event.pageY)])
   }
   xy = getCanvasXY(event.pageX, event.pageY)
   hoverX = xy[0]
@@ -4673,6 +4673,19 @@ function upgradeMapDataVersion(desiredMapDataVersion) {
       "stations": {},
     }
     newMapObject["global"] = Object.assign({}, activeMap["global"])
+    var highestValue = getMapSize(activeMap) || 0
+    for (allowedSize of ALLOWED_SIZES) {
+      if (highestValue < allowedSize) {
+        gridRows = allowedSize
+        gridCols = allowedSize
+        newMapObject["global"]['map_size'] = gridRows
+        break
+      }
+    }
+    newMapObject["global"]["style"] = {
+      "mapLineWidth": 1,
+      "mapLineStyle": 'solid'
+    }
     for (var x in activeMap) {
       for (var y in activeMap[x]) {
         var color = activeMap[x][y]["line"]
@@ -4695,7 +4708,7 @@ function upgradeMapDataVersion(desiredMapDataVersion) {
     // Upgrade from v1 to v2 is complete
     mapDataVersion = 2
     newMapObject["global"]["data_version"] = 2
-    activeMap = newMapObject
+    activeMap = Object.assign({}, newMapObject)
     compatibilityModeIndicator()
   } // mapDataVersion 1
   if (mapDataVersion == 2) {
