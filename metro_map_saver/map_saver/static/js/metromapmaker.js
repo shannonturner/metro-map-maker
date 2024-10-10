@@ -4743,6 +4743,7 @@ function upgradeMapDataVersion(desiredMapDataVersion) {
       // Hide features not yet available
       $('#line-style-options').hide()
       $('#tool-map-style, #tool-map-style-options').hide()
+      $('#station-style, label[for="station-style"]').hide()
       return
     }
     var newMapObject = {
