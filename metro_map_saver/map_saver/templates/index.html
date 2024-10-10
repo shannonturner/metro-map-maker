@@ -638,13 +638,13 @@
     // TODO: Remove the "what's new" after a few weeks of Metro Map Maker being live, and replace with "how to"
 
     // How many times has the user closed the "What's New" message?
-    var v6CloseWhatsNewCount = parseInt(window.localStorage.getItem('v6-close-whats-new-count') || 0)
-    if (v6CloseWhatsNewCount <= 1) {
+    var v7CloseWhatsNewCount = parseInt(window.localStorage.getItem('v7-close-whats-new-count') || 0)
+    if (v7CloseWhatsNewCount <= 1) {
       // They've seen it 0-2 times, show it until they've clicked hide twice
-      $('#announcement').append('<h4 id="announce-whats-new" style="text-align: left;">Metro Map Maker is better than ever, with a new look and <a href="{% url "help" %}">lots of new features</a>! <a href="{% url "help" %}">Explore what\'s new</a> or <span id="close-whats-new" class="close-announcement" style="text-decoration: underline; cursor: pointer;">close this message</span>.</h4>')
+      $('#announcement').append('<h4 id="announce-whats-new" style="text-align: left;">October 2024: Mix and match line widths and styles, plus <a href="{% url "help" %}">lots more new features</a>! <a href="{% url "help" %}">See what\'s new</a> or <span id="close-whats-new" class="close-announcement" style="text-decoration: underline; cursor: pointer;">close this message</span>.</h4>')
     }
 
-    // TODO: After removing v6CloseWhatsNew, replace it with howToMMM:
+    // TODO: After removing v7CloseWhatsNew, replace it with howToMMM:
 
     // var howToMMMCount = parseInt(window.localStorage.getItem('how-to-mmm-count') || 0)
     // if (howToMMMCount < 1) {
@@ -654,7 +654,7 @@
 
     $('body').on('click', '#close-whats-new', function() {
       $('#announce-whats-new').remove()
-      window.localStorage.setItem('v6-close-whats-new-count', v6CloseWhatsNewCount + 1)
+      window.localStorage.setItem('v7-close-whats-new-count', v7CloseWhatsNewCount + 1)
     })
 
     // $('body').on('click', '#close-how-to-mmm', function() {
