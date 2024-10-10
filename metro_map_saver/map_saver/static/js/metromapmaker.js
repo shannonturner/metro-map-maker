@@ -3083,7 +3083,7 @@ $(document).ready(function() {
       $('#tool-label').trigger('click')
     }
     else if ((event.key == 'y') && (!event.metaKey && !event.ctrlKey)) { // Y
-      if (!menuIsCollapsed) {
+      if (!menuIsCollapsed && mapDataVersion > 1) {
         $('#tool-map-style').trigger('click')
       }
     }
