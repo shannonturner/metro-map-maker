@@ -2642,21 +2642,37 @@ function getCanvasXY(pageX, pageY) {
   return [x, y]
 } // getCanvasXY(pageX, pageY)
 
+function ffSpan(color, initialColor, different) {
+  // Helper function to help determine the boundaries for floodFill,
+  //  because in JS, ['0896d7', '1-solid'] is not equal to ['0896d7', '1-solid']
+  if (different) {
+    if (color && initialColor && (color[0] != initialColor[0] || color[1] != initialColor[1])) {
+      return true
+    } else if (color && !initialColor) {
+      return true
+    } else if (!color && initialColor) {
+      return true
+    }
+    return false
+  }
+
+  if (color === undefined && initialColor === undefined) {
+    return true
+  }
+  if (color && initialColor && color[0] == initialColor[0] && color[1] == initialColor[1]) {
+    return true
+  }
+  return false
+} // ffSpan(color, initialColor, different)
+
 function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
   // Note: The largest performance bottleneck is actually in
   //  drawing all the points when dealing with large areas
   // N2H: Right now, this doesn't floodFill along diagonals,
   //  but I also don't want it to bleed beyond the diagonals
 
-  if (mapDataVersion >= 3 && initialColor) {
-    var lws = initialColor[1]
-    initialColor = initialColor[0]
-  } else {
-    var lws = false
-  }
-
   // Prevent infinite loops, but allow replacing the same color if the style is different
-  if (initialColor == replacementColor && mapDataVersion >= 3 && lws == activeLineWidthStyle) {
+  if (mapDataVersion >= 3 && initialColor && initialColor[0] == replacementColor && initialColor[1] == activeLineWidthStyle) {
     return
   } else if (initialColor == replacementColor && mapDataVersion < 3) {
     return
@@ -2676,48 +2692,97 @@ function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
   }
 
-  while (coords.length > 0)
-  {
-    y = coords.pop()
-    x = coords.pop()
-    x1 = x;
-    while (x1 >= 0 && ((!getActiveLine(x, y, activeMap) && !getActiveLine(x1, y, activeMap)) || coordinateInColor(x1, y, activeMap, initialColor, lws)))
-      x1--;
-    x1++;
-    spanAbove = spanBelow = 0;
-    while(x1 < gridCols && ((!initialColor && !getActiveLine(x1, y, activeMap)) || coordinateInColor(x1, y, activeMap, initialColor, lws)))
+  if (mapDataVersion <= 2) {
+    // While it might be simpler to have a unified version of this function,
+    //  the differences in the return values of getActiveLine() are significant enough
+    //  among the versions, and this avoids an infinite loop when flood filling over a black line (000000) in v2
+    // TODO: Revisit a unified version; might be able to special-case the 000000 problem
+    while (coords.length > 0)
     {
-      if (hoverIndicator) {
-        if (ignoreCoords && ignoreCoords[x1] && ignoreCoords[x1][y])
-          break
-        if (!ignoreCoords.hasOwnProperty(x1))
-          ignoreCoords[x1] = {}
-        drawHoverIndicator(x1, y, replacementColor, 0.5)
-        ignoreCoords[x1][y] = true
-      } else {
-        updateMapObject(x1, y, "line", replacementColor);
-      }
-      if(!spanAbove && y > 0 && ((!initialColor && !getActiveLine(x1, y-1, activeMap)) || coordinateInColor(x1, y-1, activeMap, initialColor, lws)))
-      {
-        coords.push(x1, y - 1);
-        spanAbove = 1;
-      }
-      else if(spanAbove && y > 0 && ((!initialColor && !getActiveLine(x1, y-1, activeMap)) || !coordinateInColor(x1, y-1, activeMap, initialColor, lws)))
-      {
-        spanAbove = 0;
-      }
-      if(!spanBelow && y < gridRows - 1 && ((!initialColor && !getActiveLine(x1, y+1, activeMap)) || coordinateInColor(x1, y+1, activeMap, initialColor, lws)))
-      {
-        coords.push(x1, y + 1);
-        spanBelow = 1;
-      }
-      else if(spanBelow && y < gridRows - 1 && ((!initialColor && !getActiveLine(x1, y+1, activeMap)) || !coordinateInColor(x1, y+1, activeMap, initialColor, lws)))
-      {
-        spanBelow = 0;
-      }
+      y = coords.pop()
+      x = coords.pop()
+      x1 = x;
+      while(x1 >= 0 && getActiveLine(x1, y, activeMap, mapDataVersion >= 3) == initialColor)
+        x1--;
       x1++;
-    } // while x1
-  } // while coords
+      spanAbove = spanBelow = 0;
+      while(x1 < gridCols && getActiveLine(x1, y, activeMap, mapDataVersion >= 3) == initialColor)
+      {
+        if (hoverIndicator) {
+          if (ignoreCoords && ignoreCoords[x1] && ignoreCoords[x1][y])
+            break
+          if (!ignoreCoords.hasOwnProperty(x1))
+            ignoreCoords[x1] = {}
+          drawHoverIndicator(x1, y, replacementColor, 0.5)
+          ignoreCoords[x1][y] = true
+        } else {
+          updateMapObject(x1, y, "line", replacementColor);
+        }
+        if(!spanAbove && y > 0 && getActiveLine(x1, y-1, activeMap, mapDataVersion >= 3) == initialColor)
+        {
+          coords.push(x1, y - 1);
+          spanAbove = 1;
+        }
+        else if(spanAbove && y > 0 && getActiveLine(x1, y-1, activeMap, mapDataVersion >= 3) != initialColor)
+        {
+          spanAbove = 0;
+        }
+        if(!spanBelow && y < gridRows - 1 && getActiveLine(x1, y+1, activeMap, mapDataVersion >= 3) == initialColor)
+        {
+          coords.push(x1, y + 1);
+          spanBelow = 1;
+        }
+        else if(spanBelow && y < gridRows - 1 && getActiveLine(x1, y+1, activeMap, mapDataVersion >= 3) != initialColor)
+        {
+          spanBelow = 0;
+        }
+        x1++;
+      } // while x1
+    } // while coords
+  } else {
+    while (coords.length > 0)
+    {
+      y = coords.pop()
+      x = coords.pop()
+      x1 = x;
+      while(x1 >= 0 && ffSpan(getActiveLine(x1, y, activeMap, mapDataVersion >= 3), initialColor))
+        x1--;
+      x1++;
+      spanAbove = spanBelow = 0;
+      while(x1 < gridCols && ffSpan(getActiveLine(x1, y, activeMap, mapDataVersion >= 3), initialColor))
+      {
+        if (hoverIndicator) {
+          if (ignoreCoords && ignoreCoords[x1] && ignoreCoords[x1][y])
+            break
+          if (!ignoreCoords.hasOwnProperty(x1))
+            ignoreCoords[x1] = {}
+          drawHoverIndicator(x1, y, replacementColor, 0.5)
+          ignoreCoords[x1][y] = true
+        } else {
+          updateMapObject(x1, y, "line", replacementColor);
+        }
+        if(!spanAbove && y > 0 && ffSpan(getActiveLine(x1, y-1, activeMap, mapDataVersion >= 3), initialColor))
+        {
+          coords.push(x1, y - 1);
+          spanAbove = 1;
+        }
+        else if(spanAbove && y > 0 && ffSpan(getActiveLine(x1, y-1, activeMap, mapDataVersion >= 3), initialColor, true))
+        {
+          spanAbove = 0;
+        }
+        if(!spanBelow && y < gridRows - 1 && ffSpan(getActiveLine(x1, y+1, activeMap, mapDataVersion >= 3), initialColor))
+        {
+          coords.push(x1, y + 1);
+          spanBelow = 1;
+        }
+        else if(spanBelow && y < gridRows - 1 && ffSpan(getActiveLine(x1, y+1, activeMap, mapDataVersion >= 3), initialColor, true))
+        {
+          spanBelow = 0;
+        }
+        x1++;
+      } // while x1
+    } // while coords
+  } // mapDataVersion check
 } // floodFill() (scanline implementation)
 
 function combineCanvases() {
