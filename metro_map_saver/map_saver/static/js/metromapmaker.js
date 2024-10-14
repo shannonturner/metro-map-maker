@@ -1919,6 +1919,7 @@ function saveMapHistory(metroMap) {
 
 function autoSave(metroMap) {
   // Saves the provided metroMap to localStorage
+  // This should be called AFTER the event that changes the map, not before.
   if (typeof metroMap == 'object') {
     activeMap = metroMap;
     saveMapHistory(activeMap)
@@ -3920,14 +3921,14 @@ function setAllStationOrientations(metroMap, orientation) {
         if (Object.keys(metroMap[x][y]).indexOf('station') == -1)
           continue
         metroMap[x][y]["station"]["orientation"] = orientation
-      }
-    }
-  }
-}
+      } // for y
+    } // for x
+  } // mapDataVersion
+} // setAllStationOrientations(metroMap, orientation)
 $('#set-all-station-name-orientation').on('click', function() {
-  autoSave(activeMap)
   var orientation = $('#set-all-station-name-orientation-choice').val()
   setAllStationOrientations(activeMap, orientation)
+  autoSave(activeMap)
   drawCanvas()
   setTimeout(function() {
     $('#set-all-station-name-orientation').removeClass('active')
