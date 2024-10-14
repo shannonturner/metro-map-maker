@@ -621,8 +621,6 @@ class MapDataView(TemplateView):
                 saved_map = SavedMap.objects.create(**map_details)
                 context['saved_map'] = f'{urlhash},{naming_token}'
             except MultipleObjectsReturned:
-                # This should never happen, but it happened once
-                # Perhaps this was due to a race condition?
                 context['saved_map'] = f'{urlhash},'
         else:
             # Anything that appears before the first colon will be internal-only;

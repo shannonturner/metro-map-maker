@@ -145,10 +145,10 @@ class SavedMap(models.Model):
             return 0
 
     @staticmethod
-    def get_stations(data=None, data_version=2):
+    def get_stations(data=None, data_version=3):
         stations = set()
 
-        if data_version == 2 and data:
+        if data_version >= 2 and data:
             for x in data.get('stations', {}):
                 for y in data['stations'][x]:
                     stations.add(data['stations'][x][y].get('name', '').lower())
