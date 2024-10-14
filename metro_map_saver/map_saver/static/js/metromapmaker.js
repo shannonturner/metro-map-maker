@@ -1264,8 +1264,8 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
     }
   }
   t1 = performance.now();
-  if (MMMDEBUG) { console.log('drawCanvas finished in ' + (t1 - t0) + 'ms') }
-} // drawCanvas(metroMap)
+  if (MMMDEBUG) { console.log('drawCanvas(map, ' + stationsOnly + ', ' + clearOnly + ') finished in ' + (t1 - t0) + 'ms') }
+} // drawCanvas(metroMap, stationsOnly, clearOnly)
 
 function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth, lineStyle) {
   // Draw a single point at position x, y
@@ -3723,7 +3723,7 @@ $(document).ready(function() {
       restyleAllLines(mapLineWidth)
     }
     autoSave(activeMap)
-    drawCanvas()
+    // Since restyleAllLines calls drawCanvas, I don't need to here.
   })
 
   $('.map-style-station').on('click', function() {
@@ -4734,9 +4734,9 @@ function restyleAllLines(toWidth, toStyle, deferSave) {
     activeMap = newMapObject
     if (!deferSave) {
       autoSave(activeMap)
+      drawCanvas(activeMap)
     }
-    drawCanvas(activeMap)
-} // restyleAllLines(toWidth, toStyle)
+} // restyleAllLines(toWidth, toStyle, deferSave)
 
 function upgradeMapDataVersion(desiredMapDataVersion) {
   // Upgrades to the highest mapDataVersion possible.
