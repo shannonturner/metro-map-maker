@@ -3831,7 +3831,7 @@ $(document).ready(function() {
     }
     drawCanvas(activeMap, true);
     drawIndicator(x, y);
-  }); // $('#station-name-orientation').change()
+  }); // $('#station-style').change()
 
   $('#station-transfer').click(function() {
     var x = $('#station-coordinates-x').val();
@@ -4702,7 +4702,7 @@ $('#tool-ruler').on('click', function() {
 $('#tool-undo').on('click', undo)
 $('#tool-redo').on('click', redo)
 
-function restyleAllLines(toWidth, toStyle) {
+function restyleAllLines(toWidth, toStyle, deferSave) {
     var newMapObject = {"points_by_color": {}}
     newMapObject["stations"] = Object.assign({}, activeMap["stations"])
     newMapObject["global"] = Object.assign({}, activeMap["global"])
@@ -4732,7 +4732,9 @@ function restyleAllLines(toWidth, toStyle) {
       compatibilityModeIndicator()
     }
     activeMap = newMapObject
-    autoSave(activeMap)
+    if (!deferSave) {
+      autoSave(activeMap)
+    }
     drawCanvas(activeMap)
 } // restyleAllLines(toWidth, toStyle)
 
@@ -4803,7 +4805,7 @@ function upgradeMapDataVersion(desiredMapDataVersion) {
     if (activeMap["global"] && activeMap["global"]["style"] && activeMap["global"]["style"]["mapLineStyle"]) {
       toStyle = activeMap["global"]["style"]["mapLineStyle"]
     }
-    restyleAllLines(toWidth, toStyle)
+    restyleAllLines(toWidth, toStyle, true)
   }
   // Delete undo/redo history, because I don't want to be able to downgrade to a lower mapDataVersion by undoing
   mapHistory = []
