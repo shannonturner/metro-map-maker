@@ -1946,7 +1946,7 @@ function loadMapFromUndoRedo(previousMap) {
     $('.rail-line').remove();
     var previousMap = JSON.parse(previousMap)
     loadMapFromObject(previousMap)
-    setMapSize(previousMap)
+    setMapSize(previousMap, true)
     drawCanvas(previousMap)
     if (previousMap['global'] && previousMap['global']['style']) {
       mapLineWidth = previousMap['global']['style']['mapLineWidth'] || mapLineWidth || 1
@@ -3309,21 +3309,21 @@ $(document).ready(function() {
     $('.tooltip').hide();
   }); // #tool-resize-all.click()
   $('.resize-grid').click(function() {
-    autoSave(activeMap)
     var lastToolUsed = activeTool;
     activeTool = 'resize'
     size = $(this).attr('id').split('-').slice(2);
     // Indicate which size the map is now sized to, and reset any other buttons
     resetResizeButtons(size)
-    if (activeMap && activeMap['global'] && activeMap['global']['map_size']) {
+    if (mapDataVersion >= 2) {
         activeMap['global']['map_size'] = parseInt(size)
     }
     setMapSize(activeMap, true)
     activeTool = lastToolUsed; // Reset tool after drawing the grid to avoid undefined behavior when eraser was the last-used tool
+    autoSave(activeMap)
   }); // .resize-grid.click()
   $('#tool-resize-stretch').click(function() {
-    autoSave(activeMap)
     stretchMap()
+    autoSave(activeMap)
   }) // #tool-resize-stretch.click()
   $('#tool-move-all').on('click', function() {
     if ($('#tool-move-options').is(':visible')) {
@@ -3728,7 +3728,6 @@ $(document).ready(function() {
   })
 
   $('.map-style-station').on('click', function() {
-    autoSave(activeMap)
     mapStationStyle = $(this).data('station-style')
     $('.map-style-station.active-mapstyle').removeClass('active-mapstyle')
     $(this).addClass('active-mapstyle')
