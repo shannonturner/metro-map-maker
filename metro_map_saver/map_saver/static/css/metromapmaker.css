@@ -314,6 +314,7 @@ canvas#grid-canvas, canvas#hover-canvas {
 
 #controls.collapsed #line-color-options {
   overflow-x: clip;
+  width: 100%;
 }
 
 #controls.collapsed button.rail-line {
