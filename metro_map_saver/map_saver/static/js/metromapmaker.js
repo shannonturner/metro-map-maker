@@ -3672,9 +3672,18 @@ $(document).ready(function() {
       var lineNameToChange = $('#tool-lines-to-change option:selected').text()
       var lineNameToChangeTo = $('#change-line-name').val().replaceAll('<', '').replaceAll('>', '').replaceAll('"', '').replaceAll('\\\\', '').replaceAll('/', '-') // use same replaces as in $('#create-new-rail-line').click()
 
+      var allNames = [];
+      $('.rail-line').each(function() {
+        allNames.push($(this).text());
+      });
+
       if ((lineColorToChange != lineColorToChangeTo) && (Object.keys(activeMap["global"]["lines"]).indexOf(lineColorToChangeTo) >= 0)) {
         $('#cant-save-rail-line-edits').text('Can\'t change ' + lineNameToChange + ' - it has the same color as ' + activeMap["global"]["lines"][lineColorToChangeTo]["displayName"])
-      } else {
+      }
+      else if (allNames.indexOf(lineNameToChangeTo) > -1) {
+        $('#cant-save-rail-line-edits').text('This rail line name already exists! Please choose a new name.');
+      }
+      else {
         replaceColors({
           "color": lineColorToChange,
           "name": lineNameToChange
@@ -3690,9 +3699,9 @@ $(document).ready(function() {
           activeTool = 'look'
           $('#tool-line').attr('style', '')
           $('#tool-line').removeClass('active')
-        }
-      }
-    }
+        } // if line
+      } // else
+    } // # not Edit which rail line?
     // If replacing the active line, change the active color too
     // or you'll end up drawing with a color that no longer exists among the globals
     if (activeTool == 'line' && rgb2hex(activeToolOption).slice(1, 7) == lineColorToChange)
