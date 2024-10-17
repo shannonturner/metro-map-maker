@@ -58,6 +58,8 @@ function compatibilityModeIndicator() {
 compatibilityModeIndicator()
 
 const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'] // 1-30; is set up this way to have same functionality on all keyboards
+const ALLOWED_LINE_WIDTHS = [100, 75.0, 50.0, 25.0, 12.5]
+const ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted']
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
 const ALLOWED_SIZES = [80, 120, 160, 200, 240, 360]
@@ -3091,6 +3093,12 @@ $(document).ready(function() {
     else if (event.key.toLowerCase() == 'r' && (!event.metaKey && !event.altKey)) { // R, except for Refresh
       $('#tool-ruler').trigger('click')
     }
+    else if (event.key.toLowerCase() == 'w' && (!event.metaKey && !event.altKey)) { // W, except for close window
+      cycleLineWidth()
+    }
+    else if (event.key.toLowerCase() == 'q' && (!event.metaKey && !event.altKey)) { // Q, except for quit
+      cycleLineStyle()
+    }
     else if (event.key == 'ArrowLeft' && (!event.metaKey && !event.altKey)) { // left arrow, except for "go back"
       event.preventDefault(); moveMap('left')
     }
@@ -4609,6 +4617,31 @@ $('.line-style-choice-width').on('click', function() {
     activeTool = 'line'
   }
 })
+
+function cycleLineWidth() {
+  var currentStep = ALLOWED_LINE_WIDTHS.indexOf(activeLineWidth * 100)
+  if (currentStep == -1 || currentStep == ALLOWED_LINE_WIDTHS.length-1) {
+    currentStep = 0
+  } else {
+    currentStep += 1
+  }
+  // This odd construction is because Javascript won't respect the zero after the decimal
+  var button = $('button[data-linewidth="' + ALLOWED_LINE_WIDTHS[currentStep] + '"]')
+  if (!button.length) {
+    button = $('button[data-linewidth="' + ALLOWED_LINE_WIDTHS[currentStep] +'.0"]')
+  }
+  button.trigger('click')
+} // cycleLineWidth()
+
+function cycleLineStyle() {
+  var currentStep = ALLOWED_LINE_STYLES.indexOf(activeLineStyle)
+  if (currentStep == -1 || currentStep == ALLOWED_LINE_STYLES.length-1) {
+    currentStep = 0
+  } else {
+    currentStep += 1
+  }
+  $('button[data-linestyle="' + ALLOWED_LINE_STYLES[currentStep] + '"]').trigger('click')
+} // cycleLineStyle()
 
 $('.line-style-choice-style').on('click', function() {
   $('.line-style-choice-style').removeClass('active')
