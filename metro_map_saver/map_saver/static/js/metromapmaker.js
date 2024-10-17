@@ -1989,6 +1989,7 @@ function undo() {
 
   debugUndoRedo();
   loadMapFromUndoRedo(previousMap)
+  $('.tooltip').hide()
 } // undo()
 
 function redo() {
@@ -2013,6 +2014,7 @@ function redo() {
   }
 
   loadMapFromUndoRedo(previousMap)
+  $('.tooltip').hide()
 } // redo()
 
 function debugUndoRedo() {
