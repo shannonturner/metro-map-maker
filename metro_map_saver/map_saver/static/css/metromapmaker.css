@@ -49,6 +49,7 @@ input[type=checkbox]{margin:4px 0 0;margin-top:1px\9;line-height:normal}
 #controls:not(.collapsed) button:not(.width-100):not(.rail-line) {
   width: 45%;
   height: 6rem;
+  overflow: clip;
 }
 
 #controls:not(.collapsed) #toolbox > button:not(.rail-line) {
