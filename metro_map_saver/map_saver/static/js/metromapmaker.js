@@ -1973,7 +1973,6 @@ function undo() {
   } else if (mapHistory.length == 1) {
     previousMap = mapHistory[0]
     $('span#undo-buffer-count').text('')
-    $('#tool-redo').prop('disabled', true)
   }
 
   if (mapRedoHistory.length > MAX_UNDO_HISTORY) {
@@ -1998,6 +1997,8 @@ function redo() {
   if (mapRedoHistory.length >= 1) {
     previousMap = mapRedoHistory.pop()
     mapHistory.push(previousMap)
+  } else {
+    return
   }
 
 
