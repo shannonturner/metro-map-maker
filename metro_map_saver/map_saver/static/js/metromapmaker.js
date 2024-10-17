@@ -987,7 +987,11 @@ function drawColor(color) {
     } // lineWidthStyle
   } else if (mapDataVersion == 2) {
     ctx.strokeStyle = '#' + color
-    ctx.lineWidth = activeMap['global']['style']['mapLineWidth'] * gridPixelMultiplier
+    if (activeMap && activeMap['global'] && activeMap['global']['style']) {
+      ctx.lineWidth = (activeMap['global']['style']['mapLineWidth'] || 1) * gridPixelMultiplier
+    } else {
+      ctx.lineWidth = mapLineWidth * gridPixelMultiplier
+    }
     ctx.lineCap = 'round';
     var linesAndSingletons = findLines(color)
     var lines = linesAndSingletons["lines"]
@@ -3726,10 +3730,12 @@ $(document).ready(function() {
       }
     }
     if (mapDataVersion >= 3) {
+      // Since restyleAllLines calls drawCanvas, I don't need to here.
       restyleAllLines(mapLineWidth)
+    } else {
+      drawCanvas(activeMap)
     }
     autoSave(activeMap)
-    // Since restyleAllLines calls drawCanvas, I don't need to here.
   })
 
   $('.map-style-station').on('click', function() {
