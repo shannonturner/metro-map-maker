@@ -3098,10 +3098,14 @@ $(document).ready(function() {
       $('#tool-ruler').trigger('click')
     }
     else if (event.key.toLowerCase() == 'w' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // W, except for close window
-      cycleLineWidth()
+      if (mapDataVersion >= 3) {
+        cycleLineWidth()
+      }
     }
     else if (event.key.toLowerCase() == 'q' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // Q, except for quit
-      cycleLineStyle()
+      if (mapDataVersion >= 3) {
+        cycleLineStyle()
+      }
     }
     else if (event.key == 'ArrowLeft' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // left arrow, except for "go back"
       event.preventDefault(); moveMap('left')
