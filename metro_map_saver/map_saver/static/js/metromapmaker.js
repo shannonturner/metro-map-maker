@@ -3684,7 +3684,7 @@ $(document).ready(function() {
       if ((lineColorToChange != lineColorToChangeTo) && (Object.keys(activeMap["global"]["lines"]).indexOf(lineColorToChangeTo) >= 0)) {
         $('#cant-save-rail-line-edits').text('Can\'t change ' + lineNameToChange + ' - it has the same color as ' + activeMap["global"]["lines"][lineColorToChangeTo]["displayName"])
       }
-      else if (allNames.indexOf(lineNameToChangeTo) > -1) {
+      else if (allNames.indexOf(lineNameToChangeTo) > -1 && lineNameToChange != lineNameToChangeTo) {
         $('#cant-save-rail-line-edits').text('This rail line name already exists! Please choose a new name.');
       }
       else {
