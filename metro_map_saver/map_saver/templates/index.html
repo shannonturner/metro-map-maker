@@ -478,18 +478,20 @@
       </button>
       <div id="tool-save-options" class="text-left hide-when-collapsed" style="display: none;"></div>
 
-      <button id="tool-grid" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Just hides the grid but you can still edit the map; to download your map click Download as image (Keyboard shortcut: H)">
+      <button id="tool-grid" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Adjust how many squares are visually grouped together on the grid, to make it easier to evenly space lines and stations. (Keyboard shortcut: H)">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#grid"/></svg>
-        <span class="button-label"><b><u>H</u></b>ide grid</span>
+        <span class="button-label">
+          S<b><u>h</u></b>ow Grid: <span id="grid-step">5</span>
+        </span>
       </button>
 
-      <button id="tool-ruler" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Adjust how many squares are visually grouped together on the grid, to make it easier to evenly space lines and stations. (Keyboard shortcut: R)">
+      <button id="tool-ruler" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="TODO (Keyboard shortcut: R)">
         <div id="ruler-icon-xy-container">
           <!-- TODO / N2H: Prevent reflow when X/Y coords change to ones/tens/hundreds place -->
           <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#ruler"/></svg>
           <span id="ruler-xy"></span>
         </div>
-        <span class="button-label"><b><u>R</u></b>uler: <span id="ruler-step">5</span></span>
+        <span class="button-label"><b><u>R</u></b>uler</span>
       </button>
 
       <button id="tool-zoom-in" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: +">

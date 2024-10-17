@@ -29,7 +29,7 @@ var activeLineWidthStyle = mapLineWidth + '-' + mapLineStyle
 var mapStationStyle = 'wmata'
 var menuIsCollapsed = false
 var mapSize = undefined // Not the same as gridRows/gridCols, which is the potential size; this gives the current maximum in either axis
-var rulerStep = 5
+var gridStep = 5
 
 var MMMDEBUG = true
 var MMMDEBUG_UNDO = false
@@ -770,34 +770,34 @@ function drawGrid() {
   ctx.globalAlpha = 0.5
   gridPixelMultiplier = canvas.width / gridCols;
   for (var x=0; x<gridCols; x++) {
-    if (rulerStep && x % rulerStep == 0) {
+    if (gridStep && x % gridStep == 0) {
       ctx.strokeStyle = '#60AEFF'
       if (x > 0) { // Ignore the first so we don't get two zeroes next to each other looking silly
-        var rulerX, rulerY;
+        var gridX, gridY;
         // This looks fiddly, hardcoded, and complex. (Maybe so!)
         // But all it's for is to visually center the numbers so they align with the darker line
         if (gridCols <= 240) {
-          rulerY = gridPixelMultiplier / 2
+          gridY = gridPixelMultiplier / 2
           if (x < 10) {
-            rulerX = (x * gridPixelMultiplier) + (gridPixelMultiplier / 4) + 2
+            gridX = (x * gridPixelMultiplier) + (gridPixelMultiplier / 4) + 2
           } else if (x < 100) {
-            rulerX = (x * gridPixelMultiplier) + (gridPixelMultiplier / 4)
+            gridX = (x * gridPixelMultiplier) + (gridPixelMultiplier / 4)
           } else if (x >= 100) {
-            rulerX = (x * gridPixelMultiplier) + (gridPixelMultiplier / 4) - 4
+            gridX = (x * gridPixelMultiplier) + (gridPixelMultiplier / 4) - 4
           }
         } else if (gridCols > 240) {
-          rulerY = gridPixelMultiplier / 1.25
+          gridY = gridPixelMultiplier / 1.25
           if (x < 10) {
-            rulerX = (x * gridPixelMultiplier) + (gridPixelMultiplier / 4)
+            gridX = (x * gridPixelMultiplier) + (gridPixelMultiplier / 4)
           } else if (x < 100) {
-            rulerX = (x * gridPixelMultiplier) + (gridPixelMultiplier / 4) - 3
+            gridX = (x * gridPixelMultiplier) + (gridPixelMultiplier / 4) - 3
           } else if (x < 1000) {
-            rulerX = (x * gridPixelMultiplier) + (gridPixelMultiplier / 4) - 6
+            gridX = (x * gridPixelMultiplier) + (gridPixelMultiplier / 4) - 6
           }
         }
-        ctx.fillText(x, rulerX, rulerY);
+        ctx.fillText(x, gridX, gridY);
         // And at the bottom
-        ctx.fillText(x, rulerX, (canvas.height - (gridPixelMultiplier / 4)));
+        ctx.fillText(x, gridX, (canvas.height - (gridPixelMultiplier / 4)));
       }
     } else {
       ctx.strokeStyle = '#80CEFF'
@@ -809,7 +809,7 @@ function drawGrid() {
     ctx.closePath()
   }
   for (var y=0; y<gridRows; y++) {
-    if (rulerStep && y % rulerStep == 0) {
+    if (gridStep && y % gridStep == 0) {
       ctx.strokeStyle = '#60AEFF'
       ctx.fillText(y, 0, (y * gridPixelMultiplier) + (gridPixelMultiplier / 2) + 3);
       // And at the right
@@ -826,10 +826,10 @@ function drawGrid() {
     ctx.stroke()
     ctx.closePath()
   }
-  if (!rulerStep) {
-    $('#ruler-step').text('off')
+  if (!gridStep) {
+    $('#grid-step').text('off')
   } else {
-    $('#ruler-step').text(rulerStep)
+    $('#grid-step').text(gridStep)
   }
 } // drawGrid()
 
@@ -2036,7 +2036,7 @@ function autoLoad() {
   // 1. from a URL parameter 'map' with a valid map hash
   // 2. from a map object saved in localStorage
   // 3. If neither 1 or 2, load a preset map (WMATA)
-  rulerStep = parseInt(window.localStorage.getItem('metroMapRulerStep') || rulerStep) || false
+  gridStep = parseInt(window.localStorage.getItem('metroMapGridStep') || gridStep) || false
 
   // Load from the savedMapData injected into the index.html template
   if (typeof savedMapData !== 'undefined') {
@@ -2913,15 +2913,11 @@ function resetRailLineTooltips() {
 } // resetRailLineTooltips
 
 function showGrid() {
-  $('canvas#grid-canvas').removeClass('hide-gridlines');
   $('canvas#grid-canvas').css("opacity", 1);
-  $('#tool-grid span').html('<b><u>H</u></b>ide grid');
 }
 
 function hideGrid() {
-  $('canvas#grid-canvas').addClass('hide-gridlines');
   $('canvas#grid-canvas').css("opacity", 0);
-  $('#tool-grid span').html('S<b><u>h</u></b>ow grid');
 }
 
 function setFloodFillUI() {
@@ -3268,10 +3264,7 @@ $(document).ready(function() {
     setFloodFillUI()
   }); // #tool-eraser.click()
   $('#tool-grid').click(function() {
-    if ($('canvas#grid-canvas').hasClass('hide-gridlines'))
-      showGrid()
-    else
-      hideGrid()
+    cycleGridStep()
     $('.tooltip').hide()
   }); // #tool-grid.click() (Toggle grid visibility)
   $('#tool-zoom-in').click(function() {
@@ -4719,19 +4712,25 @@ $('#label-text, #label-shape, #label-text-color, #label-bg-color-transparent, #l
   drawLabelIndicator(labelX, labelY)
 })
 
-// Ruler
-$('#tool-ruler').on('click', function() {
-  // Cycle through the ruler steps
-  var RULER_STEPS = [3, 5, 7, false]
-  var currentStep = RULER_STEPS.indexOf(rulerStep)
-  if (currentStep == -1 || currentStep == RULER_STEPS.length-1) {
-    rulerStep = RULER_STEPS[0]
+// Ruler: TODO
+$('#tool-ruler').on('click', function() {})
+
+function cycleGridStep() {
+  var GRID_STEPS = [3, 5, 7, false]
+  var currentStep = GRID_STEPS.indexOf(gridStep)
+  if (currentStep == -1 || currentStep == GRID_STEPS.length-1) {
+    gridStep = GRID_STEPS[0]
   } else {
-    rulerStep = RULER_STEPS[currentStep + 1]
+    gridStep = GRID_STEPS[currentStep + 1]
   }
-  window.localStorage.setItem('metroMapRulerStep', rulerStep);
+  if (!gridStep) {
+    hideGrid()
+  } else {
+    showGrid()
+  }
+  window.localStorage.setItem('metroMapGridStep', gridStep);
   drawGrid()
-})
+} // cycleGridStep()
 
 $('#tool-undo').on('click', undo)
 $('#tool-redo').on('click', redo)
