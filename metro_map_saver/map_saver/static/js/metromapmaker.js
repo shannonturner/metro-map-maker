@@ -3039,27 +3039,27 @@ $(document).ready(function() {
     var possibleRailLines = $('.rail-line')
     var railKey = false
 
-    if (event.key == 'z' && (event.metaKey || event.ctrlKey)) {
+    if (event.key.toLowerCase() == 'z' && (event.metaKey || event.ctrlKey)) {
       // If Control+Z is pressed
       undo();
-    }if (event.key == 'y' && (event.metaKey || event.ctrlKey)) {
+    }if (event.key.toLowerCase() == 'y' && (event.metaKey || event.ctrlKey)) {
       event.preventDefault() // Don't open the History menu
       redo();
     }
-    else if ((event.key == 'c') && (!event.metaKey && !event.ctrlKey)) { // C
+    else if ((event.key.toLowerCase() == 'c') && (!event.metaKey && !event.ctrlKey)) { // C
       if (menuIsCollapsed) {
         $('#controls-expand-menu').trigger('click')
       } else {
         $('#controls-collapse-menu').trigger('click')
       }
     }
-    else if (event.key == 'd') { // D
+    else if (event.key.toLowerCase() == 'd') { // D
       $('#tool-line').trigger('click')
     }
-    else if (event.key == 'e') { // E
+    else if (event.key.toLowerCase() == 'e') { // E
       $('#tool-eraser').trigger('click')
     }
-    else if (event.key == 'f') { // F
+    else if (event.key.toLowerCase() == 'f') { // F
       if ($('#tool-flood-fill').prop('checked')) {
         $('#tool-flood-fill').prop('checked', false)
       } else {
@@ -3067,28 +3067,28 @@ $(document).ready(function() {
       }
       setFloodFillUI()
     }
-    else if (event.key == 'g') { // G
+    else if (event.key.toLowerCase() == 'g') { // G
       if ($('#straight-line-assist').prop('checked')) {
         $('#straight-line-assist').prop('checked', false)
       } else {
         $('#straight-line-assist').prop('checked', true)
       }
     }
-    else if (event.key == 'h') { // H
+    else if (event.key.toLowerCase() == 'h') { // H
       $('#tool-grid').trigger('click')
     }
-    else if (event.key == 's') { // S
+    else if (event.key.toLowerCase() == 's') { // S
       $('#tool-station').trigger('click')
     }
-    else if (event.key == 'l')  { // L
+    else if (event.key.toLowerCase() == 'l')  { // L
       $('#tool-label').trigger('click')
     }
-    else if ((event.key == 'y') && (!event.metaKey && !event.ctrlKey)) { // Y
+    else if ((event.key.toLowerCase() == 'y') && (!event.metaKey && !event.ctrlKey)) { // Y
       if (!menuIsCollapsed && mapDataVersion > 1) {
         $('#tool-map-style').trigger('click')
       }
     }
-    else if (event.key == 'r' && (!event.metaKey && !event.altKey)) { // R, except for Refresh
+    else if (event.key.toLowerCase() == 'r' && (!event.metaKey && !event.altKey)) { // R, except for Refresh
       $('#tool-ruler').trigger('click')
     }
     else if (event.key == 'ArrowLeft' && (!event.metaKey && !event.altKey)) { // left arrow, except for "go back"
