@@ -314,9 +314,14 @@ canvas#grid-canvas, canvas#hover-canvas {
   width: 100%;
 }
 
+#controls.collapsed #line-color-options fieldset {
+  border: 0;
+  padding: 0;
+}
+
 #controls.collapsed button.rail-line {
-  margin-left: -0.75rem;
   overflow-wrap: break-word;
+  width: 5.333rem;
 }
 
 #controls.collapsed .hide-when-collapsed {

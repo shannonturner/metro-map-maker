@@ -164,19 +164,19 @@
 
         <div id="line-color-options" class="text-left">
           <fieldset>
-            <legend><span class="hide-when-collapsed">Line</span> Color <span class="hide-when-collapsed">(Keyboard Shortcuts: Number Keys)</legend>
+            <legend><span class="hide-when-collapsed">Line Color</legend>
           </fieldset>
         </div>
 
         <div id="line-style-options" class="text-left">
           <fieldset>
-            <legend>Line Size <span class="hide-when-collapsed">(Keyboard Shortcut: W)</span></legend>
+            <legend>Line Size <span class="hide-when-collapsed">(Keyboard shortcut: W)</span></legend>
             {% for line_width in ALLOWED_LINE_WIDTHS %}
               <button class="styled styling-redline line-style-choice-width" data-linewidth="{{ line_width }}">{{ line_width }}%</button>
             {% endfor %}
           </fieldset>
           <fieldset>
-            <legend>Line Style <span class="hide-when-collapsed">(Keyboard Shortcut: Q)</span></legend>
+            <legend>Line Style <span class="hide-when-collapsed">(Keyboard shortcut: Q)</span></legend>
             {% for line_style in ALLOWED_LINE_STYLES %}
               <button class="styled styling-redline line-style-choice-style" data-linestyle="{{ line_style }}">{{ line_style|title|underscore_to_space }}</button>
             {% endfor %}
