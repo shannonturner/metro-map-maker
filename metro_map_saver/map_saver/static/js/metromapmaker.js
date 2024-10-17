@@ -651,6 +651,7 @@ function bindGridSquareMouseover(event) {
     // $('#title').text([event.pageX, event.pageY, getCanvasXY(event.pageX, event.pageY)])
     $('#title').text(['XY: ' + getCanvasXY(event.pageX, event.pageY)])
   }
+  $('#ruler-xy').text(getCanvasXY(event.pageX, event.pageY))
   xy = getCanvasXY(event.pageX, event.pageY)
   hoverX = xy[0]
   hoverY = xy[1]

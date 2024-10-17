@@ -326,6 +326,14 @@ canvas#grid-canvas, canvas#hover-canvas {
   display: none;
 }
 
+#controls:not(.collapsed) #ruler-icon-xy-container {
+  margin-top: 0.5rem;
+}
+
+#controls.collapsed #ruler-icon-xy-container svg {
+  display: none;
+}
+
 #tool-line-options button.rail-line:hover {
   border: 0.5rem solid rgba(255, 255, 255, 0.3);
 }
