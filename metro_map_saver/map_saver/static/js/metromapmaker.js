@@ -3049,7 +3049,7 @@ $(document).ready(function() {
       event.preventDefault() // Don't open the History menu
       redo();
     }
-    else if ((event.key.toLowerCase() == 'c') && (!event.metaKey && !event.ctrlKey)) { // C
+    else if ((event.key.toLowerCase() == 'c') && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // C
       if (menuIsCollapsed) {
         $('#controls-expand-menu').trigger('click')
       } else {
@@ -3091,22 +3091,22 @@ $(document).ready(function() {
         $('#tool-map-style').trigger('click')
       }
     }
-    else if (event.key.toLowerCase() == 'r' && (!event.metaKey && !event.altKey)) { // R, except for Refresh
+    else if (event.key.toLowerCase() == 'r' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // R, except for Refresh
       $('#tool-ruler').trigger('click')
     }
-    else if (event.key.toLowerCase() == 'w' && (!event.metaKey && !event.altKey)) { // W, except for close window
+    else if (event.key.toLowerCase() == 'w' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // W, except for close window
       cycleLineWidth()
     }
-    else if (event.key.toLowerCase() == 'q' && (!event.metaKey && !event.altKey)) { // Q, except for quit
+    else if (event.key.toLowerCase() == 'q' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // Q, except for quit
       cycleLineStyle()
     }
-    else if (event.key == 'ArrowLeft' && (!event.metaKey && !event.altKey)) { // left arrow, except for "go back"
+    else if (event.key == 'ArrowLeft' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // left arrow, except for "go back"
       event.preventDefault(); moveMap('left')
     }
     else if (event.key == 'ArrowUp') { // up arrow
       event.preventDefault(); moveMap('up')
     }
-    else if (event.key == 'ArrowRight' && (!event.metaKey && !event.altKey)) { // right arrow, except for "go forward"
+    else if (event.key == 'ArrowRight' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // right arrow, except for "go forward"
       event.preventDefault(); moveMap('right')
     }
     else if (event.key == 'ArrowDown') { // down arrow
