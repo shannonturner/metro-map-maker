@@ -2089,6 +2089,9 @@ function autoLoad() {
       drawGrid()
       bindRailLineEvents()
       drawCanvas()
+    }).always(function() {
+      upgradeMapDataVersion()
+      setMapStyle(activeMap)
     })
     if (typeof autoLoadError !== 'undefined') {
       autoLoadError = autoLoadError + 'Loading the default map.'
@@ -2250,7 +2253,7 @@ function setMapSize(metroMapObject, getFromGlobal) {
 } // setMapSize(metroMapObject)
 
 function setMapStyle(metroMap) {
-  if (metroMap['global'] && metroMap['global']['style']) {
+  if (metroMap && metroMap['global'] && metroMap['global']['style']) {
     mapLineWidth = metroMap['global']['style']['mapLineWidth'] || mapLineWidth
     mapStationStyle = metroMap['global']['style']['mapStationStyle'] || mapStationStyle
   }
@@ -4844,7 +4847,6 @@ function upgradeMapDataVersion(desiredMapDataVersion) {
     mapDataVersion = 2
     newMapObject["global"]["data_version"] = 2
     activeMap = Object.assign({}, newMapObject)
-    compatibilityModeIndicator()
   } // mapDataVersion 1
   if (mapDataVersion == 2) {
     if (desiredMapDataVersion && desiredMapDataVersion == 2) {
@@ -4862,6 +4864,7 @@ function upgradeMapDataVersion(desiredMapDataVersion) {
     }
     restyleAllLines(toWidth, toStyle, true)
   }
+  compatibilityModeIndicator()
   // Delete undo/redo history, because I don't want to be able to downgrade to a lower mapDataVersion by undoing
   mapHistory = []
   mapRedoHistory = []
