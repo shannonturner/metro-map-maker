@@ -487,11 +487,12 @@
 
       <button id="tool-ruler" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="TODO (Keyboard shortcut: R)">
         <div id="ruler-icon-xy-container">
-          <!-- TODO / N2H: Prevent reflow when X/Y coords change to ones/tens/hundreds place -->
           <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#ruler"/></svg>
-          <span id="ruler-xy"></span>
         </div>
-        <span class="button-label"><b><u>R</u></b>uler</span>
+        <span>
+            <span class="hide-when-collapsed"><b><u>R</u></b>uler: </span>
+            <span id="ruler-xy" style="display: inline;"></span>
+        </span>
       </button>
 
       <button id="tool-zoom-in" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: +">
