@@ -253,7 +253,7 @@ div.mmm-help-setting {
   left: 0;
 }
 
-canvas#grid-canvas, canvas#hover-canvas {
+canvas#grid-canvas, canvas#hover-canvas, canvas#ruler-canvas {
   z-index: 100;
   width: 100%;
   height: auto;

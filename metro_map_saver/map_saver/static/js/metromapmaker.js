@@ -30,8 +30,10 @@ var mapStationStyle = 'wmata'
 var menuIsCollapsed = false
 var mapSize = undefined // Not the same as gridRows/gridCols, which is the potential size; this gives the current maximum in either axis
 var gridStep = 5
+var rulerOn = false
+var rulerOrigin = []
 
-var MMMDEBUG = true
+var MMMDEBUG = false
 var MMMDEBUG_UNDO = false
 
 if (typeof mapDataVersion === 'undefined') {
@@ -197,6 +199,7 @@ function snapCanvasToGrid() {
   var canvasStations = document.getElementById('metro-map-stations-canvas');
   var canvasGrid = document.getElementById('grid-canvas')
   var canvasHover = document.getElementById('hover-canvas')
+  var canvasRuler = document.getElementById('ruler-canvas')
   if (canvas.height / gridCols != preferredGridPixelMultiplier) {
     // Maintain a nice, even gridPixelMultiplier so the map looks uniform at every size
     // On iPhone for Safari, canvases larger than 4096x4096 would crash, so cap it
@@ -208,22 +211,26 @@ function snapCanvasToGrid() {
       canvasStations.height = gridCols * preferredGridPixelMultiplier;
       canvasGrid.height = gridCols * preferredGridPixelMultiplier;
       canvasHover.height = gridCols * preferredGridPixelMultiplier;
+      canvasRuler.height = gridCols * preferredGridPixelMultiplier;
     } else {
       canvas.height = MAX_CANVAS_SIZE;
       canvasStations.height = MAX_CANVAS_SIZE;
       canvasGrid.height = MAX_CANVAS_SIZE;
       canvasHover.height = MAX_CANVAS_SIZE;
+      canvasRuler.height = MAX_CANVAS_SIZE;
     }
     if (gridRows * preferredGridPixelMultiplier <= MAX_CANVAS_SIZE) {
       canvas.width = gridRows * preferredGridPixelMultiplier;
       canvasStations.width = gridRows * preferredGridPixelMultiplier;
       canvasGrid.width = gridRows * preferredGridPixelMultiplier;
       canvasHover.width = gridRows * preferredGridPixelMultiplier;
+      canvasRuler.width = gridRows * preferredGridPixelMultiplier;
     } else {
       canvas.width = MAX_CANVAS_SIZE;
       canvasStations.width = MAX_CANVAS_SIZE;
       canvasGrid.width = MAX_CANVAS_SIZE;
       canvasHover.width = MAX_CANVAS_SIZE;
+      canvasRuler.width = MAX_CANVAS_SIZE;
     }
   } // if canvas.height / gridCols != preferredGridPixelMultiplier
 
@@ -649,7 +656,7 @@ function bindGridSquareEvents(event) {
 function bindGridSquareMouseover(event) {
   if (MMMDEBUG) {
     // $('#title').text([event.pageX, event.pageY, getCanvasXY(event.pageX, event.pageY)])
-    $('#title').text(['XY: ' + getCanvasXY(event.pageX, event.pageY)])
+    // $('#title').text(['XY: ' + getCanvasXY(event.pageX, event.pageY)])
   }
   $('#ruler-xy').text(getCanvasXY(event.pageX, event.pageY))
   xy = getCanvasXY(event.pageX, event.pageY)
@@ -657,7 +664,10 @@ function bindGridSquareMouseover(event) {
   hoverY = xy[1]
   if (!mouseIsDown && !$('#tool-flood-fill').prop('checked')) {
     drawHoverIndicator(event.pageX, event.pageY)
-  } else if (!mouseIsDown && (activeToolOption || activeTool == 'eraser') && $('#tool-flood-fill').prop('checked')) {
+    if (rulerOn && rulerOrigin.length > 0 && (activeTool == 'look' || activeTool == 'line' || activeTool == 'eraser')) {
+      drawRuler(hoverX, hoverY)
+    }
+  } else if (!mouseIsDown && (activeTool == 'look' || activeTool == 'draw' || activeTool == 'eraser') && $('#tool-flood-fill').prop('checked')) {
     if (activeTool == 'line' && activeToolOption) {
       indicatorColor = activeToolOption
     } else if (activeTool != 'line' && activeTool != 'eraser') {
@@ -672,6 +682,9 @@ function bindGridSquareMouseover(event) {
     dragX = event.pageX
     dragY = event.pageY
     $('#canvas-container').click()
+  }
+  if (mouseIsDown && (rulerOn && rulerOrigin.length > 0 && (activeTool == 'look' || activeTool == 'line' || activeTool == 'eraser'))) {
+    drawRuler(hoverX, hoverY)
   }
 } // bindGridSquareMouseover()
 
@@ -690,6 +703,14 @@ function bindGridSquareMouseup(event) {
 
   // Immediately clear the straight line assist indicator upon mouseup
   drawHoverIndicator(event.pageX, event.pageY)
+
+  if (rulerOn && rulerOrigin.length > 0 && (activeTool == 'line' || activeTool == 'eraser')) {
+    // Reset the rulerOrigin and clear the canvas
+    rulerOrigin = []
+    var canvas = document.getElementById('ruler-canvas')
+    var ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+  }
 }
 
 function bindGridSquareMousedown(event) {
@@ -717,6 +738,10 @@ function bindGridSquareMousedown(event) {
   } else {
     mouseIsDown = true
     currentlyClickingAndDragging = false
+  }
+
+  if (rulerOn) {
+    drawRuler(clickX, clickY, true)
   }
 } // function bindGridSquareMousedown()
 
@@ -3165,6 +3190,9 @@ $(document).ready(function() {
     } else if (activeTool == 'station') {
       $('#tool-station').addClass('active')
     }
+    if (!rulerOn && $(this).attr('id') == 'tool-ruler') {
+      $(this).removeClass('active')
+    }
   })
   $('#toolbox button.rail-line').on('click', function() {
     $('.active').removeClass('active')
@@ -4737,8 +4765,67 @@ $('#label-text, #label-shape, #label-text-color, #label-bg-color-transparent, #l
   drawLabelIndicator(labelX, labelY)
 })
 
-// Ruler: TODO
-$('#tool-ruler').on('click', function() {})
+$('#tool-ruler').on('click', function() {
+  rulerOn = !rulerOn
+  rulerOrigin = []
+  var canvas = document.getElementById('ruler-canvas')
+  var ctx = canvas.getContext('2d')
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+})
+
+function drawRuler(x, y, replaceOrigin) {
+  // Displays a hover indicator on the hover canvas at x,y
+  var canvas = document.getElementById('ruler-canvas')
+  var ctx = canvas.getContext('2d')
+  ctx.globalAlpha = 0.33
+  ctx.fillStyle = '#2ECC71'
+  ctx.strokeStyle = '#2ECC71'
+  var gridPixelMultiplier = canvas.width / gridCols
+  if (rulerOrigin.length == 0) {
+    // Just draw the point
+    ctx.fillRect((x - 0.5) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, gridPixelMultiplier, gridPixelMultiplier)
+  } else if (rulerOrigin.length > 0) {
+    // Calculate distance between this and origin
+
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    // Re-draw the origin
+    ctx.fillRect((rulerOrigin[0] - 0.5) * gridPixelMultiplier, (rulerOrigin[1] - 0.5) * gridPixelMultiplier, gridPixelMultiplier, gridPixelMultiplier)
+
+    // Draw the new point
+    ctx.fillRect((x - 0.5) * gridPixelMultiplier, (y - 0.5) * gridPixelMultiplier, gridPixelMultiplier, gridPixelMultiplier)
+
+    // Connect the two points
+    ctx.beginPath()
+    ctx.lineWidth = gridPixelMultiplier
+    ctx.lineCap = 'round'
+    ctx.moveTo((rulerOrigin[0] * gridPixelMultiplier), (rulerOrigin[1] * gridPixelMultiplier))
+    ctx.lineTo(x * gridPixelMultiplier, y * gridPixelMultiplier)
+    ctx.stroke()
+    ctx.closePath()
+
+    // Draw the distance near the cursor
+    ctx.textAlign = 'start'
+    ctx.font = '700 ' + gridPixelMultiplier + 'px sans-serif'
+    ctx.fillStyle = '#000000'
+    var pointDistance = ''
+    var deltaX = Math.abs(rulerOrigin[0] - x)
+    var deltaY = Math.abs(rulerOrigin[1] - y)
+    if ((!deltaX && deltaY) || (deltaX && !deltaY)) {
+      // Straight line along one axis, don't need to show both
+      pointDistance += (deltaX + deltaY)
+    } else if (deltaX && deltaY) {
+      // Show both x, y difference
+      pointDistance += deltaX + ', ' + deltaY
+    }
+    ctx.fillText(pointDistance, (x + 1) * gridPixelMultiplier, (y + 1) * gridPixelMultiplier)
+  }
+  if (replaceOrigin) {
+    // Don't replace the origin on hover
+    rulerOrigin = [x, y]
+  }
+} // drawRuler(x, y, replaceOrigin)
 
 function cycleGridStep() {
   var GRID_STEPS = [3, 5, 7, false]
