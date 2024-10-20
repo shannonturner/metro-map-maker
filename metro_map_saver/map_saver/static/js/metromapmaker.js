@@ -4808,6 +4808,7 @@ function drawRuler(x, y, replaceOrigin) {
     // Draw the distance near the cursor
     ctx.textAlign = 'start'
     ctx.font = '700 ' + gridPixelMultiplier + 'px sans-serif'
+    ctx.globalAlpha = 0.67
     ctx.fillStyle = '#000000'
     var pointDistance = ''
     var deltaX = Math.abs(rulerOrigin[0] - x)
