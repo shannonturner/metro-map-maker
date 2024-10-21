@@ -667,7 +667,7 @@ function bindGridSquareMouseover(event) {
     if (rulerOn && rulerOrigin.length > 0 && (activeTool == 'look' || activeTool == 'line' || activeTool == 'eraser')) {
       drawRuler(hoverX, hoverY)
     }
-  } else if (!mouseIsDown && (activeTool == 'look' || activeTool == 'draw' || activeTool == 'eraser') && $('#tool-flood-fill').prop('checked')) {
+  } else if (!mouseIsDown && (activeToolOption || activeTool == 'eraser') && $('#tool-flood-fill').prop('checked')) {
     if (activeTool == 'line' && activeToolOption) {
       indicatorColor = activeToolOption
     } else if (activeTool != 'line' && activeTool != 'eraser') {
