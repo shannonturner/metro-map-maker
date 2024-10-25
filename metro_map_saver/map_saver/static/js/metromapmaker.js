@@ -2648,6 +2648,7 @@ function disableRightClick(event) {
 function enableRightClick() {
   document.getElementById('grid-canvas').removeEventListener('contextmenu', disableRightClick);
   document.getElementById('hover-canvas').removeEventListener('contextmenu', disableRightClick);
+  document.getElementById('ruler-canvas').removeEventListener('contextmenu', disableRightClick);
 } // enableRightClick()
 
 function getCanvasXY(pageX, pageY) {
@@ -2850,6 +2851,7 @@ function downloadImage(canvas, showImg) {
     if (showImg) {
       $('#grid-canvas').hide();
       $('#hover-canvas').hide();
+      $('#ruler-canvas').hide();
       $('#metro-map-canvas').hide();
       $('#metro-map-stations-canvas').hide();
       $('#metro-map-image').attr('src', imageData)
@@ -2872,6 +2874,7 @@ function downloadImage(canvas, showImg) {
       if (showImg) {
         $('#grid-canvas').hide();
         $('#hover-canvas').hide();
+        $('#ruler-canvas').hide();
         $('#metro-map-canvas').hide();
         $('#metro-map-stations-canvas').hide();
         $('#metro-map-image').attr('src', pngUrl)
@@ -3041,6 +3044,7 @@ $(document).ready(function() {
   // Disable right-click on the grid/hover canvases (but not on the map canvas/image)
   document.getElementById('grid-canvas').addEventListener('contextmenu', disableRightClick);
   document.getElementById('hover-canvas').addEventListener('contextmenu', disableRightClick);
+  document.getElementById('ruler-canvas').addEventListener('contextmenu', disableRightClick);
 
   // Enable the tooltips
   $(function () {
@@ -3535,6 +3539,7 @@ $(document).ready(function() {
     if ($('#grid-canvas').is(':visible')) {
       $('#grid-canvas').hide();
       $('#hover-canvas').hide();
+      $('#ruler-canvas').hide();
       $('#metro-map-canvas').hide();
       $('#metro-map-stations-canvas').hide();
       var canvas = document.getElementById('metro-map-canvas');
@@ -3553,6 +3558,7 @@ $(document).ready(function() {
     } else {
       $('#grid-canvas').show();
       $('#hover-canvas').show();
+      $('#ruler-canvas').show();
       $('#metro-map-canvas').show();
       $('#metro-map-stations-canvas').show();
       $("#metro-map-image").hide();
@@ -4521,6 +4527,7 @@ function editOnSmallScreen() {
   }
   $('#grid-canvas').show();
   $('#hover-canvas').show();
+  $('#ruler-canvas').show();
   $('#metro-map-canvas').show();
   $('#metro-map-stations-canvas').show();
   $('#metro-map-image').hide()
