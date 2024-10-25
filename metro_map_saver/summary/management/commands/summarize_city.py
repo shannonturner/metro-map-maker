@@ -38,6 +38,8 @@ class Command(BaseCommand):
         # Find maps that don't have city set, but do have either a name or suggested_city
         maps = SavedMap.objects.filter(city=None).exclude((Q(name='') & Q(suggested_city='')))
 
+        # TODO: this is all pretty slow and could be sped up quite a bit
+
         if not alltime:
             since = datetime.date.today() - datetime.timedelta(days=7)
             maps = maps.filter(created_at__date__gte=since)

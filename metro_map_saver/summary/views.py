@@ -265,7 +265,7 @@ class CityListView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        city = request.POST.get('city')
+        city = request.POST.get('city', '').replace('/', ' ')
         if city:
             return HttpResponseRedirect(reverse_lazy('city', args=(city, )))
         else:

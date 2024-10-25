@@ -31,11 +31,40 @@ SVG_TEMPLATE = Template('''
 </svg>
 ''')
 
+# For use with data_version >= 3
+SVG_TEMPLATE_V3 = Template('''
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ canvas_size|default:80 }} {{ canvas_size|default:80 }}">
+{% spaceless %}
+{% load metromap_utils %}
+{% if stations %}
+    <style>text { font: 1px Helvetica; font-weight: 600; white-space: pre; dominant-baseline: central; } line { stroke-width: {{ line_size|default:1 }}; fill: none; stroke-linecap: round; stroke-linejoin: round; }{% for hex, class_name in color_map.items %} .{{ class_name }} { stroke: #{{ hex }} }{% endfor %} {% get_line_width_styles_for_svg_style shapes_by_color %}</style>
+    {% get_station_styles_in_use stations default_station_shape line_size %}
+{% else %}
+    <style>line { stroke-width: {{ line_size|default:1 }}; fill: none; stroke-linecap: round; stroke-linejoin: round; }{% for hex, class_name in color_map.items %} .{{ class_name }} { stroke: #{{ hex }} }{% endfor %} {% get_line_width_styles_for_svg_style shapes_by_color %}</style>
+{% endif %}
+    {% for color, line_width_style in shapes_by_color.items %}
+        {% for width_style, shapes in line_width_style.items %}
+            {% for line in shapes.lines %}
+                <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}"/>
+            {% endfor %}
+            {% for point in shapes.points %}
+                {% if default_station_shape == 'rect' %}
+                    <rect x="{{ point.0|add:-0.5 }}" y="{{ point.1|add:-0.5 }}" w="1" h="1" fill="#{{ color }}" />
+                {% else %}
+                    <circle cx="{{ point.0 }}" cy="{{ point.1 }}" r="{{ point.size|default:1 }}" fill="#{{ color }}" />
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    {% endfor %}
+{% endspaceless %}
+</svg>
+''')
+
 STATIONS_SVG_TEMPLATE = Template('''
 {% spaceless %}
 {% load metromap_utils %}
 {% for station in stations %}
-    {% station_marker station default_station_shape line_size points_by_color stations %}
+    {% station_marker station default_station_shape line_size points_by_color stations data_version %}
     {% station_text station %}
 {% endfor %}
 {% endspaceless %}
@@ -73,9 +102,12 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
             # Order matters
             1: reversed(ALLOWED_MAP_SIZES),
             2: reversed(ALLOWED_MAP_SIZES),
+            3: reversed(ALLOWED_MAP_SIZES),
         }
     }
     allowed_sizes = allowed_sizes[map_type][data_version]
+
+    linewidthstyles_by_xy = {}
 
     if map_type == 'classic' and data_version == 1:
         # Ex: [0][1]['line']: 'bd1038'
@@ -163,6 +195,49 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
 
                     points_by_color[line_color]['xy'].add((x, y))
 
+    elif map_type == 'classic' and data_version == 3:
+        colors_by_xy = {}
+
+        default_station_shape = mapdata['global'].get('style', {}).get('mapStationStyle', 'wmata')
+
+        for line_color in mapdata['points_by_color']:
+            for width_style in mapdata['points_by_color'][line_color]:
+                for x in mapdata['points_by_color'][line_color][width_style]:
+                    for y in mapdata['points_by_color'][line_color][width_style][x]:
+                        x = str(x)
+                        y = str(y)
+                        if x not in VALID_XY or y not in VALID_XY:
+                            continue
+
+                        if mapdata['points_by_color'][line_color][width_style][x][y] != 1:
+                            continue
+
+                        if line_color not in points_by_color:
+                            points_by_color[line_color] = {
+                                width_style: set(),
+                            }
+                        elif width_style not in points_by_color[line_color]:
+                            points_by_color[line_color][width_style] = set()
+
+                        colors_by_xy[f'{x},{y}'] = line_color
+                        linewidthstyles_by_xy[f'{x},{y}'] = width_style
+
+                        x = int(x)
+                        y = int(y)
+
+                        if x > highest_seen:
+                            highest_seen = x
+                        if y > highest_seen:
+                            highest_seen = y
+
+                        points_by_color[line_color][width_style].add((x, y))
+
+    if map_type == 'classic' and data_version >= 2:
+
+        default_line_width = mapdata['global'].get('style', {}).get('mapLineWidth', 1)
+        default_line_style = mapdata['global'].get('style', {}).get('mapLineStyle', 'solid')
+        default_line_width_style = f'{default_line_width}-{default_line_style}'
+
         for x in mapdata['stations']:
             for y in mapdata['stations'][x]:
                 if x not in VALID_XY or y not in VALID_XY:
@@ -174,11 +249,13 @@ def sort_points_by_color(mapdata, map_type='classic', data_version=1):
                     'orientation': station.get('orientation', 0),
                     'xy': (int(x), int(y)),
                     'color': colors_by_xy[f'{x},{y}'],
+                    'line_width_style': linewidthstyles_by_xy.get(f'{x},{y}', default_line_width_style)
                 }
                 if station.get('transfer'):
                     station_data['transfer'] = 1
                 station_data['style'] = station.get('style', default_station_shape)
                 stations.append(station_data)
+
 
     for size in allowed_sizes:
         if highest_seen < size:
@@ -342,7 +419,7 @@ def reduce_straight_line(line):
     # Can't be reduced further
     return line
 
-def get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, points_by_color, stations=False):
+def get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_station_shape, points_by_color, stations=False, data_version=3):
 
     """ Finally, let's draw SVG from the sorted shapes by color.
 
@@ -365,9 +442,12 @@ def get_svg_from_shapes_by_color(shapes_by_color, map_size, line_size, default_s
         'color_map': {color: f'c{index}' for index, color in enumerate(points_by_color.keys())},
     }
 
-    return SVG_TEMPLATE.render(Context(context))
+    if data_version >= 3:
+        return SVG_TEMPLATE_V3.render(Context(context))
+    else:
+        return SVG_TEMPLATE.render(Context(context))
 
-def add_stations_to_svg(thumbnail_svg, line_size, default_station_shape, points_by_color, stations):
+def add_stations_to_svg(thumbnail_svg, line_size, default_station_shape, points_by_color, stations, data_version):
 
     """ This allows me to avoid generating the map SVG twice
         (once for thumbnails, once for stations)
@@ -383,6 +463,7 @@ def add_stations_to_svg(thumbnail_svg, line_size, default_station_shape, points_
         'default_station_shape': default_station_shape,
         'points_by_color': points_by_color,
         'stations': stations,
+        "data_version": data_version,
     }
 
     return thumbnail_svg.replace('</svg>', STATIONS_SVG_TEMPLATE.render(Context(context)))
