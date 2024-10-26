@@ -649,7 +649,7 @@
     var v7CloseWhatsNewCount = parseInt(window.localStorage.getItem('v7-close-whats-new-count') || 0)
     if (v7CloseWhatsNewCount <= 1) {
       // They've seen it 0-2 times, show it until they've clicked hide twice
-      $('#announcement').append('<h4 id="announce-whats-new" style="text-align: left;">October 2024: Mix and match line widths and styles, plus <a href="{% url "help" %}">lots more new features</a>! <a href="{% url "help" %}">See what\'s new</a> or <span id="close-whats-new" class="close-announcement" style="text-decoration: underline; cursor: pointer;">close this message</span>.</h4>')
+      $('#announcement').append('<h4 id="announce-whats-new" class="hide-when-collapsed" style="text-align: left;">Coming soon (November 9, 2024): Mix and match line widths and styles, plus <a href="{% url "help" %}">lots more new features</a>! <a href="{% url "help" %}">See what\'s new</a> or <span id="close-whats-new" class="close-announcement" style="text-decoration: underline; cursor: pointer;">close this message</span>.</h4>')
     }
 
     // TODO: After removing v7CloseWhatsNew, replace it with howToMMM:
