@@ -2889,7 +2889,7 @@ function downloadImage(canvas, showImg) {
 
 function resetResizeButtons(size) {
   $('.resize-grid').each(function() {
-    if ($(this).html().split(' ')[0] == 'Current') {
+    if ($(this).text().indexOf('Current') > -1) {
       var resizeButtonSize = $(this).attr('id').split('-').slice(2);
       var resizeButtonLabel = resizeButtonSize + 'x' + resizeButtonSize;
       $(this).text(resizeButtonLabel);
