@@ -1989,6 +1989,7 @@ function loadMapFromUndoRedo(previousMap) {
     }
     resetResizeButtons(gridCols)
     resetRailLineTooltips()
+    resetStyleButtons()
   } // if (previousMap)
 } // loadMapFromUndoRedo(previousMap)
 
@@ -2903,6 +2904,24 @@ function resetResizeButtons(size) {
     $('#tool-resize-stretch').hide()
   }
 } // function resetResizeButtons()
+
+function resetStyleButtons() {
+  $('.map-style-line.active-mapstyle').removeClass('active')
+  $('.map-style-line.active-mapstyle').removeClass('active-mapstyle')
+  $('.map-style-station.active-mapstyle').removeClass('active')
+  $('.map-style-station.active-mapstyle').removeClass('active-mapstyle')
+  if (activeMap && activeMap['global'] && activeMap['global']['style']) {
+    var width = activeMap['global']['style']['mapLineWidth']
+    var stationStyle = activeMap['global']['style']['mapStationStyle']
+    if (width) {
+      $('#tool-map-style-line-' + parseInt(width * 1000)).addClass('active-mapstyle')
+    }
+    if (stationStyle) {
+      $('#tool-map-style-station-' + stationStyle).addClass('active-mapstyle')
+      $('#reset-all-station-styles').text('Set ALL stations to ' + $('#tool-map-style-station-' + stationStyle).text())
+    }
+  }
+} // resetStyleButtons()
 
 function throttle(callback, interval) {
   let enableCall = true;
@@ -4872,10 +4891,23 @@ function restyleAllLines(toWidth, toStyle, deferSave) {
         if (!newMapObject["points_by_color"][color][newLws]) {
           newMapObject["points_by_color"][color][newLws] = {}
         }
-        newMapObject["points_by_color"][color][newLws] = Object.assign(
-          newMapObject["points_by_color"][color][newLws],
-          activeMap["points_by_color"][color][lws]
-        )
+
+        // TODO: This could maybe be made more efficient?
+        // Using Object.assign is ~40x faster here (0.2ms vs 8ms on a 360x fully-filled map),
+        //  but I was running into intermittent issues where some line data could be lost
+        //  when a given line had multiple points within the same X value, leading to Y values being dropped
+        // However -- the speed difference is negligible compared to drawCanvas, so maybe not worth it
+        for (var x in activeMap["points_by_color"][color][lws]) {
+          for (var y in activeMap["points_by_color"][color][lws][x]) {
+            if (!newMapObject["points_by_color"][color][newLws]) {
+              newMapObject["points_by_color"][color][newLws] = {}
+            }
+            if (!newMapObject["points_by_color"][color][newLws][x]) {
+              newMapObject["points_by_color"][color][newLws][x] = {}
+            }
+            newMapObject["points_by_color"][color][newLws][x][y] = activeMap["points_by_color"][color][lws][x][y]
+          }
+        }
       } // lws
     } // color
     if (mapDataVersion == 2) {
