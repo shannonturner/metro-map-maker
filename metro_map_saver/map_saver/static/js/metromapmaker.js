@@ -3598,6 +3598,11 @@ $(document).ready(function() {
 
     activeMap['global']['map_size'] = 80
 
+    // I wouldn't autoSave, but if I don't,
+    //  and you Clear -> Undo -> Clear -> Undo
+    //  then the map isn't restored on Undo as it should be
+    autoSave(activeMap)
+
     snapCanvasToGrid()
     drawGrid()
     lastStrokeStyle = undefined;
