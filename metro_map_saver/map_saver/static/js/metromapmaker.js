@@ -3098,6 +3098,7 @@ $(document).ready(function() {
 
     if (event.key.toLowerCase() == 'z' && (event.metaKey || event.ctrlKey)) {
       // If Control+Z is pressed
+      event.preventDefault() // On Safari, don't open a recently-closed window
       undo();
     }if (event.key.toLowerCase() == 'y' && (event.metaKey || event.ctrlKey)) {
       event.preventDefault() // Don't open the History menu
