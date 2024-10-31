@@ -173,7 +173,7 @@
           <fieldset>
             <legend>Line Size <span class="hide-when-collapsed">(Keyboard shortcut: W)</span></legend>
             {% for line_width in ALLOWED_LINE_WIDTHS %}
-              <button class="styled styling-redline line-style-choice-width {% if forloop.first %}active-mapstyle{% endif%}" data-linewidth="{{ line_width }}">{{ line_width }}%</button>
+              <button class="styled styling-redline line-style-choice-width {% if forloop.first %}active-mapstyle{% endif %}" data-linewidth="{{ line_width }}">{% if line_width|add:0 == line_width %}{{ line_width|floatformat:0 }}{% else %}{{ line_width }}{% endif %}%</button>
             {% endfor %}
           </fieldset>
           <fieldset>
