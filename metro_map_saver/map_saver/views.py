@@ -618,6 +618,11 @@ class MapDataView(TemplateView):
                 else:
                     map_details['mapdata'] = json.dumps(mapdata)
 
+                from citysuggester.utils import MINIMUM_STATION_OVERLAP
+                if len(stations) < MINIMUM_STATION_OVERLAP:
+                    # Don't need to check these ever
+                    map_details['suggested_city_overlap'] = -2
+
                 saved_map = SavedMap.objects.create(**map_details)
                 context['saved_map'] = f'{urlhash},{naming_token}'
             except MultipleObjectsReturned:
