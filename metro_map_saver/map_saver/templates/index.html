@@ -182,7 +182,10 @@
           <fieldset>
             <legend>Line Style <span class="hide-when-collapsed">(Keyboard shortcut: Q)</span></legend>
             {% for line_style in ALLOWED_LINE_STYLES %}
-              <button class="styled styling-redline line-style-choice-style {% if forloop.first %}active-mapstyle{% endif%}" data-linestyle="{{ line_style }}">{{ line_style|title|underscore_to_space }}</button>
+              <button class="has-hover-preview styled styling-redline line-style-choice-style {% if forloop.first %}active-mapstyle{% endif%}" data-linestyle="{{ line_style }}">
+                <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#line_style_{{ line_style }}"/></svg></span>
+                <span class="style-description">{{ line_style|title|underscore_to_space }}</span>
+              </button>
             {% endfor %}
           </fieldset>
         </div>

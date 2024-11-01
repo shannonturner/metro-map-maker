@@ -529,3 +529,12 @@ select {
   word-break: break-word;
 }
 
+#line-style-options button svg {
+  stroke: #ffffff;
+}
+
+#line-style-options button.active-mapstyle svg,
+#line-style-options button svg:active {
+  stroke: #bd1038;
+}
+
