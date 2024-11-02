@@ -3050,7 +3050,9 @@ $(document).ready(function() {
 
   document.getElementById('canvas-container').addEventListener('click', bindGridSquareEvents, false);
   document.getElementById('canvas-container').addEventListener('mousedown', bindGridSquareMousedown, false);
-  document.getElementById('canvas-container').addEventListener('mousemove', throttle(bindGridSquareMouseover, 1), false);
+  // document.getElementById('canvas-container').addEventListener('mousemove', throttle(bindGridSquareMouseover, 1), false);
+  // Trying without throttle to see if we get a smoother draw
+  document.getElementById('canvas-container').addEventListener('mousemove', bindGridSquareMouseover, false);
   document.getElementById('canvas-container').addEventListener('mouseup', bindGridSquareMouseup, false);
   window.addEventListener('resize', unfreezeMapControls);
   window.addEventListener('scroll', function() {
