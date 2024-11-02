@@ -141,15 +141,15 @@ button.styling-silverline:hover {
   border-color: rgba(162, 162, 162, .4);
 }
 
-button.styling-redline:active, button.styling-redline.active, button.styled.active-mapstyle {
+button.styling-redline:active, button.styling-redline.active, button.styled.active-mapstyle, button.styling-redline.remains-active {
   color: #bd1038;
   border-color: rgba(189, 16, 56, .4);
 }
-button.styling-greenline:active, button.styling-greenline.active {
+button.styling-greenline:active, button.styling-greenline.active, button.styling-greenline.remains-active {
   color: #00b251;
   border-color: rgba(0, 178,81, .4);
 }
-button.styling-blueline:active, button.styling-blueline.active {
+button.styling-blueline:active, button.styling-blueline.active, button.styling-blueline.remains-active {
   color: #0896d7;
   border-color: rgba(8, 150, 215, .4);
 }
@@ -159,7 +159,7 @@ button.styling-silverline:active, button.styling-silverline.active {
   border-color: rgba(162, 162, 162, .4);
 }
 
-button.styled:active, button.styled.active, button.styled.active-mapstyle {
+button.styled:active, button.styled.active, button.styled.active-mapstyle, button.styled.remains-active {
   background-color: #fff;
 }
 

@@ -4799,6 +4799,7 @@ $('#label-text, #label-shape, #label-text-color, #label-bg-color-transparent, #l
 
 $('#tool-ruler').on('click', function() {
   rulerOn = !rulerOn
+  $(this).toggleClass('remains-active')
   rulerOrigin = []
   var canvas = document.getElementById('ruler-canvas')
   var ctx = canvas.getContext('2d')
