@@ -66,6 +66,8 @@
 
 <a name="top"></a>
 
+{% with mmmiconscachetoken='assets/icons/mmm-icons.svg'|static_cache_version %}
+
 <div id="main-container" class="container-fluid">
 
   <div id="mobile-header" class="visible-xs text-left row">
@@ -78,19 +80,19 @@
           <legend>Browse Maps created by visitors like you</legend>
             <a href="{% url 'public_gallery' %}" class="width-100">
               <button class="styled styling-blueline width-100 mobile-browse">
-                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#postage-heart"/></svg>
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#postage-heart"/></svg>
                 <span class="button-label">My Favorites</span>
               </button>
             </a>
             <a href="{% url 'calendar' %}" class="width-100">
               <button class="styled styling-blueline width-100 mobile-browse">
-                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#calendar-date"/></svg>
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#calendar-date"/></svg>
                 <span class="button-label">All Maps by Date</span>
               </button>
             </a>
             <a href="{% url 'city-list' %}" class="width-100">
               <button class="styled styling-blueline width-100 mobile-browse">
-                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pin-map"/></svg>
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#pin-map"/></svg>
                 <span class="button-label">All Maps by City</span>
               </button>
             </a>
@@ -142,10 +144,10 @@
     <div id="toolbox">
 
       <button id="tool-line" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Draw a rail line on the grid (Keyboard shortcut: D)">
-          <svg id="tool-line-icon-pencil" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pencil"/></svg>
+          <svg id="tool-line-icon-pencil" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#pencil"/></svg>
           <span id="tool-line-caption-draw" class="button-label"><b><u>D</u></b>raw</span>
 
-          <svg id="tool-line-icon-paint-bucket" width="16" height="16" style="display: none;"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#paint-bucket"/></svg>
+          <svg id="tool-line-icon-paint-bucket" width="16" height="16" style="display: none;"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#paint-bucket"/></svg>
           <span id="tool-line-caption-fill" class="button-label" style="display: none;"><b><u>F</u></b>ill</span>
       </button>
       <div id="tool-line-options" style="display: none;">
@@ -174,7 +176,7 @@
             <legend>Line Size <span class="hide-when-collapsed">(Keyboard shortcut: W)</span></legend>
             {% for line_width in ALLOWED_LINE_WIDTHS %}
               <button class="has-hover-preview styled styling-redline line-style-choice-width {% if forloop.first %}active-mapstyle{% endif %}" data-linewidth="{{ line_width }}">
-                <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#line_width_{{ line_width }}"/></svg></span>
+                <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#line_width_{{ line_width }}"/></svg></span>
                 <span class="style-description">{% if line_width|add:0 == line_width %}{{ line_width|floatformat:0 }}{% else %}{{ line_width }}{% endif %}%</span>
               </button>
             {% endfor %}
@@ -183,7 +185,7 @@
             <legend>Line Style <span class="hide-when-collapsed">(Keyboard shortcut: Q)</span></legend>
             {% for line_style in ALLOWED_LINE_STYLES %}
               <button class="has-hover-preview styled styling-redline line-style-choice-style {% if forloop.first %}active-mapstyle{% endif%}" data-linestyle="{{ line_style }}">
-                <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#line_style_{{ line_style }}"/></svg></span>
+                <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#line_style_{{ line_style }}"/></svg></span>
                 <span class="style-description">{{ line_style|title|underscore_to_space }}</span>
               </button>
             {% endfor %}
@@ -191,7 +193,7 @@
         </div>
 
         <button id="rail-line-new" class="styled styling-redline width-100">
-          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#plus-circle"/></svg>
+          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#plus-circle"/></svg>
           <span>Add New Line</span>
         </button>
         <div id="tool-new-line-options" class="text-left" style="display: none">
@@ -227,13 +229,13 @@
           </fieldset>
         </div>
         <button id="rail-line-delete" class="styled styling-silverline width-100">
-          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#trash"/></svg>
+          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#trash"/></svg>
           <span class="button-label">Delete Unused Lines</span>
         </button>
       </div>
 
       <button id="tool-station" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Place a station on an existing rail line, or select an existing station (Keyboard shortcut: S)">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pin-map"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#pin-map"/></svg>
         <span class="button-label"><b><u>S</u></b>tation</span>
       </button>
       <div id="tool-station-options" class="text-left" style="display: none;">
@@ -279,15 +281,15 @@
       </div>
 
       <button id="tool-eraser" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Erase a painted rail line or station (Keyboard shortcut: E)">
-        <svg id="tool-eraser-icon-eraser" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#eraser"/></svg>
+        <svg id="tool-eraser-icon-eraser" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#eraser"/></svg>
         <span id="tool-eraser-caption-eraser" class="button-label"><b><u>E</u></b>rase</span>
 
-        <svg id="tool-eraser-icon-paint-bucket" width="16" height="16" style="display: none;"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#paint-bucket"/></svg>
+        <svg id="tool-eraser-icon-paint-bucket" width="16" height="16" style="display: none;"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#paint-bucket"/></svg>
         <span id="tool-eraser-caption-fill" class="button-label" style="font-size: 80%; display: none;">Eraser Fill</span>
       </button>
 
       <button id="tool-map-style" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Change Style of Lines and Stations (Keyboard shortcut: Y)">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#palette"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#palette"/></svg>
         <span class="button-label">St<b><u>y</u></b>le</span>
       </button>
 
@@ -297,7 +299,7 @@
           SO YOU HAVE MORE TIME TO GET THEM RIGHT
 
       <button id="tool-label" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Add a label anywhere on the map (Keyboard shortcut: L)">
-        <svg id="tool-label-icon-tags" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#tags"/></svg>
+        <svg id="tool-label-icon-tags" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#tags"/></svg>
         <span class="button-label"><b><u>L</u></b>abel</span>
       </button>
       <div id="tool-label-options" class="text-left" style="display: none;">
@@ -356,31 +358,31 @@
             -->
 
             <button id="tool-map-style-station-wmata" class="has-hover-preview map-style-station styled styling-redline" data-station-style="wmata">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-wmata"/></svg></span>
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-wmata"/></svg></span>
               <span class="style-description">Metro (Classic)</span>
             </button>
             <button id="tool-map-style-station-rect" class="has-hover-preview map-style-station styled styling-redline" data-station-style="rect">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-rect"/></svg></span>
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-rect"/></svg></span>
               <span class="style-description">Rect.</span>
             </button>
             <button id="tool-map-style-station-rect-round" class="has-hover-preview map-style-station styled styling-redline" data-station-style="rect-round">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-rect-round"/></svg></span>
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-rect-round"/></svg></span>
               <span class="style-description">Round Rect.</span>
             </button>
             <button id="tool-map-style-station-circles-thin" class="has-hover-preview map-style-station styled styling-redline" data-station-style="circles-thin">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-circles-thin"/></svg></span>
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-circles-thin"/></svg></span>
               <span class="style-description">Circles (Thin)</span>
             </button>
             <button id="tool-map-style-station-circles-lg" class="has-hover-preview map-style-station styled styling-redline" data-station-style="circles-lg">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-circles-lg"/></svg></span>
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-circles-lg"/></svg></span>
               <span class="style-description">Circles (Large)</span>
             </button>
             <button id="tool-map-style-station-circles-md" class="has-hover-preview map-style-station styled styling-redline" data-station-style="circles-md">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-circles-md"/></svg></span>
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-circles-md"/></svg></span>
               <span class="style-description">Circles (Medium)</span>
             </button>
             <button id="tool-map-style-station-circles-sm" class="has-hover-preview map-style-station styled styling-redline" data-station-style="circles-sm">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#style-circles-sm"/></svg></span>
+              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-circles-sm"/></svg></span>
               <span class="style-description">Circles (Small)</span>
             </button>
             <button id="reset-all-station-styles" class="styled styling-redline width-100">Reset to default</button>
@@ -406,7 +408,7 @@
       </div>
 
       <button id="tool-move-all" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Recenter your Metro map (Keyboard shortcuts: Arrow keys)">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-move"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#arrows-move"/></svg>
         <span class="button-label" style="font-size: 75%">Move map</span>
       </button>
       <div id="tool-move-options" class="text-left" style="display: none;">
@@ -414,22 +416,22 @@
           <legend>Move Map</legend>
           <h5 id="tool-move-v1-warning" style="display: none;">Be careful! If you move your map out of bounds, you'll lose your work. (In the next version of Metro Map Maker, you'll be prevented from going out of bounds.)</h5> <!-- "In the next version" is a bit of a misnomer, but hard to communicate which data model you're on since I'm trying hard to keep everything backwards-compatible -->
           <button id="tool-move-up" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Up arrow">
-            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-up-circle"/></svg> Move everything up</span>
+            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#arrow-up-circle"/></svg> Move everything up</span>
           </button>
           <button id="tool-move-left" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Left arrow">
-            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-left-circle"/></svg> Move everything left</span>
+            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#arrow-left-circle"/></svg> Move everything left</span>
           </button>
           <button id="tool-move-right" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Right arrow">
-            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-right-circle"/></svg> Move everything right</span>
+            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#arrow-right-circle"/></svg> Move everything right</span>
           </button>
           <button id="tool-move-down" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: Down arrow">
-            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-down-circle"/></svg> Move everything down</span>
+            <span><svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#arrow-down-circle"/></svg> Move everything down</span>
           </button>
         </fieldset>
       </div>
 
       <button id="tool-resize-all" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Resize the grid, allowing you to make larger maps">
-        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-angle-expand"/></svg>
+        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#arrows-angle-expand"/></svg>
         <span class="button-label">Resize</span>
       </button>
       <div id="tool-resize-options" class="text-left" style="display: none;">
@@ -446,29 +448,29 @@
       </div>
 
       <button id="tool-undo" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Undo a recent change to the map. (Keyboard shortcut: Control + Z, or Command + Z on Mac)">
-        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#undo"/></svg>
+        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#undo"/></svg>
         <span class="button-label">Undo <span id="undo-buffer-count"></span></span>
       </button>
       <button id="tool-redo" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Redo a recent change you just undid. (Keyboard shortcut: Control + Y, or Command + Y on Mac)">
-        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#redo"/></svg>
+        <svg class="bi" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#redo"/></svg>
         <span class="button-label">Redo <span id="redo-buffer-count"></span></span>
       </button>
 
       <button id="tool-download-image" class="width-100 has-tooltip hidden-xs styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#file-image"/></svg>
         <span class="button-label">Download {% if saved_map.svg %}(PNG){% endif %}</span>
       </button>
 
       {% if saved_map.svg %}
         <a href="{{ saved_map.svg.url }}" download="{{ saved_map.urlhash }}.svg" style="width: 100%;"><button id="tool-download-svg" class="width-100 has-tooltip styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download the map '{{ saved_map.urlhash }}' as a print-quality SVG file (does not include your edits, if any)">
-          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
+          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#file-image"/></svg>
           <span class="button-label">Download (SVG)</span>
         </button></a>
       {% endif %}
 
       <!-- Download button when on mobile -->
       <button id="tool-export-canvas" class="width-100 has-tooltip visible-xs styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Download your map to share with friends">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#file-image"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#file-image"/></svg>
         <span class="button-label">Download</span>
       </button>
 
@@ -481,13 +483,13 @@
       </div>
 
       <button id="tool-save-map" class="width-100 has-tooltip styled styling-blueline" data-toggle="tooltip" data-placement="left" title="Create a unique, shareable URL for your map">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#save"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#save"/></svg>
         <span class="button-label">Save &amp; Share</span>
       </button>
       <div id="tool-save-options" class="text-left hide-when-collapsed" style="display: none;"></div>
 
       <button id="tool-grid" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Adjust how many squares are visually grouped together on the grid, to make it easier to evenly space lines and stations. (Keyboard shortcut: H)">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#grid"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#grid"/></svg>
         <span class="button-label">
           S<b><u>h</u></b>ow Grid: <span id="grid-step">5</span>
         </span>
@@ -495,7 +497,7 @@
 
       <button id="tool-ruler" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="When on, shows distance between two points. When off, shows x,y coordinates as you move the cursor. (Keyboard shortcut: R)">
         <div id="ruler-icon-xy-container">
-          <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#ruler"/></svg>
+          <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#ruler"/></svg>
         </div>
         <span>
             <span class="hide-when-collapsed"><b><u>R</u></b>uler: </span>
@@ -504,42 +506,42 @@
       </button>
 
       <button id="tool-zoom-in" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: +">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#zoom-in"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#zoom-in"/></svg>
         <span class="button-label">Zoom <b>+</b></span>
       </button>
       <button id="tool-zoom-out" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: -">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#zoom-out"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#zoom-out"/></svg>
         <span class="button-label">Zoom <b>-</b></span>
       </button>
 
       <button id="snap-controls-left" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move all controls to the left side of the screen (Keyboard shortcut: [)">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-left-circle"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#arrow-left-circle"/></svg>
         <span class="button-label" style="font-size: 80%;">Move controls</span>
       </button>
       <button id="snap-controls-right" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move all controls to the right side of the screen (Keyboard shortcut: ])" style="display: none;">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrow-right-circle"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#arrow-right-circle"/></svg>
         <span class="button-label" style="font-size: 80%;">Move controls</span>
       </button>
 
       <button id="controls-collapse-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Collapse menu and only show icons. Only the most commonly-used controls and options are shown when collapsed. (Keyboard shortcut: C)">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-collapse-vertical"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#arrows-collapse-vertical"/></svg>
         <span class="button-label"><b><u>C</b></u>ollapse</span>
       </button>
 
       <button id="controls-expand-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Expand Menu (Keyboard shortcut: C)" style="display: none;">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#arrows-expand-vertical"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#arrows-expand-vertical"/></svg>
       </button>
 
       {% comment %}
       Hide for now, consider revisiting later
       <button id="controls-dock-menu" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Move controls to top, right, bottom, or left of screen">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#window-desktop"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#window-desktop"/></svg>
         <span class="button-label">Dock</span> <!-- TODO: this should replace "snap controls to left" and cycle between top,right,bottom,left (clockwise) -->
       </button>
       {% endcomment %}
 
       <button id="tool-clear-map" class="has-tooltip styled styling-silverline width-100" data-toggle="tooltip" data-placement="left" title="Be careful: this will delete your map">
-        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#trash"/></svg>
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#trash"/></svg>
         <span class="button-label">Clear map</span>
       </button>
 
@@ -550,40 +552,40 @@
           <legend>Browse & Remix</legend>
             <a href="{% url 'public_gallery' %}" class="width-100">
               <button class="has-tooltip styled styling-blueline width-100" data-toggle="tooltip" data-placement="left" title="These are some of my favorite maps made by visitors like you">
-                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#postage-heart"/></svg>
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#postage-heart"/></svg>
                 <span class="button-label">My Favorites</span>
               </button>
             </a>
             <a href="{% url 'calendar' %}" class="width-100">
               <button class="has-tooltip styled styling-blueline width-100" data-toggle="tooltip" data-placement="left" title="All Metro Maps ever made by visitors like you">
-                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#calendar-date"/></svg>
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#calendar-date"/></svg>
                 <span class="button-label">All Maps by Date</span>
               </button>
             </a>
             <a href="{% url 'city-list' %}" class="width-100">
               <button class="has-tooltip styled styling-blueline width-100" data-toggle="tooltip" data-placement="left" title="All Metro Maps ever made by vistors like you, grouped by their city">
-                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#pin-map"/></svg>
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#pin-map"/></svg>
                 <span class="button-label">All Maps by City</span>
               </button>
             </a>
             {% if saved_map %}
               <a href="{% url 'calendar-day' saved_map.created_at.year saved_map.created_at.month saved_map.created_at.day %}" class="width-100">
                 <button class="has-tooltip styled styling-blueline width-100" data-toggle="tooltip" data-placement="left" title="Browse maps made on the same date as this map">
-                  <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#calendar-date"/></svg>
+                  <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#calendar-date"/></svg>
                   <span class="button-label">{{ saved_map.created_at.date }}</span>
                 </button>
               </a>
             {% else %}
               <a href="{% url 'calendar-day' today.year today.month today.day %}" class="width-100">
                 <button class="has-tooltip styled styling-blueline width-100" data-toggle="tooltip" data-placement="left" title="Browse maps made today">
-                  <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#calendar-date"/></svg>
+                  <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#calendar-date"/></svg>
                   <span class="button-label">Maps made today</span>
                 </button>
               </a>
             {% endif %}
             <a href="{% url 'help' %}" class="width-100">
               <button class="has-tooltip styled styling-greenline width-100" data-toggle="tooltip" data-placement="left" title="New to Metro Map Maker? Get help on how to get started">
-                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}#life-preserver"/></svg>
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#life-preserver"/></svg>
                 <span class="button-label">Help</span>
               </button>
             </a>
@@ -598,6 +600,8 @@
   </div> <!-- #controls -->
 
 </div> <!-- #main-container -->
+
+{% endwith %}{# mmmiconscachetoken #}
 
   <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
   {% if saved_map %}
