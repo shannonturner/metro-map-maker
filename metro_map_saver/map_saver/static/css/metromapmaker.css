@@ -451,6 +451,30 @@ select {
   }
 }
 
+@media (min-width: 1200px) and (max-width: 1499px) {
+  #controls {
+    width: 22.5%;
+  }
+}
+
+@media (min-width: 2400px) {
+  #controls {
+    width: 12.5%;
+  }
+}
+
+@media (min-width: 3000px) {
+  #controls {
+    width: 10%;
+  }
+}
+
+@media (max-width: 1099px) {
+  button#tool-grid span.button-label, button#tool-ruler span:first-child {
+    font-size: 75%;
+  }
+}
+
 @media (min-width: 768px) {
   #controls {
     position: fixed;
