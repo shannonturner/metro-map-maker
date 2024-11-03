@@ -336,6 +336,10 @@ canvas#grid-canvas, canvas#hover-canvas, canvas#ruler-canvas {
   display: none;
 }
 
+#controls.collapsed button#tool-ruler {
+  overflow: clip;
+}
+
 #tool-line-options button.rail-line:hover {
   border: 0.5rem solid rgba(255, 255, 255, 0.3);
 }
