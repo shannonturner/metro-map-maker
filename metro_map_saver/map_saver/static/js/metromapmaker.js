@@ -3135,13 +3135,15 @@ $(document).ready(function() {
         ctx.clearRect(0, 0, canvas.width, canvas.height)
       } else {
         $('#straight-line-assist').prop('checked', true)
-        for (var x=0; x<gridRows; x++) {
-          for (var y=0; y<gridCols; y++) {
-            if (x == clickX || y == clickY || Math.abs(x - clickX) == Math.abs(y - clickY)) {
-              drawHoverIndicator(x, y, '#2E71CC')
-            } // if it's a straight line from the origin
-          } // for y
-        } // for x
+        if (mouseIsDown && (activeTool == 'line' || activeTool == 'eraser')) {
+          for (var x=0; x<gridRows; x++) {
+            for (var y=0; y<gridCols; y++) {
+              if (x == clickX || y == clickY || Math.abs(x - clickX) == Math.abs(y - clickY)) {
+                drawHoverIndicator(x, y, '#2E71CC')
+              } // if it's a straight line from the origin
+            } // for y
+          } // for x
+        }
       } // #straight-line-assist checked?
     }
     else if (event.key.toLowerCase() == 'h') { // H
