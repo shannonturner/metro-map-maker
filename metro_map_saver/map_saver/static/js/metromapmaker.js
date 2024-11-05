@@ -1977,6 +1977,7 @@ function loadMapFromUndoRedo(previousMap) {
     // Remove all rail lines, they'll be replaced on loadMapFromObject()
     $('.rail-line').remove();
     var previousMap = JSON.parse(previousMap)
+    activeMap = previousMap
     loadMapFromObject(previousMap)
     setMapSize(previousMap, true)
     drawCanvas(previousMap)
