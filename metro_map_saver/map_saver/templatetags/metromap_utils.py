@@ -277,7 +277,7 @@ def get_connected_stations(x, y, stations):
 
     eligible_stations = [
         # Each station must be circles-thin, rect, or rect-round in order to qualify for connection
-        (s['xy'][0], s['xy'][1]) for s in stations if s['style'] in ALLOWED_CONNECTING_STATIONS
+        (s['xy'][0], s['xy'][1]) for s in stations if s.get('style', ALLOWED_STATION_STYLES[0]) in ALLOWED_CONNECTING_STATIONS
     ]
 
     if (x, y) not in eligible_stations:
