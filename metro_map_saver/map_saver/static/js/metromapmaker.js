@@ -7,6 +7,7 @@ var activeMap = false;
 var preferredGridPixelMultiplier = 20;
 var lastStrokeStyle;
 var redrawOverlappingPoints = {}; // Only in use by mapDataVersion 1
+var rightClicking = false;
 var dragX = false;
 var dragY = false;
 var clickX = false;
@@ -686,6 +687,12 @@ function bindGridSquareMouseover(event) {
   hoverX = xy[0]
   hoverY = xy[1]
 
+  if (rightClicking) {
+    // Pan-scroll on right click
+    window.scrollTo(event.screenX, event.screenY)
+    return
+  }
+
   if (!mouseIsDown && activeTool == 'eyedropper') {
     var clws = getActiveLine(xy[0], xy[1], activeMap, true)
     if (clws) {
@@ -738,6 +745,7 @@ function bindGridSquareMouseup(event) {
   clickY = false
 
   mouseIsDown = false
+  rightClicking = false
 
   // Immediately clear the straight line assist indicator upon mouseup
   drawHoverIndicator(event.pageX, event.pageY)
@@ -757,6 +765,11 @@ function bindGridSquareMousedown(event) {
   xy = getCanvasXY(event.pageX, event.pageY)
   clickX = xy[0]
   clickY = xy[1]
+
+  if (event.button == 2) {
+    // Right click
+    rightClicking = true
+  }
 
   // Visually indicate which squares you can fill in with
   //  straight line assist
