@@ -671,6 +671,7 @@ function bindGridSquareEvents(event) {
         $('#rail-line-' + clws).trigger('click')
       }
       $('#tool-eyedropper').removeClass('active')
+      $('#tool-eyedropper').removeAttr('style')
     } // if color, lineWidthStyle
   }
 } // bindGridSquareEvents()
@@ -684,7 +685,21 @@ function bindGridSquareMouseover(event) {
   xy = getCanvasXY(event.pageX, event.pageY)
   hoverX = xy[0]
   hoverY = xy[1]
-  // TODO: Consider whether eyedropper should preview which color you'll get
+
+  if (!mouseIsDown && activeTool == 'eyedropper') {
+    var clws = getActiveLine(xy[0], xy[1], activeMap, true)
+    if (clws) {
+      if (mapDataVersion >= 3) {
+        var color = clws[0]
+      } else {
+        var color = clws
+      }
+      $('#tool-eyedropper').css({'background-color': '#' + color, 'color': '#ffffff'})
+    } else {
+      $('#tool-eyedropper').removeAttr('style')
+    }
+  }
+
   if (!mouseIsDown && !$('#tool-flood-fill').prop('checked')) {
     drawHoverIndicator(event.pageX, event.pageY)
     if (rulerOn && rulerOrigin.length > 0 && (activeTool == 'look' || activeTool == 'line' || activeTool == 'eraser')) {
