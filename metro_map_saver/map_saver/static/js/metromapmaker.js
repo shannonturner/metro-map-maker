@@ -3186,6 +3186,11 @@ $(document).ready(function() {
     else if (event.key.toLowerCase() == 'l')  { // L
       $('#tool-label').trigger('click')
     }
+    else if (event.key.toLowerCase() == 'o' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // O, except for Open
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        cycleSelectMenu(document.getElementById('station-name-orientation'))
+      }
+    }
     else if (event.key.toLowerCase() == 'p' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // P, except for Print
       $('#tool-eyedropper').trigger('click')
     }
