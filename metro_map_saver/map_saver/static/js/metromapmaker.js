@@ -650,6 +650,28 @@ function bindGridSquareEvents(event) {
     makeStation(x, y)
   } else if (activeTool == 'label') {
     makeLabel(x, y)
+  } else if (activeTool == 'eyedropper') {
+    var clws = getActiveLine(x, y, activeMap, true)
+    if (clws) {
+      // Click the color, and set the line width/style, too.
+      if (mapDataVersion >= 3) {
+        $('#rail-line-' + clws[0]).trigger('click')
+        var lws = clws[1]
+        activeLineWidth = lws.split('-')[0]
+        activeLineStyle = lws.split('-')[1]
+        activeLineWidthStyle = lws
+        // This odd construction is because Javascript won't respect the zero after the decimal
+        var button = $('button[data-linewidth="' + ALLOWED_LINE_WIDTHS[ALLOWED_LINE_WIDTHS.indexOf(activeLineWidth * 100)] + '"]')
+        if (!button.length) {
+          button = $('button[data-linewidth="' + ALLOWED_LINE_WIDTHS[ALLOWED_LINE_WIDTHS.indexOf(activeLineWidth * 100)] +'.0"]')
+        }
+        button.trigger('click')
+        $('button[data-linestyle="' + ALLOWED_LINE_STYLES[ALLOWED_LINE_STYLES.indexOf(activeLineStyle)] + '"]').trigger('click')
+      } else {
+        $('#rail-line-' + clws).trigger('click')
+      }
+      $('#tool-eyedropper').removeClass('active')
+    } // if color, lineWidthStyle
   }
 } // bindGridSquareEvents()
 
@@ -3164,6 +3186,9 @@ $(document).ready(function() {
     else if (event.key.toLowerCase() == 'r' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // R, except for Refresh
       $('#tool-ruler').trigger('click')
     }
+    else if (event.key.toLowerCase() == 'p' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // P, except for Print
+      $('#tool-eyedropper').trigger('click')
+    }
     else if (event.key.toLowerCase() == 'w' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // W, except for close window
       if (mapDataVersion >= 3) {
         cycleLineWidth()
@@ -4875,6 +4900,10 @@ function drawRuler(x, y, replaceOrigin) {
     rulerOrigin = [x, y]
   }
 } // drawRuler(x, y, replaceOrigin)
+
+$('#tool-eyedropper').on('click', function() {
+  activeTool = 'eyedropper'
+})
 
 function cycleGridStep() {
   var GRID_STEPS = [3, 5, 7, false]
