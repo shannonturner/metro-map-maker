@@ -3106,6 +3106,13 @@ $(document).ready(function() {
   // Trying without throttle to see if we get a smoother draw
   document.getElementById('canvas-container').addEventListener('mousemove', bindGridSquareMouseover, false);
   document.getElementById('canvas-container').addEventListener('mouseup', bindGridSquareMouseup, false);
+
+  // Better support for mobile
+  document.getElementById('canvas-container').addEventListener('touchstart', bindGridSquareEvents, false);
+  document.getElementById('canvas-container').addEventListener('touchmove', bindGridSquareMouseover, false);
+  document.getElementById('canvas-container').addEventListener('touchend', bindGridSquareMouseup, false);
+  document.getElementById('canvas-container').addEventListener('touchcancel', bindGridSquareMouseup, false);
+
   window.addEventListener('resize', unfreezeMapControls);
   window.addEventListener('scroll', function() {
     $('.tooltip').hide()
