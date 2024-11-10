@@ -684,6 +684,7 @@ function bindGridSquareMouseover(event) {
   xy = getCanvasXY(event.pageX, event.pageY)
   hoverX = xy[0]
   hoverY = xy[1]
+  // TODO: Consider whether eyedropper should preview which color you'll get
   if (!mouseIsDown && !$('#tool-flood-fill').prop('checked')) {
     drawHoverIndicator(event.pageX, event.pageY)
     if (rulerOn && rulerOrigin.length > 0 && (activeTool == 'look' || activeTool == 'line' || activeTool == 'eraser')) {
@@ -3189,6 +3190,9 @@ $(document).ready(function() {
     else if (event.key.toLowerCase() == 'p' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // P, except for Print
       $('#tool-eyedropper').trigger('click')
     }
+    else if (event.key.toLowerCase() == 'k' && (!event.metaKey && !event.altKey && !event.ctrlKey)) {
+      $('#tool-look').trigger('click')
+    }
     else if (event.key.toLowerCase() == 'w' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // W, except for close window
       if (mapDataVersion >= 3) {
         cycleLineWidth()
@@ -4903,6 +4907,10 @@ function drawRuler(x, y, replaceOrigin) {
 
 $('#tool-eyedropper').on('click', function() {
   activeTool = 'eyedropper'
+})
+
+$('#tool-look').on('click', function() {
+  activeTool = 'look'
 })
 
 function cycleGridStep() {
