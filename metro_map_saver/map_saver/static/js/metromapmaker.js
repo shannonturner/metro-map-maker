@@ -3215,7 +3215,10 @@ $(document).ready(function() {
       redo();
     }
     else if ((event.key.toLowerCase() == 'y') && (!event.metaKey && !event.ctrlKey)) { // Y
-      if (!menuIsCollapsed && mapDataVersion > 1) {
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        cycleSelectMenu(document.getElementById('station-style'))
+      }
+      else if (!menuIsCollapsed && mapDataVersion > 1) {
         $('#tool-map-style').trigger('click')
       }
     }
@@ -4949,6 +4952,15 @@ function cycleGridStep() {
   window.localStorage.setItem('metroMapGridStep', gridStep);
   drawGrid()
 } // cycleGridStep()
+
+function cycleSelectMenu(select) {
+  if (select.selectedIndex >= select.options.length - 1) {
+    select.selectedIndex = 0
+  } else {
+    select.selectedIndex += 1
+  }
+  $(select).trigger('change')
+} // cycleSelectMenu(select)
 
 $('#tool-undo').on('click', undo)
 $('#tool-redo').on('click', redo)
