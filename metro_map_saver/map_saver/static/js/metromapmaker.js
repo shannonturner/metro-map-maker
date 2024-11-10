@@ -3205,6 +3205,11 @@ $(document).ready(function() {
         cycleLineWidth()
       }
     }
+    else if ((event.key.toLowerCase() == 'x') && (!event.metaKey && !event.ctrlKey)) { // X
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        $('#station-transfer').trigger('click')
+      }
+    }
     else if (event.key.toLowerCase() == 'y' && (event.metaKey || event.ctrlKey)) { // Ctrl + Y
       event.preventDefault() // Don't open the History menu
       redo();
