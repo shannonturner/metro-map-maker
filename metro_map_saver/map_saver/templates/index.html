@@ -22,7 +22,7 @@
     {% if saved_map.png %}
       <meta property="og:image" content="{{ saved_map.png.url }}">
     {% elif saved_map %}
-      <meta property="og:image" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
+      <meta property="og:image" content="/media/{{ saved_map|get_media_image_url }}">
     {% endif %}
     <meta property="og:image" content="https://metromapmaker.com/static/assets/metromapmaker.png?version=3">
 
@@ -35,7 +35,7 @@
     {% if saved_map.png %}
       <meta name="twitter:image:src" content="{{ saved_map.png.url }}">
     {% elif saved_map %}
-      <meta name="twitter:image:src" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
+      <meta name="twitter:image:src" content="/media/{{ saved_map|get_media_image_url }}">
     {% endif %}
 
     <title>

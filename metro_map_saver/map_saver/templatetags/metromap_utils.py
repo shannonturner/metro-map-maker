@@ -729,6 +729,14 @@ def map_color(color, color_map):
 def underscore_to_space(value):
     return value.replace('_', ' ')
 
+@register.filter
+def get_media_image_url(value):
+    from map_saver.models import get_image_filepath
+    try:
+        return get_image_filepath(value, 'png')
+    except Exception:
+        return ''
+
 SVG_DEFS = {
     'wmata': {
         'wm-xf': [ # WMATA transfer
