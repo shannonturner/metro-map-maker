@@ -3108,10 +3108,22 @@ $(document).ready(function() {
   document.getElementById('canvas-container').addEventListener('mouseup', bindGridSquareMouseup, false);
 
   // Better support for mobile
-  document.getElementById('canvas-container').addEventListener('touchstart', bindGridSquareEvents, false);
-  document.getElementById('canvas-container').addEventListener('touchmove', bindGridSquareMouseover, false);
-  document.getElementById('canvas-container').addEventListener('touchend', bindGridSquareMouseup, false);
-  document.getElementById('canvas-container').addEventListener('touchcancel', bindGridSquareMouseup, false);
+  document.getElementById('canvas-container').addEventListener('touchstart', function(e) {
+    console.log(`DEBUG: touchstart at ${e.pageX},${e.pageY}`)
+    bindGridSquareEvents(e)
+  }, false);
+  document.getElementById('canvas-container').addEventListener('touchmove', function(e) {
+    console.log(`DEBUG: touchmove at ${e.pageX},${e.pageY}`)
+    bindGridSquareMouseover(e)
+  }, false);
+  document.getElementById('canvas-container').addEventListener('touchend', function(e) {
+    console.log(`DEBUG: touchend at ${e.pageX},${e.pageY}`)
+    bindGridSquareMouseup(e)
+  }, false);
+  document.getElementById('canvas-container').addEventListener('touchcancel', function(e) {
+    console.log(`DEBUG: touchcancel at ${e.pageX},${e.pageY}`)
+    bindGridSquareMouseup(e)
+  }, false);
 
   window.addEventListener('resize', unfreezeMapControls);
   window.addEventListener('scroll', function() {
