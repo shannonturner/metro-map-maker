@@ -3137,15 +3137,7 @@ $(document).ready(function() {
     var possibleRailLines = $('.rail-line')
     var railKey = false
 
-    if (event.key.toLowerCase() == 'z' && (event.metaKey || event.ctrlKey)) {
-      // If Control+Z is pressed
-      event.preventDefault() // On Safari, don't open a recently-closed window
-      undo();
-    }if (event.key.toLowerCase() == 'y' && (event.metaKey || event.ctrlKey)) {
-      event.preventDefault() // Don't open the History menu
-      redo();
-    }
-    else if ((event.key.toLowerCase() == 'c') && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // C
+    if ((event.key.toLowerCase() == 'c') && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // C
       if (menuIsCollapsed) {
         $('#controls-expand-menu').trigger('click')
       } else {
@@ -3188,35 +3180,43 @@ $(document).ready(function() {
     else if (event.key.toLowerCase() == 'h') { // H
       $('#tool-grid').trigger('click')
     }
-    else if (event.key.toLowerCase() == 's') { // S
-      $('#tool-station').trigger('click')
+    else if (event.key.toLowerCase() == 'k' && (!event.metaKey && !event.altKey && !event.ctrlKey)) {
+      $('#tool-look').trigger('click')
     }
     else if (event.key.toLowerCase() == 'l')  { // L
       $('#tool-label').trigger('click')
     }
-    else if ((event.key.toLowerCase() == 'y') && (!event.metaKey && !event.ctrlKey)) { // Y
-      if (!menuIsCollapsed && mapDataVersion > 1) {
-        $('#tool-map-style').trigger('click')
+    else if (event.key.toLowerCase() == 'p' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // P, except for Print
+      $('#tool-eyedropper').trigger('click')
+    }
+    else if (event.key.toLowerCase() == 'q' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // Q, except for quit
+      if (mapDataVersion >= 3) {
+        cycleLineStyle()
       }
     }
     else if (event.key.toLowerCase() == 'r' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // R, except for Refresh
       $('#tool-ruler').trigger('click')
     }
-    else if (event.key.toLowerCase() == 'p' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // P, except for Print
-      $('#tool-eyedropper').trigger('click')
-    }
-    else if (event.key.toLowerCase() == 'k' && (!event.metaKey && !event.altKey && !event.ctrlKey)) {
-      $('#tool-look').trigger('click')
+    else if (event.key.toLowerCase() == 's') { // S
+      $('#tool-station').trigger('click')
     }
     else if (event.key.toLowerCase() == 'w' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // W, except for close window
       if (mapDataVersion >= 3) {
         cycleLineWidth()
       }
     }
-    else if (event.key.toLowerCase() == 'q' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // Q, except for quit
-      if (mapDataVersion >= 3) {
-        cycleLineStyle()
+    else if (event.key.toLowerCase() == 'y' && (event.metaKey || event.ctrlKey)) { // Ctrl + Y
+      event.preventDefault() // Don't open the History menu
+      redo();
+    }
+    else if ((event.key.toLowerCase() == 'y') && (!event.metaKey && !event.ctrlKey)) { // Y
+      if (!menuIsCollapsed && mapDataVersion > 1) {
+        $('#tool-map-style').trigger('click')
       }
+    }
+    else if (event.key.toLowerCase() == 'z' && (event.metaKey || event.ctrlKey)) { // Ctrl + Z
+      event.preventDefault() // On Safari, don't open a recently-closed window
+      undo();
     }
     else if (event.key == 'ArrowLeft' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // left arrow, except for "go back"
       event.preventDefault(); moveMap('left')
