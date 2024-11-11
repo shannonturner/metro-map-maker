@@ -3120,11 +3120,11 @@ $(document).ready(function() {
     console.log(`DEBUG: touchmove at ${e.pageX},${e.pageY}`)
     if (!$('#tool-flood-fill').prop('checked')) {
       var xy = getCanvasXY(event.pageX, event.pageY)
-    }
-    if (activeTool == 'line' && activeToolOption) {
-      makeLine(x, y)
-    } else if (activeTool == 'eraser') {
-      erase(x, y)
+        if (activeTool == 'line' && activeToolOption) {
+        makeLine(xy[0], xy[1])
+      } else if (activeTool == 'eraser') {
+        erase(xy[0], xy[1])
+      }
     }
     bindGridSquareMouseover(e)
   }, false);
