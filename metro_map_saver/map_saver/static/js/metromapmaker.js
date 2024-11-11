@@ -3121,6 +3121,12 @@ $(document).ready(function() {
   document.getElementById('canvas-container').addEventListener('mouseup', bindGridSquareMouseup, false);
 
   // Better support for mobile
+  // TODO: This works okay, but but has a few big problems:
+  // 1. The canvas frequently crashes on iOS Safari and iOS Chrome,
+  //  rendering as a black field. Perhaps clearing the canvases in a different way would help.
+  // 2. Canvas performance is extremely poor. Possibly dropping bindGridSquareMouseover on touchmove could help, but this is surely linked with the canvas crashes.
+  // 3. Would need to add a better way of scrolling (perhaps use two fingers to scroll),
+  //  so that you don't draw/erase as you're scrolling
   document.getElementById('canvas-container').addEventListener('touchstart', function(e) {
     console.log(`DEBUG: touchstart at ${e.pageX},${e.pageY}`)
     bindGridSquareEvents(e)
@@ -3145,6 +3151,7 @@ $(document).ready(function() {
     console.log(`DEBUG: touchcancel at ${e.pageX},${e.pageY}`)
     bindGridSquareMouseup(e)
   }, false);
+  // -----------------------------------------------------------------------------------
 
   window.addEventListener('resize', unfreezeMapControls);
   window.addEventListener('scroll', function() {
@@ -4864,22 +4871,28 @@ function setLineStyle(style, ctx) {
   if (style == 'solid') {
     pattern = []
     ctx.lineCap = 'round'
-  } else if (style == 'dashed') {
+  }
+  else if (style == 'dashed') {
     pattern = [gridPixelMultiplier, gridPixelMultiplier * 1.5]
     ctx.lineCap = 'square'
-  } else if (style == 'dotted_dense') {
+  }
+  else if (style == 'dotted_dense') {
     ctx.lineCap = 'butt'
     pattern = [gridPixelMultiplier / 2, gridPixelMultiplier / 4]
-  } else if (style == 'dotted') {
+  }
+  else if (style == 'dotted') {
     ctx.lineCap = 'butt'
     pattern = [gridPixelMultiplier / 2, gridPixelMultiplier / 2]
-  } else if (style == 'dense_thick') {
+  }
+  else if (style == 'dense_thick') {
     pattern = [2, 2]
     ctx.lineCap = 'butt'
-  } else if (style == 'dense_thin') {
+  }
+  else if (style == 'dense_thin') {
     pattern = [1, 1]
     ctx.lineCap = 'butt'
-  } else {
+  }
+  else {
     // Safety: fallback to solid
     pattern = []
     ctx.lineCap = 'round'
