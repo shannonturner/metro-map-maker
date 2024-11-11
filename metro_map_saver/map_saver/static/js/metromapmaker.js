@@ -397,6 +397,48 @@ function makeLine(x, y, deferSave) {
   }
 } // makeLine(x, y, deferSave)
 
+function erase(x, y) {
+  // I need to check for the old line and station
+  // BEFORE actually doing the erase operations
+  var erasedLine = getActiveLine(x, y, activeMap);
+  if (!erasedLine) {
+    // Erasing nothing, there's nothing to do here
+    return
+  }
+
+  if (getStation(x, y, activeMap) || getLabel(x, y, activeMap)) {
+    // XXX: Labels share the stations canvas;
+    // if I ever change that I'll want to have a separate
+    // check for redrawLabels
+    var redrawStations = true;
+  } else {
+    var redrawStations = false;
+  }
+  // NOT YET IMPLEMENTED: Check if there is a label here, and if so, redraw Labels after erasing
+  if (getLabel(x, y, activeMap)) {
+    var redrawLabels = true
+  } else {
+    var redrawLabels = false
+  }
+  if (erasedLine && $('#tool-flood-fill').prop('checked')) {
+    floodFill(x, y, getActiveLine(x, y, activeMap, (mapDataVersion >= 3)), '')
+    autoSave(activeMap)
+    if (mapDataVersion >= 2) {
+      redrawCanvasForColor(erasedLine)
+    } else if (mapDataVersion == 1) {
+      drawCanvas(activeMap)
+    }
+  } else {
+    metroMap = updateMapObject(x, y);
+    autoSave(metroMap);
+    if (mapDataVersion >= 2) {
+      redrawCanvasForColor(erasedLine)
+    } else if (mapDataVersion == 1) {
+      drawArea(x, y, metroMap, erasedLine, redrawStations);
+    }
+  }
+} // erase(x, y)
+
 function redrawCanvasForColor(color) {
   var t0 = performance.now()
   // Clear the main canvas
@@ -608,45 +650,7 @@ function bindGridSquareEvents(event) {
     } else
       makeLine(x, y)
   } else if (activeTool == 'eraser') {
-    // I need to check for the old line and station
-    // BEFORE actually doing the erase operations
-    var erasedLine = getActiveLine(x, y, activeMap);
-    if (!erasedLine) {
-      // Erasing nothing, there's nothing to do here
-      return
-    }
-
-    if (getStation(x, y, activeMap) || getLabel(x, y, activeMap)) {
-      // XXX: Labels share the stations canvas;
-      // if I ever change that I'll want to have a separate
-      // check for redrawLabels
-      var redrawStations = true;
-    } else {
-      var redrawStations = false;
-    }
-    // NOT YET IMPLEMENTED: Check if there is a label here, and if so, redraw Labels after erasing
-    if (getLabel(x, y, activeMap)) {
-      var redrawLabels = true
-    } else {
-      var redrawLabels = false
-    }
-    if (erasedLine && $('#tool-flood-fill').prop('checked')) {
-      floodFill(x, y, getActiveLine(x, y, activeMap, (mapDataVersion >= 3)), '')
-      autoSave(activeMap)
-      if (mapDataVersion >= 2) {
-        redrawCanvasForColor(erasedLine)
-      } else if (mapDataVersion == 1) {
-        drawCanvas(activeMap)
-      }
-    } else {
-      metroMap = updateMapObject(x, y);
-      autoSave(metroMap);
-      if (mapDataVersion >= 2) {
-        redrawCanvasForColor(erasedLine)
-      } else if (mapDataVersion == 1) {
-        drawArea(x, y, metroMap, erasedLine, redrawStations);
-      }
-    }
+    erase(x, y)
   } else if (activeTool == 'station') {
     makeStation(x, y)
   } else if (activeTool == 'label') {
@@ -3114,6 +3118,14 @@ $(document).ready(function() {
   }, false);
   document.getElementById('canvas-container').addEventListener('touchmove', function(e) {
     console.log(`DEBUG: touchmove at ${e.pageX},${e.pageY}`)
+    if (!$('#tool-flood-fill').prop('checked')) {
+      var xy = getCanvasXY(event.pageX, event.pageY)
+    }
+    if (activeTool == 'line' && activeToolOption) {
+      makeLine(x, y)
+    } else if (activeTool == 'eraser') {
+      erase(x, y)
+    }
     bindGridSquareMouseover(e)
   }, false);
   document.getElementById('canvas-container').addEventListener('touchend', function(e) {
