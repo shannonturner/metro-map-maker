@@ -377,11 +377,20 @@ function bindRailLineEvents() {
 } // bindRailLineEvents()
 
 function makeLine(x, y, deferSave) {
+  var color = rgb2hex(activeToolOption).slice(1, 7);
   if (mapDataVersion == 1) { drawArea(x, y, activeMap, true) }
   else if (mapDataVersion >= 2) {
-    var previousColor = getActiveLine(x, y, activeMap)
-  }
-  var color = rgb2hex(activeToolOption).slice(1, 7);
+    var previousLineWidthStyle = getActiveLine(x, y, activeMap, true)
+    if (previousLineWidthStyle) {
+      var previousColor = previousLineWidthStyle[0]
+      var previousLineWidthStyle = previousLineWidthStyle[1]
+      if (color == previousColor && activeLineWidthStyle == previousLineWidthStyle) {
+        // We can skip updating the map (and redrawing the color) if nothing's changed
+        return
+      } // no change
+    } // previousLineWidthStyle
+  } // mapDataVersion
+
   metroMap = updateMapObject(x, y, "line", color);
   if (!deferSave) {
     autoSave(metroMap);
