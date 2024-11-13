@@ -210,6 +210,16 @@
   <symbol id="line_style_dotted" width="64" height="48" viewBox="0 0 6 4">
     <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="round" stroke-dasharray=".5 .5"/>
   </symbol>
+  <symbol id="line_style_hollow" width="64" height="48" viewBox="0 0 6 4">
+    <!-- The mask didn't work at all here, hence the second line -->
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" stroke="rgba(189, 16, 56, .7)"/>
+  </symbol>
+  <symbol id="line_style_hollow-active" width="64" height="48" viewBox="0 0 6 4">
+    <!-- Unfortunately since the mask didn't work, I also need to add Javascript to handle this -->
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" stroke="#fff"/>
+  </symbol>
   <!-- Add new line styles here to populate their previews; see metromap_utils.SVG_STYLES for necessary SVG attributes -->
 
   <!-- Add more as needed -->

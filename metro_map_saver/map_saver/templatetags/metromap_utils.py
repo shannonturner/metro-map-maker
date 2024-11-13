@@ -637,14 +637,17 @@ def get_line_width_styles_for_svg_style(shapes_by_color):
 
     widths = set()
     styles = set()
+    css_styles = []
 
     for color in shapes_by_color:
         for width_style in shapes_by_color[color]:
             width, style = width_style.split('-')
             widths.add(width)
             styles.add(style)
+            # Handle combination width/styles like hollow lines
+            if width_style in SVG_STYLES:
+                css_styles.append(f".{SVG_STYLES[width_style]['class']} {{ {SVG_STYLES[width_style]['style']} }}")
 
-    css_styles = []
     for width in widths:
         if width in SVG_STYLES:
             css_styles.append(f".{SVG_STYLES[width]['class']} {{ {SVG_STYLES[width]['style']} }}")
@@ -687,6 +690,21 @@ def get_line_class_from_width_style(width_style, line_size):
         '{}',
         mark_safe(classes)
     )
+
+@register.simple_tag
+def get_masked_line_class_from_width_style(width_style, line_size):
+
+    """ Given a width_style and line_size, return the appropriate CSS class(es)
+            necessary for a masked/hollow line
+    """
+
+    if width_style in SVG_STYLES:
+        return format_html(
+            '{}',
+            mark_safe(SVG_STYLES[width_style]['class'])
+        )
+    else:
+        return ''
 
 @register.filter
 def square_root(value):
@@ -771,4 +789,11 @@ SVG_STYLES = {
     '0.5': {"class": "w3", "style": "stroke-width: .5;"},
     '0.25': {"class": "w4", "style": "stroke-width: .25;"},
     '0.125': {"class": "w5", "style": "stroke-width: .125;"},
+
+    # Combination width/style lines
+    '1-hollow': {"class": "lh1", "style": "stroke-width: 0.6"},
+    '0.75-hollow': {"class": "lh2", "style": "stroke-width: 0.45"},
+    '0.5-hollow': {"class": "lh3", "style": "stroke-width: 0.3"},
+    '0.25-hollow': {"class": "lh4", "style": "stroke-width: 0.15"},
+    '0.125-hollow': {"class": "lh5", "style": "stroke-width: 0.075"},
 }

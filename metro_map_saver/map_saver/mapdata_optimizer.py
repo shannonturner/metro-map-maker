@@ -5,6 +5,7 @@ from django.template import Context, Template
 
 from .validator import VALID_XY, ALLOWED_MAP_SIZES, ALLOWED_ORIENTATIONS
 
+# For use with data version 2
 SVG_TEMPLATE = Template('''
 <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {{ canvas_size|default:80 }} {{ canvas_size|default:80 }}">
 {% spaceless %}
@@ -45,7 +46,15 @@ SVG_TEMPLATE_V3 = Template('''
     {% for color, line_width_style in shapes_by_color.items %}
         {% for width_style, shapes in line_width_style.items %}
             {% for line in shapes.lines %}
-                <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}"/>
+                {% if 'hollow' in width_style %}
+                    <mask id="k{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" maskUnits="userSpaceOnUse">
+                        <line class="{% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#fff"/>
+                        <line class="{% get_masked_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#000"/>
+                    </mask>
+                    <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" mask="url(#k{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }})"/>
+                {% else %}
+                    <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}"/>
+                {% endif %}
             {% endfor %}
             {% for point in shapes.points %}
                 {% if default_station_shape == 'rect' %}
