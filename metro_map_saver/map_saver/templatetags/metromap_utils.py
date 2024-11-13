@@ -784,6 +784,7 @@ SVG_STYLES = {
     'dotted_dense': {"class": "l3", "style": "stroke-dasharray: .5 .25; stroke-linecap: butt;"},
     'dense_thin': {"class": "l4", "style": "stroke-dasharray: .05 .05; stroke-linecap: butt;"},
     'dense_thick': {"class": "l5", "style": "stroke-dasharray: .1 .1; stroke-linecap: butt;"},
+    'hollow_open': {"class": "l6", "style": "stroke-linecap: butt;"},
     '1': {"class": "w1", "style": "stroke-width: 1;"},
     '0.75': {"class": "w2", "style": "stroke-width: .75;"},
     '0.5': {"class": "w3", "style": "stroke-width: .5;"},
@@ -796,4 +797,10 @@ SVG_STYLES = {
     '0.5-hollow': {"class": "lh3", "style": "stroke-width: 0.3"},
     '0.25-hollow': {"class": "lh4", "style": "stroke-width: 0.15"},
     '0.125-hollow': {"class": "lh5", "style": "stroke-width: 0.075"},
+
+    '1-hollow_open': {"class": "lho1", "style": "stroke-width: 0.6; stroke-linecap: butt;"},
+    '0.75-hollow_open': {"class": "lho2", "style": "stroke-width: 0.45; stroke-linecap: butt;"},
+    '0.5-hollow_open': {"class": "lho3", "style": "stroke-width: 0.3; stroke-linecap: butt;"},
+    '0.25-hollow_open': {"class": "lho4", "style": "stroke-width: 0.15; stroke-linecap: butt;"},
+    '0.125-hollow_open': {"class": "lho5", "style": "stroke-width: 0.075; stroke-linecap: butt;"},
 }

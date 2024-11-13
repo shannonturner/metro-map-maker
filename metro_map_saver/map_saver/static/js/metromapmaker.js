@@ -62,7 +62,7 @@ compatibilityModeIndicator()
 
 const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'] // 1-30; is set up this way to have same functionality on all keyboards
 const ALLOWED_LINE_WIDTHS = [100, 75.0, 50.0, 25.0, 12.5]
-const ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted', 'hollow']
+const ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted', 'hollow', 'hollow_open']
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
 const ALLOWED_SIZES = [80, 120, 160, 200, 240, 360]
@@ -1065,7 +1065,7 @@ function drawColor(color) {
         moveLineStroke(ctx, line[0], line[1], line[2], line[3])
         ctx.stroke()
         ctx.closePath()
-        if (thisLineStyle == 'hollow') {
+        if (thisLineStyle == 'hollow' || thisLineStyle == 'hollow_open') {
           // The hollow portion actually gets drawn after the regular line
           ctx.save()
           ctx.globalCompositeOperation = 'xor';
@@ -4877,7 +4877,7 @@ $('.line-style-choice-style').on('click', function() {
   }
 
   // Hollow line buttons are two-tone and so need extra help
-  var twoToneButtons = ['hollow']
+  var twoToneButtons = ['hollow', 'hollow_open']
   var twoToneCurrent = $('#svgu_ls_' + activeLineStyle).attr('xlink:href')
   if (twoToneButtons.indexOf(activeLineStyle) > -1 && !twoToneCurrent.endsWith('-active')) {
     $('#svgu_ls_' + activeLineStyle).attr('xlink:href', twoToneCurrent + '-active')
@@ -4922,6 +4922,10 @@ function setLineStyle(style, ctx) {
   else if (style == 'hollow') {
     pattern = []
     ctx.lineCap = 'round'
+  }
+  else if (style == 'hollow_open') {
+    pattern = []
+    ctx.lineCap = 'butt'
   }
   else {
     // Safety: fallback to solid
