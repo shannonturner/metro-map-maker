@@ -202,6 +202,9 @@
     <!-- The slightly smaller x2 value here looks better since the line is uneven; at 5 it gives an incorrect impression of the next line part being extremely thin -->
     <line x1="1" x2="4.8" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="butt" stroke-linejoin="round" stroke-dasharray="1 .2 .5 .2"/>
   </symbol>
+  <symbol id="line_style_dashed_square" width="64" height="48" viewBox="0 0 6 4">
+    <line x1=".5" x2="5.5" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="butt" stroke-linejoin="round" stroke-dasharray="1 1"/>
+  </symbol>
   <symbol id="line_style_dense_thin" width="64" height="48" viewBox="0 0 6 4">
     <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="round" stroke-dasharray=".05 .05"/>
   </symbol>
