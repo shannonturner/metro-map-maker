@@ -205,6 +205,14 @@
   <symbol id="line_style_dashed_square" width="64" height="48" viewBox="0 0 6 4">
     <line x1=".5" x2="5.5" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="butt" stroke-linejoin="round" stroke-dasharray="1 1"/>
   </symbol>
+  <symbol id="line_style_dashed_outline" width="64" height="48" viewBox="0 0 6 4">
+    <line x1=".5" x2="5.5" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="square"/>
+    <line x1=".75" x2="5.25" y1="2.25" y2="2.25" stroke-width=".75" stroke-linecap="square" stroke-dasharray="1 2.5" stroke="rgba(189, 16, 56, .7)"/>
+  </symbol>
+  <symbol id="line_style_dashed_outline-active" width="64" height="48" viewBox="0 0 6 4">
+    <line x1=".5" x2="5.5" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="square"/>
+    <line x1=".75" x2="5.25" y1="2.25" y2="2.25" stroke-width=".75" stroke-linecap="square" stroke-dasharray="1 2.5" stroke="#fff"/>
+  </symbol>
   <symbol id="line_style_dense_thin" width="64" height="48" viewBox="0 0 6 4">
     <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="round" stroke-dasharray=".05 .05"/>
   </symbol>

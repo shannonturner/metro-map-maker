@@ -52,6 +52,13 @@ SVG_TEMPLATE_V3 = Template('''
                         <line class="{% get_masked_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#000"/>
                     </mask>
                     <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" mask="url(#k{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }})"/>
+                {% elif 'outline' in width_style %}
+                    <mask id="k{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" maskUnits="userSpaceOnUse">
+                        <line class="{% get_line_class_from_width_style width_style line_size True %} sl-sq" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#fff"/>
+                        <line class="{% get_masked_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#000"/>
+                    </mask>
+                    <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size True %} sl-sq" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" mask="url(#k{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }})"/>
+                    <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}"/>
                 {% else %}
                     <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}"/>
                 {% endif %}

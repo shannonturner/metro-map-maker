@@ -656,6 +656,10 @@ def get_line_width_styles_for_svg_style(shapes_by_color):
         if style in SVG_STYLES:
             css_styles.append(f".{SVG_STYLES[style]['class']} {{ {SVG_STYLES[style]['style']} }}")
 
+        # Special case because
+        if style.endswith('_outline'):
+            css_styles.append(f".sl-sq {{ stroke-linecap: square; }}")
+
     css_styles = ''.join(css_styles)
 
     return format_html(
@@ -664,7 +668,7 @@ def get_line_width_styles_for_svg_style(shapes_by_color):
     )
 
 @register.simple_tag
-def get_line_class_from_width_style(width_style, line_size):
+def get_line_class_from_width_style(width_style, line_size, width_only=False, style_only=False):
 
     """ Given a width_style and line_size, return the appropriate CSS class(es)
             necessary for this line (if any)
@@ -676,12 +680,12 @@ def get_line_class_from_width_style(width_style, line_size):
     line_size = str(line_size)
     if width == line_size:
         pass # No class necessary; it's the default
-    elif width in SVG_STYLES:
+    elif width in SVG_STYLES and not style_only:
         classes.append(SVG_STYLES[width]['class'])
 
     if style == ALLOWED_LINE_STYLES[0]:
         pass # No class necessary; it's the default (solid)
-    elif style in SVG_STYLES:
+    elif style in SVG_STYLES and not width_only:
         classes.append(SVG_STYLES[style]['class'])
 
     classes = ' '.join(classes)
@@ -786,7 +790,8 @@ SVG_STYLES = {
     'dense_thick': {"class": "l5", "style": "stroke-dasharray: .1 .1; stroke-linecap: butt;"},
     'hollow_open': {"class": "l6", "style": "stroke-linecap: butt;"},
     'dashed_uneven': {"class": "l7", "style": "stroke-dasharray: 1 .2 .5 .2; stroke-linecap: butt;"},
-    'dashed_square': {"class": "l7", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
+    'dashed_square': {"class": "l8", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
+    'dashed_outline': {"class": "l9", "style": "stroke-dasharray: 1 2.5; stroke-linecap: square;"},
     '1': {"class": "w1", "style": "stroke-width: 1;"},
     '0.75': {"class": "w2", "style": "stroke-width: .75;"},
     '0.5': {"class": "w3", "style": "stroke-width: .5;"},
@@ -805,4 +810,10 @@ SVG_STYLES = {
     '0.5-hollow_open': {"class": "lho3", "style": "stroke-width: 0.3; stroke-linecap: butt;"},
     '0.25-hollow_open': {"class": "lho4", "style": "stroke-width: 0.15; stroke-linecap: butt;"},
     '0.125-hollow_open': {"class": "lho5", "style": "stroke-width: 0.075; stroke-linecap: butt;"},
+
+    '1-dashed_outline': {"class": "ldo1", "style": "stroke-width: 0.75; stroke-linecap: square;"},
+    '0.75-dashed_outline': {"class": "ldo2", "style": "stroke-width: 0.5625; stroke-linecap: square;"},
+    '0.5-dashed_outline': {"class": "ldo3", "style": "stroke-width: 0.375; stroke-linecap: square;"},
+    '0.25-dashed_outline': {"class": "ldo4", "style": "stroke-width: 0.1875; stroke-linecap: square;"},
+    '0.125-dashed_outline': {"class": "ldo5", "style": "stroke-width: 0.09375; stroke-linecap: square;"},
 }
