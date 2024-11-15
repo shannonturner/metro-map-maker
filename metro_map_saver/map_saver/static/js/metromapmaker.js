@@ -1059,7 +1059,7 @@ function drawColor(color) {
       var lines = linesAndSingletons["lines"]
       var singletons = linesAndSingletons["singletons"]
       for (var line of lines) {
-        if (thisLineStyle == 'dashed_outline' || thisLineStyle == 'dotted_outline') {
+        if (thisLineStyle == 'dashed_outline' || thisLineStyle == 'dotted_outline' || thisLineStyle == 'densedot_outline') {
           // Draw the hollow line first
           if (thisLineStyle == 'dashed_outline') {
             ctx.lineCap = 'square'
@@ -1304,9 +1304,7 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
   }
   activeMap = metroMap;
 
-  console.log(`in drawCanvas, before: ${ctx.lineWidth}`)
   ctx.lineWidth = mapLineWidth * gridPixelMultiplier
-  console.log(`in drawCanvas, after: ${ctx.lineWidth}`)
   ctx.lineCap = 'round';
 
   if (mapDataVersion >= 2) {
@@ -4910,7 +4908,7 @@ $('.line-style-choice-style').on('click', function() {
   }
 
   // Hollow line buttons are two-tone and so need extra help
-  var twoToneButtons = ['hollow', 'hollow_open', 'dashed_outline', 'dotted_outline']
+  var twoToneButtons = ['hollow', 'hollow_open', 'dashed_outline', 'dotted_outline', 'densedot_outline']
   var twoToneCurrent = $('#svgu_ls_' + activeLineStyle).attr('xlink:href')
   if (twoToneButtons.indexOf(activeLineStyle) > -1 && !twoToneCurrent.endsWith('-active')) {
     $('#svgu_ls_' + activeLineStyle).attr('xlink:href', twoToneCurrent + '-active')
@@ -4950,6 +4948,10 @@ function setLineStyle(style, ctx) {
   }
   else if (style == 'dotted_outline') {
     pattern = [gridPixelMultiplier, gridPixelMultiplier]
+    ctx.lineCap = 'butt'
+  }
+  else if (style == 'densedot_outline') {
+    pattern = [gridPixelMultiplier, gridPixelMultiplier / 2]
     ctx.lineCap = 'butt'
   }
   else if (style == 'dense_thick') {

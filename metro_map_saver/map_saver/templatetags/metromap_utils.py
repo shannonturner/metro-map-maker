@@ -795,6 +795,7 @@ SVG_STYLES = {
     'dashed_square': {"class": "l8", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
     'dashed_outline': {"class": "l9", "style": "stroke-dasharray: 1 2.5; stroke-linecap: square;"},
     'dotted_outline': {"class": "l10", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
+    'densedot_outline': {"class": "l11", "style": "stroke-dasharray: 1 .5; stroke-linecap: butt;"},
     '1': {"class": "w1", "style": "stroke-width: 1;"},
     '0.75': {"class": "w2", "style": "stroke-width: .75;"},
     '0.5': {"class": "w3", "style": "stroke-width: .5;"},
@@ -825,4 +826,10 @@ SVG_STYLES = {
     '0.5-dotted_outline': {"class": "lto3", "style": "stroke-width: 0.375; stroke-linecap: butt;"},
     '0.25-dotted_outline': {"class": "lto4", "style": "stroke-width: 0.1875; stroke-linecap: butt;"},
     '0.125-dotted_outline': {"class": "lto5", "style": "stroke-width: 0.09375; stroke-linecap: butt;"},
+
+    '1-densedot_outline': {"class": "lto1", "style": "stroke-width: 0.75; stroke-linecap: butt;"},
+    '0.75-densedot_outline': {"class": "lto2", "style": "stroke-width: 0.5625; stroke-linecap: butt;"},
+    '0.5-densedot_outline': {"class": "lto3", "style": "stroke-width: 0.375; stroke-linecap: butt;"},
+    '0.25-densedot_outline': {"class": "lto4", "style": "stroke-width: 0.1875; stroke-linecap: butt;"},
+    '0.125-densedot_outline': {"class": "lto5", "style": "stroke-width: 0.09375; stroke-linecap: butt;"},
 }
