@@ -657,8 +657,10 @@ def get_line_width_styles_for_svg_style(shapes_by_color):
             css_styles.append(f".{SVG_STYLES[style]['class']} {{ {SVG_STYLES[style]['style']} }}")
 
         # Special case because
-        if style.endswith('_outline'):
+        if style == 'dashed_outline':
             css_styles.append(f".sl-sq {{ stroke-linecap: square; }}")
+        elif style.endswith('_outline'):
+            css_styles.append(f".sl-b {{ stroke-linecap: butt; }}")
 
     css_styles = ''.join(css_styles)
 
@@ -792,6 +794,7 @@ SVG_STYLES = {
     'dashed_uneven': {"class": "l7", "style": "stroke-dasharray: 1 .2 .5 .2; stroke-linecap: butt;"},
     'dashed_square': {"class": "l8", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
     'dashed_outline': {"class": "l9", "style": "stroke-dasharray: 1 2.5; stroke-linecap: square;"},
+    'dotted_outline': {"class": "l10", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
     '1': {"class": "w1", "style": "stroke-width: 1;"},
     '0.75': {"class": "w2", "style": "stroke-width: .75;"},
     '0.5': {"class": "w3", "style": "stroke-width: .5;"},
@@ -816,4 +819,10 @@ SVG_STYLES = {
     '0.5-dashed_outline': {"class": "ldo3", "style": "stroke-width: 0.375; stroke-linecap: square;"},
     '0.25-dashed_outline': {"class": "ldo4", "style": "stroke-width: 0.1875; stroke-linecap: square;"},
     '0.125-dashed_outline': {"class": "ldo5", "style": "stroke-width: 0.09375; stroke-linecap: square;"},
+
+    '1-dotted_outline': {"class": "lto1", "style": "stroke-width: 0.75; stroke-linecap: butt;"},
+    '0.75-dotted_outline': {"class": "lto2", "style": "stroke-width: 0.5625; stroke-linecap: butt;"},
+    '0.5-dotted_outline': {"class": "lto3", "style": "stroke-width: 0.375; stroke-linecap: butt;"},
+    '0.25-dotted_outline': {"class": "lto4", "style": "stroke-width: 0.1875; stroke-linecap: butt;"},
+    '0.125-dotted_outline': {"class": "lto5", "style": "stroke-width: 0.09375; stroke-linecap: butt;"},
 }
