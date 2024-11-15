@@ -1016,7 +1016,7 @@ function drawColor(color) {
         var x = xy[0]
         var y = xy[1]
         ctx.strokeStyle = '#' + color
-        drawPoint(ctx, x, y, activeMap, false, color, thisLineWidth, thisLineStyle)
+        drawPoint(ctx, x, y, activeMap, false, color, (thisLineWidth / gridPixelMultiplier), thisLineStyle)
       }
     } // lineWidthStyle
   } else if (mapDataVersion == 2) {
@@ -1335,6 +1335,9 @@ function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth, lineStyle)
     color = erasedLine;
   }
   else {
+    // CONSIDER: There's a display bug if I accidentally call drawPoint with lineWidth set
+    //  where it includes the gridPixelMultiplier already; may be worth clamping it to a maximum value,
+    //  or only allowing one of ALLOWED_LINE_WIDTHS during the call
     ctx.lineWidth = (gridPixelMultiplier * (lineWidth || activeLineWidth))
     setLineStyle(lineStyle || activeLineStyle, ctx)
   }
