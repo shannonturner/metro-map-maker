@@ -3298,7 +3298,7 @@ $(document).ready(function() {
     }
     else if (event.key.toLowerCase() == 'q' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // Q, except for quit
       if (mapDataVersion >= 3) {
-        cycleLineStyle()
+        cycleLineStyle(event.shiftKey ? -1 : 1)
       }
     }
     else if (event.key.toLowerCase() == 'r' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // R, except for Refresh
@@ -4888,12 +4888,14 @@ function cycleLineWidth(direction) {
   button.trigger('click')
 } // cycleLineWidth()
 
-function cycleLineStyle() {
+function cycleLineStyle(direction) {
   var currentStep = ALLOWED_LINE_STYLES.indexOf(activeLineStyle)
-  if (currentStep == -1 || currentStep == ALLOWED_LINE_STYLES.length-1) {
+  if (direction == 1 && (currentStep == -1 || currentStep == ALLOWED_LINE_STYLES.length-1)) {
     currentStep = 0
+  } else if (direction == -1 && currentStep <= 0) {
+    currentStep = ALLOWED_LINE_STYLES.length - 1
   } else {
-    currentStep += 1
+    currentStep += direction
   }
   $('button[data-linestyle="' + ALLOWED_LINE_STYLES[currentStep] + '"]').trigger('click')
 } // cycleLineStyle()
