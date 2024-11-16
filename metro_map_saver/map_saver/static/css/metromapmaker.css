@@ -567,7 +567,7 @@ select {
 }
 
 #line-style-options button.active-mapstyle svg,
-#line-style-options button svg:active {
+#line-style-options button svg:not(.twotone):active {
   stroke: #bd1038;
 }
 

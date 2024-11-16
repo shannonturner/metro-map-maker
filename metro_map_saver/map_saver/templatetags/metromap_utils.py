@@ -26,6 +26,15 @@ HAS_VARIANTS = [
     'circles-sm',
 ]
 
+TWOTONE_LINESTYLES = [
+    # Should match twoToneButtons defined in metromapmaker.js
+    'hollow',
+    'hollow_open',
+    'wide_stripes',
+    'square_stripes',
+    'stripes',
+]
+
 @register.simple_tag
 def station_marker(station, default_shape, line_size, points_by_color, stations, data_version):
 
@@ -766,6 +775,10 @@ def map_color(color, color_map):
 @register.filter
 def underscore_to_space(value):
     return value.replace('_', ' ')
+
+@register.filter
+def is_twotone(value):
+    return value in TWOTONE_LINESTYLES
 
 @register.filter
 def get_media_image_url(value):
