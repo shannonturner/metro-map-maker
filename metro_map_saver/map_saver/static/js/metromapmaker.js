@@ -3290,7 +3290,7 @@ $(document).ready(function() {
     }
     else if (event.key.toLowerCase() == 'o' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // O, except for Open
       if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
-        cycleSelectMenu(document.getElementById('station-name-orientation'))
+        cycleSelectMenu(document.getElementById('station-name-orientation'), event.shiftKey ? -1 : 1)
       }
     }
     else if (event.key.toLowerCase() == 'p' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // P, except for Print
@@ -3323,7 +3323,7 @@ $(document).ready(function() {
     }
     else if ((event.key.toLowerCase() == 'y') && (!event.metaKey && !event.ctrlKey)) { // Y
       if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
-        cycleSelectMenu(document.getElementById('station-style'))
+        cycleSelectMenu(document.getElementById('station-style'), event.shiftKey ? -1 : 1)
       }
       else if (!menuIsCollapsed && mapDataVersion > 1) {
         $('#tool-map-style').trigger('click')
@@ -5114,11 +5114,13 @@ function cycleGridStep() {
   drawGrid()
 } // cycleGridStep()
 
-function cycleSelectMenu(select) {
-  if (select.selectedIndex >= select.options.length - 1) {
+function cycleSelectMenu(select, direction) {
+  if (direction == 1 && select.selectedIndex >= select.options.length - 1) {
     select.selectedIndex = 0
+  } else if (direction == -1 && select.selectedIndex <= 0) {
+    select.selectedIndex = select.options.length - 1
   } else {
-    select.selectedIndex += 1
+    select.selectedIndex += direction
   }
   $(select).trigger('change')
 } // cycleSelectMenu(select)
