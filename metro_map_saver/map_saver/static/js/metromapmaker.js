@@ -3309,7 +3309,7 @@ $(document).ready(function() {
     }
     else if (event.key.toLowerCase() == 'w' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // W, except for close window
       if (mapDataVersion >= 3) {
-        cycleLineWidth()
+        cycleLineWidth(event.shiftKey ? -1 : 1)
       }
     }
     else if ((event.key.toLowerCase() == 'x') && (!event.metaKey && !event.ctrlKey)) { // X
@@ -4871,12 +4871,14 @@ $('.line-style-choice-width').on('click', function() {
   }
 })
 
-function cycleLineWidth() {
+function cycleLineWidth(direction) {
   var currentStep = ALLOWED_LINE_WIDTHS.indexOf(activeLineWidth * 100)
-  if (currentStep == -1 || currentStep == ALLOWED_LINE_WIDTHS.length-1) {
+  if (direction == 1 && (currentStep == -1 || currentStep == ALLOWED_LINE_WIDTHS.length-1)) {
     currentStep = 0
+  } else if (direction == -1 && currentStep <= 0) {
+    currentStep = ALLOWED_LINE_WIDTHS.length-1
   } else {
-    currentStep += 1
+    currentStep += direction
   }
   // This odd construction is because Javascript won't respect the zero after the decimal
   var button = $('button[data-linewidth="' + ALLOWED_LINE_WIDTHS[currentStep] + '"]')
