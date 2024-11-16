@@ -62,7 +62,7 @@ compatibilityModeIndicator()
 
 const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'] // 1-30; is set up this way to have same functionality on all keyboards
 const ALLOWED_LINE_WIDTHS = [100, 75.0, 50.0, 25.0, 12.5]
-const ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dashed_uneven', 'dashed_square', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted', 'hollow', 'hollow_open', 'wide_stripes', 'square_stripes', 'densedot_outline']
+const ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dashed_uneven', 'dashed_square', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted', 'hollow', 'hollow_open', 'wide_stripes', 'square_stripes', 'stripes']
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
 const ALLOWED_SIZES = [80, 120, 160, 200, 240, 360]
@@ -1059,7 +1059,7 @@ function drawColor(color) {
       var lines = linesAndSingletons["lines"]
       var singletons = linesAndSingletons["singletons"]
       for (var line of lines) {
-        if (thisLineStyle == 'wide_stripes' || thisLineStyle == 'square_stripes' || thisLineStyle == 'densedot_outline') {
+        if (thisLineStyle == 'wide_stripes' || thisLineStyle == 'square_stripes' || thisLineStyle == 'stripes') {
           // Draw the hollow line first
           if (thisLineStyle == 'wide_stripes') {
             ctx.lineCap = 'square'
@@ -4908,7 +4908,7 @@ $('.line-style-choice-style').on('click', function() {
   }
 
   // Hollow line buttons are two-tone and so need extra help
-  var twoToneButtons = ['hollow', 'hollow_open', 'wide_stripes', 'square_stripes', 'densedot_outline']
+  var twoToneButtons = ['hollow', 'hollow_open', 'wide_stripes', 'square_stripes', 'stripes']
   var twoToneCurrent = $('#svgu_ls_' + activeLineStyle).attr('xlink:href')
   if (twoToneButtons.indexOf(activeLineStyle) > -1 && !twoToneCurrent.endsWith('-active')) {
     $('#svgu_ls_' + activeLineStyle).attr('xlink:href', twoToneCurrent + '-active')
@@ -4950,7 +4950,7 @@ function setLineStyle(style, ctx) {
     pattern = [gridPixelMultiplier, gridPixelMultiplier]
     ctx.lineCap = 'butt'
   }
-  else if (style == 'densedot_outline') {
+  else if (style == 'stripes') {
     pattern = [gridPixelMultiplier, gridPixelMultiplier / 2]
     ctx.lineCap = 'butt'
   }
