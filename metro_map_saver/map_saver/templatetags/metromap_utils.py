@@ -659,7 +659,7 @@ def get_line_width_styles_for_svg_style(shapes_by_color):
         # Special case because
         if style == 'wide_stripes':
             css_styles.append(f".sl-sq {{ stroke-linecap: square; }}")
-        elif style.endswith('_outline'):
+        elif style.endswith('_stripes'):
             css_styles.append(f".sl-b {{ stroke-linecap: butt; }}")
 
     css_styles = ''.join(css_styles)
@@ -794,7 +794,7 @@ SVG_STYLES = {
     'dashed_uneven': {"class": "l7", "style": "stroke-dasharray: 1 .2 .5 .2; stroke-linecap: butt;"},
     'dashed_square': {"class": "l8", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
     'wide_stripes': {"class": "l9", "style": "stroke-dasharray: 1 2.5; stroke-linecap: square;"},
-    'dotted_outline': {"class": "l10", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
+    'square_stripes': {"class": "l10", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
     'densedot_outline': {"class": "l11", "style": "stroke-dasharray: 1 .5; stroke-linecap: butt;"},
     '1': {"class": "w1", "style": "stroke-width: 1;"},
     '0.75': {"class": "w2", "style": "stroke-width: .75;"},
@@ -821,11 +821,11 @@ SVG_STYLES = {
     '0.25-wide_stripes': {"class": "ldo4", "style": "stroke-width: 0.1875; stroke-linecap: square;"},
     '0.125-wide_stripes': {"class": "ldo5", "style": "stroke-width: 0.09375; stroke-linecap: square;"},
 
-    '1-dotted_outline': {"class": "lto1", "style": "stroke-width: 0.75; stroke-linecap: butt;"},
-    '0.75-dotted_outline': {"class": "lto2", "style": "stroke-width: 0.5625; stroke-linecap: butt;"},
-    '0.5-dotted_outline': {"class": "lto3", "style": "stroke-width: 0.375; stroke-linecap: butt;"},
-    '0.25-dotted_outline': {"class": "lto4", "style": "stroke-width: 0.1875; stroke-linecap: butt;"},
-    '0.125-dotted_outline': {"class": "lto5", "style": "stroke-width: 0.09375; stroke-linecap: butt;"},
+    '1-square_stripes': {"class": "lto1", "style": "stroke-width: 0.75; stroke-linecap: butt;"},
+    '0.75-square_stripes': {"class": "lto2", "style": "stroke-width: 0.5625; stroke-linecap: butt;"},
+    '0.5-square_stripes': {"class": "lto3", "style": "stroke-width: 0.375; stroke-linecap: butt;"},
+    '0.25-square_stripes': {"class": "lto4", "style": "stroke-width: 0.1875; stroke-linecap: butt;"},
+    '0.125-square_stripes': {"class": "lto5", "style": "stroke-width: 0.09375; stroke-linecap: butt;"},
 
     '1-densedot_outline': {"class": "lto1", "style": "stroke-width: 0.75; stroke-linecap: butt;"},
     '0.75-densedot_outline': {"class": "lto2", "style": "stroke-width: 0.5625; stroke-linecap: butt;"},
