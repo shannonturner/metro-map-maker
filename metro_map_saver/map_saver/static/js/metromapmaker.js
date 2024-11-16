@@ -735,6 +735,9 @@ function bindGridSquareMouseover(event) {
       indicatorColor = '#ffffff'
     }
     floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap, (mapDataVersion >= 3)), indicatorColor, true)
+  } else if (!mouseIsDown && (activeTool != 'line' && activeTool != 'eraser') && $('#tool-flood-fill').prop('checked')) {
+    drawHoverIndicator(event.pageX, event.pageY);
+    return
   }
   if (mouseIsDown && (activeTool == 'line' || activeTool == 'eraser')) {
     dragX = event.pageX
