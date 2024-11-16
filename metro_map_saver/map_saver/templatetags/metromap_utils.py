@@ -628,6 +628,20 @@ def get_station_styles_in_use(stations, default_shape, line_size):
         mark_safe(svg),
     )
 
+@register.filter
+def has_line_style(shapes_by_color, line_style="color_outline"):
+
+    """ Returns True if this map uses a line with the given style.
+
+        Primarily intended for use with "color_outline" to set the filter definition up top.
+    """
+
+    for color in shapes_by_color:
+        for width_style in shapes_by_color[color]:
+            width, style = width_style.split('-')
+            if line_style == style:
+                return True
+
 @register.simple_tag
 def get_line_width_styles_for_svg_style(shapes_by_color):
 
@@ -796,6 +810,8 @@ SVG_STYLES = {
     'wide_stripes': {"class": "l9", "style": "stroke-dasharray: 1 2.5; stroke-linecap: square;"},
     'square_stripes': {"class": "l10", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
     'stripes': {"class": "l11", "style": "stroke-dasharray: 1 .5; stroke-linecap: butt;"},
+    'color_outline': {"class": "l12", "style": "stroke-linecap: butt;"},
+
     '1': {"class": "w1", "style": "stroke-width: 1;"},
     '0.75': {"class": "w2", "style": "stroke-width: .75;"},
     '0.5': {"class": "w3", "style": "stroke-width: .5;"},
@@ -814,6 +830,12 @@ SVG_STYLES = {
     '0.5-hollow_open': {"class": "lho3", "style": "stroke-width: 0.3; stroke-linecap: butt;"},
     '0.25-hollow_open': {"class": "lho4", "style": "stroke-width: 0.15; stroke-linecap: butt;"},
     '0.125-hollow_open': {"class": "lho5", "style": "stroke-width: 0.075; stroke-linecap: butt;"},
+
+    '1-color_outline': {"class": "lco1", "style": "stroke-width: 0.6; stroke-linecap: butt;"},
+    '0.75-color_outline': {"class": "lco2", "style": "stroke-width: 0.45; stroke-linecap: butt;"},
+    '0.5-color_outline': {"class": "lco3", "style": "stroke-width: 0.3; stroke-linecap: butt;"},
+    '0.25-color_outline': {"class": "lco4", "style": "stroke-width: 0.15; stroke-linecap: butt;"},
+    '0.125-color_outline': {"class": "lco5", "style": "stroke-width: 0.075; stroke-linecap: butt;"},
 
     '1-wide_stripes': {"class": "ldo1", "style": "stroke-width: 0.75; stroke-linecap: square;"},
     '0.75-wide_stripes': {"class": "ldo2", "style": "stroke-width: 0.5625; stroke-linecap: square;"},

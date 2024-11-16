@@ -251,6 +251,11 @@
     <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" stroke="#fff"/>
   </symbol>
+  <symbol id="line_style_color_outline" width="64" height="48" viewBox="0 0 6 4">
+    <line x1="1" x2="5" y1="1.5" y2="1.5" stroke-width="0.5" stroke-linecap="butt"/>
+    <line x1="1" x2="5" y1="2" y2="2" stroke-width="1.5" stroke-linecap="butt" stroke-opacity=".7"/>
+    <line x1="1" x2="5" y1="3" y2="3" stroke-width="0.5" stroke-linecap="butt"/>
+  </symbol>
   <symbol id="line_style_hollow_open" width="64" height="48" viewBox="0 0 6 4">
     <!-- The mask didn't work at all here, hence the second line -->
     <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="butt"/>

@@ -43,14 +43,22 @@ SVG_TEMPLATE_V3 = Template('''
 {% else %}
     <style>line { stroke-width: {{ line_size|default:1 }}; fill: none; stroke-linecap: round; stroke-linejoin: round; }{% for hex, class_name in color_map.items %} .{{ class_name }} { stroke: #{{ hex }} }{% endfor %} {% get_line_width_styles_for_svg_style shapes_by_color %}</style>
 {% endif %}
+{% if shapes_by_color|has_line_style:"color_outline" %}
+    <filter id="fco" filterUnits="userSpaceOnUse">
+        <feBlend in="SourceGraphic" in2="SourceGraphic" mode="screen"/>
+    </filter>
+{% endif %}
     {% for color, line_width_style in shapes_by_color.items %}
         {% for width_style, shapes in line_width_style.items %}
             {% for line in shapes.lines %}
-                {% if 'hollow' in width_style %}
+                {% if 'hollow' in width_style or 'color_outline' in width_style %}
                     <mask id="k{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" maskUnits="userSpaceOnUse">
                         <line class="{% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#fff"/>
                         <line class="{% get_masked_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#000"/>
                     </mask>
+                    {% if 'color_outline' in width_style %}
+                        <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" filter="url(#fco)"/>
+                    {% endif %}
                     <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" mask="url(#k{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }})"/>
                 {% elif 'stripes' in width_style %}
                     <mask id="k{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" maskUnits="userSpaceOnUse">
