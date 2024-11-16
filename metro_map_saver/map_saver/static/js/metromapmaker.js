@@ -3169,30 +3169,30 @@ $(document).ready(function() {
   // 2. Canvas performance is extremely poor. Possibly dropping bindGridSquareMouseover on touchmove could help, but this is surely linked with the canvas crashes.
   // 3. Would need to add a better way of scrolling (perhaps use two fingers to scroll),
   //  so that you don't draw/erase as you're scrolling
-  document.getElementById('canvas-container').addEventListener('touchstart', function(e) {
-    console.log(`DEBUG: touchstart at ${e.pageX},${e.pageY}`)
-    bindGridSquareEvents(e)
-  }, false);
-  document.getElementById('canvas-container').addEventListener('touchmove', function(e) {
-    console.log(`DEBUG: touchmove at ${e.pageX},${e.pageY}`)
-    if (!$('#tool-flood-fill').prop('checked')) {
-      var xy = getCanvasXY(event.pageX, event.pageY)
-        if (activeTool == 'line' && activeToolOption) {
-        makeLine(xy[0], xy[1])
-      } else if (activeTool == 'eraser') {
-        erase(xy[0], xy[1])
-      }
-    }
-    bindGridSquareMouseover(e)
-  }, false);
-  document.getElementById('canvas-container').addEventListener('touchend', function(e) {
-    console.log(`DEBUG: touchend at ${e.pageX},${e.pageY}`)
-    bindGridSquareMouseup(e)
-  }, false);
-  document.getElementById('canvas-container').addEventListener('touchcancel', function(e) {
-    console.log(`DEBUG: touchcancel at ${e.pageX},${e.pageY}`)
-    bindGridSquareMouseup(e)
-  }, false);
+  // document.getElementById('canvas-container').addEventListener('touchstart', function(e) {
+  //   console.log(`DEBUG: touchstart at ${e.pageX},${e.pageY}`)
+  //   bindGridSquareEvents(e)
+  // }, false);
+  // document.getElementById('canvas-container').addEventListener('touchmove', function(e) {
+  //   console.log(`DEBUG: touchmove at ${e.pageX},${e.pageY}`)
+  //   if (!$('#tool-flood-fill').prop('checked')) {
+  //     var xy = getCanvasXY(event.pageX, event.pageY)
+  //       if (activeTool == 'line' && activeToolOption) {
+  //       makeLine(xy[0], xy[1])
+  //     } else if (activeTool == 'eraser') {
+  //       erase(xy[0], xy[1])
+  //     }
+  //   }
+  //   bindGridSquareMouseover(e)
+  // }, false);
+  // document.getElementById('canvas-container').addEventListener('touchend', function(e) {
+  //   console.log(`DEBUG: touchend at ${e.pageX},${e.pageY}`)
+  //   bindGridSquareMouseup(e)
+  // }, false);
+  // document.getElementById('canvas-container').addEventListener('touchcancel', function(e) {
+  //   console.log(`DEBUG: touchcancel at ${e.pageX},${e.pageY}`)
+  //   bindGridSquareMouseup(e)
+  // }, false);
   // -----------------------------------------------------------------------------------
 
   window.addEventListener('resize', unfreezeMapControls);
