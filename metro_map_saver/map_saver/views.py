@@ -945,7 +945,10 @@ class CityView(ListView):
                 queryset = queryset.filter(city__name=city)
             except Exception:
                 if city:
-                    queryset = queryset.filter(name__startswith=city)
+                    queryset = queryset.filter(name__istartswith=city)
+            else:
+                if city and not queryset.exists():
+                    queryset = SavedMap.objects.all().defer(*SavedMap.DEFER_FIELDS).filter(name__istartswith=city)
         return queryset.order_by('-created_at')
 
     def get_context_data(self, **kwargs):
