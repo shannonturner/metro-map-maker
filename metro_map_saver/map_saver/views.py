@@ -52,6 +52,7 @@ from .validator import (
     ALLOWED_LINE_WIDTHS,
     ALLOWED_LINE_STYLES,
     ALLOWED_MAP_SIZES,
+    ALLOWED_STATION_STYLES,
 )
 from .common_cities import CITIES
 
@@ -119,6 +120,7 @@ class HomeView(TemplateView):
         context['ALLOWED_MAP_SIZES'] = ALLOWED_MAP_SIZES
         context['ALLOWED_LINE_WIDTHS'] = [w * 100 for w in ALLOWED_LINE_WIDTHS]
         context['ALLOWED_LINE_STYLES'] = ALLOWED_LINE_STYLES
+        context['ALLOWED_STATION_STYLES'] = ALLOWED_STATION_STYLES
 
         return render(request, self.template_name, context)
 

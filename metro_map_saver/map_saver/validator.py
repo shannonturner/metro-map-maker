@@ -14,7 +14,15 @@ MAX_MAP_SIZE = ALLOWED_MAP_SIZES[-1]
 VALID_XY = [str(x) for x in range(MAX_MAP_SIZE)]
 ALLOWED_LINE_WIDTHS = [1, 0.75, 0.5, 0.25, 0.125]
 ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dashed_uneven', 'dashed_square', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted', 'hollow', 'hollow_open', 'color_outline', 'wide_stripes', 'square_stripes', 'stripes']
-ALLOWED_STATION_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
+ALLOWED_STATION_STYLES = {
+    'wmata': {"short": "Metro (Classic)", "long": "Metro (Classic)"},
+    'rect': {"short": "Rect.", "long": "Rectangles"},
+    'rect-round': {"short": "Round Rect.", "long": "Round Rectangles"},
+    'circles-thin': {"short": "Circles (Thin)", "long": "Circles (Thin)"},
+    'circles-lg': {"short": "Circles (Large)", "long": "Circles (Large)"},
+    'circles-md': {"short": "Circles (Medium)", "long": "Circles (Medium)"},
+    'circles-sm': {"short": "Circles (Small)", "long": "Circles (Small)"},
+}
 ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1]
 ALLOWED_CONNECTING_STATIONS = ['rect', 'rect-round', 'circles-thin']
 ALLOWED_TAGS = ['real', 'speculative', 'unknown'] # TODO: change 'speculative' to 'fantasy' here and everywhere else, it's the more common usage
@@ -210,7 +218,7 @@ def validate_metro_map_v3(metro_map):
 
     station_style = metro_map['global'].get('style', {}).get('mapStationStyle', 'wmata')
     if station_style not in ALLOWED_STATION_STYLES:
-        station_style = ALLOWED_STATION_STYLES[0]
+        station_style = list(ALLOWED_STATION_STYLES.keys())[0]
 
     validated_metro_map['global']['style'] = {
         'mapLineWidth': line_width,
@@ -448,7 +456,7 @@ def validate_metro_map_v2(metro_map):
 
     station_style = metro_map['global'].get('style', {}).get('mapStationStyle', 'wmata')
     if station_style not in ALLOWED_STATION_STYLES:
-        station_style = ALLOWED_STATION_STYLES[0]
+        station_style = list(ALLOWED_STATION_STYLES.keys())[0]
 
     validated_metro_map['global']['style'] = {
         'mapLineWidth': line_width,
@@ -651,7 +659,7 @@ def validate_metro_map(metro_map):
 
     station_style = metro_map['global'].get('style', {}).get('mapStationStyle', 'wmata')
     if station_style not in ALLOWED_STATION_STYLES:
-        station_style = ALLOWED_STATION_STYLES[0]
+        station_style = list(ALLOWED_STATION_STYLES.keys())[0]
 
     validated_metro_map['global']['style'] = {
         'mapLineWidth': line_width,
