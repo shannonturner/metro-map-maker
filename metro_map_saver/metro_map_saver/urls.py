@@ -19,6 +19,7 @@ from django.contrib import admin
 from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.views.decorators.cache import cache_page, never_cache
+from django.views.generic.base import RedirectView
 
 import map_saver.views
 import moderate.views
@@ -56,6 +57,9 @@ urlpatterns = [
 
     path('credits/', map_saver.views.CreditsView.as_view(), name='credits'),
     path('help/', map_saver.views.HelpView.as_view(), name='help'),
+
+    # Blog redirect
+    path('blog/', RedirectView.as_view(url='https://blog.metromapmaker.com', permanent=True), name='blog'),
 
     # Admin HQ
     path('admin/home/', never_cache(map_saver.views.AdminHomeView.as_view()), name='admin_home'),
