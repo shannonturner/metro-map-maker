@@ -8,6 +8,7 @@ var preferredGridPixelMultiplier = 20;
 var lastStrokeStyle;
 var redrawOverlappingPoints = {}; // Only in use by mapDataVersion 1
 var rightClicking = false;
+var arrowKeys = new Set();
 var dragX = false;
 var dragY = false;
 var clickX = false;
@@ -2612,6 +2613,66 @@ function updateMapObject(x, y, key, data) {
   return metroMap;
 } // updateMapObject()
 
+function moveStation(directions) {
+  if (!activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+    // Only allow moving a station when the station menu is open and active
+    return
+  }
+
+  var xOffset = 0;
+  var yOffset = 0;
+
+  // If you hold left and right (or up/down) at the same time, it'll prefer right (down),
+  //  and I guess you could say they should cancel each other out,
+  //  but why would you do that?
+  if (directions.has('left')) {
+      var xOffset = -1;
+  }
+  if (directions.has('right')) {
+      var xOffset = 1;
+  }
+  if (directions.has('up')) {
+      var yOffset = -1;
+  }
+  if (directions.has('down')) {
+      var yOffset = 1;
+  }
+
+  if (mapDataVersion == 3) {
+    var x = parseInt($('#station-coordinates-x').val())
+    var y = parseInt($('#station-coordinates-y').val())
+
+    // If there's already a station there, we can't move this one on top of it.
+    if (getStation(x + xOffset, y + yOffset, activeMap)) {
+      return // TODO: Consider showing visual bell to indicate failure
+    }
+
+    // If there's no line here, we can't move this station on top of nothing.
+    // Stations must be place on a line.
+    if (!getActiveLine(x + xOffset, y + yOffset, activeMap)) {
+      return // TODO: Consider showing visual bell to indicate failure
+    }
+
+    // Set the hidden form fields station-coordinates-x, -y as well
+    $('#station-coordinates-x').val(x + xOffset)
+    $('#station-coordinates-y').val(y + yOffset)
+
+    if (!activeMap['stations'][x + xOffset]) {
+      activeMap['stations'][x + xOffset] = {}
+    }
+    if (!activeMap['stations'][x + xOffset][y + yOffset]) {
+      activeMap['stations'][x + xOffset][y + yOffset] = {}
+    }
+    activeMap['stations'][x + xOffset][y + yOffset] = activeMap['stations'][x][y]
+    delete activeMap['stations'][x][y]
+  }
+
+  drawCanvas(activeMap, true)
+  autoSave(activeMap)
+
+  return true
+} // moveStation(direction)
+
 function moveMap(direction) {
     // Much faster and easier to read replacement
     //  of the old method of moving the map
@@ -3341,16 +3402,37 @@ $(document).ready(function() {
       undo();
     }
     else if (event.key == 'ArrowLeft' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // left arrow, except for "go back"
-      event.preventDefault(); moveMap('left')
+      event.preventDefault();
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        arrowKeys.add('left')
+      }
+      else {
+        moveMap('left')
+      }
     }
     else if (event.key == 'ArrowUp') { // up arrow
-      event.preventDefault(); moveMap('up')
+      event.preventDefault();
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        arrowKeys.add('up')
+      } else {
+        moveMap('up')
+      }
     }
     else if (event.key == 'ArrowRight' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // right arrow, except for "go forward"
-      event.preventDefault(); moveMap('right')
+      event.preventDefault();
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        arrowKeys.add('right')
+      } else {
+        moveMap('right')
+      }
     }
     else if (event.key == 'ArrowDown') { // down arrow
-      event.preventDefault(); moveMap('down')
+      event.preventDefault();
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        arrowKeys.add('down')
+      } else {
+        moveMap('down')
+      }
     }
     else if (event.key == '-' || event.key == '_') { // minus
       $('#tool-zoom-out').trigger('click')
@@ -3381,7 +3463,17 @@ $(document).ready(function() {
     if (railKey !== false && possibleRailLines[railKey]) {
       possibleRailLines[railKey].click()
     }
+
+    if (arrowKeys.size > 0 && activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+      moveStation(arrowKeys)
+    }
   }); // document.addEventListener("keydown")
+
+  document.addEventListener("keyup", function(event) {
+    if (arrowKeys.size > 0) {
+      arrowKeys = new Set()
+    }
+  }); // keyup
 
   activeTool = 'look';
 
