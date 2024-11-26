@@ -34,6 +34,7 @@ var mapSize = undefined // Not the same as gridRows/gridCols, which is the poten
 var gridStep = 5
 var rulerOn = false
 var rulerOrigin = []
+var moveStationOn = []
 
 var MMMDEBUG = false
 var MMMDEBUG_UNDO = false
@@ -475,6 +476,12 @@ function redrawCanvasForColor(color) {
 function makeStation(x, y) {
   // Use a temporary station and don't write to activeMap unless it actually has data
   //  this is how to make stations with no name go away on their own now that the grid is gone
+
+  if (moveStationOn.length == 2) {
+    moveStationTo(moveStationOn[0], moveStationOn[1], x, y)
+    return
+  }
+
   temporaryStation = {}
   if (!getActiveLine(x, y, activeMap)) {
     // Only expand the #tool-station-options if it's actually on a line
@@ -489,6 +496,7 @@ function makeStation(x, y) {
     }
     $('#tool-station-options').hide();
     drawCanvas(activeMap, true) // clear any stale station indicators
+    setMoveStationAbility(true) // turn off "Move Station"
     return
   }
 
@@ -2628,6 +2636,7 @@ function moveStationTo(fromX, fromY, x, y) {
   // Set the hidden form fields station-coordinates-x, -y as well
   $('#station-coordinates-x').val(x)
   $('#station-coordinates-y').val(y)
+  moveStationOn = [x, y]
 
   if (!activeMap['stations'][x]) {
     activeMap['stations'][x] = {}
@@ -2637,6 +2646,8 @@ function moveStationTo(fromX, fromY, x, y) {
   }
   activeMap['stations'][x][y] = activeMap['stations'][fromX][fromY]
   delete activeMap['stations'][fromX][fromY]
+  drawCanvas(activeMap, true)
+  autoSave(activeMap)
 } // moveStationTo(fromX, fromY, x, y)
 
 function moveStation(directions) {
@@ -2669,10 +2680,6 @@ function moveStation(directions) {
     var y = parseInt($('#station-coordinates-y').val())
     moveStationTo(x, y, (x + xOffset), (y + yOffset))
   }
-
-  drawCanvas(activeMap, true)
-  autoSave(activeMap)
-
   return true
 } // moveStation(direction)
 
@@ -3358,6 +3365,13 @@ $(document).ready(function() {
     }
     else if (event.key.toLowerCase() == 'l')  { // L
       $('#tool-label').trigger('click')
+    }
+    else if (event.key.toLowerCase() == 'm')  { // M
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        $('#move-station').trigger('click')
+      } else {
+        setMoveStationAbility(true) // disable it
+      }
     }
     else if (event.key.toLowerCase() == 'o' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // O, except for Open
       if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
@@ -5197,6 +5211,34 @@ $('#tool-eyedropper').on('click', function() {
 
 $('#tool-look').on('click', function() {
   activeTool = 'look'
+})
+
+function setMoveStationAbility(disable) {
+  // By default, this should toggle,
+  //  but it's useful to always disable, like when closing the station menu
+  if (disable) {
+    moveStationOn = []
+  } else if (moveStationOn.length > 0) {
+    moveStationOn = []
+  } else {
+    moveStationOn = [
+      parseInt($('#station-coordinates-x').val()),
+      parseInt($('#station-coordinates-y').val())
+    ]
+  }
+
+  if (moveStationOn.length == 2) {
+    $('span#move-station-enabled').text(': Arrow Keys, Mouse')
+  } else {
+    setTimeout(function() {
+      $('#move-station').removeClass('active')
+    }, 1)
+    $('span#move-station-enabled').text(': Arrow Keys only')
+  }
+} // setMoveStationAbility(disable)
+
+$('#move-station').on('click', function() {
+  setMoveStationAbility()
 })
 
 function cycleGridStep() {

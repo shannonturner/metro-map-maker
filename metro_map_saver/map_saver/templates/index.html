@@ -273,6 +273,11 @@
                 <option value="{{ station_style }}">{{ station_style_names.long }}</option>
             {% endfor %}
           </select>
+
+          <hr>
+          <button id="move-station" class="has-tooltip styled styling-redline width-100" data-toggle="tooltip" data-placement="left" title="Allows you to place a station somewhere else on the map. (You must place a station on a drawn line, and it can't be placed on another station.) You can also use the arrow keys to move a station while the station menu is open, even if Move Station is off. (Keyboard shortcut: M)">
+            <span class="button-label"><b><u>M</u></b>ove station<span id="move-station-enabled">: Arrow Keys only</span></span>
+          </button>
         </fieldset>
       </div>
 
