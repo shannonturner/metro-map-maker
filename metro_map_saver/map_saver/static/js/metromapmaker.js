@@ -2613,6 +2613,32 @@ function updateMapObject(x, y, key, data) {
   return metroMap;
 } // updateMapObject()
 
+function moveStationTo(fromX, fromY, x, y) {
+  // Moves an existing station (station) to the coordinates at (x,y),
+  //  if those are valid
+
+  if (!getActiveLine(x, y, activeMap)) {
+    return // TODO: Consider showing visual bell to indicate failure
+  }
+
+  if (getStation(x, y, activeMap)) {
+    return // TODO: Consider showing visual bell to indicate failure
+  }
+
+  // Set the hidden form fields station-coordinates-x, -y as well
+  $('#station-coordinates-x').val(x)
+  $('#station-coordinates-y').val(y)
+
+  if (!activeMap['stations'][x]) {
+    activeMap['stations'][x] = {}
+  }
+  if (!activeMap['stations'][x][y]) {
+    activeMap['stations'][x][y] = {}
+  }
+  activeMap['stations'][x][y] = activeMap['stations'][fromX][fromY]
+  delete activeMap['stations'][fromX][fromY]
+} // moveStationTo(fromX, fromY, x, y)
+
 function moveStation(directions) {
   if (!activeTool == 'station' && $('#tool-station-options').is(':visible')) {
     // Only allow moving a station when the station menu is open and active
@@ -2641,30 +2667,7 @@ function moveStation(directions) {
   if (mapDataVersion == 3) {
     var x = parseInt($('#station-coordinates-x').val())
     var y = parseInt($('#station-coordinates-y').val())
-
-    // If there's already a station there, we can't move this one on top of it.
-    if (getStation(x + xOffset, y + yOffset, activeMap)) {
-      return // TODO: Consider showing visual bell to indicate failure
-    }
-
-    // If there's no line here, we can't move this station on top of nothing.
-    // Stations must be place on a line.
-    if (!getActiveLine(x + xOffset, y + yOffset, activeMap)) {
-      return // TODO: Consider showing visual bell to indicate failure
-    }
-
-    // Set the hidden form fields station-coordinates-x, -y as well
-    $('#station-coordinates-x').val(x + xOffset)
-    $('#station-coordinates-y').val(y + yOffset)
-
-    if (!activeMap['stations'][x + xOffset]) {
-      activeMap['stations'][x + xOffset] = {}
-    }
-    if (!activeMap['stations'][x + xOffset][y + yOffset]) {
-      activeMap['stations'][x + xOffset][y + yOffset] = {}
-    }
-    activeMap['stations'][x + xOffset][y + yOffset] = activeMap['stations'][x][y]
-    delete activeMap['stations'][x][y]
+    moveStationTo(x, y, (x + xOffset), (y + yOffset))
   }
 
   drawCanvas(activeMap, true)
