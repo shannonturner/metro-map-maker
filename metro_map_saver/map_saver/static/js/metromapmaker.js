@@ -375,6 +375,7 @@ function bindRailLineEvents() {
       $('#tool-line-icon-paint-bucket').hide()
     }
     $('#tool-station-options').hide();
+    setMoveStationAbility(true) // turn off "Move Station"
   });  
 } // bindRailLineEvents()
 
@@ -761,7 +762,7 @@ function bindGridSquareMouseover(event) {
 function bindGridSquareMouseup(event) {
   // Workaround to give focus to #station-name after mousedown
   // Just don't steal focus away from another text box
-  if (activeTool == 'station' && document.activeElement.type != 'text') {
+  if (activeTool == 'station' && document.activeElement.type != 'text' && moveStationOn.length == 0) {
     $('#station-name').focus()
   }
   // Unset current click's x, y coordinates,
@@ -841,6 +842,14 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
     var activeColor = '#000000'
   else if (activeTool == 'eraser')
     var activeColor = '#ffffff'
+  else if (activeTool == 'station' && moveStationOn.length == 2) {
+    var gridPixelMultiplier = canvas.width / gridCols
+    ctx.font = '700 ' + gridPixelMultiplier + 'px sans-serif';
+    if (!getActiveLine(x, y, activeMap) || getStation(x, y, activeMap)) {
+      ctx.globalAlpha = 0.25 // Visually indicate that it's not valid
+    }
+    drawStation(ctx, moveStationOn[0], moveStationOn[1], activeMap, false, x, y)
+  }
   ctx.fillStyle = fillColor || activeColor || '#2ECC71'
   var gridPixelMultiplier = canvas.width / gridCols
   ctx.fillRect((x * gridPixelMultiplier) - (gridPixelMultiplier / 2), (y * gridPixelMultiplier) - (gridPixelMultiplier / 2), gridPixelMultiplier, gridPixelMultiplier)
@@ -1533,13 +1542,30 @@ function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth, lineStyle)
   ctx.closePath()
 } // drawPoint(ctx, x, y, metroMap)
 
-function drawStation(ctx, x, y, metroMap, skipText) {
+function drawStation(ctx, x, y, metroMap, skipText, drawAtX, drawAtY) {
   var station = getStation(x, y, metroMap)
   if (station) {
     var isTransferStation = station["transfer"];
   } else {
     return; // If it's not a station, I can end here.
   }
+  var isMoving = false
+
+  // The original (x, y) values if I'm replacing them with (drawAtX, drawAtY) below
+  var stationX = x
+  var stationY = y
+  if (drawAtX !== undefined && drawAtY !== undefined) {
+    // Used to get the real station from above, but draw it somewhere else.
+    //  which is nice when hovering.
+    x = drawAtX
+    y = drawAtY
+    isMoving = true
+  }
+  console.log(`drawAtX: ${drawAtX}, isMoving: ${isMoving}`)
+  // TODO: It would be much more work initially, but refactoring each function below --
+  // including all variants of drawStyledStation and drawStationName,
+  //  would allow me to draw the correct station marker while moving,
+  // and avoid a lot of clumsy workarounds / additional complexity
 
   var thisStationStyle = station["style"] || mapStationStyle
   var drawAsConnected = false
@@ -1554,17 +1580,17 @@ function drawStation(ctx, x, y, metroMap, skipText) {
   } else if (thisStationStyle == 'circles-sm') {
     drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.25, gridPixelMultiplier / 4)
   } else if (thisStationStyle == 'rect') {
-    drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, 0, 0)
+    drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, 0, 0, false, false, isMoving)
   } else if (thisStationStyle == 'rect-round' || thisStationStyle == 'circles-thin') {
-    drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, 0, 0, 20)
+    drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, 0, 0, 20, false, isMoving)
   }
 
   if (!skipText) {
-    drawStationName(ctx, x, y, metroMap, isTransferStation, drawAsConnected)
+    drawStationName(ctx, stationX, stationY, metroMap, isTransferStation, drawAsConnected, drawAtX, drawAtY)
   }
 } // drawStation(ctx, x, y, metroMap)
 
-function drawStationName(ctx, x, y, metroMap, isTransferStation, drawAsConnected) {
+function drawStationName(ctx, x, y, metroMap, isTransferStation, drawAsConnected, drawAtX, drawAtY) {
   // Write the station name
   ctx.textAlign = 'start'
   ctx.fillStyle = '#000000';
@@ -1573,6 +1599,12 @@ function drawStationName(ctx, x, y, metroMap, isTransferStation, drawAsConnected
   var stationName = station["name"].replaceAll('_', ' ')
   var orientation = parseInt(station["orientation"])
   var textSize = ctx.measureText(stationName).width;
+
+  if (drawAtX !== undefined && drawAtY !== undefined) {
+    x = drawAtX
+    y = drawAtY
+  }
+
   if (isTransferStation)
     var xOffset = gridPixelMultiplier * 1.5
   else if (drawAsConnected)
@@ -1673,8 +1705,12 @@ function drawCircleStation(ctx, x, y, metroMap, isTransferStation, stationCircle
   ctx.fill();
 }
 
-function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, strokeColor, fillColor, radius, isIndicator) {
+function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, strokeColor, fillColor, radius, isIndicator, isMoving) {
   var lineColorWidthStyle = getActiveLine(x, y, metroMap, true)
+  if (!lineColorWidthStyle && isMoving) {
+    // Moving off a line, which isn't valid, but we want to preview
+    lineColorWidthStyle = ['bd1038', '1-solid']
+  }
   if (mapDataVersion == 3) {
     var lineColor = '#' + lineColorWidthStyle[0]
     var lineWidth = lineColorWidthStyle[1].split('-')[0]
@@ -1686,6 +1722,9 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     var lineWidth = 1
   }
   var lineDirection = getLineDirection(x, y, metroMap)["direction"]
+  if (!lineDirection && isMoving) {
+    lineDirection = 'singleton'
+  }
 
   var rectArgs = []
   var drawAsConnected = false
@@ -1740,7 +1779,7 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
       lineDirection = 'diagonal-ne'
       height = gridPixelMultiplier
     }
-  } else if (!connectedStations && !isIndicator) {
+  } else if (!connectedStations && !isIndicator && !isMoving) {
     // Eligible for connecting, but it's an interior station.
     // Don't draw this station.
     return
@@ -3590,6 +3629,7 @@ $(document).ready(function() {
     $('#tool-station').addClass('active')
     if ($('#tool-station-options').is(':visible')) {
       $('#tool-station-options').hide();
+      setMoveStationAbility(true) // turn off "Move Station"
       $(this).removeClass('width-100')
     }
     $('.tooltip').hide();
@@ -3608,6 +3648,7 @@ $(document).ready(function() {
     $('.active').removeClass('active')
     $('#tool-eraser').addClass('active')
     $('#tool-station-options').hide();
+    setMoveStationAbility(true) // turn off "Move Station"
     $('.tooltip').hide();
     $('#tool-line').attr('style', '')
     if (!$('#tool-line-options').is(':visible')) {
@@ -3844,6 +3885,7 @@ $(document).ready(function() {
     // On mobile, you need to tap and hold on the canvas to save the image
     drawCanvas(activeMap);
     $('#tool-station-options').hide();
+    setMoveStationAbility(true) // turn off "Move Station"
 
     $('.tooltip').hide();
     if ($('#grid-canvas').is(':visible')) {
