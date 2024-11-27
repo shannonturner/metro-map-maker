@@ -45,7 +45,7 @@
 
         <a href="{% url 'home_map' map.urlhash %}">
             {% if map.name %}
-                <h4>{{ map.name }}</h4>
+                <h4>{{ map.name|striptags }}</h4>
             {% else %}
                 <h4>(No name)</h4>
             {% endif %}

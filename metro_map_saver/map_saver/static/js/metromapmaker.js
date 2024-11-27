@@ -3833,9 +3833,6 @@ $(document).ready(function() {
         })
         $('#name-this-map').click(function(e) {
 
-          // Sanitize the map name
-          $('#user-given-map-name').val($('#user-given-map-name').val().replaceAll('<', '').replaceAll('>', '').replaceAll('"', '').replaceAll('\\\\', '').replace('&amp;', '&').replaceAll('&', '&amp;').replaceAll('/', '-').replaceAll("'", '')) // use similar replaces to $('#create-new-rail-line').click()
-
           var formData = $('#name-map').serializeArray().reduce(function(obj, item) {
               obj[item.name] = item.value;
               return obj;

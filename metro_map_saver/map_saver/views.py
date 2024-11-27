@@ -45,7 +45,6 @@ from .forms import (
 from .models import SavedMap, IdentifyMap, City
 from .validator import (
     is_hex,
-    sanitize_string,
     validate_metro_map,
     hex64,
     ALLOWED_TAGS,
@@ -411,7 +410,7 @@ class CreatorNameMapView(TemplateView):
             else:
                 if this_map.naming_token and this_map.naming_token == naming_token:
                     # This is the original creator of the map; allow them to name the map.
-                    this_map.name = sanitize_string(f'{name} ({tags})' if tags in ALLOWED_TAGS else f'{name}')[:255]
+                    this_map.name = f'{name} ({tags})' if tags in ALLOWED_TAGS else f'{name}'[:255]
                     this_map.save()
                     context['saved_map'] = 'Success'
                 else:
