@@ -618,8 +618,10 @@ function makeLabel(x, y) {
 } // makeLabel(x, y)
 
 function bindGridSquareEvents(event) {
-  $('#station-coordinates-x').val('');
-  $('#station-coordinates-y').val('');
+  if (!moveStationOn) {
+    $('#station-coordinates-x').val('');
+    $('#station-coordinates-y').val('');
+  }
 
   if (!event.isTrusted) {
     // This is a click + drag
@@ -847,6 +849,8 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
     ctx.font = '700 ' + gridPixelMultiplier + 'px sans-serif';
     if (!getActiveLine(x, y, activeMap) || getStation(x, y, activeMap)) {
       ctx.globalAlpha = 0.25 // Visually indicate that it's not valid
+    } else {
+      ctx.globalAlpha = 0.75
     }
     drawStation(ctx, moveStationOn[0], moveStationOn[1], activeMap, false, x, y)
   }
@@ -1561,11 +1565,6 @@ function drawStation(ctx, x, y, metroMap, skipText, drawAtX, drawAtY) {
     y = drawAtY
     isMoving = true
   }
-  console.log(`drawAtX: ${drawAtX}, isMoving: ${isMoving}`)
-  // TODO: It would be much more work initially, but refactoring each function below --
-  // including all variants of drawStyledStation and drawStationName,
-  //  would allow me to draw the correct station marker while moving,
-  // and avoid a lot of clumsy workarounds / additional complexity
 
   var thisStationStyle = station["style"] || mapStationStyle
   var drawAsConnected = false
@@ -1580,22 +1579,21 @@ function drawStation(ctx, x, y, metroMap, skipText, drawAtX, drawAtY) {
   } else if (thisStationStyle == 'circles-sm') {
     drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.25, gridPixelMultiplier / 4)
   } else if (thisStationStyle == 'rect') {
-    drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, 0, 0, false, false, isMoving)
+    drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, station, isTransferStation, 0, 0, false, false, isMoving)
   } else if (thisStationStyle == 'rect-round' || thisStationStyle == 'circles-thin') {
-    drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, 0, 0, 20, false, isMoving)
+    drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, station, isTransferStation, 0, 0, 20, false, isMoving)
   }
 
   if (!skipText) {
-    drawStationName(ctx, stationX, stationY, metroMap, isTransferStation, drawAsConnected, drawAtX, drawAtY)
+    drawStationName(ctx, stationX, stationY, metroMap, station, isTransferStation, drawAsConnected, drawAtX, drawAtY)
   }
 } // drawStation(ctx, x, y, metroMap)
 
-function drawStationName(ctx, x, y, metroMap, isTransferStation, drawAsConnected, drawAtX, drawAtY) {
+function drawStationName(ctx, x, y, metroMap, station, isTransferStation, drawAsConnected, drawAtX, drawAtY) {
   // Write the station name
   ctx.textAlign = 'start'
   ctx.fillStyle = '#000000';
   ctx.save();
-  var station = getStation(x, y, metroMap)
   var stationName = station["name"].replaceAll('_', ' ')
   var orientation = parseInt(station["orientation"])
   var textSize = ctx.measureText(stationName).width;
@@ -1705,7 +1703,7 @@ function drawCircleStation(ctx, x, y, metroMap, isTransferStation, stationCircle
   ctx.fill();
 }
 
-function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, strokeColor, fillColor, radius, isIndicator, isMoving) {
+function drawStyledStation_rectangles(ctx, x, y, metroMap, thisStation, isTransferStation, strokeColor, fillColor, radius, isIndicator, isMoving) {
   var lineColorWidthStyle = getActiveLine(x, y, metroMap, true)
   if (!lineColorWidthStyle && isMoving) {
     // Moving off a line, which isn't valid, but we want to preview
@@ -1729,7 +1727,6 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
   var rectArgs = []
   var drawAsConnected = false
   var connectedStations = getConnectedStations(x, y, metroMap)
-  var thisStation = getStation(x, y, metroMap)
 
   var width = gridPixelMultiplier
   var height = gridPixelMultiplier
@@ -1795,6 +1792,8 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     } else if (!isTransferStation) {
       width = gridPixelMultiplier / 2
     }
+  } else if (isMoving && !isTransferStation && lineDirection != 'singleton') {
+    width = gridPixelMultiplier / 2
   }
 
   if (drawAsConnected && !isIndicator) {
@@ -1976,9 +1975,9 @@ function drawIndicator(x, y) {
   } else if (thisStationStyle == 'rect') {
     // For this and rect-round, I don't actually want to draw the one continuous station
     //  even if I could; these all should be individually selectable.
-    drawStyledStation_rectangles(ctx, x, y, activeMap, isTransferStation, '#000000', '#00ff00', false, true)
+    drawStyledStation_rectangles(ctx, x, y, activeMap, permStation, isTransferStation, '#000000', '#00ff00', false, true)
   } else if (thisStationStyle == 'rect-round' || thisStationStyle == 'circles-thin') {
-    drawStyledStation_rectangles(ctx, x, y, activeMap, isTransferStation, '#000000', '#00ff00', 20, true)
+    drawStyledStation_rectangles(ctx, x, y, activeMap, permStation, isTransferStation, '#000000', '#00ff00', 20, true)
   } 
 } // drawIndicator(x, y)
 
