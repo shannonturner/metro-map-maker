@@ -4174,8 +4174,6 @@ $(document).ready(function() {
   })
 
   $('#station-name').change(function() {
-    $(this).val($(this).val().replaceAll('"', '').replaceAll("'", '').replaceAll('<', '').replaceAll('>', '').replaceAll('&', '').replaceAll('/', '').replaceAll('_', ' ').replaceAll('\\\\', '').replaceAll('%', ''))
-
     var x = $('#station-coordinates-x').val();
     var y = $('#station-coordinates-y').val();
 
