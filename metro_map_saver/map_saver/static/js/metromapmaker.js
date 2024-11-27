@@ -477,10 +477,11 @@ function redrawCanvasForColor(color) {
 function makeStation(x, y) {
   // Use a temporary station and don't write to activeMap unless it actually has data
   //  this is how to make stations with no name go away on their own now that the grid is gone
-
   if (moveStationOn.length == 2) {
-    moveStationTo(moveStationOn[0], moveStationOn[1], x, y)
-    return
+    var swappedStation = moveStationTo(moveStationOn[0], moveStationOn[1], x, y)
+    if (!swappedStation) {
+      return
+    }
   }
 
   temporaryStation = {}
@@ -505,6 +506,13 @@ function makeStation(x, y) {
   $('#station-coordinates-x').val(x);
   $('#station-coordinates-y').val(y);
   var allLines = $('.rail-line');
+
+  if (moveStationOn.length == 2) {
+    // If moveStationOn has coordinates but I didn't return above,
+    //  I must have clicked on a station,
+    //  so I want to swap which station is active
+    moveStationOn = [x, y]
+  }
 
   $('#tool-station').addClass('width-100')
 
@@ -2668,7 +2676,7 @@ function moveStationTo(fromX, fromY, x, y) {
   }
 
   if (getStation(x, y, activeMap)) {
-    return // TODO: Consider showing visual bell to indicate failure
+    return true // Want to swap to another station
   }
 
   // Set the hidden form fields station-coordinates-x, -y as well
@@ -2689,6 +2697,8 @@ function moveStationTo(fromX, fromY, x, y) {
 } // moveStationTo(fromX, fromY, x, y)
 
 function moveStation(directions) {
+  // This is the keyboard shortcut version of moving stations;
+  //  contrast with moveStationTo which is the mouse version
   if (!activeTool == 'station' && $('#tool-station-options').is(':visible')) {
     // Only allow moving a station when the station menu is open and active
     return
@@ -2714,6 +2724,12 @@ function moveStation(directions) {
   }
 
   if (mapDataVersion == 3) {
+    // moveStationTo has this check, but when mousing, I want
+    //  to be able to switch which station is active,
+    //  not swap positions or place one station on top of another
+    if (getStation(x, y, activeMap)) {
+      return // TODO: Consider showing visual bell to indicate failure
+    }
     var x = parseInt($('#station-coordinates-x').val())
     var y = parseInt($('#station-coordinates-y').val())
     moveStationTo(x, y, (x + xOffset), (y + yOffset))
