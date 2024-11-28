@@ -904,7 +904,7 @@ class MapsPerDayView(DayArchiveView):
     """ Display the maps created this day
     """
 
-    queryset = SavedMap.objects.defer(*SavedMap.DEFER_FIELDS).all().exclude(tags__slug='calendar-hidden')
+    queryset = SavedMap.objects.defer(*SavedMap.DEFER_FIELDS).all().filter(browse_visible=True)
     date_field = 'created_at'
     paginate_by = 50
     context_object_name = 'maps'
@@ -937,7 +937,7 @@ class CityView(ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        queryset = SavedMap.objects.all().defer(*SavedMap.DEFER_FIELDS)
+        queryset = SavedMap.objects.all().filter(browse_visible=True).defer(*SavedMap.DEFER_FIELDS)
         city = self.kwargs.get('city').title()
         if city == 'Unspecified':
             queryset = queryset.filter(city__exact=None)
@@ -949,7 +949,10 @@ class CityView(ListView):
                     queryset = queryset.filter(name__istartswith=city)
             else:
                 if city and not queryset.exists():
-                    queryset = SavedMap.objects.all().defer(*SavedMap.DEFER_FIELDS).filter(name__istartswith=city)
+                    queryset = SavedMap.objects.all().defer(*SavedMap.DEFER_FIELDS).filter(
+                        name__istartswith=city,
+                        browse_visible=True,
+                    )
         return queryset.order_by('-created_at')
 
     def get_context_data(self, **kwargs):
@@ -982,6 +985,7 @@ class SameDayView(ListView):
         return super().get_queryset().defer(*SavedMap.DEFER_FIELDS).filter(
             created_at__gte=this_map.created_at.date(),
             created_at__lt=this_map.created_at.date() + datetime.timedelta(days=1),
+            browse_visible=True,
         )
 
 class RecaptchaMixin:
@@ -1108,7 +1112,7 @@ class RandomMapView(RateMapView):
         return super().get(request, *args, **kwargs)
 
     def get_object(self, *args, **kwargs):
-        pks = SavedMap.objects.all().values_list('pk', flat=True)
+        pks = SavedMap.objects.all().filter(browse_visible=True).values_list('pk', flat=True)
         return SavedMap.objects.get(pk=random.choice(pks))
 
 
@@ -1120,6 +1124,7 @@ class HighestRatedMapsView(ListView):
     def get_queryset(self):
         queryset = super().get_queryset().filter(
             likes__gt=0,
+            browse_visible=True,
         ).defer(*SavedMap.DEFER_FIELDS).order_by('-likes')
         return queryset
 
