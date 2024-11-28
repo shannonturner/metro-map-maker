@@ -1032,14 +1032,14 @@ class IdentifyMapView(RecaptchaMixin, FormView):
         except Exception as exc:
             pass
         else:
-            if is_submission_valid:
+            already_identified = self.request.session.get('identified', [])
+            if is_submission_valid and urlhash not in already_identified:
                 self.model.objects.create(
                     saved_map=mmap,
                     name=name,
                     map_type=map_type,
                 )
-                already_identified = self.request.session.get('identified', [])
-                self.request.session['identified'] = already_identified + [mmap.id]
+                self.request.session['identified'] = already_identified + [urlhash]
 
         return HttpResponseRedirect(self.get_success_url(urlhash))
 
@@ -1064,7 +1064,7 @@ class RateMapView(RecaptchaMixin, FormView, DetailView):
     def get_success_url(self, urlhash):
         return reverse_lazy('rate', args=(urlhash, ))
 
-    @method_decorator(cache_control(max_age=60))
+    @method_decorator(never_cache)
     @method_decorator(ensure_csrf_cookie)
     def get(self, request, *args, **kwargs):
         try:
@@ -1072,10 +1072,10 @@ class RateMapView(RecaptchaMixin, FormView, DetailView):
         except MultipleObjectsReturned:
             self.object = SavedMap.objects.filter(urlhash=kwargs.get('urlhash')).earliest('id')
         context = self.get_context_data(object=self.object, map=self.object)
-        if not self.object.id in request.session.get('rated', []):
+        if not self.object.urlhash in request.session.get('rated', []):
             context['form_like'] = self.form_class(dict(urlhash=self.object.urlhash, choice='likes'))
             context['form_dislike'] = self.form_class(dict(urlhash=self.object.urlhash, choice='dislikes'))
-        if not self.object.id in request.session.get('identified', []):
+        if not self.object.urlhash in request.session.get('identified', []):
             context['identify_form'] = IdentifyForm(dict(urlhash=self.object.urlhash))
 
         return self.render_to_response(context)
@@ -1090,10 +1090,10 @@ class RateMapView(RecaptchaMixin, FormView, DetailView):
         except Exception as exc:
             pass
         else:
-            if is_submission_valid:
+            already_rated = self.request.session.get('rated', [])
+            if is_submission_valid and urlhash not in already_rated:
                 mmap.update(**{choice: F(choice) + 1})
-                already_rated = self.request.session.get('rated', [])
-                self.request.session['rated'] = already_rated + [mmap.first().id]
+                self.request.session['rated'] = already_rated + [urlhash]
 
         return HttpResponseRedirect(self.get_success_url(urlhash))
 
