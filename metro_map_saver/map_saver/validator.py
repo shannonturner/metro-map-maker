@@ -22,6 +22,7 @@ ALLOWED_STATION_STYLES = {
     'circles-lg': {"short": "Circles (Large)", "long": "Circles (Large)"},
     'circles-md': {"short": "Circles (Medium)", "long": "Circles (Medium)"},
     'circles-sm': {"short": "Circles (Small)", "long": "Circles (Small)"},
+    'london': {"short": "London", "long": "London"},
 }
 ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1]
 ALLOWED_CONNECTING_STATIONS = ['rect', 'rect-round', 'circles-thin']

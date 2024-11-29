@@ -66,7 +66,7 @@ const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit
 const ALLOWED_LINE_WIDTHS = [100, 75.0, 50.0, 25.0, 12.5]
 const ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dashed_uneven', 'dashed_square', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted', 'hollow', 'hollow_open', 'color_outline', 'wide_stripes', 'square_stripes', 'stripes']
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1];
-const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
+const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin', 'london']
 const ALLOWED_SIZES = [80, 120, 160, 200, 240, 360]
 const MAX_MAP_SIZE = ALLOWED_SIZES[ALLOWED_SIZES.length-1]
 
@@ -1590,6 +1590,8 @@ function drawStation(ctx, x, y, metroMap, skipText, drawAtX, drawAtY) {
     drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, station, isTransferStation, 0, 0, false, false, isMoving)
   } else if (thisStationStyle == 'rect-round' || thisStationStyle == 'circles-thin') {
     drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, station, isTransferStation, 0, 0, 20, false, isMoving)
+  } else if (thisStationStyle == 'london') {
+    drawStyledStation_London(ctx, x, y, metroMap, station)
   }
 
   if (!skipText) {
@@ -1947,6 +1949,128 @@ function primitiveRoundRect(ctx, x, y, width, height, radius) {
   ctx.closePath()
 }
 
+function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fillColor) {
+  var lineColorWidthStyle = getActiveLine(x, y, metroMap, true)
+  if (mapDataVersion == 3) {
+    var lineColor = '#' + lineColorWidthStyle[0]
+    var lineWidth = lineColorWidthStyle[1].split('-')[0]
+  } else if (mapDataVersion == 2) {
+    var lineColor = '#' + lineColorWidthStyle
+    var lineWidth = mapLineWidth
+  } else if (mapDataVersion == 1) {
+    var lineColor = '#' + lineColorWidthStyle
+    var lineWidth = 1
+  }
+  var lineDirection = getLineDirection(x, y, metroMap)
+  var isDiagonal = lineDirection["direction"].indexOf('diagonal') > -1
+  var isEndcap = lineDirection["endcap"]
+  if (station) {
+    var markerDirection = station["orientation"]
+  } else {
+    var markerDirection = parseInt(window.localStorage.getItem('metroMapStationOrientation'))
+  }
+
+  // TODO: May need to adjust per line width as well, otherwise stations placed on thicker lines don't look very good.
+  var height = gridPixelMultiplier / 2
+  var width = gridPixelMultiplier * 0.75
+
+  ctx.strokeStyle = strokeColor || lineColor
+  ctx.fillStyle = fillColor || lineColor
+  var isIndicator = !!(strokeColor && fillColor)
+  ctx.lineWidth = 2
+
+  console.log(`x,y: ${x},${y} strokeColor: ${strokeColor} fillColor: ${fillColor} isIndicator: ${isIndicator} ctx.lineWidth: ${ctx.lineWidth} lineDirection: ${JSON.stringify(lineDirection)} station: ${JSON.stringify(station)}`)
+
+  if ((station && station["transfer"]) || lineDirection['direction'] == 'singleton') {
+    // Transfer stations are drawn as a thicker black and white circle.
+    ctx.strokeStyle = '#000000'
+    drawCircleStation(ctx, x, y, activeMap, true, .6, gridPixelMultiplier / 4, ctx.strokeStyle, ctx.strokeStyle)
+    if (isIndicator) {
+      ctx.fillStyle = fillColor
+    } else {
+      ctx.fillStyle = '#ffffff'
+    }
+    drawCircleStation(ctx, x, y, activeMap, true, .5, gridPixelMultiplier / 4, ctx.fillStyle, ctx.strokeStyle, true)
+  } else if (isEndcap) {
+    // Non-transfer stations on an endcap are drawn as a rectangle capping that line
+    width = gridPixelMultiplier * 1.5
+
+    if (isDiagonal) {
+      ctx.save()
+      ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier)
+    }
+
+    if (lineDirection["direction"] == 'horizontal') {
+      rectArgs = [(x - 0.25) * gridPixelMultiplier, (y - 0.75) * gridPixelMultiplier, height, width]
+    } else if (lineDirection["direction"] == 'vertical') {
+      rectArgs = [(x - 0.75) * gridPixelMultiplier, (y - 0.25) * gridPixelMultiplier, width, height]
+    } else if (lineDirection["direction"] == 'diagonal-se') {
+      ctx.rotate(-45 * (Math.PI / 180))
+      rectArgs = [-0.75 * gridPixelMultiplier, -0.25 * gridPixelMultiplier, width, height]
+    } else if (lineDirection["direction"] == 'diagonal-ne') {
+        ctx.rotate(45 * (Math.PI / 180))
+        rectArgs = [-0.75 * gridPixelMultiplier, -0.25 * gridPixelMultiplier, width, height]
+    }
+
+    ctx.fillRect(...rectArgs)
+    ctx.strokeRect(...rectArgs)
+    if (isDiagonal) {
+      ctx.restore()
+    }
+  } else if (!station || (station && !station["transfer"])) {
+    // The station name orientation for non-transfer stations also controls which side of the line the rectangular station marker appears on.
+    if (isDiagonal) {
+      ctx.save()
+      ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier)
+    }
+
+    if (lineDirection["direction"] == 'horizontal') {
+      if ([0, -45, -135, 90, 1].indexOf(markerDirection) > -1) {
+        // Draw the marker above
+        rectArgs = [(x - 0.25) * gridPixelMultiplier, (y - 0.75) * gridPixelMultiplier, height, width]
+      } else if ([180, 45, 135, -90, -1].indexOf(markerDirection) > -1) {
+        // Draw the marker below
+        rectArgs = [(x - 0.25) * gridPixelMultiplier, (y) * gridPixelMultiplier, height, width]
+      }
+    } else if (lineDirection["direction"] == 'vertical') {
+      if ([0, -45, 45, 90, 1].indexOf(markerDirection) > -1) {
+        // Draw the marker on the right
+        rectArgs = [(x) * gridPixelMultiplier, (y - 0.25) * gridPixelMultiplier, width, height]
+      } else if ([180, -135, 135, -90, -1].indexOf(markerDirection) > -1) {
+        // Draw the marker on the left
+        rectArgs = [(x - 0.75) * gridPixelMultiplier, (y - 0.25) * gridPixelMultiplier, width, height]
+      }
+    } else if (lineDirection["direction"] == 'diagonal-se') {
+      if ([0, -45, 45, 90, 1].indexOf(markerDirection) > -1) {
+        // Draw the marker above right
+        ctx.rotate(-45 * (Math.PI / 180))
+        // In rectArgs, x moves the marker left/right across the line, y moves the marker up/down the line
+        rectArgs = [0, -0.25 * gridPixelMultiplier, width, height]
+      } else if ([180, -135, 135, -90, -1].indexOf(markerDirection) > -1) {
+        // Draw the marker below left
+        ctx.rotate(-45 * (Math.PI / 180))
+        rectArgs = [-0.75 * gridPixelMultiplier, -0.25 * gridPixelMultiplier, width, height]
+      }
+    } else if (lineDirection["direction"] == 'diagonal-ne') {
+      if ([0, -45, 45, -90, -1].indexOf(markerDirection) > -1) {
+        // Draw the marker below right
+        ctx.rotate(45 * (Math.PI / 180))
+        rectArgs = [0, -0.25 * gridPixelMultiplier, width, height]
+      } else if ([180, -135, 135, 90, 1].indexOf(markerDirection) > -1) {
+        // Draw the marker above left
+        ctx.rotate(45 * (Math.PI / 180))
+        rectArgs = [-0.75 * gridPixelMultiplier, -0.25 * gridPixelMultiplier, width, height]
+      }
+    }
+
+    ctx.fillRect(...rectArgs)
+    ctx.strokeRect(...rectArgs)
+    if (isDiagonal) {
+      ctx.restore()
+    }
+  } // non-transfer, non-endcap
+} // drawStyledStation_London
+
 function drawIndicator(x, y) {
   // Place a temporary station marker on the canvas;
   // this will be overwritten by the drawCanvas() call
@@ -1986,7 +2110,9 @@ function drawIndicator(x, y) {
     drawStyledStation_rectangles(ctx, x, y, activeMap, permStation, isTransferStation, '#000000', '#00ff00', false, true)
   } else if (thisStationStyle == 'rect-round' || thisStationStyle == 'circles-thin') {
     drawStyledStation_rectangles(ctx, x, y, activeMap, permStation, isTransferStation, '#000000', '#00ff00', 20, true)
-  } 
+  } else if (thisStationStyle == 'london') {
+    drawStyledStation_London(ctx, x, y, activeMap, permStation, '#000000', '#00ff00')
+  }
 } // drawIndicator(x, y)
 
 function drawLabel(ctx, x, y, metroMap, indicatorColor) {
