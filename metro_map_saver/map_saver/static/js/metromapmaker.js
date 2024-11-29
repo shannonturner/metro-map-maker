@@ -1970,9 +1970,17 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
     var markerDirection = parseInt(window.localStorage.getItem('metroMapStationOrientation'))
   }
 
-  // TODO: May need to adjust per line width as well, otherwise stations placed on thicker lines don't look very good.
+  // This adds a lot of complexity, but we need to adjust per line width as well,
+  //   otherwise stations placed on thicker lines don't look very good.
   var height = gridPixelMultiplier / 2
   var width = gridPixelMultiplier * 0.75
+  if (lineWidth == 1) {
+    height = height * 1.5
+    width = width * 1.5
+  } else if (lineWidth == 0.75) {
+    height = height * 1.25
+    width = width * 1.25
+  }
 
   ctx.strokeStyle = strokeColor || lineColor
   ctx.fillStyle = fillColor || lineColor
@@ -1993,23 +2001,34 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
     drawCircleStation(ctx, x, y, activeMap, true, .5, gridPixelMultiplier / 4, ctx.fillStyle, ctx.strokeStyle, true)
   } else if (isEndcap) {
     // Non-transfer stations on an endcap are drawn as a rectangle capping that line
-    width = gridPixelMultiplier * 1.5
+    var endcapMultiplier = 1.5
+    if (lineWidth == 1 || lineWidth == 0.75) {
+      endcapMultiplier = 1.75
+    }
+
+    width = gridPixelMultiplier * endcapMultiplier
+    var xOffset = (endcapMultiplier / 6)
+    var yOffset = (endcapMultiplier / 2)
 
     if (isDiagonal) {
       ctx.save()
       ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier)
     }
 
+    if (lineDirection["offset_endcap"]) {
+      xOffset = (endcapMultiplier / 4)
+    }
+
     if (lineDirection["direction"] == 'horizontal') {
-      rectArgs = [(x - 0.25) * gridPixelMultiplier, (y - 0.75) * gridPixelMultiplier, height, width]
+      rectArgs = [(x - xOffset) * gridPixelMultiplier, (y - yOffset) * gridPixelMultiplier, height, width]
     } else if (lineDirection["direction"] == 'vertical') {
-      rectArgs = [(x - 0.75) * gridPixelMultiplier, (y - 0.25) * gridPixelMultiplier, width, height]
+      rectArgs = [(x - yOffset) * gridPixelMultiplier, (y - xOffset) * gridPixelMultiplier, width, height]
     } else if (lineDirection["direction"] == 'diagonal-se') {
       ctx.rotate(-45 * (Math.PI / 180))
-      rectArgs = [-0.75 * gridPixelMultiplier, -0.25 * gridPixelMultiplier, width, height]
+      rectArgs = [(-1 * yOffset) * gridPixelMultiplier, (-1 * xOffset) * gridPixelMultiplier, width, height]
     } else if (lineDirection["direction"] == 'diagonal-ne') {
         ctx.rotate(45 * (Math.PI / 180))
-        rectArgs = [-0.75 * gridPixelMultiplier, -0.25 * gridPixelMultiplier, width, height]
+        rectArgs = [(-1 * yOffset) * gridPixelMultiplier, (-1 * xOffset) * gridPixelMultiplier, width, height]
     }
 
     ctx.fillRect(...rectArgs)
@@ -4549,6 +4568,7 @@ function getLineDirection(x, y, metroMap) {
 
   info = {
     "direction": false,
+    "offset_endcap": false,
     "endcap": false
   }
 
@@ -4559,6 +4579,11 @@ function getLineDirection(x, y, metroMap) {
   var neighboringPoints = [N, E, S, W, NE, SE, SW, NW].filter((d) => d !== undefined)
   if (neighboringPoints.length == 1) {
     info['endcap'] = true
+    if ([S, E, SE, SW].filter((d) => d !== undefined).length == 1) {
+      // London styles need these endcaps drawn at a slightly different offset
+      // Note: these are the N, W, NE, NW endcaps; the points I'm checking are their neighboring points
+      info['offset_endcap'] = true
+    }
   }
 
   if (origin == W && W == E) {
