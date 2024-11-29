@@ -4556,6 +4556,11 @@ function getLineDirection(x, y, metroMap) {
     return info
   }
 
+  var neighboringPoints = [N, E, S, W, NE, SE, SW, NW].filter((d) => d !== undefined)
+  if (neighboringPoints.length == 1) {
+    info['endcap'] = true
+  }
+
   if (origin == W && W == E) {
     info['direction'] = 'horizontal'
   } else if (origin == N && N == S) {
@@ -4566,16 +4571,12 @@ function getLineDirection(x, y, metroMap) {
     info['direction'] = 'diagonal-ne'
   } else if (origin == W || origin == E) {
     info['direction'] = 'horizontal'
-    info['endcap'] = true
   } else if (origin == N || origin == S) {
     info['direction'] = 'vertical'
-    info['endcap'] = true
   } else if (origin == NW || origin == SE) {
     info['direction'] = 'diagonal-se'
-    info['endcap'] = true
   } else if (origin == SW || origin == NE) {
     info['direction'] = 'diagonal-ne'
-    info['endcap'] = true
   } else {
     info['direction'] = 'singleton'
   }
