@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% load humanize %}
+
+{% block title %}
+    Custom Map List - Metro Map Maker
+{% endblock title %}
+
+{% block breadcrumbs %}
+    {{ block.super }}
+
+    <li class="navbar-text nav-item">
+        <a href="{% url 'calendar' %}" class="nav-link">Maps by Date</a>
+    </li>
+{% endblock breadcrumbs %}
+
+{% block content %}
+
+    <div class="row">
+        <div class="m-5 mt-0 mb-3">
+            {% if maps %}
+                <h2>Custom List</h2>
+                <h3>You can share this list with friends by sharing this URL.</h3>
+            {% else %}
+                <h2>Create a Custom List</h2>
+                <h3>You can add up to {{ limit }} maps to your custom list and share with friends.</h3>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        {% for map in maps %}
+            {% cycle 'red' 'orange' 'yellow' 'green' 'blue' 'purple' 'silver' as cycle_color silent %}
+            {% include "map_saver/map_card.html" with map=map cycle_color=cycle_color %}
+        {% endfor %}
+    </div>
+
+    <div class="row m-3">
+        <form method="POST">
+            {# TODO: CONFIRM I don't need csrf_token here because it's a GET #}
+            {% csrf_token %}
+        <fieldset class="p-3 w-25 border">
+            <legend>Create a list of maps by adding either the map's URL, its unique URL alphanumeric identifier (what comes after the URL in <code>metromapmaker.com/map/</code>), or its numeric ID. Add only one map per line.</legend>
+
+            {% for field in form %}
+                {{ field }}
+            {% endfor %}
+
+            <button type="submit" class="bg-styled fs-4 styling-redline">Create Custom List</button>
+        </fieldset>
+        </form>
+    </div>
+
+{% endblock content %}

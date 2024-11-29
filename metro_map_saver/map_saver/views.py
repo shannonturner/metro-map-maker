@@ -30,6 +30,7 @@ import os
 import pprint
 import pytz
 import random
+import re
 import requests
 import urllib.parse
 
@@ -41,6 +42,7 @@ from .forms import (
     CreateMapForm,
     IdentifyForm,
     RateForm,
+    CustomListForm,
 )
 from .models import SavedMap, IdentifyMap, City
 from .validator import (
@@ -56,6 +58,8 @@ from .validator import (
 from .common_cities import CITIES
 
 logger = logging.getLogger(__name__)
+
+INVALID_URLHASH_CHARS = re.compile(r'[^a-zA-Z0-9\-_]')
 
 class HomeView(TemplateView):
 
@@ -1132,6 +1136,102 @@ class HighestRatedMapsView(ListView):
         context = super().get_context_data(**kwargs)
         context['showing_best'] = True
         return context
+
+
+def parse_map_ids_and_urlhashes(map_ids_and_urlhashes):
+
+    """ Given a set of mixed map IDs and urlhashes,
+        return a list of each, separated out.
+
+        Note: an all-numeric URLhash could incorrectly be sorted into the numbers category,
+            though this is likely to be pretty rare.
+    """
+
+    map_ids_and_urlhashes = map_ids_and_urlhashes.strip()
+    map_ids_and_urlhashes = map_ids_and_urlhashes.split('\n')
+
+    numeric_ids = []
+    urlhashes = []
+    ordered = []
+
+    common_prefixes = []
+    for host in settings.ALLOWED_HOSTS:
+        common_prefixes.append(f'https://{host}/map/')
+        common_prefixes.append(f'https://{host}/rate/')
+        common_prefixes.append(f'{host}/map/')
+        common_prefixes.append(f'{host}/rate/')
+        common_prefixes.append(f'{host}/?map=') # Support old-style bookmarks
+
+    if settings.DEBUG:
+        # Need to explicitly add the port
+        common_prefixes.append(f'http://{host}:8000/map/')
+        common_prefixes.append(f'http://{host}:8000/rate/')
+
+    for id_or_hash in map_ids_and_urlhashes:
+
+        for prefix in common_prefixes:
+            id_or_hash = id_or_hash.removeprefix(prefix)
+
+        id_or_hash = re.sub(INVALID_URLHASH_CHARS, '', id_or_hash).strip()
+
+        if not id_or_hash:
+            continue
+
+        if id_or_hash.isdigit() and id_or_hash not in numeric_ids:
+            numeric_ids.append(id_or_hash)
+            ordered.append(id_or_hash)
+        elif id_or_hash not in urlhashes and len(id_or_hash) == 8:
+            urlhashes.append(id_or_hash)
+            ordered.append(id_or_hash)
+
+    return (numeric_ids, urlhashes, ordered)
+
+
+class CustomListView(FormView):
+
+    """ While working on the "My Favorite Maps" series,
+            it would be really helpful to be able to create
+            a "Maps by Day"-style listing of the maps,
+            so I can browse them at a glance
+            and have them all in a single place.
+    """
+
+    model = SavedMap
+    context_object_name = 'maps'
+    template_name = 'map_saver/custom_list.html'
+    form_class = CustomListForm
+    CUSTOM_LIST_LIMIT = 100
+
+    def get_success_url(self, maps):
+        (numeric_ids, urlhashes, ordered) = parse_map_ids_and_urlhashes(
+            '\n'.join(maps.split(','))
+        )
+        return reverse_lazy('custom_list', args=(','.join(ordered),))
+
+    def form_valid(self, form):
+        return redirect(
+            self.get_success_url(
+                form.data['maps'].replace('\n', ',').replace('\r', ',').replace(',,', ',')
+            )
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['limit'] = self.CUSTOM_LIST_LIMIT
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+
+        map_ids_and_urlhashes = '\n'.join(kwargs.get('maps', '').strip().split(','))
+        if map_ids_and_urlhashes:
+            (numeric_ids, urlhashes, ordered) = parse_map_ids_and_urlhashes(map_ids_and_urlhashes)
+            maps_by_id = SavedMap.objects.defer(*SavedMap.DEFER_FIELDS).filter(id__in=numeric_ids)
+            maps_by_hash = SavedMap.objects.defer(*SavedMap.DEFER_FIELDS).filter(urlhash__in=urlhashes)
+            context['maps'] = maps_by_id.union(maps_by_hash).order_by('-id')[:self.CUSTOM_LIST_LIMIT]
+            context['form'].initial = {'maps': '\n'.join(ordered)}
+
+        return self.render_to_response(context)
 
 
 class CreditsView(TemplateView):
