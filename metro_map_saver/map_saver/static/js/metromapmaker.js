@@ -1987,7 +1987,9 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
   var isIndicator = !!(strokeColor && fillColor)
   ctx.lineWidth = 2
 
-  console.log(`x,y: ${x},${y} strokeColor: ${strokeColor} fillColor: ${fillColor} isIndicator: ${isIndicator} ctx.lineWidth: ${ctx.lineWidth} lineDirection: ${JSON.stringify(lineDirection)} station: ${JSON.stringify(station)}`)
+  if (MMMDEBUG) {
+    console.log(`London x,y: ${x},${y} strokeColor: ${strokeColor} fillColor: ${fillColor} isIndicator: ${isIndicator} ctx.lineWidth: ${ctx.lineWidth} lineDirection: ${JSON.stringify(lineDirection)} station: ${JSON.stringify(station)}`)
+  }
 
   if ((station && station["transfer"]) || lineDirection['direction'] == 'singleton') {
     // Transfer stations are drawn as a thicker black and white circle.
@@ -1999,6 +2001,13 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
       ctx.fillStyle = '#ffffff'
     }
     drawCircleStation(ctx, x, y, activeMap, true, .5, gridPixelMultiplier / 4, ctx.fillStyle, ctx.strokeStyle, true)
+
+    var londonConnections = getConnectedStations(x, y, activeMap, true)
+    if (londonConnections && !isIndicator) {
+      for (var direction in londonConnections) {
+        drawLondonTransferConnection(ctx, x, y, ...londonConnections[direction])
+      }
+    }
   } else if (isEndcap) {
     // Non-transfer stations on an endcap are drawn as a rectangle capping that line
     var endcapMultiplier = 1.5
@@ -2089,6 +2098,27 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
     }
   } // non-transfer, non-endcap
 } // drawStyledStation_London
+
+function drawLondonTransferConnection(ctx, x, y, x1, y1) {
+  var dx = x - x1
+  var dy = y - y1
+  var xOffset = (-0.25 * dx)
+  var yOffset = (-0.25 * dy)
+
+  ctx.strokeStyle = '#000000'
+  ctx.fillStyle = '#ffffff'
+
+  ctx.lineWidth = gridPixelMultiplier
+  ctx.beginPath()
+  moveLineStroke(ctx, x + xOffset, y + yOffset, x1 - xOffset, y1 - yOffset)
+  ctx.stroke()
+
+  ctx.lineWidth = gridPixelMultiplier * 0.5
+  ctx.strokeStyle = '#ffffff'
+  ctx.beginPath()
+  moveLineStroke(ctx, x, y, x1, y1)
+  ctx.stroke()
+} // drawLondonTransferConnection(ctx, x, y, x1, y1)
 
 function drawIndicator(x, y) {
   // Place a temporary station marker on the canvas;
@@ -4609,10 +4639,24 @@ function getLineDirection(x, y, metroMap) {
   return info
 }
 
-function getConnectedStations(x, y, metroMap) {
+function stationIsStyle(station, style) {
+  if (station && station['style'] && station['style'] == style) {
+    // Return true if station is explicitly the given style,
+    return true
+  } else if (station && !station['style'] && mapStationStyle == style) {
+    //  or implicitly because the station is the default and there's a style set
+    return true
+  }
+  return false
+} // stationIsStyle(station, style)
+
+function getConnectedStations(x, y, metroMap, londonConnections) {
   // Finds connecting stations along a SINGLE direction,
   //  to aid in drawing one continuous station from multiple stations.
   // If applicable, returns a set of starting and ending x,y coordinates
+
+  // If londonConnections is true, return all connected transfer stations
+  //  along all directions
 
   // Known issue:
   // If you have several stations set up along multiple directions, for example:
@@ -4645,6 +4689,9 @@ function getConnectedStations(x, y, metroMap) {
   if (!origin) {
     return
   }
+  if (londonConnections && (!origin || !origin['transfer'])) {
+    return
+  }
 
   var NW = getStation(x-1, y-1, metroMap)
   var NE = getStation(x+1, y-1, metroMap)
@@ -4657,6 +4704,21 @@ function getConnectedStations(x, y, metroMap) {
 
   if (!NW && !NE && !SW && !SE && !N && !E && !S && !W) {
     return 'singleton'
+  }
+
+  if (londonConnections) {
+    var connectedTo = {}
+
+    if (stationIsStyle(NW, 'london') && NW['transfer']) { connectedTo["NW"] = [x-1, y-1] }
+    if (stationIsStyle(NE, 'london') && NE['transfer']) { connectedTo["NE"] = [x+1, y-1] }
+    if (stationIsStyle(SW, 'london') && SW['transfer']) { connectedTo["SW"] = [x-1, y+1] }
+    if (stationIsStyle(SE, 'london') && SE['transfer']) { connectedTo["SE"] = [x+1, y+1] }
+    if (stationIsStyle(N, 'london') && N['transfer']) { connectedTo["N"] = [x, y-1] }
+    if (stationIsStyle(E, 'london') && E['transfer']) { connectedTo["E"] = [x+1, y] }
+    if (stationIsStyle(S, 'london') && S['transfer']) { connectedTo["S"] = [x, y+1] }
+    if (stationIsStyle(W, 'london') && W['transfer']) { connectedTo["W"] = [x-1, y] }
+
+    return connectedTo
   }
 
   function shouldUseOvals(station) {
