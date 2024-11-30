@@ -2105,6 +2105,17 @@ function drawLondonTransferConnection(ctx, x, y, x1, y1) {
   var xOffset = (-0.25 * dx)
   var yOffset = (-0.25 * dy)
 
+  // Horizontal and vertical lines look better
+  //  with slightly different offsets
+  //  than their diagonal counterparts (which have more space to begin with)
+  if (dx == 0 && Math.abs(dy) > 0) {
+    // Vertical
+    var yOffset = (-0.375 * dy)
+  } else if (dy == 0 && Math.abs(dx) > 0) {
+    // Horizontal
+    var xOffset = (-0.375 * dx)
+  }
+
   ctx.strokeStyle = '#000000'
   ctx.fillStyle = '#ffffff'
 
