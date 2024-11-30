@@ -572,3 +572,14 @@ select {
   stroke: #bd1038;
 }
 
+/* TODO: Consider Applying this treatment to Circles Lg, Md, Sm also,
+  for improved readability */
+button#tool-map-style-station-london svg {
+  stroke: #ffffff;
+  fill: #ffffff;
+}
+button#tool-map-style-station-london.active-mapstyle svg,
+button#tool-map-style-station-london svg:active {
+  stroke: #bd1038;
+  fill: #bd1038;
+}
