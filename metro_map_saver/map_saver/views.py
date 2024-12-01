@@ -309,6 +309,13 @@ class MapSimilarView(TemplateView):
     @method_decorator(gzip_page)
     @method_decorator(login_required)
     def get(self, request, **kwargs):
+        # 2024: Does not scale well enough to use in prod, disable.
+        # Consider:
+        #   Reduce search space by only searching maps with:
+        #       * the same city
+        #       * the same map size
+        # Or maybe adding the .created_from column will obsolete this entirely
+        return render(request, 'MapGalleryView.html', context)
 
         # Filter by +/- 20% of the current map's number of stations instead of all visible maps
         STATION_THRESHOLD = 0.2
