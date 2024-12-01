@@ -656,37 +656,30 @@
   <script src='{% static "js/mmm-cheatcodes.js" %}' defer="defer"></script>
 
   <script type="text/javascript">
-    // TODO: Remove the "what's new" after a few weeks of Metro Map Maker being live, and replace with "how to"
-
-    // How many times has the user closed the "What's New" message?
-    var v7LaunchNewsCount = parseInt(window.localStorage.getItem('v7-close-launch-news-count') || 0)
-    if (v7LaunchNewsCount <= 1) {
+    // Announcements
+    var announcementStorage = 'announcement-2024-11-30' // UPDATE THIS WHEN CHANGING THE MESSAGE
+    var announcementMessage = '<h4 id="announce-whats-new" style="text-align: left;">Version 7.1 adds <a href="https://blog.metromapmaker.com/">so many new features</a>! If you <a href="https://blog.metromapmaker.com/">sign up for free email updates</a> you can be the first to know about new releases,'
+    // ----- ^^^ ----- EDITABLE PORTION ----- ^^^ -----
+    announcementMessage += ' or <span id="close-' + announcementStorage + '" class="close-announcement" style="text-decoration: underline; cursor: pointer;">close this message</span>.</h4>'
+    var announcement = parseInt(window.localStorage.getItem(announcementStorage) || 0)
+    if (announcement <= 1) {
       // They've seen it 0-2 times, show it until they've clicked hide twice
-      $('#announcement').append('<h4 id="announce-whats-new" style="text-align: left;">Metro Map Maker version 7 is live, with <a href="{% url "help" %}">lots of new features</a> like mixing and matching line styles and widths, and so much more! <br><br> <a href="{% url "help" %}">Explore what\'s new</a> or <span id="close-whats-new" class="close-announcement" style="text-decoration: underline; cursor: pointer;">close this message</span>.</h4>')
+      $('#announcement').append(announcementMessage)
     }
-
-    $('body').on('click', '#close-whats-new', function() {
+    $('body').on('click', '#close-' + announcementStorage, function() {
       $('#announce-whats-new').remove()
-      window.localStorage.setItem('v7-close-launch-news-count', v7LaunchNewsCount + 1)
+      window.localStorage.setItem(announcementStorage, announcement + 1)
     })
-
-    // TODO: After removing v7LaunchNewsCount, replace it with howToMMM:
-
-    // var howToMMMCount = parseInt(window.localStorage.getItem('how-to-mmm-count') || 0)
-    // if (howToMMMCount < 1) {
-    //   // How to make maps: only show until they've clicked hide once
-    //   $('#announcement').append('<h4 id="announce-how-to" style="text-align: left;"><a href="{% url "help" %}">[Video] How to make maps with Metro Map Maker</a> <span id="close-how-to-mmm" class="close-announcement" style="text-decoration: underline; cursor: pointer;">Close this message</span>')
-    // }
-
-    $('body').on('click', '#close-whats-new', function() {
-      $('#announce-whats-new').remove()
-      window.localStorage.setItem('v7-close-whats-new-count', v7CloseWhatsNewCount + 1)
+    // Evergreen How to use MMM message
+    var howToMMMCount = parseInt(window.localStorage.getItem('how-to-mmm-count') || 0)
+    if (howToMMMCount < 1) {
+      // How to make maps: only show until they've clicked hide once
+      $('#announcement').append('<h4 id="announce-how-to" style="text-align: left;"><a href="{% url "help" %}">[Video] How to make maps with Metro Map Maker</a> <span id="close-how-to-mmm" class="close-announcement" style="text-decoration: underline; cursor: pointer;">Close this message</span>')
+    }
+    $('body').on('click', '#close-how-to-mmm', function() {
+      $('#announce-how-to').remove()
+      window.localStorage.setItem('how-to-mmm-count', howToMMMCount + 1)
     })
-
-    // $('body').on('click', '#close-how-to-mmm', function() {
-    //   $('#announce-how-to').remove()
-    //   window.localStorage.setItem('how-to-mmm-count', howToMMMCount + 1)
-    // })
   </script>
 
   </body>
