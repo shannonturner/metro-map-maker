@@ -88,7 +88,7 @@ class HomeView(TemplateView):
             try:
                 saved_map = SavedMap.objects.get(urlhash=urlhash)
             except MultipleObjectsReturned:
-                saved_map = SavedMap.objects.filter(urlhash=urlhash).first()
+                saved_map = SavedMap.objects.filter(urlhash=urlhash).earliest('id')
             except ObjectDoesNotExist:
                 context = {
                     'today': timezone.now().date(),
@@ -415,7 +415,7 @@ class CreatorNameMapView(TemplateView):
 
         if name or tags:
             try:
-                this_map = SavedMap.objects.get(urlhash=request.POST.get('urlhash'))
+                this_map = SavedMap.objects.filter(urlhash=request.POST.get('urlhash')).earliest('id')
             except (ObjectDoesNotExist, MultipleObjectsReturned):
                 pass
             else:
@@ -530,8 +530,8 @@ class MapDiffView(TemplateView):
         pretty_printer = pprint.PrettyPrinter(indent=1)
 
         try:
-            maps.append(SavedMap.objects.get(urlhash=kwargs.get('urlhash_first')))
-            maps.append(SavedMap.objects.get(urlhash=kwargs.get('urlhash_second')))
+            maps.append(SavedMap.objects.filter(urlhash=kwargs.get('urlhash_first')).earliest('id'))
+            maps.append(SavedMap.objects.filter(urlhash=kwargs.get('urlhash_second')).earliest('id'))
         except ObjectDoesNotExist:
             context['error'] = '[ERROR] One or both of the maps does not exist (either {0} or {1})'.format(kwargs.get('urlhash_first'), kwargs.get('urlhash_second'))
         except MultipleObjectsReturned:
