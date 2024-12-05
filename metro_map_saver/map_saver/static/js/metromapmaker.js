@@ -2981,6 +2981,9 @@ function moveStation(directions) {
     var y = parseInt($('#station-coordinates-y').val())
     moveStationTo(x, y, (x + xOffset), (y + yOffset))
   }
+  if ($('#move-station-enabled').text().indexOf('Mouse') == -1) {
+    moveStationOn = [] // Don't enable the ability to move stations with the mouse if it isn't already on
+  }
   return true
 } // moveStation(direction)
 
