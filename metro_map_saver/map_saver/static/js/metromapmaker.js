@@ -1576,6 +1576,7 @@ function drawStation(ctx, x, y, metroMap, skipText, drawAtX, drawAtY) {
 
   var thisStationStyle = station["style"] || mapStationStyle
   var drawAsConnected = false
+  var lineDirection = false
 
   if (!thisStationStyle || thisStationStyle == 'wmata') {
     drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation)
@@ -1591,7 +1592,14 @@ function drawStation(ctx, x, y, metroMap, skipText, drawAtX, drawAtY) {
   } else if (thisStationStyle == 'rect-round' || thisStationStyle == 'circles-thin') {
     drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, station, isTransferStation, 0, 0, 20, false, isMoving)
   } else if (thisStationStyle == 'london') {
-    drawStyledStation_London(ctx, x, y, metroMap, station)
+    var stationNameOffset = drawStyledStation_London(ctx, x, y, metroMap, station, false, false, isMoving)
+    // Based on the station orientation and whether it's an xfer station,
+    //  modify the drawAtX and drawAtY values very slightly from x, y
+    //  to subtly offset where the name is drawn
+    if (stationNameOffset && stationNameOffset.length > 0 && !drawAtX && !drawAtY) {
+      drawAtX = x + stationNameOffset[0]
+      drawAtY = y + stationNameOffset[1]
+    }
   }
 
   if (!skipText) {
@@ -1949,8 +1957,17 @@ function primitiveRoundRect(ctx, x, y, width, height, radius) {
   ctx.closePath()
 }
 
-function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fillColor) {
+function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fillColor, isMoving) {
   var lineColorWidthStyle = getActiveLine(x, y, metroMap, true)
+  if (!lineColorWidthStyle && isMoving) {
+    // Moving off a line, which isn't valid, but we want to preview
+    // BUG (Minor display): when moving a station off an existing line,
+    //  this will show as a red station marker on the hover canvas
+    //  on the last valid mouse position, even though the cursor is elsewhere.
+    //  Curiously / a clue: this only shows for vertical and horizontal lines,
+    //    and not for diagonal lines.
+    lineColorWidthStyle = ['bd1038', '1-solid']
+  }
   if (mapDataVersion == 3) {
     var lineColor = '#' + lineColorWidthStyle[0]
     var lineWidth = lineColorWidthStyle[1].split('-')[0]
@@ -1962,7 +1979,7 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
     var lineWidth = 1
   }
   var lineDirection = getLineDirection(x, y, metroMap)
-  var isDiagonal = lineDirection["direction"].indexOf('diagonal') > -1
+  var isDiagonal = (lineDirection["direction"] && lineDirection["direction"].indexOf('diagonal') > -1)
   var isEndcap = lineDirection["endcap"]
   if (station) {
     var markerDirection = station["orientation"]
@@ -2097,6 +2114,50 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
       ctx.restore()
     }
   } // non-transfer, non-endcap
+
+  if (station && station['transfer']) {
+    // Transfer stations already have a lot of spacing,
+    //  and since the circle takes up the full grid square,
+    //  we don't need special spacing.
+    return []
+  }
+
+  var stationNameOffset = []
+  if (lineDirection["direction"] == 'diagonal-se') {
+    if ([-45, 45, 90, 1].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0.5, -0.25]
+    } else if ([-135, 135, -90, -1].indexOf(markerDirection) > -1) {
+      stationNameOffset = [-0.5, 0.25]
+    } else if (markerDirection == 0) {
+      stationNameOffset = [0.5, -0.5]
+    } else if (markerDirection == 180) {
+      stationNameOffset = [-0.5, 0.5]
+    }
+  } else if (lineDirection["direction"] == 'diagonal-ne') {
+    if ([180, -135].indexOf(markerDirection) > -1) {
+      stationNameOffset = [-0.25, -0.5]
+    } else if ([0, 45].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0.25, 0.5]
+    } else if ([1, 90, 135].indexOf(markerDirection) > -1) {
+      stationNameOffset = [-0.5, -0.5]
+    } else if ([-1, -90, -45].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0.5, 0.5]
+    }
+  } else if (lineDirection["direction"] == 'vertical') {
+    if ([45, -45].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0.5, 0]
+    } else if ([135, -135].indexOf(markerDirection) > -1) {
+      stationNameOffset = [-0.5, 0]
+    }
+  } else if (lineDirection["direction"] == 'horizontal') {
+    if ([1, 90, -135, -45].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0, -0.5]
+    } else if ([-1, -90, 135, 45].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0, 0.5]
+    }
+  }
+
+  return stationNameOffset
 } // drawStyledStation_London
 
 function drawLondonTransferConnection(ctx, x, y, x1, y1) {
