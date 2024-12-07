@@ -2011,13 +2011,13 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
   if ((station && station["transfer"]) || lineDirection['direction'] == 'singleton') {
     // Transfer stations are drawn as a thicker black and white circle.
     ctx.strokeStyle = '#000000'
-    drawCircleStation(ctx, x, y, activeMap, true, .6, gridPixelMultiplier / 4, ctx.strokeStyle, ctx.strokeStyle)
+    drawCircleStation(ctx, x, y, activeMap, true, .5, gridPixelMultiplier / 4, ctx.strokeStyle, ctx.strokeStyle)
     if (isIndicator) {
       ctx.fillStyle = fillColor
     } else {
       ctx.fillStyle = '#ffffff'
     }
-    drawCircleStation(ctx, x, y, activeMap, true, .5, gridPixelMultiplier / 4, ctx.fillStyle, ctx.strokeStyle, true)
+    drawCircleStation(ctx, x, y, activeMap, true, .4, gridPixelMultiplier / 4, ctx.fillStyle, ctx.strokeStyle, true)
 
     var londonConnections = getConnectedStations(x, y, activeMap, true)
     if (londonConnections && !isIndicator) {
@@ -2180,12 +2180,12 @@ function drawLondonTransferConnection(ctx, x, y, x1, y1) {
   ctx.strokeStyle = '#000000'
   ctx.fillStyle = '#ffffff'
 
-  ctx.lineWidth = gridPixelMultiplier
+  ctx.lineWidth = gridPixelMultiplier * .525
   ctx.beginPath()
   moveLineStroke(ctx, x + xOffset, y + yOffset, x1 - xOffset, y1 - yOffset)
   ctx.stroke()
 
-  ctx.lineWidth = gridPixelMultiplier * 0.5
+  ctx.lineWidth = gridPixelMultiplier * 0.25
   ctx.strokeStyle = '#ffffff'
   ctx.beginPath()
   moveLineStroke(ctx, x, y, x1, y1)
