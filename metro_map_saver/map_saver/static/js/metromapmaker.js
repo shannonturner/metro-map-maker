@@ -3836,8 +3836,8 @@ $(document).ready(function() {
       if (!$('#tool-station').hasClass('width-100')) {
         $(this).removeClass('width-100')
       }
-      // Also reset the + Add New Line button
-      $('#rail-line-new span').text('Add New Line')
+      // Also reset the + Add New Color button
+      $('#rail-line-new span').text('Add New Color')
       $('#tool-new-line-options').hide()
     } else {
       $('#tool-line-options').show();
@@ -4224,10 +4224,10 @@ $(document).ready(function() {
 
   $('#rail-line-new').click(function() {
     if ($('#tool-new-line-options').is(':visible')) {
-      $(this).children('span').text('Add New Line')
+      $(this).children('span').text('Add New Color')
       $('#tool-new-line-options').hide()
     } else {
-      $(this).children('span').text('Hide Add Line options')
+      $(this).children('span').text('Hide Add Color options')
       $('#tool-new-line-options').show()
     }
   }) // #rail-line-new.click() (expand tool-new-line-options)
@@ -5228,7 +5228,7 @@ function collapseToolbox() {
   if ($('#hide-save-share-url').length == 1) {
     $('#hide-save-share-url').hide()
   }
-  $('#rail-line-new').children('span').text('Add New Line')
+  $('#rail-line-new').children('span').text('Add New Color')
   $('#rail-line-change').children('span').html('Edit colors &amp; names')
   $('#controls-expand-menu').show()
 }
