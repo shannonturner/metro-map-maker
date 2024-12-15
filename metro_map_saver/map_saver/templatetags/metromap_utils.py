@@ -30,6 +30,7 @@ TWOTONE_LINESTYLES = [
     # Should match twoToneButtons defined in metromapmaker.js
     'hollow',
     'hollow_open',
+    'hollow_round',
     'wide_stripes',
     'square_stripes',
     'stripes',
@@ -781,6 +782,33 @@ def is_twotone(value):
     return value in TWOTONE_LINESTYLES
 
 @register.filter
+def hollow_line_mask(line):
+    
+    """ Given a line, determine which direction it's going,
+        then apply the necessary adjustments so that hollow lines
+        show correctly with squared end caps.
+
+        line is a list of 4 coordinates:
+            x1 y1 x2 y2
+    """
+
+    if line[0] == line[2] and line[3] > line[1]:
+        # Vertical line
+        return [line[0], line[1] + 0.5, line[2], line[3] - 0.5]
+    elif line[1] == line[3] and line[2] > line[0]:
+        # Horizontal line
+        return [line[0] + 0.5, line[1], line[2] - 0.5, line[3]]
+    elif line[2] > line[0] and line[3] > line[1]:
+        # Southeast line
+        return [line[0] + 0.375, line[1] + 0.375, line[2] - 0.375, line[3] - 0.375]
+    elif line[2] > line[0] and line[3] < line[1]:
+        # Northeast line
+        return [line[0] + 0.375, line[1] - 0.375, line[2] - 0.375, line[3] + 0.375]
+    else:
+        # This shouldn't ever happen, but let's fall back
+        return line
+
+@register.filter
 def get_media_image_url(value):
     from map_saver.models import get_image_filepath
     try:
@@ -824,6 +852,7 @@ SVG_STYLES = {
     'square_stripes': {"class": "l10", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
     'stripes': {"class": "l11", "style": "stroke-dasharray: 1 .5; stroke-linecap: butt;"},
     'color_outline': {"class": "l12", "style": "stroke-linecap: butt;"},
+    'hollow': {"class": "l13", "style": "stroke-linecap: square;"},
 
     '1': {"class": "w1", "style": "stroke-width: 1;"},
     '0.75': {"class": "w2", "style": "stroke-width: .75;"},
@@ -832,11 +861,17 @@ SVG_STYLES = {
     '0.125': {"class": "w5", "style": "stroke-width: .125;"},
 
     # Combination width/style lines
-    '1-hollow': {"class": "lh1", "style": "stroke-width: 0.6"},
-    '0.75-hollow': {"class": "lh2", "style": "stroke-width: 0.45"},
-    '0.5-hollow': {"class": "lh3", "style": "stroke-width: 0.3"},
-    '0.25-hollow': {"class": "lh4", "style": "stroke-width: 0.15"},
-    '0.125-hollow': {"class": "lh5", "style": "stroke-width: 0.075"},
+    '1-hollow': {"class": "lh1", "style": "stroke-width: 0.6; stroke-linecap: square;"},
+    '0.75-hollow': {"class": "lh2", "style": "stroke-width: 0.45; stroke-linecap: square;"},
+    '0.5-hollow': {"class": "lh3", "style": "stroke-width: 0.3; stroke-linecap: square;"},
+    '0.25-hollow': {"class": "lh4", "style": "stroke-width: 0.15; stroke-linecap: square;"},
+    '0.125-hollow': {"class": "lh5", "style": "stroke-width: 0.075; stroke-linecap: square;"},
+
+    '1-hollow_round': {"class": "lh6", "style": "stroke-width: 0.6"},
+    '0.75-hollow_round': {"class": "lh7", "style": "stroke-width: 0.45"},
+    '0.5-hollow_round': {"class": "lh8", "style": "stroke-width: 0.3"},
+    '0.25-hollow_round': {"class": "lh9", "style": "stroke-width: 0.15"},
+    '0.125-hollow_round': {"class": "lh0", "style": "stroke-width: 0.075"},
 
     '1-hollow_open': {"class": "lho1", "style": "stroke-width: 0.6; stroke-linecap: butt;"},
     '0.75-hollow_open': {"class": "lho2", "style": "stroke-width: 0.45; stroke-linecap: butt;"},

@@ -13,6 +13,7 @@ ALLOWED_MAP_SIZES = [80, 120, 160, 200, 240, 360]
 MAX_MAP_SIZE = ALLOWED_MAP_SIZES[-1]
 VALID_XY = [str(x) for x in range(MAX_MAP_SIZE)]
 ALLOWED_LINE_WIDTHS = [1, 0.75, 0.5, 0.25, 0.125]
+# Note: hollow_round works; I only need to add it to ALLOWED_LINE_STYLES to re-add the functionality .
 ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dashed_uneven', 'dashed_square', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted', 'hollow', 'hollow_open', 'color_outline', 'wide_stripes', 'square_stripes', 'stripes']
 ALLOWED_STATION_STYLES = {
     'wmata': {"short": "Metro (Classic)", "long": "Metro (Classic)"},
