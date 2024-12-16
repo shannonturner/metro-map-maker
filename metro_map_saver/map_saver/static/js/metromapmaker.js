@@ -3770,9 +3770,17 @@ $(document).ready(function() {
       }
     }
     else if (event.key == '-' || event.key == '_') { // minus
+      if ((event.metaKey || event.ctrlKey) && (event.key == '-' || event.key == '_')) {
+        // Prevent the browser built-in Zoom out, because it's not actually helpful
+        event.preventDefault()
+      }
       $('#tool-zoom-out').trigger('click')
     }
     else if (event.key == '=' || event.key == '+') { // plus / equal sign
+      if ((event.metaKey || event.ctrlKey) && (event.key == '=' || event.key == '+')) {
+        // Prevent the browser built-in Zoom in, because it's not actually helpful
+        event.preventDefault()
+      }
       $('#tool-zoom-in').trigger('click')
     }
     else if (event.code == 'BracketLeft') { // [
