@@ -2804,6 +2804,20 @@ function updateMapObject(x, y, key, data) {
       for (var lineWidthStyle in metroMap['points_by_color'][data]) {
         if (metroMap['points_by_color'] && metroMap['points_by_color'][data] && metroMap['points_by_color'][data][lineWidthStyle] && metroMap['points_by_color'][data][lineWidthStyle][x] && metroMap['points_by_color'][data][lineWidthStyle][x][y]) {
           delete metroMap['points_by_color'][data][lineWidthStyle][x][y]
+          if (Object.values(metroMap['points_by_color'][data][lineWidthStyle][x]).filter((o) => Object.keys(o)).length == 0) {
+            delete metroMap['points_by_color'][data][lineWidthStyle][x]
+            // TODO -- TEST THIS REALLY CAREFULLY AND WELL
+            // TODO -- DELETE THESE LOGGING STATEMENTS WHEN I'M CONFIDENT
+            console.log(`deleting metroMap['points_by_color'][data][lineWidthStyle][x], pbc[color][lws] is now: ${JSON.stringify(metroMap['points_by_color'][data][lineWidthStyle])}`)
+          }
+          if (Object.values(metroMap['points_by_color'][data][lineWidthStyle]).filter((o) => Object.keys(o)).length == 0) {
+            delete metroMap['points_by_color'][data][lineWidthStyle]
+            console.log(`deleting metroMap['points_by_color'][data][lineWidthStyle], pbc[color] is now: ${JSON.stringify(metroMap['points_by_color'][data])}`)
+          }
+          if (Object.values(metroMap['points_by_color'][data]).filter((o) => Object.keys(o)).length == 0) {
+            delete metroMap['points_by_color'][data]
+            console.log(`deleting metroMap['points_by_color'][data], pbc is now: ${Object.keys(metroMap['points_by_color'])}`)
+          }
         }
       }
       if (metroMap["stations"] && metroMap["stations"][x] && metroMap["stations"][x][y]) {
