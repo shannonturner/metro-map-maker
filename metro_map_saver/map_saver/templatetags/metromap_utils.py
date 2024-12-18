@@ -74,6 +74,113 @@ def station_marker(station, default_shape, line_size, points_by_color, stations,
             svg.append(use_defs(x, y, 'wm-xf'))
         else:
             svg.append(use_defs(x, y, 'wm'))
+    elif shape == 'london':
+        line_width_style = station['line_width_style']
+        line_size, line_style = line_width_style.split('-')
+        line_size = float(line_size)
+
+        line_direction_info = get_line_direction(x, y, color, points_by_color, line_width_style)
+        line_direction = line_direction_info["direction"]
+
+        # Vary the size of the marker based on the line width
+        if line_size == 1:
+            height = 0.75
+            width = 1.125
+        elif line_size == 0.75:
+            height = 0.625
+            width = 0.9375
+        else:
+            height = 0.5
+            width = 0.75
+
+        # For notches and endcaps
+        if line_direction == 'diagonal-ne':
+            rotation = f'45 {x} {y}'
+        elif line_direction == 'diagonal-se':
+            rotation = f'-45 {x} {y}'
+        else:
+            rotation = None
+
+        if station.get('transfer') or line_direction == 'singleton':
+            svg.append(use_defs(x, y, 'l'))
+            for london_connection in get_london_connections(x, y, stations):
+                dx = x - london_connection[0]
+                dy = y - london_connection[1]
+                x_offset = (-0.25 * dx)
+                y_offset = (-0.25 * dy)
+
+                # Use smaller offsets for vertical/horizontal
+                if dx == 0 and abs(dy) > 0:
+                    y_offset = (-0.525 * dy)
+                elif dy == 0 and abs(dx) > 0:
+                    x_offset = (-0.525 * dx)
+                elif abs(dx) > 0 and abs(dy) > 0:
+                    # Diagonal lines have enough room to look good with larger offsets
+                    x_offset = (-0.55 * dx)
+                    y_offset = (-0.55 * dy)
+                    x2 = london_connection[0] - x_offset
+                    y2 = london_connection[1] - y_offset
+                    svg.append(svg_line(x + x_offset, y + y_offset, x2, y2, classes='lxco'))
+
+                svg.append(svg_line(x, y, *london_connection, classes='lxci'))
+        elif line_direction_info['endcap']:
+            if line_size >= 0.75:
+                width = 1.75
+            else:
+                width = 1.5
+
+            x_offset = width / 6
+            y_offset = width / 2
+
+            if line_direction_info["offset_endcap"]:
+                x_offset = width / 4
+
+            if line_direction == 'horizontal':
+                x_offset *= -1
+                y_offset *= -1
+                width, height = height, width
+            elif line_direction in ('vertical', 'diagonal-se', 'diagonal-ne'):
+                x_offset, y_offset = (y_offset * -1, x_offset * -1)
+
+            svg.append(svg_rect(x, y, width, height, x_offset, y_offset, color, color, 0.1, None, rotation))
+        else:
+            x_offset = 0
+            y_offset = 0
+
+            if line_direction == 'horizontal':
+                if station.get('orientation') in (0, -45, -135, 90, 1):
+                    # Draw above
+                    x_offset = -0.25
+                    y_offset = -0.75
+                elif station.get('orientation') in (180, 45, 135, -90, -1):
+                    # Draw below
+                    x_offset = -0.25
+                width, height = height, width
+            elif line_direction == 'vertical':
+                if station.get('orientation') in (0, -45, 45, 90, 1):
+                    # Draw on right
+                    y_offset = -0.25
+                elif station.get('orientation') in (180, -135, 135, -90, -1):
+                    x_offset = -0.75
+                    y_offset = -0.25
+            elif line_direction == 'diagonal-se':
+                if station.get('orientation') in (0, -45, 45, 90, 1):
+                    # Draw above-right
+                    y_offset = -0.25
+                elif station.get('orientation') in (180, -135, 135, -90, -1):
+                    # Draw below-left
+                    x_offset = -0.75
+                    y_offset = -0.25
+            elif line_direction == 'diagonal-ne':
+                if station.get('orientation') in (0, -45, 45, -90, -1):
+                    # Draw below-right
+                    y_offset = -0.25
+                elif station.get('orientation') in (180, -135, 135, 90, 1):
+                    # Draw above-left
+                    x_offset = -0.75
+                    y_offset = -0.25
+
+            svg.append(svg_rect(x, y, width, height, x_offset, y_offset, color, color, 0.1, None, rotation))
     elif shape in ALLOWED_CONNECTING_STATIONS:
         # Set generics, and change as needed
         width = 0.5
@@ -95,7 +202,8 @@ def station_marker(station, default_shape, line_size, points_by_color, stations,
             # line_width and style are set globally in data_version 2
             line_width_style = None
 
-        line_direction = get_line_direction(x, y, color, points_by_color, line_width_style)
+        line_direction_info = get_line_direction(x, y, color, points_by_color, line_width_style)
+        line_direction = line_direction_info['direction']
         station_direction = get_connected_stations(x, y, stations)
         draw_as_connected = False
 
@@ -230,6 +338,12 @@ def svg_rect(x, y, w, h, x_offset, y_offset, fill, stroke=None, stroke_width=0.2
         return f'<rect x="{x + x_offset}" y="{y + y_offset}" width="{w}" height="{h}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}"{rx}{rot}/>'
     return f'<rect x="{x + x_offset}" y="{y + y_offset}" width="{w}" height="{h}" fill="{fill}"{rx}{rot}/>'
 
+def svg_line(x1, y1, x2, y2, classes='', **kwargs):
+    if classes:
+        classes = f' class="{classes}"'
+    kwargs = ' '.join([f'{k}="{v}"' for k, v in kwargs.items()])
+    return f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}"{classes}{kwargs}/>'
+
 def get_line_direction(x, y, color, points_by_color, line_width_style=None):
 
     """ Returns which direction this line is going in,
@@ -237,6 +351,12 @@ def get_line_direction(x, y, color, points_by_color, line_width_style=None):
     """
 
     color = color.removeprefix('#')
+
+    info = {
+        "direction": None,
+        "endcap": False,
+        "offset_endcap": False,
+    }
 
     if not line_width_style:
         # 'xy' isn't a valid value for a line width/style;
@@ -254,24 +374,39 @@ def get_line_direction(x, y, color, points_by_color, line_width_style=None):
     S = (x, y+1) in points_by_color[color][line_width_style]
     W = (x-1, y) in points_by_color[color][line_width_style]
 
+    neighboring_points = [
+        NW, NE, SW, SE,
+        N, E, S, W,
+    ]
+    neighboring_points = [np for np in neighboring_points if np]
+    if len(neighboring_points) == 1:
+        info["endcap"] = True
+
+    london_offset_endcaps = [S, E, SE, SW]
+    london_offset_endcaps = [np for np in london_offset_endcaps if np]
+    if len(london_offset_endcaps) == 1:
+        info["offset_endcap"] = True
+
     if W and E:
-        return 'horizontal'
+        info["direction"] = 'horizontal'
     elif N and S:
-        return 'vertical'
+        info["direction"] = 'vertical'
     elif NW and SE:
-        return 'diagonal-se'
+        info["direction"] = 'diagonal-se'
     elif SW and NE:
-        return 'diagonal-ne'
+        info["direction"] = 'diagonal-ne'
     elif W or E:
-        return 'horizontal'
+        info["direction"] = 'horizontal'
     elif N or S:
-        return 'vertical'
+        info["direction"] = 'vertical'
     elif NW or SE:
-        return 'diagonal-se'
+        info["direction"] = 'diagonal-se'
     elif SW or NE:
-        return 'diagonal-ne'
+        info["direction"] = 'diagonal-ne'
     else:
-        return 'singleton'
+        info["direction"] = 'singleton'
+
+    return info
 
 def get_connected_stations(x, y, stations):
 
@@ -453,6 +588,35 @@ def lengthen_connecting_station(length):
     else:
         return length + round((length - 2) / 2)
 
+def get_london_connections(x, y, stations):
+
+    """ Get all* London-style connecting stations adjacent to (x, y)
+
+        * Or at least, all those to the E, S, SE, and NE,
+            because we don't need to draw the other directions twice.
+    """
+
+    eligible_stations = [
+        # Only London transfer stations connect
+        (s['xy'][0], s['xy'][1]) for s in stations if s.get('style') == 'london' and s.get('transfer')
+    ]
+
+    NW = (x-1, y-1)
+    NE = (x+1, y-1)
+    SW = (x-1, y+1)
+    SE = (x+1, y+1)
+    N = (x, y-1)
+    E = (x+1, y)
+    S = (x, y+1)
+    W = (x-1, y)
+
+    connected = []
+    for direction in [N, W, SW, NW]: # If I need to expand this to all 8, that's easy enough as they're all defined above.
+        if direction in eligible_stations:
+            connected.append(direction)
+
+    return connected
+
 @register.simple_tag
 def station_text(station):
 
@@ -535,6 +699,8 @@ def station_text(station):
             y_val = y_val + 1.75
         else:
             y_val = y_val + 1.25
+
+    # TODO: London
 
     text = f'''<text x="{x_val}" y="{y_val}"{text_anchor}{transform}>'''
 
@@ -630,6 +796,13 @@ def get_station_styles_in_use(stations, default_shape, line_size):
                     svg.append(''.join(color_variants[style][variant]))
                     svg.append('</g>')
         svg.append('</defs>')
+
+    if 'london' in styles:
+        # Insert this first so it doesn't get added to the <defs>
+        svg.insert(
+            0,
+            '<style>.lxco { stroke: #000; stroke-width: 0.525; fill: #fff; stroke-linecap: square; } .lxci { stroke: #fff; stroke-width: 0.25; fill: #fff; stroke-linecap: square; } </style>'
+        )
 
     svg = ''.join(svg)
 
@@ -783,7 +956,7 @@ def is_twotone(value):
 
 @register.filter
 def hollow_line_mask(line):
-    
+
     """ Given a line, determine which direction it's going,
         then apply the necessary adjustments so that hollow lines
         show correctly with squared end caps.
@@ -836,6 +1009,9 @@ SVG_DEFS = {
     'circles-thin': {
         'ct-xf': [svg_circle(None, None, .5, '#fff', '#000', .2, defs=True)],
         'ct': [svg_circle(None, None, .5, '#fff', '#000', .1, defs=True)],
+    },
+    'london': {
+        'l': [svg_circle(None, None, .45, '#fff', '#000', .2, defs=True)],
     }
 }
 

@@ -334,31 +334,31 @@ class OptimizeMapTest(TestCase):
         for point in horizontal:
             self.assertEqual(
                 'horizontal',
-                get_line_direction(point[0], point[1], 'bd1038', points_by_color),
+                get_line_direction(point[0], point[1], 'bd1038', points_by_color)["direction"],
             )
 
         for point in vertical:
             self.assertEqual(
                 'vertical',
-                get_line_direction(point[0], point[1], 'bd1038', points_by_color),
+                get_line_direction(point[0], point[1], 'bd1038', points_by_color)["direction"],
             )
 
         for point in diagonal_se:
             self.assertEqual(
                 'diagonal-se',
-                get_line_direction(point[0], point[1], 'bd1038', points_by_color),
+                get_line_direction(point[0], point[1], 'bd1038', points_by_color)["direction"],
             )
 
         for point in diagonal_ne:
             self.assertEqual(
                 'diagonal-ne',
-                get_line_direction(point[0], point[1], 'bd1038', points_by_color),
+                get_line_direction(point[0], point[1], 'bd1038', points_by_color)["direction"],
             )
 
         for point in singleton:
             self.assertEqual(
                 'singleton',
-                get_line_direction(point[0], point[1], 'bd1038', points_by_color),
+                get_line_direction(point[0], point[1], 'bd1038', points_by_color)["direction"],
             )
 
     def test_get_connected_stations(self):

@@ -26,7 +26,7 @@ ALLOWED_STATION_STYLES = {
     'london': {"short": "London", "long": "London"},
 }
 ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1]
-ALLOWED_CONNECTING_STATIONS = ['rect', 'rect-round', 'circles-thin']
+ALLOWED_CONNECTING_STATIONS = ['rect', 'rect-round', 'circles-thin'] # Note: London deliberately not included, because it connects differently than these
 ALLOWED_TAGS = ['real', 'speculative', 'unknown'] # TODO: change 'speculative' to 'fantasy' here and everywhere else, it's the more common usage
 
 # TODO: ALLOWED_LABEL DETAILS
