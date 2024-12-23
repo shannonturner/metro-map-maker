@@ -652,6 +652,17 @@ def station_text(station, points_by_color=None):
     #   which is necessary for London-style stations later.
     orientation = station['orientation']
 
+    if station.get('style') == 'london':
+        line_width_style = station['line_width_style']
+        line_direction = get_line_direction(
+            *station['xy'],
+            f"#{station['color']}",
+            points_by_color,
+            line_width_style,
+        )
+        if line_direction['endcap']:
+            station['transfer'] = True
+
     if station.get('transfer'):
         x_val = station['xy'][0] + 1.5
     else:
@@ -709,14 +720,11 @@ def station_text(station, points_by_color=None):
 
     # London needs to offset the station names based on the line direction and orientation
     #   (though transfer stations already have plenty of offset, so skip for those)
+    #   (Note: endcap stations are set above as transfer stations for purposes of these offsets)
     if station.get('style') == 'london' and not station.get('transfer'):
-        line_width_style = station['line_width_style']
-        line_direction = get_line_direction(
-            *station['xy'],
-            f"#{station['color']}",
-            points_by_color,
-            line_width_style,
-        )
+        # mmm.js's drawStyledStation_London() has only a handful of conditionals,
+        #   and so looks very simple and straightforward compared to the mess below.
+        #   But this is because SVG rotation is handled differently than on the canvas
 
         # TODO: endcaps on diagonals should have the same spacing as transfers
 
@@ -781,6 +789,14 @@ def station_text(station, points_by_color=None):
                 x_val += 0.25
             elif orientation == 180:
                 x_val += -0.25
+            elif orientation == 1:
+                x_val += 0.75
+            elif orientation == -1:
+                x_val += -0.75
+            elif orientation == 90:
+                y_val += 0.75
+            elif orientation == -90:
+                y_val += -0.75
 
             if orientation in (-45, -135):
                 y_val += 0.25
@@ -791,6 +807,10 @@ def station_text(station, points_by_color=None):
                 y_val += -0.5
             elif orientation in (-1, -90, 135, 45):
                 y_val += 0.5
+            elif orientation == 0:
+                y_val += -0.75
+            elif orientation == 180:
+                y_val += 0.75
 
             if orientation == 90:
                 x_val += 0.25
