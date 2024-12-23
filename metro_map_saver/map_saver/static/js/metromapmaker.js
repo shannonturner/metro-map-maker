@@ -1597,8 +1597,13 @@ function drawStation(ctx, x, y, metroMap, skipText, drawAtX, drawAtY) {
     //  modify the drawAtX and drawAtY values very slightly from x, y
     //  to subtly offset where the name is drawn
     if (stationNameOffset && stationNameOffset.length > 0 && !drawAtX && !drawAtY) {
-      drawAtX = x + stationNameOffset[0]
-      drawAtY = y + stationNameOffset[1]
+      if (stationNameOffset.length == 2) {
+        drawAtX = x + stationNameOffset[0]
+        drawAtY = y + stationNameOffset[1]
+      } else if (stationNameOffset == 'endcap') {
+        // Kinda hacky patch to make endcaps "borrow" the spacing of transfer stations; consider refactoring
+        isTransferStation = true
+      }
     }
   }
 
@@ -2120,6 +2125,8 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
     //  and since the circle takes up the full grid square,
     //  we don't need special spacing.
     return []
+  } else if (station && lineDirection["endcap"]) {
+    return 'endcap'
   }
 
   var stationNameOffset = []
@@ -2148,12 +2155,20 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
       stationNameOffset = [0.5, 0]
     } else if ([135, -135].indexOf(markerDirection) > -1) {
       stationNameOffset = [-0.5, 0]
+    } else if ([1, 90].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0.75, 0]
+    } else if ([-1, -90].indexOf(markerDirection) > -1) {
+      stationNameOffset = [-0.75, 0]
     }
   } else if (lineDirection["direction"] == 'horizontal') {
     if ([1, 90, -135, -45].indexOf(markerDirection) > -1) {
       stationNameOffset = [0, -0.5]
     } else if ([-1, -90, 135, 45].indexOf(markerDirection) > -1) {
       stationNameOffset = [0, 0.5]
+    } else if (markerDirection == 0) {
+      stationNameOffset = [0, -0.75]
+    } else if (markerDirection == 180) {
+      stationNameOffset = [0, 0.75]
     }
   }
 
