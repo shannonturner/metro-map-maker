@@ -50,27 +50,31 @@ SVG_TEMPLATE_V3 = Template('''
 {% endif %}
     {% for color, line_width_style in shapes_by_color.items %}
         {% for width_style, shapes in line_width_style.items %}
+            {% with line_style=width_style|get_style %}
             {% for line in shapes.lines %}
-                {% if 'hollow' in width_style or 'color_outline' in width_style %}
+                {% if 'hollow' in line_style or line_style == 'color_outline' %}
                     <mask id="k{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" maskUnits="userSpaceOnUse">
                         <line class="{% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#fff"/>
-                        <line class="{% get_masked_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#000"/>
+                        {% if 'hollow' in line_style or line_style == 'color_outline' %}
+                            <line class="{% get_masked_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#000"/>
+                        {% endif %}
                     </mask>
-                    {% if 'color_outline' in width_style %}
+                    {% if line_style == 'color_outline' %}
                         <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" filter="url(#fco)"/>
                     {% endif %}
                     <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" mask="url(#k{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }})"/>
-                {% elif 'stripes' in width_style %}
+                {% elif 'stripes' in line_style %}
                     <mask id="k{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" maskUnits="userSpaceOnUse">
-                        <line class="{% get_line_class_from_width_style width_style line_size True %} {% if 'wide_stripes' in width_style %}sl-sq{% else %}sl-b{% endif %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#fff"/>
+                        <line class="{% get_line_class_from_width_style width_style line_size True %} {% if line_style == 'wide_stripes' %}sl-sq{% else %}sl-b{% endif %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#fff"/>
                         <line class="{% get_masked_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" stroke="#000"/>
                     </mask>
-                    <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size True %} {% if 'wide_stripes' in width_style %}sl-sq{% else %}sl-b{% endif %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" mask="url(#k{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }})"/>
+                    <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size True %} {% if line_style == 'wide_stripes' %}sl-sq{% else %}sl-b{% endif %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}" mask="url(#k{{ forloop.parentloop.parentloop.counter }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }})"/>
                     <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}"/>
                 {% else %}
                     <line class="{% map_color color color_map %} {% get_line_class_from_width_style width_style line_size %}" x1="{{ line.0 }}" y1="{{ line.1 }}" x2="{{ line.2 }}" y2="{{ line.3 }}"/>
                 {% endif %}
             {% endfor %}
+            {% endwith %} {# line_style #}
             {% for point in shapes.points %}
                 {% if default_station_shape == 'rect' %}
                     <rect x="{{ point.0|add:-0.5 }}" y="{{ point.1|add:-0.5 }}" w="1" h="1" fill="#{{ color }}" />
@@ -89,7 +93,7 @@ STATIONS_SVG_TEMPLATE = Template('''
 {% load metromap_utils %}
 {% for station in stations %}
     {% station_marker station default_station_shape line_size points_by_color stations data_version %}
-    {% station_text station %}
+    {% station_text station points_by_color %} {# pbc needed because london-style stations want line direction #}
 {% endfor %}
 {% endspaceless %}
 </svg>

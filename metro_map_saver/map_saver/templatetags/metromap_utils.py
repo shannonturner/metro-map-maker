@@ -147,35 +147,37 @@ def station_marker(station, default_shape, line_size, points_by_color, stations,
             x_offset = 0
             y_offset = 0
 
+            orientation = station.get('orientation', ALLOWED_ORIENTATIONS[0])
+
             if line_direction == 'horizontal':
-                if station.get('orientation') in (0, -45, -135, 90, 1):
+                if orientation in (0, -45, -135, 90, 1):
                     # Draw above
                     x_offset = -0.25
                     y_offset = -0.75
-                elif station.get('orientation') in (180, 45, 135, -90, -1):
+                elif orientation in (180, 45, 135, -90, -1):
                     # Draw below
                     x_offset = -0.25
                 width, height = height, width
             elif line_direction == 'vertical':
-                if station.get('orientation') in (0, -45, 45, 90, 1):
+                if orientation in (0, -45, 45, 90, 1):
                     # Draw on right
                     y_offset = -0.25
-                elif station.get('orientation') in (180, -135, 135, -90, -1):
+                elif orientation in (180, -135, 135, -90, -1):
                     x_offset = -0.75
                     y_offset = -0.25
             elif line_direction == 'diagonal-se':
-                if station.get('orientation') in (0, -45, 45, 90, 1):
+                if orientation in (0, -45, 45, 90, 1):
                     # Draw above-right
                     y_offset = -0.25
-                elif station.get('orientation') in (180, -135, 135, -90, -1):
+                elif orientation in (180, -135, 135, -90, -1):
                     # Draw below-left
                     x_offset = -0.75
                     y_offset = -0.25
             elif line_direction == 'diagonal-ne':
-                if station.get('orientation') in (0, -45, 45, -90, -1):
+                if orientation in (0, -45, 45, -90, -1):
                     # Draw below-right
                     y_offset = -0.25
-                elif station.get('orientation') in (180, -135, 135, 90, 1):
+                elif orientation in (180, -135, 135, 90, 1):
                     # Draw above-left
                     x_offset = -0.75
                     y_offset = -0.25
@@ -618,7 +620,7 @@ def get_london_connections(x, y, stations):
     return connected
 
 @register.simple_tag
-def station_text(station):
+def station_text(station, points_by_color=None):
 
     """ Generate the SVG text tag for a station based on
             whether it's a transfer station, and
@@ -644,6 +646,11 @@ def station_text(station):
     assert isinstance(station['xy'][0], int)
     assert isinstance(station['xy'][1], int)
     assert station['orientation'] in ALLOWED_ORIENTATIONS
+
+    # Other transformations are done to station['orientation'] below to handle the differences
+    #   between the SVG/Canvas implementations, so this preserves the original orientation
+    #   which is necessary for London-style stations later.
+    orientation = station['orientation']
 
     if station.get('transfer'):
         x_val = station['xy'][0] + 1.5
@@ -700,7 +707,91 @@ def station_text(station):
         else:
             y_val = y_val + 1.25
 
-    # TODO: London
+    # London needs to offset the station names based on the line direction and orientation
+    #   (though transfer stations already have plenty of offset, so skip for those)
+    if station.get('style') == 'london' and not station.get('transfer'):
+        line_width_style = station['line_width_style']
+        line_direction = get_line_direction(
+            *station['xy'],
+            f"#{station['color']}",
+            points_by_color,
+            line_width_style,
+        )
+
+        if line_direction['direction'] == 'diagonal-se':
+            if orientation in (90, 1):
+                x_val += 0.5
+                y_val += -0.25
+            elif orientation in (-90, -1):
+                x_val += -0.5
+                y_val += 0.25
+            elif orientation == 0:
+                x_val += 0.5
+                y_val += -0.5
+            elif orientation == 180:
+                x_val += -0.5
+                y_val += 0.5
+            elif orientation == 135:
+                x_val += -0.5
+            elif orientation == -135:
+                x_val += -0.25
+                y_val += 0.5
+            elif orientation == 45:
+                x_val += 0.5
+                y_val += -0.5
+            elif orientation == -45:
+                x_val += 0.5
+        elif line_direction['direction'] == 'diagonal-ne':
+            if orientation in (180, 135):
+                x_val += -0.25
+                y_val += -0.5
+            elif orientation in (0, 45):
+                x_val += 0.25
+                y_val += 0.5
+            elif orientation in (1, 90, 135):
+                x_val += -0.5
+                y_val += -0.5
+            elif orientation in (-1, -90, -45):
+                x_val += 0.5
+                y_val += 0.5
+        elif line_direction['direction'] == 'vertical':
+            if orientation in (45, -45):
+                x_val += 0.5
+            elif orientation in (135, -135):
+                x_val += -0.5
+            elif orientation == 0:
+                x_val += 0.25
+            elif orientation == 180:
+                x_val += -0.25
+
+            if orientation in (-45, -135):
+                y_val += 0.25
+            elif orientation in (45, 135):
+                y_val += -0.25
+        elif line_direction['direction'] == 'horizontal':
+            if orientation in (1, 90, -135, -45):
+                y_val += -0.5
+            elif orientation in (-1, -90, 135, 45):
+                y_val += 0.5
+
+            if orientation == 90:
+                x_val += 0.25
+                y_val += 0.5
+            elif orientation == -90:
+                x_val += -0.25
+                y_val += -0.5
+            elif orientation == -135:
+                x_val += -0.25
+                y_val += -0.25
+            elif orientation == 135:
+                x_val += -0.25
+                y_val += 0.25
+            elif orientation == 45:
+                x_val += 0.25
+                y_val += 0.25
+            elif orientation == -45:
+                x_val += 0.25
+                y_val += -0.25
 
     text = f'''<text x="{x_val}" y="{y_val}"{text_anchor}{transform}>'''
 
@@ -953,6 +1044,10 @@ def underscore_to_space(value):
 @register.filter
 def is_twotone(value):
     return value in TWOTONE_LINESTYLES
+
+@register.filter
+def get_style(value):
+    return value.split('-')[1]
 
 @register.filter
 def hollow_line_mask(line):
