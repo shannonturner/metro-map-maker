@@ -718,11 +718,13 @@ def station_text(station, points_by_color=None):
             line_width_style,
         )
 
+        # TODO: endcaps on diagonals should have the same spacing as transfers
+
         if line_direction['direction'] == 'diagonal-se':
-            if orientation in (90, 1):
+            if orientation == 1:
                 x_val += 0.5
                 y_val += -0.25
-            elif orientation in (-90, -1):
+            elif orientation == -1:
                 x_val += -0.5
                 y_val += 0.25
             elif orientation == 0:
@@ -741,18 +743,34 @@ def station_text(station, points_by_color=None):
                 y_val += -0.5
             elif orientation == -45:
                 x_val += 0.5
-        elif line_direction['direction'] == 'diagonal-ne':
-            if orientation in (180, 135):
+            elif orientation == 90:
+                x_val += 0.5
+                y_val += 0.5
+            elif orientation == -90:
                 x_val += -0.25
                 y_val += -0.5
-            elif orientation in (0, 45):
+        elif line_direction['direction'] == 'diagonal-ne':
+            if orientation == 180:
+                x_val += -0.25
+                y_val += -0.5
+            elif orientation == 0:
                 x_val += 0.25
                 y_val += 0.5
-            elif orientation in (1, 90, 135):
+            elif orientation in (1, 135):
                 x_val += -0.5
                 y_val += -0.5
-            elif orientation in (-1, -90, -45):
+            elif orientation in (-1, -45):
                 x_val += 0.5
+                y_val += 0.5
+            elif orientation == 45:
+                x_val += 0.5
+            elif orientation == -135:
+                x_val += -0.5
+            elif orientation == 90:
+                x_val += 0.25
+                y_val += -0.5
+            elif orientation == -90:
+                x_val += -0.25
                 y_val += 0.5
         elif line_direction['direction'] == 'vertical':
             if orientation in (45, -45):
