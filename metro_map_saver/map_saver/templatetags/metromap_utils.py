@@ -1156,7 +1156,7 @@ SVG_STYLES = {
     'dense_thick': {"class": "l5", "style": "stroke-dasharray: .1 .1; stroke-linecap: butt;"},
     'hollow_open': {"class": "l6", "style": "stroke-linecap: butt;"},
     'dashed_uneven': {"class": "l7", "style": "stroke-dasharray: 1 .2 .5 .2; stroke-linecap: butt;"},
-    'dashed_square': {"class": "l8", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
+    'dotted_square': {"class": "l8", "style": "stroke-linecap: butt;"},
     'wide_stripes': {"class": "l9", "style": "stroke-dasharray: 1 2.5; stroke-linecap: square;"},
     'square_stripes': {"class": "l10", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
     'stripes': {"class": "l11", "style": "stroke-dasharray: 1 .5; stroke-linecap: butt;"},
@@ -1170,6 +1170,9 @@ SVG_STYLES = {
     '0.125': {"class": "w5", "style": "stroke-width: .125;"},
 
     # Combination width/style lines
+    # These need special handling in mapdata_optimizer.SVG_TEMPLATE_V3
+    #   to use get_masked_line_class_from_width_style (in addition to get_line_class_from_width_style);
+    #   see dotted_square for a trivial example case
     '1-hollow': {"class": "lh1", "style": "stroke-width: 0.6; stroke-linecap: square;"},
     '0.75-hollow': {"class": "lh2", "style": "stroke-width: 0.45; stroke-linecap: square;"},
     '0.5-hollow': {"class": "lh3", "style": "stroke-width: 0.3; stroke-linecap: square;"},
@@ -1211,4 +1214,10 @@ SVG_STYLES = {
     '0.5-stripes': {"class": "lst3", "style": "stroke-width: 0.375; stroke-linecap: butt;"},
     '0.25-stripes': {"class": "lst4", "style": "stroke-width: 0.1875; stroke-linecap: butt;"},
     '0.125-stripes': {"class": "lst5", "style": "stroke-width: 0.09375; stroke-linecap: butt;"},
+
+    '1-dotted_square': {"class": "lds1", "style": "stroke-dasharray: 1 1;"},
+    '0.75-dotted_square': {"class": "lds2", "style": "stroke-dasharray: 0.75 0.75;"},
+    '0.5-dotted_square': {"class": "lds3", "style": "stroke-dasharray: 0.5 0.5;"},
+    '0.25-dotted_square': {"class": "lds4", "style": "stroke-dasharray: 0.25 0.25;"},
+    '0.125-dotted_square': {"class": "lds5", "style": "stroke-dasharray: 0.125 0.125;"},
 }

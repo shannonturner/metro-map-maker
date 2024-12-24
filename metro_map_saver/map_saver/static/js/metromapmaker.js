@@ -64,7 +64,7 @@ compatibilityModeIndicator()
 
 const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'] // 1-30; is set up this way to have same functionality on all keyboards
 const ALLOWED_LINE_WIDTHS = [100, 75.0, 50.0, 25.0, 12.5]
-const ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dashed_uneven', 'dashed_square', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted', 'hollow', 'hollow_round', 'hollow_open', 'color_outline', 'wide_stripes', 'square_stripes', 'stripes']
+const ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dashed_uneven', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted', 'dotted_square', 'hollow', 'hollow_round', 'hollow_open', 'color_outline', 'wide_stripes', 'square_stripes', 'stripes']
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin', 'london']
 const ALLOWED_SIZES = [80, 120, 160, 200, 240, 360]
@@ -5476,8 +5476,8 @@ function setLineStyle(style, ctx) {
     pattern = [gridPixelMultiplier, gridPixelMultiplier / 5, gridPixelMultiplier / 2, gridPixelMultiplier / 5]
     ctx.lineCap = 'butt'
   }
-  else if (style == 'dashed_square') {
-    pattern = [gridPixelMultiplier, gridPixelMultiplier]
+  else if (style == 'dotted_square') {
+    pattern = [ctx.lineWidth, ctx.lineWidth]
     ctx.lineCap = 'butt'
   }
   else {
