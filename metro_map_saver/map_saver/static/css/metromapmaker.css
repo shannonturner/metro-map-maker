@@ -291,6 +291,12 @@ canvas#grid-canvas, canvas#hover-canvas, canvas#ruler-canvas {
   gap: 0.5rem;
 }
 
+#line-manage-options {
+  display: flex;
+  gap: 0.5rem;
+  flex-flow: column;
+}
+
 #tool-line-options div {
   flex-grow: 1;
 }
