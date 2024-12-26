@@ -721,9 +721,7 @@ function bindGridSquareMouseover(event) {
   hoverY = xy[1]
 
   if (rightClicking) {
-    // Pan-scroll on right click
-    window.scrollTo(event.screenX, event.screenY)
-    return
+    // TODO: Pan-scroll on right click
   }
 
   if (!mouseIsDown && activeTool == 'eyedropper') {
