@@ -284,7 +284,7 @@ canvas#grid-canvas, canvas#hover-canvas, canvas#ruler-canvas {
   width: 100%;
 }
 
-#tool-line-options, div fieldset {
+#tool-line-options, div fieldset, #line-colors {
   display: flex;
   flex-flow: row wrap;
   justify-content: space-between;
@@ -303,7 +303,7 @@ canvas#grid-canvas, canvas#hover-canvas, canvas#ruler-canvas {
   padding: 0.5rem;
 }
 
-#tool-line-options button.rail-line {
+#line-colors button.rail-line {
   text-shadow: -1px -1px 0 #333, 1px -1px 0 #333, -1px 1px 0 #333, 1px 1px 0 #333;
   color: #fff;
   justify-content: center;
@@ -346,10 +346,10 @@ canvas#grid-canvas, canvas#hover-canvas, canvas#ruler-canvas {
   overflow: clip;
 }
 
-#tool-line-options button.rail-line:hover {
+#line-colors button.rail-line:hover {
   border: 0.5rem solid rgba(255, 255, 255, 0.3);
 }
-#tool-line-options button.rail-line:active {
+#line-colors button.rail-line:active {
   border: 0.5rem solid rgba(0, 0, 0, 0.3);
 }
 

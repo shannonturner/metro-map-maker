@@ -2765,7 +2765,7 @@ function loadMapFromObject(metroMapObject, update) {
           } else {
             keyboardShortcut = ''
           }
-          $('#line-color-options fieldset').append('<button id="rail-line-' + line + '" class="rail-line has-tooltip" style="background-color: #' + line + ';"' + keyboardShortcut + '>' + metroMapObject['global']['lines'][line]['displayName'] + '</button>');
+          $('#line-color-options fieldset #line-colors').append('<button id="rail-line-' + line + '" class="rail-line has-tooltip" style="background-color: #' + line + ';"' + keyboardShortcut + '>' + metroMapObject['global']['lines'][line]['displayName'] + '</button>');
           numLines++;
       }
     }
@@ -4297,7 +4297,7 @@ $(document).ready(function() {
       $('#tool-new-line-errors').text('Too many rail lines! Delete your unused ones before creating new ones.');
     } else {
       $('#tool-new-line-errors').text('');
-      $('#line-color-options fieldset').append('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line has-tooltip" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');
+      $('#line-color-options fieldset #line-colors').append('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line has-tooltip" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');
       if (!activeMap['global']) {
         activeMap['global'] = {"lines": {}}
       }
@@ -4330,7 +4330,7 @@ $(document).ready(function() {
       $(this).children('span').html('Edit colors &amp; names')
       $('#tool-change-line-options').hide()
     } else {
-      $(this).children('span').text('Close Edit Line options')
+      $(this).children('span').text('Close Edit Color options')
       $('#tool-change-line-options').show()
     }
 
