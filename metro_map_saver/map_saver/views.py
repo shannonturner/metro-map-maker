@@ -655,6 +655,8 @@ class AdminHomeView(TemplateView):
     """ A sort of 'home base' for admins like me
         to review important stats centrally
         and serve as a dashboard for all of the main reviewing tasks
+
+        TODO: revisit this, make it useful once more
     """
 
     template_name = 'AdminHome.html'
@@ -668,149 +670,11 @@ class AdminHomeView(TemplateView):
         if not request.user.is_superuser:
             raise PermissionDenied
 
-        action = request.POST.get('action')
-        if action == 'mass_hide':
-            group = request.POST.get('group', '').replace("'", '"')
-            group = json.loads(group)
-            maps = SavedMap.objects.filter(
-                gallery_visible=True,
-                tags__exact=None,
-                **group,
-            )
-            maps.update(gallery_visible=False)
-
         # Return empty response for success
         return render(request, 'MapDataView.html', {})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # Get basic usage stats of number of maps created
-        eastern_time = pytz.timezone('US/Eastern')
-        today = datetime.datetime.now(tz=eastern_time).date()
-        yesterday = today - datetime.timedelta(days=1)
-        last_30 = today - datetime.timedelta(days=30)
-        last_90 = today - datetime.timedelta(days=90)
-        prev_90_start = today - datetime.timedelta(days=180)
-        prev_90_end = today - datetime.timedelta(days=91)
-
-        context['today'] = today
-        context['yesterday'] = yesterday
-
-        context['created_today'] = SavedMap.objects.filter(created_at=today).count()
-        context['created_yesterday'] = SavedMap.objects.filter(created_at=yesterday).count()
-        context['last_30'] = SavedMap.objects.filter(created_at__gt=last_30).count()
-        context['last_90'] = SavedMap.objects.filter(created_at__gt=last_90).count()
-        context['prev_90'] = SavedMap.objects.filter(
-            created_at__gt=prev_90_start,
-            created_at__lte=prev_90_end,
-        ).count()
-        context['last_90_change'] = context['last_90'] - context['prev_90']
-
-        # Get numbers of maps needing review
-        filter_groups = {
-            '0 stations': {'station_count': 0},
-            '1-10 stations': {'station_count__gte': 1, 'station_count__lte': 10},
-            '11-20 stations': {'station_count__gte': 11, 'station_count__lte': 20},
-            '21-30 stations': {'station_count__gte': 21, 'station_count__lte': 30},
-            '31-40 stations': {'station_count__gte': 31, 'station_count__lte': 40},
-            '41-50 stations': {'station_count__gte': 41, 'station_count__lte': 50},
-            '51-75 stations': {'station_count__gte': 51, 'station_count__lte': 75},
-            '76-100 stations': {'station_count__gte': 76, 'station_count__lte': 100},
-            '101-200 stations': {'station_count__gte': 101, 'station_count__lte': 200},
-            '201-500 stations': {'station_count__gte': 201, 'station_count__lte': 500},
-            '501+ stations': {'station_count__gte': 501},
-        }
-
-        maps_needing_review = SavedMap.objects.filter(tags__exact=None, gallery_visible=True)
-
-        PER_PAGE = 100
-
-        context['maps'] = {
-            group: {
-                'needing_review': maps_needing_review.filter(**filters).count(),
-                'total': SavedMap.objects.filter(**filters).count(),
-                'review_link': '/admin/gallery/notags/?per_page={0}&{1}'.format(
-                    PER_PAGE,
-                    urllib.parse.urlencode(filters)
-                ),
-                'filters': filters,
-            } for group, filters in filter_groups.items()
-        }
-
-        context['totals'] = {
-            'needing_review': maps_needing_review.count(),
-            'total': SavedMap.objects.count(),
-        }
-
-        maps_tagged_need_review = SavedMap.objects.filter(
-            tags__slug='needs-review',
-            gallery_visible=True,
-        ).count()
-        maps_no_tags = SavedMap.objects.filter(
-            tags__exact=None,
-            gallery_visible=True,
-        ).count()
-
-        context['maps_no_tags'] = maps_no_tags
-        context['maps_tagged_need_review'] = maps_tagged_need_review
-
-        # How many travel systems do we have a publicly visible real/speculative map for?
-        travel_system_names = [ts.name.split(',')[0] for ts in TravelSystem.objects.all()]
-        travel_system_has_real_map = set()
-        maps_tagged_real = SavedMap.objects.filter(
-            tags__slug='real',
-            publicly_visible=True,
-        )
-
-        travel_system_has_speculative_map = set()
-        maps_tagged_speculative = SavedMap.objects.filter(
-            tags__slug='speculative',
-            publicly_visible=True,
-        )
-
-        for real_map in maps_tagged_real:
-            if real_map.name in travel_system_names or \
-            real_map.suggested_city in travel_system_names:
-                travel_system_has_real_map.add(real_map.name)
-
-        for speculative_map in maps_tagged_speculative:
-            if speculative_map.name in travel_system_names or \
-            speculative_map.suggested_city in travel_system_names:
-                travel_system_has_speculative_map.add(speculative_map.name)
-
-        travel_system_names = set(travel_system_names)
-
-        context['travel_system_has_real_map'] = sorted(travel_system_has_real_map)
-        context['travel_system_missing_real_map'] = sorted(
-            travel_system_names - travel_system_has_real_map
-        )
-        context['travel_system_has_speculative_map'] = sorted(travel_system_has_speculative_map)
-        context['travel_system_missing_speculative_map'] = sorted(
-            travel_system_names - travel_system_has_speculative_map
-        )
-        context['total_travel_systems'] = TravelSystem.objects.count()
-
-        # Maps currently in the public gallery
-        public_tags = ['real', 'speculative', 'unknown', 'favorite']
-        public_tags = {tag: {} for tag in public_tags}
-        context['public_tags'] = {}
-        public = SavedMap.objects.filter(publicly_visible=True)
-        for tag in public_tags:
-            context['public_tags'][tag] = public.filter(tags__slug=tag).count()
-        context['public_total'] = public.count()
-
-        context['most_popular_cities'] = SavedMap.objects.exclude(suggested_city='') \
-            .values_list('suggested_city') \
-            .annotate(city_count=Count('suggested_city')) \
-            .order_by('-city_count')[:10]
-
-        context['most_popular_cities_by_name'] = SavedMap.objects.exclude(name='') \
-            .filter(publicly_visible=True) \
-            .values_list('name') \
-            .annotate(city_count=Count('name')) \
-            .order_by('-city_count')[:10]
-
         return context
 
 
