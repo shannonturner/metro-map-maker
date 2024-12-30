@@ -37,7 +37,6 @@
 
     <div class="row m-3">
         <form method="POST">
-            {# TODO: CONFIRM I don't need csrf_token here because it's a GET #}
             {% csrf_token %}
         <fieldset class="p-3 w-25 border">
             <legend>Create a list of maps by adding either the map's URL, its unique URL alphanumeric identifier (what comes after the URL in <code>metromapmaker.com/map/</code>), or its numeric ID. Add only one map per line.</legend>
@@ -50,5 +49,16 @@
         </fieldset>
         </form>
     </div>
+
+    {% if maps %}
+        <hr>
+        <h3>These maps in CSV format (Comma-Separated-Values Spreadsheet)</h3>
+        <p>Copy this, paste it into your spreadsheet editor, and split text to columns.</p>
+        <div class="row m-3">
+            {# Awkward spacing here so that we don't get extra spaces and newlines in the CSV #}
+            <textarea rows="10" style="width: 25%;">id,url,station_count,line_count{% for map in maps %}
+{{ map.id }},https://metromapmaker.com/map/{{ map.urlhash }},{{ map.station_count }},{{ map.data.global.lines|length }}{% endfor %}</textarea>
+        </div>
+    {% endif %}
 
 {% endblock content %}
