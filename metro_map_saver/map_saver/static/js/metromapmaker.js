@@ -36,7 +36,7 @@ var rulerOn = false
 var rulerOrigin = []
 var moveStationOn = []
 
-var MMMDEBUG = false
+var MMMDEBUG = true
 var MMMDEBUG_UNDO = false
 
 if (typeof mapDataVersion === 'undefined') {
@@ -300,6 +300,28 @@ function getActiveLine(x, y, metroMap, returnLineWidthStyle) {
   return false;
 } // getActiveLine(x, y, metroMap, returnLineWidthStyle)
 
+function isOnOrAdjacentToStation(x, y, metroMap) {
+  // Returns true if a given point is on or is adjacent to a station;
+  //  used to know whether the stations canvas needs redrawing
+  var coordinates = [x, y]
+  for (var x1=-1; x1<2; x1++) {
+    for (var y1=-1; y1<2; y1++) {
+      if (x1 == 0 && y1 == 0) { continue }
+      coordinates.push(x + x1)
+      coordinates.push(y + y1)
+    }
+  }
+
+  while (coordinates.length >= 2) {
+    x = coordinates.shift()
+    y = coordinates.shift()
+    if (getStation(x, y, metroMap)) {
+      return true
+    }
+  }
+  return false
+} // isOnOrAdjacentToStation(x, y, metroMap)
+
 function getStation(x, y, metroMap) {
   // Given an x, y coordinate pair, return the station object
   if (metroMap && (mapDataVersion == 2 || mapDataVersion == 3) && metroMap["stations"] && metroMap["stations"][x]) {
@@ -403,7 +425,7 @@ function makeLine(x, y, deferSave) {
       // If there's nothing here previously, we don't need to clear/redraw
       redrawCanvasForColor(previousColor)
     }
-    redrawCanvasForColor(color)
+    redrawCanvasForColor(color, isOnOrAdjacentToStation(x, y, activeMap))
   } else if (mapDataVersion == 1) {
     drawArea(x, y, activeMap)
   }
@@ -436,7 +458,7 @@ function erase(x, y) {
     floodFill(x, y, getActiveLine(x, y, activeMap, (mapDataVersion >= 3)), '')
     autoSave(activeMap)
     if (mapDataVersion >= 2) {
-      redrawCanvasForColor(erasedLine)
+      redrawCanvasForColor(erasedLine, (redrawStations || isOnOrAdjacentToStation(x, y, activeMap)))
     } else if (mapDataVersion == 1) {
       drawCanvas(activeMap)
     }
@@ -444,20 +466,24 @@ function erase(x, y) {
     metroMap = updateMapObject(x, y);
     autoSave(metroMap);
     if (mapDataVersion >= 2) {
-      redrawCanvasForColor(erasedLine)
+      redrawCanvasForColor(erasedLine, (redrawStations || isOnOrAdjacentToStation(x, y, metroMap)))
     } else if (mapDataVersion == 1) {
       drawArea(x, y, metroMap, erasedLine, redrawStations);
     }
   }
 } // erase(x, y)
 
-function redrawCanvasForColor(color) {
+function redrawCanvasForColor(color, isOnOrAdjacentToStation) {
   var t0 = performance.now()
   // Clear the main canvas
   drawCanvas(false, false, true)
+  var t1 = performance.now()
+  console.log(`drawCanvas(false, false, true) in ${(t1 - t0)} ms`)
 
   // Only redraw the current color; the others we can use as-is
   drawColor(color)
+  var t2 = performance.now()
+  console.log(`drawColor(${color}) in ${(t2 - t1)} ms`)
 
   // Draw all of the colors onto the newly-cleared canvas
   var canvas = document.getElementById('metro-map-canvas');
@@ -466,9 +492,13 @@ function redrawCanvasForColor(color) {
     var colorCanvas = createColorCanvasIfNeeded(color)
     ctx.drawImage(colorCanvas, 0, 0); // Layer the stations on top of the canvas
   }
+  var t3 = performance.now()
+  console.log(`ctx.drawImage() loop in ${(t3 - t2)} ms`)
 
-  // Redraw the stations canvas too, in case any stations were deleted or edited nearby
-  drawCanvas(activeMap, true)
+  // Redraw the stations canvas too, if any stations were deleted or edited nearby
+  if (isOnOrAdjacentToStation) {
+    drawCanvas(activeMap, true)
+  }
 
   var t1 = performance.now()
   if (MMMDEBUG) { console.log('redrawCanvasForColor finished in ' + (t1 - t0) + 'ms') }
@@ -672,7 +702,7 @@ function bindGridSquareEvents(event) {
       autoSave(activeMap)
       if (mapDataVersion >= 2) {
         drawColor(initialColor)
-        redrawCanvasForColor(replacementColor)
+        redrawCanvasForColor(replacementColor, isOnOrAdjacentToStation(x, y, activeMap))
       } else if (mapDataVersion == 1) {
         drawCanvas(activeMap)
       }
