@@ -4746,7 +4746,7 @@ function getLineDirection(x, y, metroMap) {
     return info
   }
 
-  var neighboringPoints = [N, E, S, W, NE, SE, SW, NW].filter((d) => d !== undefined)
+  var neighboringPoints = [N, E, S, W, NE, SE, SW, NW].filter((d) => d !== undefined && d == origin)
   if (neighboringPoints.length == 1) {
     info['endcap'] = true
     if ([S, E, SE, SW].filter((d) => d !== undefined).length == 1) {
