@@ -497,6 +497,8 @@ function redrawCanvasForColor(color, isOnOrAdjacentToStation) {
 
   // Redraw the stations canvas too, if any stations were deleted or edited nearby
   if (isOnOrAdjacentToStation) {
+    // TODO: Is it possible to improve performance even further
+    //  by separating out the station drawing and the station name drawing?
     drawCanvas(activeMap, true)
   }
 
@@ -1109,8 +1111,14 @@ function drawColor(color) {
     return
   }
   var colorCanvas = createColorCanvasIfNeeded(color)
+  if (typeof window.scrollByPages == 'function') {
+    console.log('in drawColor, clearing via canvas width (ff perf test)')
+    colorCanvas.width = colorCanvas.width
+  }
   var ctx = colorCanvas.getContext('2d', {alpha: true})
-  ctx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
+  if (typeof window.scrollByPages == 'undefined') {
+    ctx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
+  }
   if (mapDataVersion == 3) {
     for (var lineWidthStyle in activeMap['points_by_color'][color]) {
       ctx.strokeStyle = '#' + color
