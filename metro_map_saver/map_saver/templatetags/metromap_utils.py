@@ -85,10 +85,10 @@ def station_marker(station, default_shape, line_size, points_by_color, stations,
         # Vary the size of the marker based on the line width
         if line_size == 1:
             height = 0.75
-            width = 1.125
+            width = height * 2
         elif line_size == 0.75:
             height = 0.625
-            width = 0.9375
+            width = height * 1.5
         else:
             height = 0.5
             width = 0.75
@@ -147,31 +147,31 @@ def station_marker(station, default_shape, line_size, points_by_color, stations,
             x_offset = 0
             y_offset = 0
 
+            if line_size == 1:
+                major_offset = -1.5
+            elif line_size == 0.75:
+                major_offset = -1.25
+            else:
+                major_offset = -0.75
+
             orientation = station.get('orientation', ALLOWED_ORIENTATIONS[0])
 
             if line_direction == 'horizontal':
                 if orientation in (0, -45, -135, 90, 1):
                     # Draw above
                     x_offset = -0.25
-                    y_offset = -0.75
+                    y_offset = major_offset
                 elif orientation in (180, 45, 135, -90, -1):
                     # Draw below
                     x_offset = -0.25
                 width, height = height, width
-            elif line_direction == 'vertical':
+            elif line_direction in ('vertical', 'diagonal-se'):
                 if orientation in (0, -45, 45, 90, 1):
-                    # Draw on right
+                    # Vertical: Draw on right / Diagonal-SE: Draw above-right
                     y_offset = -0.25
                 elif orientation in (180, -135, 135, -90, -1):
-                    x_offset = -0.75
-                    y_offset = -0.25
-            elif line_direction == 'diagonal-se':
-                if orientation in (0, -45, 45, 90, 1):
-                    # Draw above-right
-                    y_offset = -0.25
-                elif orientation in (180, -135, 135, -90, -1):
-                    # Draw below-left
-                    x_offset = -0.75
+                    # Draw on left / below-left
+                    x_offset = major_offset
                     y_offset = -0.25
             elif line_direction == 'diagonal-ne':
                 if orientation in (0, -45, 45, -90, -1):
@@ -179,7 +179,7 @@ def station_marker(station, default_shape, line_size, points_by_color, stations,
                     y_offset = -0.25
                 elif orientation in (180, -135, 135, 90, 1):
                     # Draw above-left
-                    x_offset = -0.75
+                    x_offset = major_offset
                     y_offset = -0.25
 
             svg.append(svg_rect(x, y, width, height, x_offset, y_offset, color, color, 0.1, None, rotation))
