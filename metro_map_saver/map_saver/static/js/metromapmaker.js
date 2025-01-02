@@ -2032,12 +2032,15 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
   //   otherwise stations placed on thicker lines don't look very good.
   var height = gridPixelMultiplier / 2
   var width = gridPixelMultiplier * 0.75
+  var markerOffset = 0.75
   if (lineWidth == 1) {
     height = height * 1.5
-    width = width * 1.5
+    width = width * 2
+    markerOffset = 1.5
   } else if (lineWidth == 0.75) {
     height = height * 1.25
-    width = width * 1.25
+    width = width * 1.5
+    markerOffset = 1.25
   }
 
   ctx.strokeStyle = strokeColor || lineColor
@@ -2113,7 +2116,7 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
     if (lineDirection["direction"] == 'horizontal') {
       if ([0, -45, -135, 90, 1].indexOf(markerDirection) > -1) {
         // Draw the marker above
-        rectArgs = [(x - 0.25) * gridPixelMultiplier, (y - 0.75) * gridPixelMultiplier, height, width]
+        rectArgs = [(x - 0.25) * gridPixelMultiplier, (y - markerOffset) * gridPixelMultiplier, height, width]
       } else if ([180, 45, 135, -90, -1].indexOf(markerDirection) > -1) {
         // Draw the marker below
         rectArgs = [(x - 0.25) * gridPixelMultiplier, (y) * gridPixelMultiplier, height, width]
@@ -2124,7 +2127,7 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
         rectArgs = [(x) * gridPixelMultiplier, (y - 0.25) * gridPixelMultiplier, width, height]
       } else if ([180, -135, 135, -90, -1].indexOf(markerDirection) > -1) {
         // Draw the marker on the left
-        rectArgs = [(x - 0.75) * gridPixelMultiplier, (y - 0.25) * gridPixelMultiplier, width, height]
+        rectArgs = [(x - markerOffset) * gridPixelMultiplier, (y - 0.25) * gridPixelMultiplier, width, height]
       }
     } else if (lineDirection["direction"] == 'diagonal-se') {
       if ([0, -45, 45, 90, 1].indexOf(markerDirection) > -1) {
@@ -2135,7 +2138,7 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
       } else if ([180, -135, 135, -90, -1].indexOf(markerDirection) > -1) {
         // Draw the marker below left
         ctx.rotate(-45 * (Math.PI / 180))
-        rectArgs = [-0.75 * gridPixelMultiplier, -0.25 * gridPixelMultiplier, width, height]
+        rectArgs = [(-1 * markerOffset) * gridPixelMultiplier, -0.25 * gridPixelMultiplier, width, height]
       }
     } else if (lineDirection["direction"] == 'diagonal-ne') {
       if ([0, -45, 45, -90, -1].indexOf(markerDirection) > -1) {
@@ -2145,7 +2148,7 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
       } else if ([180, -135, 135, 90, 1].indexOf(markerDirection) > -1) {
         // Draw the marker above left
         ctx.rotate(45 * (Math.PI / 180))
-        rectArgs = [-0.75 * gridPixelMultiplier, -0.25 * gridPixelMultiplier, width, height]
+        rectArgs = [(-1 * markerOffset) * gridPixelMultiplier, -0.25 * gridPixelMultiplier, width, height]
       }
     }
 
