@@ -458,7 +458,9 @@ function erase(x, y) {
     floodFill(x, y, getActiveLine(x, y, activeMap, (mapDataVersion >= 3)), '')
     autoSave(activeMap)
     if (mapDataVersion >= 2) {
-      redrawCanvasForColor(erasedLine, (redrawStations || isOnOrAdjacentToStation(x, y, activeMap)))
+      // If Flood Fill is on, we actually do always want to redraw all stations,
+      //  because you might have erased the line the stations were on
+      redrawCanvasForColor(erasedLine, true)
     } else if (mapDataVersion == 1) {
       drawCanvas(activeMap)
     }
@@ -2757,6 +2759,7 @@ function setMapStyle(metroMap) {
 
 function isMapStretchable(size) {
   // Determine if the map is small enough to be stretched
+  // TODO: be smarter about whether I can actually stretch rather than basing it on gridRows/Cols
   if (size) {
     return size <= MAX_MAP_SIZE / 2
   } else {
