@@ -2488,6 +2488,12 @@ function loadMapFromUndoRedo(previousMap) {
     resetResizeButtons(gridCols)
     resetRailLineTooltips()
     resetStyleButtons()
+    // Re-create the Edit colors drop-down menu, because the delete unused colors might have been undone/redone
+    $('#tool-lines-to-change').html('<option>Edit which color?</option>')
+    // Now populate the select dropdown
+    for (var line in activeMap["global"]["lines"]) {
+      $('#tool-lines-to-change').append('<option value="' + line + '">' + activeMap["global"]["lines"][line]["displayName"] + '</option>')
+    } // for line in globals
   } // if (previousMap)
 } // loadMapFromUndoRedo(previousMap)
 
@@ -4356,13 +4362,13 @@ $(document).ready(function() {
     if (allColors.indexOf($('#new-rail-line-color').val().slice(1, 7)) >= 0) {
       $('#tool-new-line-errors').text('This color already exists! Please choose a new color.');
     } else if (allNames.indexOf($('#new-rail-line-name').val()) >= 0) {
-      $('#tool-new-line-errors').text('This rail line name already exists! Please choose a new name.');
+      $('#tool-new-line-errors').text('This color name already exists! Please choose a new name.');
     } else if ($('#new-rail-line-name').val().length == 0) {
-      $('#tool-new-line-errors').text('This rail line name cannot be blank. Please enter a name.');
+      $('#tool-new-line-errors').text('This color name cannot be blank. Please enter a name.');
     } else if ($('#new-rail-line-name').val().length > 100) {
-      $('#tool-new-line-errors').text('This rail line name is too long. Please shorten it.');
+      $('#tool-new-line-errors').text('This color name is too long. Please shorten it.');
     } else if ($('.rail-line').length > 99) {
-      $('#tool-new-line-errors').text('Too many rail lines! Delete your unused ones before creating new ones.');
+      $('#tool-new-line-errors').text('Too many colors! Delete your unused ones before creating new ones.');
     } else {
       $('#tool-new-line-errors').text('');
       $('#line-color-options fieldset #line-colors').append('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line has-tooltip" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');
@@ -4386,7 +4392,7 @@ $(document).ready(function() {
     bindRailLineEvents();
     resetRailLineTooltips()
     // Repopulate the Edit Rail Lines dropdown menu, in case it's open
-    $('#tool-lines-to-change').html('<option>Edit which rail line?</option>')
+    $('#tool-lines-to-change').html('<option>Edit which color?</option>')
     for (var line in activeMap["global"]["lines"]) {
       $('#tool-lines-to-change').append('<option value="' + line + '">' + activeMap["global"]["lines"][line]["displayName"] + '</option>')
     }
@@ -4402,7 +4408,7 @@ $(document).ready(function() {
       $('#tool-change-line-options').show()
     }
 
-    $('#tool-lines-to-change').html('<option>Edit which rail line?</option>')
+    $('#tool-lines-to-change').html('<option>Edit which color?</option>')
     $('#change-line-name').hide()
     $('#change-line-color').hide()
     $('#tool-change-line-options label').hide()
@@ -4417,7 +4423,7 @@ $(document).ready(function() {
   $('#tool-lines-to-change').on('change', function() {
     $('#tool-change-line-options label').show()
     // Set the name and color
-    if ($('#tool-lines-to-change option:selected').text() != 'Edit which rail line?') {
+    if ($('#tool-lines-to-change option:selected').text() != 'Edit which color?') {
       $('#change-line-name').show()
       $('#change-line-color').show()
       $('#change-line-name').val($('#tool-lines-to-change option:selected').text())
@@ -4431,7 +4437,7 @@ $(document).ready(function() {
 
   $('#save-rail-line-edits').click(function() {
     // Save edits
-    if ($('#tool-lines-to-change option:selected').text() != 'Edit which rail line?') {
+    if ($('#tool-lines-to-change option:selected').text() != 'Edit which color?') {
       var lineColorToChange = $('#tool-lines-to-change').val()
       var lineColorToChangeTo = $('#change-line-color').val().slice(1)
       var lineNameToChange = $('#tool-lines-to-change option:selected').text()
@@ -4446,7 +4452,7 @@ $(document).ready(function() {
         $('#cant-save-rail-line-edits').text('Can\'t change ' + lineNameToChange + ' - it has the same color as ' + activeMap["global"]["lines"][lineColorToChangeTo]["displayName"])
       }
       else if (allNames.indexOf(lineNameToChangeTo) > -1 && lineNameToChange != lineNameToChangeTo) {
-        $('#cant-save-rail-line-edits').text('This rail line name already exists! Please choose a new name.');
+        $('#cant-save-rail-line-edits').text('This color name already exists! Please choose a new name.');
       }
       else {
         replaceColors({
@@ -4466,7 +4472,7 @@ $(document).ready(function() {
           $('#tool-line').removeClass('active')
         } // if line
       } // else
-    } // # not Edit which rail line?
+    } // # not Edit which color?
     // If replacing the active line, change the active color too
     // or you'll end up drawing with a color that no longer exists among the globals
     if (activeTool == 'line' && rgb2hex(activeToolOption).slice(1, 7) == lineColorToChange)
