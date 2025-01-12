@@ -2035,13 +2035,16 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
   var height = gridPixelMultiplier / 2
   var width = gridPixelMultiplier * 0.75
   var markerOffset = 0.75
+  var markerMainSizeOffset = 1
   if (lineWidth == 1) {
     height = height * 1.5
-    width = width * 2
+    markerMainSizeOffset = 2
+    width = width * markerMainSizeOffset
     markerOffset = 1.5
   } else if (lineWidth == 0.75) {
     height = height * 1.25
-    width = width * 1.5
+    markerMainSizeOffset = 1.5
+    width = width * markerMainSizeOffset
     markerOffset = 1.25
   }
 
@@ -2181,6 +2184,11 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
     } else if (markerDirection == 180) {
       stationNameOffset = [-0.5, 0.5]
     }
+
+    if (lineWidth >= 0.75) {
+      stationNameOffset[0] *= markerMainSizeOffset
+      stationNameOffset[1] *= markerMainSizeOffset
+    }
   } else if (lineDirection["direction"] == 'diagonal-ne') {
     if ([180, -135].indexOf(markerDirection) > -1) {
       stationNameOffset = [-0.25, -0.5]
@@ -2190,6 +2198,11 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
       stationNameOffset = [-0.5, -0.5]
     } else if ([-1, -90, -45].indexOf(markerDirection) > -1) {
       stationNameOffset = [0.5, 0.5]
+    }
+
+    if (lineWidth >= 0.75) {
+      stationNameOffset[0] *= markerMainSizeOffset
+      stationNameOffset[1] *= markerMainSizeOffset
     }
   } else if (lineDirection["direction"] == 'vertical') {
     if ([45, -45].indexOf(markerDirection) > -1) {
@@ -2201,6 +2214,15 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
     } else if ([-1, -90].indexOf(markerDirection) > -1) {
       stationNameOffset = [-0.75, 0]
     }
+
+    if (lineWidth >= 0.75) {
+      if (markerDirection == 0) {
+        stationNameOffset = [0.5, 0]
+      } else if (markerDirection == 180) {
+        stationNameOffset = [-0.5, 0]
+      }
+      stationNameOffset[0] *= markerMainSizeOffset
+    }
   } else if (lineDirection["direction"] == 'horizontal') {
     if ([1, 90, -135, -45].indexOf(markerDirection) > -1) {
       stationNameOffset = [0, -0.5]
@@ -2210,6 +2232,10 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
       stationNameOffset = [0, -0.75]
     } else if (markerDirection == 180) {
       stationNameOffset = [0, 0.75]
+    }
+
+    if (lineWidth >= 0.75) {
+      stationNameOffset[1] *= markerMainSizeOffset
     }
   }
 

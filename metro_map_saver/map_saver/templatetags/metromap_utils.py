@@ -664,10 +664,15 @@ def station_text(station, points_by_color=None):
             station['transfer'] = True
 
     if station.get('transfer'):
-        x_val = station['xy'][0] + 1.5
+        x_text_offset = 1.5
     else:
-        x_val = station['xy'][0] + 0.75
+        x_text_offset = 0.75
 
+    y_text_offset = 0
+    x_offset = 0
+    y_offset = 0
+
+    x_val = station['xy'][0]
     y_val = station['xy'][1]
 
     if station['orientation'] == 0:
@@ -690,9 +695,9 @@ def station_text(station, points_by_color=None):
     ):
         text_anchor = ' text-anchor="end"'
         if station.get('transfer'):
-            x_val = station['xy'][0] - 1.5
+            x_text_offset *= -1
         else:
-            x_val = station['xy'][0] - 0.75
+            x_text_offset *= -1
 
         if station['orientation'] == 135:
             station['orientation'] = -45
@@ -705,18 +710,16 @@ def station_text(station, points_by_color=None):
             transform = f' transform="rotate({station["orientation"]} {station["xy"][0]}, {station["xy"][1]})"'
     elif station['orientation'] == 1:
         text_anchor = ' text-anchor="middle"'
-        x_val = station['xy'][0]
         if station.get('transfer'):
-            y_val = y_val - 1.75
+            y_text_offset -= 1.75
         else:
-            y_val = y_val - 1.25
+            y_text_offset -= 1.25
     elif station['orientation'] == -1:
         text_anchor = ' text-anchor="middle"'
-        x_val = station['xy'][0]
         if station.get('transfer'):
-            y_val = y_val + 1.75
+            y_text_offset += 1.75
         else:
-            y_val = y_val + 1.25
+            y_text_offset += 1.25
 
     # London needs to offset the station names based on the line direction and orientation
     #   (though transfer stations already have plenty of offset, so skip for those)
@@ -727,109 +730,155 @@ def station_text(station, points_by_color=None):
         #   But this is because SVG rotation is handled differently than on the canvas
 
         # TODO: endcaps on diagonals should have the same spacing as transfers
+        line_width, line_style = line_width_style.split('-')
+        line_width = float(line_width)
+
+        if line_width == 1:
+            marker_main_size_offset = 2
+        elif line_width == 0.75:
+            marker_main_size_offset = 1.5
+        else:
+            marker_main_size_offset = 1
 
         if line_direction['direction'] == 'diagonal-se':
             if orientation == 1:
-                x_val += 0.5
-                y_val += -0.25
+                x_offset = 0.5
+                y_offset = -0.25
             elif orientation == -1:
-                x_val += -0.5
-                y_val += 0.25
+                x_offset = -0.5
+                x_text_offset = 0
+                y_offset = 0.25
             elif orientation == 0:
-                x_val += 0.5
-                y_val += -0.5
+                x_offset = 0.5
+                y_offset = -0.5
             elif orientation == 180:
-                x_val += -0.5
-                y_val += 0.5
+                x_offset = -0.5
+                y_offset = 0.5
             elif orientation == 135:
-                x_val += -0.5
+                x_offset = -0.5
             elif orientation == -135:
-                x_val += -0.25
-                y_val += 0.5
+                x_offset = -0.25
+                y_offset = 0.5
             elif orientation == 45:
-                x_val += 0.5
-                y_val += -0.5
+                x_offset = 0.5
+                y_offset = -0.5
             elif orientation == -45:
-                x_val += 0.5
+                x_offset = 0.5
             elif orientation == 90:
-                x_val += 0.5
-                y_val += 0.5
+                x_offset = 0.5
+                y_offset = 0.5
             elif orientation == -90:
-                x_val += -0.25
-                y_val += -0.5
+                x_offset = -0.25
+                y_offset = -0.5
+
+            if line_width >= 0.75:
+                x_offset *= marker_main_size_offset
+                y_offset *= marker_main_size_offset
         elif line_direction['direction'] == 'diagonal-ne':
             if orientation == 180:
-                x_val += -0.25
-                y_val += -0.5
+                x_offset = -0.25
+                y_offset = -0.5
             elif orientation == 0:
-                x_val += 0.25
-                y_val += 0.5
+                x_offset = 0.25
+                y_offset = 0.5
             elif orientation in (1, 135):
-                x_val += -0.5
-                y_val += -0.5
+                x_offset = -0.5
+                y_offset = -0.5
             elif orientation in (-1, -45):
-                x_val += 0.5
-                y_val += 0.5
+                x_offset = 0.5
+                y_offset = 0.5
             elif orientation == 45:
-                x_val += 0.5
+                x_offset = 0.5
             elif orientation == -135:
-                x_val += -0.5
+                x_offset = -0.5
             elif orientation == 90:
-                x_val += 0.25
-                y_val += -0.5
+                x_offset = 0.25
+                y_offset = -0.5
             elif orientation == -90:
-                x_val += -0.25
-                y_val += 0.5
+                x_offset = -0.25
+                y_offset = 0.5
+
+            if orientation in (1, -1):
+                x_text_offset = 0
+
+            if line_width >= 0.75:
+                x_offset *= marker_main_size_offset
+                y_offset *= marker_main_size_offset
         elif line_direction['direction'] == 'vertical':
             if orientation in (45, -45):
-                x_val += 0.5
+                x_offset = 0.5
             elif orientation in (135, -135):
-                x_val += -0.5
+                x_offset = -0.5
             elif orientation == 0:
-                x_val += 0.25
+                x_offset = 0.25
             elif orientation == 180:
-                x_val += -0.25
+                x_offset = -0.25
             elif orientation == 1:
-                x_val += 0.75
+                x_offset = 0.75
+                x_text_offset = 0
             elif orientation == -1:
-                x_val += -0.75
+                x_offset = -0.75
+                x_text_offset = 0
             elif orientation == 90:
-                y_val += 0.75
+                y_offset = 0.75
             elif orientation == -90:
-                y_val += -0.75
+                y_offset = -0.75
 
             if orientation in (-45, -135):
-                y_val += 0.25
+                y_offset = 0.25
             elif orientation in (45, 135):
-                y_val += -0.25
-        elif line_direction['direction'] == 'horizontal':
-            if orientation in (1, 90, -135, -45):
-                y_val += -0.5
-            elif orientation in (-1, -90, 135, 45):
-                y_val += 0.5
-            elif orientation == 0:
-                y_val += -0.75
-            elif orientation == 180:
-                y_val += 0.75
+                y_offset = -0.25
 
-            if orientation == 90:
-                x_val += 0.25
-                y_val += 0.5
+            if line_width >= 0.75 and orientation == 0:
+                x_offset = 0.5
+            elif line_width >= 0.75 and orientation == 180:
+                x_offset = -0.5
+
+            if line_width >= 0.75:
+                x_offset *= marker_main_size_offset
+                x_offset *= marker_main_size_offset
+        elif line_direction['direction'] == 'horizontal':
+            if orientation == 1:
+                x_text_offset = 0
+                y_offset = -0.5
+            elif orientation == -1:
+                x_text_offset = 0
+                y_offset = 0.5
+            elif orientation == 0:
+                y_offset = -0.75
+            elif orientation == 180:
+                x_text_offset = -0.75
+                y_offset = 0.75
+            elif orientation == 90:
+                x_offset = 0.5
             elif orientation == -90:
-                x_val += -0.25
-                y_val += -0.5
+                # -90 doesn't get an x_text_offset normally, but needs it here
+                x_text_offset = -0.75
+                x_offset = -0.5
             elif orientation == -135:
-                x_val += -0.25
-                y_val += -0.25
+                x_offset = -0.25
+                y_offset = -0.25
             elif orientation == 135:
-                x_val += -0.25
-                y_val += 0.25
+                x_offset = -0.25
+                y_offset = 0.25
             elif orientation == 45:
-                x_val += 0.25
-                y_val += 0.25
+                x_offset = 0.25
+                y_offset = 0.25
             elif orientation == -45:
-                x_val += 0.25
-                y_val += -0.25
+                x_offset = 0.25
+                y_offset = -0.25
+
+            if line_width >= 0.75:
+                x_offset *= marker_main_size_offset
+                y_offset *= marker_main_size_offset
+    elif station.get('style') == 'london' and station.get('transfer'):
+        if orientation in (-1, 1):
+            x_text_offset = 0
+
+    x_val += x_text_offset
+    y_val += y_text_offset
+    x_val += x_offset
+    y_val += y_offset
 
     text = f'''<text x="{x_val}" y="{y_val}"{text_anchor}{transform}>'''
 
