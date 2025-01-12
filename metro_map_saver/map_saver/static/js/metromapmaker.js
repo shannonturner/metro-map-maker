@@ -36,7 +36,7 @@ var rulerOn = false
 var rulerOrigin = []
 var moveStationOn = []
 
-var MMMDEBUG = true
+var MMMDEBUG = false
 var MMMDEBUG_UNDO = false
 
 if (typeof mapDataVersion === 'undefined') {
@@ -479,13 +479,13 @@ function redrawCanvasForColor(color, isOnOrAdjacentToStation) {
   var t0 = performance.now()
   // Clear the main canvas
   drawCanvas(false, false, true)
-  var t1 = performance.now()
-  console.log(`drawCanvas(false, false, true) in ${(t1 - t0)} ms`)
+  // var t1 = performance.now()
+  // console.log(`drawCanvas(false, false, true) in ${(t1 - t0)} ms`)
 
   // Only redraw the current color; the others we can use as-is
   drawColor(color)
-  var t2 = performance.now()
-  console.log(`drawColor(${color}) in ${(t2 - t1)} ms`)
+  // var t2 = performance.now()
+  // console.log(`drawColor(${color}) in ${(t2 - t1)} ms`)
 
   // Draw all of the colors onto the newly-cleared canvas
   var canvas = document.getElementById('metro-map-canvas');
@@ -494,8 +494,8 @@ function redrawCanvasForColor(color, isOnOrAdjacentToStation) {
     var colorCanvas = createColorCanvasIfNeeded(color)
     ctx.drawImage(colorCanvas, 0, 0); // Layer the stations on top of the canvas
   }
-  var t3 = performance.now()
-  console.log(`ctx.drawImage() loop in ${(t3 - t2)} ms`)
+  // var t3 = performance.now()
+  // console.log(`ctx.drawImage() loop in ${(t3 - t2)} ms`)
 
   // Redraw the stations canvas too, if any stations were deleted or edited nearby
   if (isOnOrAdjacentToStation) {
@@ -1113,10 +1113,6 @@ function drawColor(color) {
     return
   }
   var colorCanvas = createColorCanvasIfNeeded(color)
-  if (typeof window.scrollByPages == 'function') {
-    console.log('in drawColor, clearing via canvas width (ff perf test)')
-    colorCanvas.width = colorCanvas.width
-  }
   var ctx = colorCanvas.getContext('2d', {alpha: true})
   if (typeof window.scrollByPages == 'undefined') {
     ctx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
@@ -2895,17 +2891,12 @@ function updateMapObject(x, y, key, data) {
           delete metroMap['points_by_color'][data][lineWidthStyle][x][y]
           if (Object.values(metroMap['points_by_color'][data][lineWidthStyle][x]).filter((o) => Object.keys(o)).length == 0) {
             delete metroMap['points_by_color'][data][lineWidthStyle][x]
-            // TODO -- TEST THIS REALLY CAREFULLY AND WELL
-            // TODO -- DELETE THESE LOGGING STATEMENTS WHEN I'M CONFIDENT
-            console.log(`deleting metroMap['points_by_color'][data][lineWidthStyle][x], pbc[color][lws] is now: ${JSON.stringify(metroMap['points_by_color'][data][lineWidthStyle])}`)
           }
           if (Object.values(metroMap['points_by_color'][data][lineWidthStyle]).filter((o) => Object.keys(o)).length == 0) {
             delete metroMap['points_by_color'][data][lineWidthStyle]
-            console.log(`deleting metroMap['points_by_color'][data][lineWidthStyle], pbc[color] is now: ${JSON.stringify(metroMap['points_by_color'][data])}`)
           }
           if (Object.values(metroMap['points_by_color'][data]).filter((o) => Object.keys(o)).length == 0) {
             delete metroMap['points_by_color'][data]
-            console.log(`deleting metroMap['points_by_color'][data], pbc is now: ${Object.keys(metroMap['points_by_color'])}`)
           }
         }
       }
