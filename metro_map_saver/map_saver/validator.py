@@ -13,10 +13,20 @@ ALLOWED_MAP_SIZES = [80, 120, 160, 200, 240, 360]
 MAX_MAP_SIZE = ALLOWED_MAP_SIZES[-1]
 VALID_XY = [str(x) for x in range(MAX_MAP_SIZE)]
 ALLOWED_LINE_WIDTHS = [1, 0.75, 0.5, 0.25, 0.125]
-ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted']
-ALLOWED_STATION_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
+# Note: hollow_round works; I only need to add it to ALLOWED_LINE_STYLES to re-add the functionality .
+ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dashed_uneven', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted', 'dotted_square', 'hollow', 'hollow_open', 'color_outline', 'wide_stripes', 'square_stripes', 'stripes']
+ALLOWED_STATION_STYLES = {
+    'wmata': {"short": "Metro (Classic)", "long": "Metro (Classic)"},
+    'rect': {"short": "Rect.", "long": "Rectangles"},
+    'rect-round': {"short": "Round Rect.", "long": "Round Rectangles"},
+    'circles-thin': {"short": "Circles (Thin)", "long": "Circles (Thin)"},
+    'circles-lg': {"short": "Circles (Large)", "long": "Circles (Large)"},
+    'circles-md': {"short": "Circles (Medium)", "long": "Circles (Medium)"},
+    'circles-sm': {"short": "Circles (Small)", "long": "Circles (Small)"},
+    'london': {"short": "London", "long": "London"},
+}
 ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1]
-ALLOWED_CONNECTING_STATIONS = ['rect', 'rect-round', 'circles-thin']
+ALLOWED_CONNECTING_STATIONS = ['rect', 'rect-round', 'circles-thin'] # Note: London deliberately not included, because it connects differently than these
 ALLOWED_TAGS = ['real', 'speculative', 'unknown'] # TODO: change 'speculative' to 'fantasy' here and everywhere else, it's the more common usage
 
 # TODO: ALLOWED_LABEL DETAILS
@@ -197,7 +207,7 @@ def validate_metro_map_v3(metro_map):
 
         valid_lines.append(line)
         validated_metro_map['global']['lines'][line] = {
-            'displayName': sanitize_string(display_name)
+            'displayName': display_name
         }
 
     line_width = metro_map['global'].get('style', {}).get('mapLineWidth', 1)
@@ -210,7 +220,7 @@ def validate_metro_map_v3(metro_map):
 
     station_style = metro_map['global'].get('style', {}).get('mapStationStyle', 'wmata')
     if station_style not in ALLOWED_STATION_STYLES:
-        station_style = ALLOWED_STATION_STYLES[0]
+        station_style = list(ALLOWED_STATION_STYLES.keys())[0]
 
     validated_metro_map['global']['style'] = {
         'mapLineWidth': line_width,
@@ -311,7 +321,7 @@ def validate_metro_map_v3(metro_map):
                     stations_skipped.append(f'STA BAD POS: {x},{y}')
                     continue
 
-                station_name = sanitize_string_without_html_entities(metro_map['stations'][x][y].get('name', '_') or '_')
+                station_name = metro_map['stations'][x][y].get('name', '_') or '_'
                 if len(station_name) < 1:
                     station_name = '_'
                 elif len(station_name) > 255:
@@ -448,7 +458,7 @@ def validate_metro_map_v2(metro_map):
 
     station_style = metro_map['global'].get('style', {}).get('mapStationStyle', 'wmata')
     if station_style not in ALLOWED_STATION_STYLES:
-        station_style = ALLOWED_STATION_STYLES[0]
+        station_style = list(ALLOWED_STATION_STYLES.keys())[0]
 
     validated_metro_map['global']['style'] = {
         'mapLineWidth': line_width,
@@ -651,7 +661,7 @@ def validate_metro_map(metro_map):
 
     station_style = metro_map['global'].get('style', {}).get('mapStationStyle', 'wmata')
     if station_style not in ALLOWED_STATION_STYLES:
-        station_style = ALLOWED_STATION_STYLES[0]
+        station_style = list(ALLOWED_STATION_STYLES.keys())[0]
 
     validated_metro_map['global']['style'] = {
         'mapLineWidth': line_width,

@@ -56,10 +56,12 @@ class SavedMap(models.Model):
     # v2+ representation of map data
     data = models.JSONField(default=dict, blank=True)
     # gallery_visible: should this be shown in the default view of the Admin Gallery?
-    gallery_visible = models.BooleanField(default=True)
+    #   Essentially -- which maps have I already reviewed?
+    gallery_visible = models.BooleanField(default=True, help_text='Should this be shown in the default view of the Admin Gallery?')
     # publicly_visible: should this be shown in the publicly-visible gallery?
     #   (using this to improve speed and reduce query complexity)
     publicly_visible = models.BooleanField(default=False)
+    browse_visible = models.BooleanField(default=True, help_text='Uncheck this to disable a map from being able to be browsed in the maps by date and similar views, though it is still accessible by direct link.')
     name = models.CharField(max_length=255, blank=True, default='', help_text='User-provided (or admin-provided) name for a map. When user-provided, contains tags like (real).')
     thumbnail = models.TextField(blank=True, default='') # Consider: Delete after thumbnail files generation migration
     thumbnail_svg = models.FileField(upload_to=get_thumbnail_filepath, null=True, blank=True)
@@ -354,6 +356,7 @@ class SavedMap(models.Model):
             models.Index(fields=["urlhash"]),
             models.Index(fields=["gallery_visible"]),
             models.Index(fields=["publicly_visible"]),
+            models.Index(fields=["browse_visible"]),
             models.Index(fields=["created_at"]),
             models.Index(fields=["station_count"]),
             models.Index(fields=["name"]),

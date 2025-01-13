@@ -26,6 +26,16 @@ HAS_VARIANTS = [
     'circles-sm',
 ]
 
+TWOTONE_LINESTYLES = [
+    # Should match twoToneButtons defined in metromapmaker.js
+    'hollow',
+    'hollow_open',
+    'hollow_round',
+    'wide_stripes',
+    'square_stripes',
+    'stripes',
+]
+
 @register.simple_tag
 def station_marker(station, default_shape, line_size, points_by_color, stations, data_version):
 
@@ -64,6 +74,115 @@ def station_marker(station, default_shape, line_size, points_by_color, stations,
             svg.append(use_defs(x, y, 'wm-xf'))
         else:
             svg.append(use_defs(x, y, 'wm'))
+    elif shape == 'london':
+        line_width_style = station['line_width_style']
+        line_size, line_style = line_width_style.split('-')
+        line_size = float(line_size)
+
+        line_direction_info = get_line_direction(x, y, color, points_by_color, line_width_style)
+        line_direction = line_direction_info["direction"]
+
+        # Vary the size of the marker based on the line width
+        if line_size == 1:
+            height = 0.75
+            width = height * 2
+        elif line_size == 0.75:
+            height = 0.625
+            width = height * 1.5
+        else:
+            height = 0.5
+            width = 0.75
+
+        # For notches and endcaps
+        if line_direction == 'diagonal-ne':
+            rotation = f'45 {x} {y}'
+        elif line_direction == 'diagonal-se':
+            rotation = f'-45 {x} {y}'
+        else:
+            rotation = None
+
+        if station.get('transfer') or line_direction == 'singleton':
+            svg.append(use_defs(x, y, 'l'))
+            for london_connection in get_london_connections(x, y, stations):
+                dx = x - london_connection[0]
+                dy = y - london_connection[1]
+                x_offset = (-0.25 * dx)
+                y_offset = (-0.25 * dy)
+
+                # Use smaller offsets for vertical/horizontal
+                if dx == 0 and abs(dy) > 0:
+                    y_offset = (-0.525 * dy)
+                elif dy == 0 and abs(dx) > 0:
+                    x_offset = (-0.525 * dx)
+                elif abs(dx) > 0 and abs(dy) > 0:
+                    # Diagonal lines have enough room to look good with larger offsets
+                    x_offset = (-0.55 * dx)
+                    y_offset = (-0.55 * dy)
+                    x2 = london_connection[0] - x_offset
+                    y2 = london_connection[1] - y_offset
+                    svg.append(svg_line(x + x_offset, y + y_offset, x2, y2, classes='lxco'))
+
+                svg.append(svg_line(x, y, *london_connection, classes='lxci'))
+        elif line_direction_info['endcap']:
+            if line_size >= 0.75:
+                width = 1.75
+            else:
+                width = 1.5
+
+            x_offset = width / 6
+            y_offset = width / 2
+
+            if line_direction_info["offset_endcap"]:
+                x_offset = width / 4
+
+            if line_direction == 'horizontal':
+                x_offset *= -1
+                y_offset *= -1
+                width, height = height, width
+            elif line_direction in ('vertical', 'diagonal-se', 'diagonal-ne'):
+                x_offset, y_offset = (y_offset * -1, x_offset * -1)
+
+            svg.append(svg_rect(x, y, width, height, x_offset, y_offset, color, color, 0.1, None, rotation))
+        else:
+            x_offset = 0
+            y_offset = 0
+
+            if line_size == 1:
+                major_offset = -1.5
+            elif line_size == 0.75:
+                major_offset = -1.25
+            else:
+                major_offset = -0.75
+
+            orientation = station.get('orientation', ALLOWED_ORIENTATIONS[0])
+
+            if line_direction == 'horizontal':
+                if orientation in (0, -45, -135, 90, 1):
+                    # Draw above
+                    x_offset = -0.25
+                    y_offset = major_offset
+                elif orientation in (180, 45, 135, -90, -1):
+                    # Draw below
+                    x_offset = -0.25
+                width, height = height, width
+            elif line_direction in ('vertical', 'diagonal-se'):
+                if orientation in (0, -45, 45, 90, 1):
+                    # Vertical: Draw on right / Diagonal-SE: Draw above-right
+                    y_offset = -0.25
+                elif orientation in (180, -135, 135, -90, -1):
+                    # Draw on left / below-left
+                    x_offset = major_offset
+                    y_offset = -0.25
+            elif line_direction == 'diagonal-ne':
+                if orientation in (0, -45, 45, -90, -1):
+                    # Draw below-right
+                    y_offset = -0.25
+                elif orientation in (180, -135, 135, 90, 1):
+                    # Draw above-left
+                    x_offset = major_offset
+                    y_offset = -0.25
+
+            svg.append(svg_rect(x, y, width, height, x_offset, y_offset, color, color, 0.1, None, rotation))
     elif shape in ALLOWED_CONNECTING_STATIONS:
         # Set generics, and change as needed
         width = 0.5
@@ -85,7 +204,8 @@ def station_marker(station, default_shape, line_size, points_by_color, stations,
             # line_width and style are set globally in data_version 2
             line_width_style = None
 
-        line_direction = get_line_direction(x, y, color, points_by_color, line_width_style)
+        line_direction_info = get_line_direction(x, y, color, points_by_color, line_width_style)
+        line_direction = line_direction_info['direction']
         station_direction = get_connected_stations(x, y, stations)
         draw_as_connected = False
 
@@ -220,6 +340,12 @@ def svg_rect(x, y, w, h, x_offset, y_offset, fill, stroke=None, stroke_width=0.2
         return f'<rect x="{x + x_offset}" y="{y + y_offset}" width="{w}" height="{h}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}"{rx}{rot}/>'
     return f'<rect x="{x + x_offset}" y="{y + y_offset}" width="{w}" height="{h}" fill="{fill}"{rx}{rot}/>'
 
+def svg_line(x1, y1, x2, y2, classes='', **kwargs):
+    if classes:
+        classes = f' class="{classes}"'
+    kwargs = ' '.join([f'{k}="{v}"' for k, v in kwargs.items()])
+    return f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}"{classes}{kwargs}/>'
+
 def get_line_direction(x, y, color, points_by_color, line_width_style=None):
 
     """ Returns which direction this line is going in,
@@ -227,6 +353,12 @@ def get_line_direction(x, y, color, points_by_color, line_width_style=None):
     """
 
     color = color.removeprefix('#')
+
+    info = {
+        "direction": None,
+        "endcap": False,
+        "offset_endcap": False,
+    }
 
     if not line_width_style:
         # 'xy' isn't a valid value for a line width/style;
@@ -244,24 +376,39 @@ def get_line_direction(x, y, color, points_by_color, line_width_style=None):
     S = (x, y+1) in points_by_color[color][line_width_style]
     W = (x-1, y) in points_by_color[color][line_width_style]
 
+    neighboring_points = [
+        NW, NE, SW, SE,
+        N, E, S, W,
+    ]
+    neighboring_points = [np for np in neighboring_points if np]
+    if len(neighboring_points) == 1:
+        info["endcap"] = True
+
+    london_offset_endcaps = [S, E, SE, SW]
+    london_offset_endcaps = [np for np in london_offset_endcaps if np]
+    if len(london_offset_endcaps) == 1:
+        info["offset_endcap"] = True
+
     if W and E:
-        return 'horizontal'
+        info["direction"] = 'horizontal'
     elif N and S:
-        return 'vertical'
+        info["direction"] = 'vertical'
     elif NW and SE:
-        return 'diagonal-se'
+        info["direction"] = 'diagonal-se'
     elif SW and NE:
-        return 'diagonal-ne'
+        info["direction"] = 'diagonal-ne'
     elif W or E:
-        return 'horizontal'
+        info["direction"] = 'horizontal'
     elif N or S:
-        return 'vertical'
+        info["direction"] = 'vertical'
     elif NW or SE:
-        return 'diagonal-se'
+        info["direction"] = 'diagonal-se'
     elif SW or NE:
-        return 'diagonal-ne'
+        info["direction"] = 'diagonal-ne'
     else:
-        return 'singleton'
+        info["direction"] = 'singleton'
+
+    return info
 
 def get_connected_stations(x, y, stations):
 
@@ -277,7 +424,7 @@ def get_connected_stations(x, y, stations):
 
     eligible_stations = [
         # Each station must be circles-thin, rect, or rect-round in order to qualify for connection
-        (s['xy'][0], s['xy'][1]) for s in stations if s.get('style', ALLOWED_STATION_STYLES[0]) in ALLOWED_CONNECTING_STATIONS
+        (s['xy'][0], s['xy'][1]) for s in stations if s.get('style', list(ALLOWED_STATION_STYLES.keys())[0]) in ALLOWED_CONNECTING_STATIONS
     ]
 
     if (x, y) not in eligible_stations:
@@ -443,8 +590,37 @@ def lengthen_connecting_station(length):
     else:
         return length + round((length - 2) / 2)
 
+def get_london_connections(x, y, stations):
+
+    """ Get all* London-style connecting stations adjacent to (x, y)
+
+        * Or at least, all those to the E, S, SE, and NE,
+            because we don't need to draw the other directions twice.
+    """
+
+    eligible_stations = [
+        # Only London transfer stations connect
+        (s['xy'][0], s['xy'][1]) for s in stations if s.get('style') == 'london' and s.get('transfer')
+    ]
+
+    NW = (x-1, y-1)
+    NE = (x+1, y-1)
+    SW = (x-1, y+1)
+    SE = (x+1, y+1)
+    N = (x, y-1)
+    E = (x+1, y)
+    S = (x, y+1)
+    W = (x-1, y)
+
+    connected = []
+    for direction in [N, W, SW, NW]: # If I need to expand this to all 8, that's easy enough as they're all defined above.
+        if direction in eligible_stations:
+            connected.append(direction)
+
+    return connected
+
 @register.simple_tag
-def station_text(station):
+def station_text(station, points_by_color=None):
 
     """ Generate the SVG text tag for a station based on
             whether it's a transfer station, and
@@ -471,11 +647,32 @@ def station_text(station):
     assert isinstance(station['xy'][1], int)
     assert station['orientation'] in ALLOWED_ORIENTATIONS
 
-    if station.get('transfer'):
-        x_val = station['xy'][0] + 1.5
-    else:
-        x_val = station['xy'][0] + 0.75
+    # Other transformations are done to station['orientation'] below to handle the differences
+    #   between the SVG/Canvas implementations, so this preserves the original orientation
+    #   which is necessary for London-style stations later.
+    orientation = station['orientation']
 
+    if station.get('style') == 'london':
+        line_width_style = station['line_width_style']
+        line_direction = get_line_direction(
+            *station['xy'],
+            f"#{station['color']}",
+            points_by_color,
+            line_width_style,
+        )
+        if line_direction['endcap']:
+            station['transfer'] = True
+
+    if station.get('transfer'):
+        x_text_offset = 1.5
+    else:
+        x_text_offset = 0.75
+
+    y_text_offset = 0
+    x_offset = 0
+    y_offset = 0
+
+    x_val = station['xy'][0]
     y_val = station['xy'][1]
 
     if station['orientation'] == 0:
@@ -498,9 +695,9 @@ def station_text(station):
     ):
         text_anchor = ' text-anchor="end"'
         if station.get('transfer'):
-            x_val = station['xy'][0] - 1.5
+            x_text_offset *= -1
         else:
-            x_val = station['xy'][0] - 0.75
+            x_text_offset *= -1
 
         if station['orientation'] == 135:
             station['orientation'] = -45
@@ -513,18 +710,175 @@ def station_text(station):
             transform = f' transform="rotate({station["orientation"]} {station["xy"][0]}, {station["xy"][1]})"'
     elif station['orientation'] == 1:
         text_anchor = ' text-anchor="middle"'
-        x_val = station['xy'][0]
         if station.get('transfer'):
-            y_val = y_val - 1.75
+            y_text_offset -= 1.75
         else:
-            y_val = y_val - 1.25
+            y_text_offset -= 1.25
     elif station['orientation'] == -1:
         text_anchor = ' text-anchor="middle"'
-        x_val = station['xy'][0]
         if station.get('transfer'):
-            y_val = y_val + 1.75
+            y_text_offset += 1.75
         else:
-            y_val = y_val + 1.25
+            y_text_offset += 1.25
+
+    # London needs to offset the station names based on the line direction and orientation
+    #   (though transfer stations already have plenty of offset, so skip for those)
+    #   (Note: endcap stations are set above as transfer stations for purposes of these offsets)
+    if station.get('style') == 'london' and not station.get('transfer'):
+        # mmm.js's drawStyledStation_London() has only a handful of conditionals,
+        #   and so looks very simple and straightforward compared to the mess below.
+        #   But this is because SVG rotation is handled differently than on the canvas
+
+        # TODO: endcaps on diagonals should have the same spacing as transfers
+        line_width, line_style = line_width_style.split('-')
+        line_width = float(line_width)
+
+        if line_width == 1:
+            marker_main_size_offset = 2
+        elif line_width == 0.75:
+            marker_main_size_offset = 1.5
+        else:
+            marker_main_size_offset = 1
+
+        if line_direction['direction'] == 'diagonal-se':
+            if orientation == 1:
+                x_offset = 0.5
+                y_offset = -0.25
+            elif orientation == -1:
+                x_offset = -0.5
+                x_text_offset = 0
+                y_offset = 0.25
+            elif orientation == 0:
+                x_offset = 0.5
+                y_offset = -0.5
+            elif orientation == 180:
+                x_offset = -0.5
+                y_offset = 0.5
+            elif orientation == 135:
+                x_offset = -0.5
+            elif orientation == -135:
+                x_offset = -0.25
+                y_offset = 0.5
+            elif orientation == 45:
+                x_offset = 0.5
+                y_offset = -0.5
+            elif orientation == -45:
+                x_offset = 0.5
+            elif orientation == 90:
+                x_offset = 0.5
+                y_offset = 0.5
+            elif orientation == -90:
+                x_offset = -0.25
+                y_offset = -0.5
+
+            if line_width >= 0.75:
+                x_offset *= marker_main_size_offset
+                y_offset *= marker_main_size_offset
+        elif line_direction['direction'] == 'diagonal-ne':
+            if orientation == 180:
+                x_offset = -0.25
+                y_offset = -0.5
+            elif orientation == 0:
+                x_offset = 0.25
+                y_offset = 0.5
+            elif orientation in (1, 135):
+                x_offset = -0.5
+                y_offset = -0.5
+            elif orientation in (-1, -45):
+                x_offset = 0.5
+                y_offset = 0.5
+            elif orientation == 45:
+                x_offset = 0.5
+            elif orientation == -135:
+                x_offset = -0.5
+            elif orientation == 90:
+                x_offset = 0.25
+                y_offset = -0.5
+            elif orientation == -90:
+                x_offset = -0.25
+                y_offset = 0.5
+
+            if orientation in (1, -1):
+                x_text_offset = 0
+
+            if line_width >= 0.75:
+                x_offset *= marker_main_size_offset
+                y_offset *= marker_main_size_offset
+        elif line_direction['direction'] == 'vertical':
+            if orientation in (45, -45):
+                x_offset = 0.5
+            elif orientation in (135, -135):
+                x_offset = -0.5
+            elif orientation == 0:
+                x_offset = 0.25
+            elif orientation == 180:
+                x_offset = -0.25
+            elif orientation == 1:
+                x_offset = 0.75
+                x_text_offset = 0
+            elif orientation == -1:
+                x_offset = -0.75
+                x_text_offset = 0
+            elif orientation == 90:
+                y_offset = 0.75
+            elif orientation == -90:
+                y_offset = -0.75
+
+            if orientation in (-45, -135):
+                y_offset = 0.25
+            elif orientation in (45, 135):
+                y_offset = -0.25
+
+            if line_width >= 0.75 and orientation == 0:
+                x_offset = 0.5
+            elif line_width >= 0.75 and orientation == 180:
+                x_offset = -0.5
+
+            if line_width >= 0.75:
+                x_offset *= marker_main_size_offset
+                x_offset *= marker_main_size_offset
+        elif line_direction['direction'] == 'horizontal':
+            if orientation == 1:
+                x_text_offset = 0
+                y_offset = -0.5
+            elif orientation == -1:
+                x_text_offset = 0
+                y_offset = 0.5
+            elif orientation == 0:
+                y_offset = -0.75
+            elif orientation == 180:
+                x_text_offset = -0.75
+                y_offset = 0.75
+            elif orientation == 90:
+                x_offset = 0.5
+            elif orientation == -90:
+                # -90 doesn't get an x_text_offset normally, but needs it here
+                x_text_offset = -0.75
+                x_offset = -0.5
+            elif orientation == -135:
+                x_offset = -0.25
+                y_offset = -0.25
+            elif orientation == 135:
+                x_offset = -0.25
+                y_offset = 0.25
+            elif orientation == 45:
+                x_offset = 0.25
+                y_offset = 0.25
+            elif orientation == -45:
+                x_offset = 0.25
+                y_offset = -0.25
+
+            if line_width >= 0.75:
+                x_offset *= marker_main_size_offset
+                y_offset *= marker_main_size_offset
+    elif station.get('style') == 'london' and station.get('transfer'):
+        if orientation in (-1, 1):
+            x_text_offset = 0
+
+    x_val += x_text_offset
+    y_val += y_text_offset
+    x_val += x_offset
+    y_val += y_offset
 
     text = f'''<text x="{x_val}" y="{y_val}"{text_anchor}{transform}>'''
 
@@ -621,12 +975,33 @@ def get_station_styles_in_use(stations, default_shape, line_size):
                     svg.append('</g>')
         svg.append('</defs>')
 
+    if 'london' in styles:
+        # Insert this first so it doesn't get added to the <defs>
+        svg.insert(
+            0,
+            '<style>.lxco { stroke: #000; stroke-width: 0.525; fill: #fff; stroke-linecap: square; } .lxci { stroke: #fff; stroke-width: 0.25; fill: #fff; stroke-linecap: square; } </style>'
+        )
+
     svg = ''.join(svg)
 
     return format_html(
         '{}',
         mark_safe(svg),
     )
+
+@register.filter
+def has_line_style(shapes_by_color, line_style="color_outline"):
+
+    """ Returns True if this map uses a line with the given style.
+
+        Primarily intended for use with "color_outline" to set the filter definition up top.
+    """
+
+    for color in shapes_by_color:
+        for width_style in shapes_by_color[color]:
+            width, style = width_style.split('-')
+            if line_style == style:
+                return True
 
 @register.simple_tag
 def get_line_width_styles_for_svg_style(shapes_by_color):
@@ -637,14 +1012,17 @@ def get_line_width_styles_for_svg_style(shapes_by_color):
 
     widths = set()
     styles = set()
+    css_styles = []
 
     for color in shapes_by_color:
         for width_style in shapes_by_color[color]:
             width, style = width_style.split('-')
             widths.add(width)
             styles.add(style)
+            # Handle combination width/styles like hollow lines
+            if width_style in SVG_STYLES:
+                css_styles.append(f".{SVG_STYLES[width_style]['class']} {{ {SVG_STYLES[width_style]['style']} }}")
 
-    css_styles = []
     for width in widths:
         if width in SVG_STYLES:
             css_styles.append(f".{SVG_STYLES[width]['class']} {{ {SVG_STYLES[width]['style']} }}")
@@ -652,6 +1030,12 @@ def get_line_width_styles_for_svg_style(shapes_by_color):
     for style in styles:
         if style in SVG_STYLES:
             css_styles.append(f".{SVG_STYLES[style]['class']} {{ {SVG_STYLES[style]['style']} }}")
+
+        # Special case because
+        if style == 'wide_stripes':
+            css_styles.append(f".sl-sq {{ stroke-linecap: square; }}")
+        elif style.endswith('stripes'):
+            css_styles.append(f".sl-b {{ stroke-linecap: butt; }}")
 
     css_styles = ''.join(css_styles)
 
@@ -661,7 +1045,7 @@ def get_line_width_styles_for_svg_style(shapes_by_color):
     )
 
 @register.simple_tag
-def get_line_class_from_width_style(width_style, line_size):
+def get_line_class_from_width_style(width_style, line_size, width_only=False, style_only=False):
 
     """ Given a width_style and line_size, return the appropriate CSS class(es)
             necessary for this line (if any)
@@ -673,12 +1057,12 @@ def get_line_class_from_width_style(width_style, line_size):
     line_size = str(line_size)
     if width == line_size:
         pass # No class necessary; it's the default
-    elif width in SVG_STYLES:
+    elif width in SVG_STYLES and not style_only:
         classes.append(SVG_STYLES[width]['class'])
 
     if style == ALLOWED_LINE_STYLES[0]:
         pass # No class necessary; it's the default (solid)
-    elif style in SVG_STYLES:
+    elif style in SVG_STYLES and not width_only:
         classes.append(SVG_STYLES[style]['class'])
 
     classes = ' '.join(classes)
@@ -687,6 +1071,21 @@ def get_line_class_from_width_style(width_style, line_size):
         '{}',
         mark_safe(classes)
     )
+
+@register.simple_tag
+def get_masked_line_class_from_width_style(width_style, line_size):
+
+    """ Given a width_style and line_size, return the appropriate CSS class(es)
+            necessary for a masked/hollow line
+    """
+
+    if width_style in SVG_STYLES:
+        return format_html(
+            '{}',
+            mark_safe(SVG_STYLES[width_style]['class'])
+        )
+    else:
+        return ''
 
 @register.filter
 def square_root(value):
@@ -729,6 +1128,49 @@ def map_color(color, color_map):
 def underscore_to_space(value):
     return value.replace('_', ' ')
 
+@register.filter
+def is_twotone(value):
+    return value in TWOTONE_LINESTYLES
+
+@register.filter
+def get_style(value):
+    return value.split('-')[1]
+
+@register.filter
+def hollow_line_mask(line):
+
+    """ Given a line, determine which direction it's going,
+        then apply the necessary adjustments so that hollow lines
+        show correctly with squared end caps.
+
+        line is a list of 4 coordinates:
+            x1 y1 x2 y2
+    """
+
+    if line[0] == line[2] and line[3] > line[1]:
+        # Vertical line
+        return [line[0], line[1] + 0.5, line[2], line[3] - 0.5]
+    elif line[1] == line[3] and line[2] > line[0]:
+        # Horizontal line
+        return [line[0] + 0.5, line[1], line[2] - 0.5, line[3]]
+    elif line[2] > line[0] and line[3] > line[1]:
+        # Southeast line
+        return [line[0] + 0.375, line[1] + 0.375, line[2] - 0.375, line[3] - 0.375]
+    elif line[2] > line[0] and line[3] < line[1]:
+        # Northeast line
+        return [line[0] + 0.375, line[1] - 0.375, line[2] - 0.375, line[3] + 0.375]
+    else:
+        # This shouldn't ever happen, but let's fall back
+        return line
+
+@register.filter
+def get_media_image_url(value):
+    from map_saver.models import get_image_filepath
+    try:
+        return get_image_filepath(value, 'png')
+    except Exception:
+        return ''
+
 SVG_DEFS = {
     'wmata': {
         'wm-xf': [ # WMATA transfer
@@ -749,6 +1191,9 @@ SVG_DEFS = {
     'circles-thin': {
         'ct-xf': [svg_circle(None, None, .5, '#fff', '#000', .2, defs=True)],
         'ct': [svg_circle(None, None, .5, '#fff', '#000', .1, defs=True)],
+    },
+    'london': {
+        'l': [svg_circle(None, None, .45, '#fff', '#000', .2, defs=True)],
     }
 }
 
@@ -758,9 +1203,70 @@ SVG_STYLES = {
     'dotted_dense': {"class": "l3", "style": "stroke-dasharray: .5 .25; stroke-linecap: butt;"},
     'dense_thin': {"class": "l4", "style": "stroke-dasharray: .05 .05; stroke-linecap: butt;"},
     'dense_thick': {"class": "l5", "style": "stroke-dasharray: .1 .1; stroke-linecap: butt;"},
+    'hollow_open': {"class": "l6", "style": "stroke-linecap: butt;"},
+    'dashed_uneven': {"class": "l7", "style": "stroke-dasharray: 1 .2 .5 .2; stroke-linecap: butt;"},
+    'dotted_square': {"class": "l8", "style": "stroke-linecap: butt;"},
+    'wide_stripes': {"class": "l9", "style": "stroke-dasharray: 1 2.5; stroke-linecap: square;"},
+    'square_stripes': {"class": "l10", "style": "stroke-dasharray: 1 1; stroke-linecap: butt;"},
+    'stripes': {"class": "l11", "style": "stroke-dasharray: 1 .5; stroke-linecap: butt;"},
+    'color_outline': {"class": "l12", "style": "stroke-linecap: butt;"},
+    'hollow': {"class": "l13", "style": "stroke-linecap: square;"},
+
     '1': {"class": "w1", "style": "stroke-width: 1;"},
     '0.75': {"class": "w2", "style": "stroke-width: .75;"},
     '0.5': {"class": "w3", "style": "stroke-width: .5;"},
     '0.25': {"class": "w4", "style": "stroke-width: .25;"},
     '0.125': {"class": "w5", "style": "stroke-width: .125;"},
+
+    # Combination width/style lines
+    # These need special handling in mapdata_optimizer.SVG_TEMPLATE_V3
+    #   to use get_masked_line_class_from_width_style (in addition to get_line_class_from_width_style);
+    #   see dotted_square for a trivial example case
+    '1-hollow': {"class": "lh1", "style": "stroke-width: 0.6; stroke-linecap: square;"},
+    '0.75-hollow': {"class": "lh2", "style": "stroke-width: 0.45; stroke-linecap: square;"},
+    '0.5-hollow': {"class": "lh3", "style": "stroke-width: 0.3; stroke-linecap: square;"},
+    '0.25-hollow': {"class": "lh4", "style": "stroke-width: 0.15; stroke-linecap: square;"},
+    '0.125-hollow': {"class": "lh5", "style": "stroke-width: 0.075; stroke-linecap: square;"},
+
+    '1-hollow_round': {"class": "lh6", "style": "stroke-width: 0.6"},
+    '0.75-hollow_round': {"class": "lh7", "style": "stroke-width: 0.45"},
+    '0.5-hollow_round': {"class": "lh8", "style": "stroke-width: 0.3"},
+    '0.25-hollow_round': {"class": "lh9", "style": "stroke-width: 0.15"},
+    '0.125-hollow_round': {"class": "lh0", "style": "stroke-width: 0.075"},
+
+    '1-hollow_open': {"class": "lho1", "style": "stroke-width: 0.6; stroke-linecap: butt;"},
+    '0.75-hollow_open': {"class": "lho2", "style": "stroke-width: 0.45; stroke-linecap: butt;"},
+    '0.5-hollow_open': {"class": "lho3", "style": "stroke-width: 0.3; stroke-linecap: butt;"},
+    '0.25-hollow_open': {"class": "lho4", "style": "stroke-width: 0.15; stroke-linecap: butt;"},
+    '0.125-hollow_open': {"class": "lho5", "style": "stroke-width: 0.075; stroke-linecap: butt;"},
+
+    '1-color_outline': {"class": "lco1", "style": "stroke-width: 0.6; stroke-linecap: butt;"},
+    '0.75-color_outline': {"class": "lco2", "style": "stroke-width: 0.45; stroke-linecap: butt;"},
+    '0.5-color_outline': {"class": "lco3", "style": "stroke-width: 0.3; stroke-linecap: butt;"},
+    '0.25-color_outline': {"class": "lco4", "style": "stroke-width: 0.15; stroke-linecap: butt;"},
+    '0.125-color_outline': {"class": "lco5", "style": "stroke-width: 0.075; stroke-linecap: butt;"},
+
+    '1-wide_stripes': {"class": "lsw1", "style": "stroke-width: 0.75; stroke-linecap: square;"},
+    '0.75-wide_stripes': {"class": "lsw2", "style": "stroke-width: 0.5625; stroke-linecap: square;"},
+    '0.5-wide_stripes': {"class": "lsw3", "style": "stroke-width: 0.375; stroke-linecap: square;"},
+    '0.25-wide_stripes': {"class": "lsw4", "style": "stroke-width: 0.1875; stroke-linecap: square;"},
+    '0.125-wide_stripes': {"class": "lsw5", "style": "stroke-width: 0.09375; stroke-linecap: square;"},
+
+    '1-square_stripes': {"class": "lsq1", "style": "stroke-width: 0.75; stroke-linecap: butt;"},
+    '0.75-square_stripes': {"class": "lsq2", "style": "stroke-width: 0.5625; stroke-linecap: butt;"},
+    '0.5-square_stripes': {"class": "lsq3", "style": "stroke-width: 0.375; stroke-linecap: butt;"},
+    '0.25-square_stripes': {"class": "lsq4", "style": "stroke-width: 0.1875; stroke-linecap: butt;"},
+    '0.125-square_stripes': {"class": "lsq5", "style": "stroke-width: 0.09375; stroke-linecap: butt;"},
+
+    '1-stripes': {"class": "lst1", "style": "stroke-width: 0.75; stroke-linecap: butt;"},
+    '0.75-stripes': {"class": "lst2", "style": "stroke-width: 0.5625; stroke-linecap: butt;"},
+    '0.5-stripes': {"class": "lst3", "style": "stroke-width: 0.375; stroke-linecap: butt;"},
+    '0.25-stripes': {"class": "lst4", "style": "stroke-width: 0.1875; stroke-linecap: butt;"},
+    '0.125-stripes': {"class": "lst5", "style": "stroke-width: 0.09375; stroke-linecap: butt;"},
+
+    '1-dotted_square': {"class": "lds1", "style": "stroke-dasharray: 1 1;"},
+    '0.75-dotted_square': {"class": "lds2", "style": "stroke-dasharray: 0.75 0.75;"},
+    '0.5-dotted_square': {"class": "lds3", "style": "stroke-dasharray: 0.5 0.5;"},
+    '0.25-dotted_square': {"class": "lds4", "style": "stroke-dasharray: 0.25 0.25;"},
+    '0.125-dotted_square': {"class": "lds5", "style": "stroke-dasharray: 0.125 0.125;"},
 }

@@ -7,6 +7,8 @@ var activeMap = false;
 var preferredGridPixelMultiplier = 20;
 var lastStrokeStyle;
 var redrawOverlappingPoints = {}; // Only in use by mapDataVersion 1
+var rightClicking = false;
+var arrowKeys = new Set();
 var dragX = false;
 var dragY = false;
 var clickX = false;
@@ -32,6 +34,7 @@ var mapSize = undefined // Not the same as gridRows/gridCols, which is the poten
 var gridStep = 5
 var rulerOn = false
 var rulerOrigin = []
+var moveStationOn = []
 
 var MMMDEBUG = false
 var MMMDEBUG_UNDO = false
@@ -61,9 +64,9 @@ compatibilityModeIndicator()
 
 const numberKeys = ['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0', 'Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'] // 1-30; is set up this way to have same functionality on all keyboards
 const ALLOWED_LINE_WIDTHS = [100, 75.0, 50.0, 25.0, 12.5]
-const ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted']
+const ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dashed_uneven', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted', 'dotted_square', 'hollow', 'hollow_open', 'color_outline', 'wide_stripes', 'square_stripes', 'stripes']
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1];
-const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin']
+const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin', 'london']
 const ALLOWED_SIZES = [80, 120, 160, 200, 240, 360]
 const MAX_MAP_SIZE = ALLOWED_SIZES[ALLOWED_SIZES.length-1]
 
@@ -297,6 +300,28 @@ function getActiveLine(x, y, metroMap, returnLineWidthStyle) {
   return false;
 } // getActiveLine(x, y, metroMap, returnLineWidthStyle)
 
+function isOnOrAdjacentToStation(x, y, metroMap) {
+  // Returns true if a given point is on or is adjacent to a station;
+  //  used to know whether the stations canvas needs redrawing
+  var coordinates = [x, y]
+  for (var x1=-1; x1<2; x1++) {
+    for (var y1=-1; y1<2; y1++) {
+      if (x1 == 0 && y1 == 0) { continue }
+      coordinates.push(x + x1)
+      coordinates.push(y + y1)
+    }
+  }
+
+  while (coordinates.length >= 2) {
+    x = coordinates.shift()
+    y = coordinates.shift()
+    if (getStation(x, y, metroMap)) {
+      return true
+    }
+  }
+  return false
+} // isOnOrAdjacentToStation(x, y, metroMap)
+
 function getStation(x, y, metroMap) {
   // Given an x, y coordinate pair, return the station object
   if (metroMap && (mapDataVersion == 2 || mapDataVersion == 3) && metroMap["stations"] && metroMap["stations"][x]) {
@@ -372,6 +397,7 @@ function bindRailLineEvents() {
       $('#tool-line-icon-paint-bucket').hide()
     }
     $('#tool-station-options').hide();
+    setMoveStationAbility(true) // turn off "Move Station"
   });  
 } // bindRailLineEvents()
 
@@ -399,19 +425,67 @@ function makeLine(x, y, deferSave) {
       // If there's nothing here previously, we don't need to clear/redraw
       redrawCanvasForColor(previousColor)
     }
-    redrawCanvasForColor(color)
+    redrawCanvasForColor(color, isOnOrAdjacentToStation(x, y, activeMap))
   } else if (mapDataVersion == 1) {
     drawArea(x, y, activeMap)
   }
 } // makeLine(x, y, deferSave)
 
-function redrawCanvasForColor(color) {
+function erase(x, y) {
+  // I need to check for the old line and station
+  // BEFORE actually doing the erase operations
+  var erasedLine = getActiveLine(x, y, activeMap);
+  if (!erasedLine) {
+    // Erasing nothing, there's nothing to do here
+    return
+  }
+
+  if (getStation(x, y, activeMap) || getLabel(x, y, activeMap)) {
+    // XXX: Labels share the stations canvas;
+    // if I ever change that I'll want to have a separate
+    // check for redrawLabels
+    var redrawStations = true;
+  } else {
+    var redrawStations = false;
+  }
+  // NOT YET IMPLEMENTED: Check if there is a label here, and if so, redraw Labels after erasing
+  if (getLabel(x, y, activeMap)) {
+    var redrawLabels = true
+  } else {
+    var redrawLabels = false
+  }
+  if (erasedLine && $('#tool-flood-fill').prop('checked')) {
+    floodFill(x, y, getActiveLine(x, y, activeMap, (mapDataVersion >= 3)), '')
+    autoSave(activeMap)
+    if (mapDataVersion >= 2) {
+      // If Flood Fill is on, we actually do always want to redraw all stations,
+      //  because you might have erased the line the stations were on
+      redrawCanvasForColor(erasedLine, true)
+    } else if (mapDataVersion == 1) {
+      drawCanvas(activeMap)
+    }
+  } else {
+    metroMap = updateMapObject(x, y);
+    autoSave(metroMap);
+    if (mapDataVersion >= 2) {
+      redrawCanvasForColor(erasedLine, (redrawStations || isOnOrAdjacentToStation(x, y, metroMap)))
+    } else if (mapDataVersion == 1) {
+      drawArea(x, y, metroMap, erasedLine, redrawStations);
+    }
+  }
+} // erase(x, y)
+
+function redrawCanvasForColor(color, isOnOrAdjacentToStation) {
   var t0 = performance.now()
   // Clear the main canvas
   drawCanvas(false, false, true)
+  // var t1 = performance.now()
+  // console.log(`drawCanvas(false, false, true) in ${(t1 - t0)} ms`)
 
   // Only redraw the current color; the others we can use as-is
   drawColor(color)
+  // var t2 = performance.now()
+  // console.log(`drawColor(${color}) in ${(t2 - t1)} ms`)
 
   // Draw all of the colors onto the newly-cleared canvas
   var canvas = document.getElementById('metro-map-canvas');
@@ -420,9 +494,15 @@ function redrawCanvasForColor(color) {
     var colorCanvas = createColorCanvasIfNeeded(color)
     ctx.drawImage(colorCanvas, 0, 0); // Layer the stations on top of the canvas
   }
+  // var t3 = performance.now()
+  // console.log(`ctx.drawImage() loop in ${(t3 - t2)} ms`)
 
-  // Redraw the stations canvas too, in case any stations were deleted or edited nearby
-  drawCanvas(activeMap, true)
+  // Redraw the stations canvas too, if any stations were deleted or edited nearby
+  if (isOnOrAdjacentToStation) {
+    // TODO: Is it possible to improve performance even further
+    //  by separating out the station drawing and the station name drawing?
+    drawCanvas(activeMap, true)
+  }
 
   var t1 = performance.now()
   if (MMMDEBUG) { console.log('redrawCanvasForColor finished in ' + (t1 - t0) + 'ms') }
@@ -431,6 +511,13 @@ function redrawCanvasForColor(color) {
 function makeStation(x, y) {
   // Use a temporary station and don't write to activeMap unless it actually has data
   //  this is how to make stations with no name go away on their own now that the grid is gone
+  if (moveStationOn.length == 2) {
+    var swappedStation = moveStationTo(moveStationOn[0], moveStationOn[1], x, y)
+    if (!swappedStation) {
+      return
+    }
+  }
+
   temporaryStation = {}
   if (!getActiveLine(x, y, activeMap)) {
     // Only expand the #tool-station-options if it's actually on a line
@@ -445,6 +532,7 @@ function makeStation(x, y) {
     }
     $('#tool-station-options').hide();
     drawCanvas(activeMap, true) // clear any stale station indicators
+    setMoveStationAbility(true) // turn off "Move Station"
     return
   }
 
@@ -452,6 +540,13 @@ function makeStation(x, y) {
   $('#station-coordinates-x').val(x);
   $('#station-coordinates-y').val(y);
   var allLines = $('.rail-line');
+
+  if (moveStationOn.length == 2) {
+    // If moveStationOn has coordinates but I didn't return above,
+    //  I must have clicked on a station,
+    //  so I want to swap which station is active
+    moveStationOn = [x, y]
+  }
 
   $('#tool-station').addClass('width-100')
 
@@ -565,8 +660,10 @@ function makeLabel(x, y) {
 } // makeLabel(x, y)
 
 function bindGridSquareEvents(event) {
-  $('#station-coordinates-x').val('');
-  $('#station-coordinates-y').val('');
+  if (!moveStationOn) {
+    $('#station-coordinates-x').val('');
+    $('#station-coordinates-y').val('');
+  }
 
   if (!event.isTrusted) {
     // This is a click + drag
@@ -609,56 +706,41 @@ function bindGridSquareEvents(event) {
       autoSave(activeMap)
       if (mapDataVersion >= 2) {
         drawColor(initialColor)
-        redrawCanvasForColor(replacementColor)
+        redrawCanvasForColor(replacementColor, isOnOrAdjacentToStation(x, y, activeMap))
       } else if (mapDataVersion == 1) {
         drawCanvas(activeMap)
       }
     } else
       makeLine(x, y)
   } else if (activeTool == 'eraser') {
-    // I need to check for the old line and station
-    // BEFORE actually doing the erase operations
-    var erasedLine = getActiveLine(x, y, activeMap);
-    if (!erasedLine) {
-      // Erasing nothing, there's nothing to do here
-      return
-    }
-
-    if (getStation(x, y, activeMap) || getLabel(x, y, activeMap)) {
-      // XXX: Labels share the stations canvas;
-      // if I ever change that I'll want to have a separate
-      // check for redrawLabels
-      var redrawStations = true;
-    } else {
-      var redrawStations = false;
-    }
-    // NOT YET IMPLEMENTED: Check if there is a label here, and if so, redraw Labels after erasing
-    if (getLabel(x, y, activeMap)) {
-      var redrawLabels = true
-    } else {
-      var redrawLabels = false
-    }
-    if (erasedLine && $('#tool-flood-fill').prop('checked')) {
-      floodFill(x, y, getActiveLine(x, y, activeMap, (mapDataVersion >= 3)), '')
-      autoSave(activeMap)
-      if (mapDataVersion >= 2) {
-        redrawCanvasForColor(erasedLine)
-      } else if (mapDataVersion == 1) {
-        drawCanvas(activeMap)
-      }
-    } else {
-      metroMap = updateMapObject(x, y);
-      autoSave(metroMap);
-      if (mapDataVersion >= 2) {
-        redrawCanvasForColor(erasedLine)
-      } else if (mapDataVersion == 1) {
-        drawArea(x, y, metroMap, erasedLine, redrawStations);
-      }
-    }
+    erase(x, y)
   } else if (activeTool == 'station') {
     makeStation(x, y)
   } else if (activeTool == 'label') {
     makeLabel(x, y)
+  } else if (activeTool == 'eyedropper') {
+    var clws = getActiveLine(x, y, activeMap, true)
+    if (clws) {
+      // Click the color, and set the line width/style, too.
+      if (mapDataVersion >= 3) {
+        $('#rail-line-' + clws[0]).trigger('click')
+        var lws = clws[1]
+        activeLineWidth = lws.split('-')[0]
+        activeLineStyle = lws.split('-')[1]
+        activeLineWidthStyle = lws
+        // This odd construction is because Javascript won't respect the zero after the decimal
+        var button = $('button[data-linewidth="' + ALLOWED_LINE_WIDTHS[ALLOWED_LINE_WIDTHS.indexOf(activeLineWidth * 100)] + '"]')
+        if (!button.length) {
+          button = $('button[data-linewidth="' + ALLOWED_LINE_WIDTHS[ALLOWED_LINE_WIDTHS.indexOf(activeLineWidth * 100)] +'.0"]')
+        }
+        button.trigger('click')
+        $('button[data-linestyle="' + ALLOWED_LINE_STYLES[ALLOWED_LINE_STYLES.indexOf(activeLineStyle)] + '"]').trigger('click')
+      } else {
+        $('#rail-line-' + clws).trigger('click')
+      }
+      $('#tool-eyedropper').removeClass('active')
+      $('#tool-eyedropper').removeAttr('style')
+    } // if color, lineWidthStyle
   }
 } // bindGridSquareEvents()
 
@@ -671,6 +753,25 @@ function bindGridSquareMouseover(event) {
   xy = getCanvasXY(event.pageX, event.pageY)
   hoverX = xy[0]
   hoverY = xy[1]
+
+  if (rightClicking) {
+    // TODO: Pan-scroll on right click
+  }
+
+  if (!mouseIsDown && activeTool == 'eyedropper') {
+    var clws = getActiveLine(xy[0], xy[1], activeMap, true)
+    if (clws) {
+      if (mapDataVersion >= 3) {
+        var color = clws[0]
+      } else {
+        var color = clws
+      }
+      $('#tool-eyedropper').css({'background-color': '#' + color, 'color': '#ffffff'})
+    } else {
+      $('#tool-eyedropper').removeAttr('style')
+    }
+  }
+
   if (!mouseIsDown && !$('#tool-flood-fill').prop('checked')) {
     drawHoverIndicator(event.pageX, event.pageY)
     if (rulerOn && rulerOrigin.length > 0 && (activeTool == 'look' || activeTool == 'line' || activeTool == 'eraser')) {
@@ -686,6 +787,9 @@ function bindGridSquareMouseover(event) {
       indicatorColor = '#ffffff'
     }
     floodFill(hoverX, hoverY, getActiveLine(hoverX, hoverY, activeMap, (mapDataVersion >= 3)), indicatorColor, true)
+  } else if (!mouseIsDown && (activeTool != 'line' && activeTool != 'eraser') && $('#tool-flood-fill').prop('checked')) {
+    drawHoverIndicator(event.pageX, event.pageY);
+    return
   }
   if (mouseIsDown && (activeTool == 'line' || activeTool == 'eraser')) {
     dragX = event.pageX
@@ -700,7 +804,7 @@ function bindGridSquareMouseover(event) {
 function bindGridSquareMouseup(event) {
   // Workaround to give focus to #station-name after mousedown
   // Just don't steal focus away from another text box
-  if (activeTool == 'station' && document.activeElement.type != 'text') {
+  if (activeTool == 'station' && document.activeElement.type != 'text' && moveStationOn.length == 0) {
     $('#station-name').focus()
   }
   // Unset current click's x, y coordinates,
@@ -709,6 +813,7 @@ function bindGridSquareMouseup(event) {
   clickY = false
 
   mouseIsDown = false
+  rightClicking = false
 
   // Immediately clear the straight line assist indicator upon mouseup
   drawHoverIndicator(event.pageX, event.pageY)
@@ -728,6 +833,11 @@ function bindGridSquareMousedown(event) {
   xy = getCanvasXY(event.pageX, event.pageY)
   clickX = xy[0]
   clickY = xy[1]
+
+  if (event.button == 2) {
+    // Right click
+    rightClicking = true
+  }
 
   // Visually indicate which squares you can fill in with
   //  straight line assist
@@ -774,6 +884,16 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
     var activeColor = '#000000'
   else if (activeTool == 'eraser')
     var activeColor = '#ffffff'
+  else if (activeTool == 'station' && moveStationOn.length == 2) {
+    var gridPixelMultiplier = canvas.width / gridCols
+    ctx.font = '700 ' + gridPixelMultiplier + 'px sans-serif';
+    if (!getActiveLine(x, y, activeMap) || getStation(x, y, activeMap)) {
+      ctx.globalAlpha = 0.25 // Visually indicate that it's not valid
+    } else {
+      ctx.globalAlpha = 0.75
+    }
+    drawStation(ctx, moveStationOn[0], moveStationOn[1], activeMap, false, x, y)
+  }
   ctx.fillStyle = fillColor || activeColor || '#2ECC71'
   var gridPixelMultiplier = canvas.width / gridCols
   ctx.fillRect((x * gridPixelMultiplier) - (gridPixelMultiplier / 2), (y * gridPixelMultiplier) - (gridPixelMultiplier / 2), gridPixelMultiplier, gridPixelMultiplier)
@@ -994,7 +1114,9 @@ function drawColor(color) {
   }
   var colorCanvas = createColorCanvasIfNeeded(color)
   var ctx = colorCanvas.getContext('2d', {alpha: true})
-  ctx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
+  if (typeof window.scrollByPages == 'undefined') {
+    ctx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
+  }
   if (mapDataVersion == 3) {
     for (var lineWidthStyle in activeMap['points_by_color'][color]) {
       ctx.strokeStyle = '#' + color
@@ -1004,12 +1126,55 @@ function drawColor(color) {
       var lines = linesAndSingletons["lines"]
       var singletons = linesAndSingletons["singletons"]
       for (var line of lines) {
+        if (thisLineStyle == 'wide_stripes' || thisLineStyle == 'square_stripes' || thisLineStyle == 'stripes') {
+          // Draw the hollow line first
+          if (thisLineStyle == 'wide_stripes') {
+            ctx.lineCap = 'square'
+          } else {
+            ctx.lineCap = 'butt'
+          }
+          ctx.lineWidth = thisLineWidth
+          ctx.setLineDash([])
+          ctx.beginPath()
+          moveLineStroke(ctx, line[0], line[1], line[2], line[3])
+          ctx.stroke()
+          ctx.closePath()
+
+          // Draw the mask at 75% size
+          ctx.save()
+          ctx.globalCompositeOperation = 'xor';
+          ctx.lineWidth = thisLineWidth * 0.75
+          ctx.beginPath()
+          moveLineStroke(ctx, line[0], line[1], line[2], line[3])
+          ctx.stroke()
+          ctx.clip()
+          ctx.restore()
+        }
+
+        // vvv Drawing the line itself vvv
         ctx.beginPath()
         ctx.lineWidth = thisLineWidth
         setLineStyle(thisLineStyle, ctx)
         moveLineStroke(ctx, line[0], line[1], line[2], line[3])
         ctx.stroke()
         ctx.closePath()
+        // ^^^ Drawing the line itself ^^^
+
+        if (thisLineStyle == 'hollow_round' || thisLineStyle == 'hollow' || thisLineStyle == 'hollow_open' || thisLineStyle == 'color_outline') {
+          // The hollow portion actually gets drawn after the regular line
+          ctx.save()
+          if (thisLineStyle == 'color_outline') {
+            ctx.globalCompositeOperation = 'screen'
+          } else {
+            ctx.globalCompositeOperation = 'xor';
+          }
+          ctx.lineWidth = Math.ceil((gridPixelMultiplier * 3 / 5) * (thisLineWidth / gridPixelMultiplier))
+          ctx.beginPath()
+          moveLineStroke(ctx, line[0], line[1], line[2], line[3])
+          ctx.stroke()
+          ctx.clip()
+          ctx.restore()
+        }
       }
       for (var s of singletons) {
         var xy = s.split(',')
@@ -1423,16 +1588,29 @@ function drawPoint(ctx, x, y, metroMap, erasedLine, color, lineWidth, lineStyle)
   ctx.closePath()
 } // drawPoint(ctx, x, y, metroMap)
 
-function drawStation(ctx, x, y, metroMap, skipText) {
+function drawStation(ctx, x, y, metroMap, skipText, drawAtX, drawAtY) {
   var station = getStation(x, y, metroMap)
   if (station) {
     var isTransferStation = station["transfer"];
   } else {
     return; // If it's not a station, I can end here.
   }
+  var isMoving = false
+
+  // The original (x, y) values if I'm replacing them with (drawAtX, drawAtY) below
+  var stationX = x
+  var stationY = y
+  if (drawAtX !== undefined && drawAtY !== undefined) {
+    // Used to get the real station from above, but draw it somewhere else.
+    //  which is nice when hovering.
+    x = drawAtX
+    y = drawAtY
+    isMoving = true
+  }
 
   var thisStationStyle = station["style"] || mapStationStyle
   var drawAsConnected = false
+  var lineDirection = false
 
   if (!thisStationStyle || thisStationStyle == 'wmata') {
     drawStyledStation_WMATA(ctx, x, y, metroMap, isTransferStation)
@@ -1444,25 +1622,44 @@ function drawStation(ctx, x, y, metroMap, skipText) {
   } else if (thisStationStyle == 'circles-sm') {
     drawCircleStation(ctx, x, y, metroMap, isTransferStation, 0.25, gridPixelMultiplier / 4)
   } else if (thisStationStyle == 'rect') {
-    drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, 0, 0)
+    drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, station, isTransferStation, 0, 0, false, false, isMoving)
   } else if (thisStationStyle == 'rect-round' || thisStationStyle == 'circles-thin') {
-    drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, 0, 0, 20)
+    drawAsConnected = drawStyledStation_rectangles(ctx, x, y, metroMap, station, isTransferStation, 0, 0, 20, false, isMoving)
+  } else if (thisStationStyle == 'london') {
+    var stationNameOffset = drawStyledStation_London(ctx, x, y, metroMap, station, false, false, isMoving)
+    // Based on the station orientation and whether it's an xfer station,
+    //  modify the drawAtX and drawAtY values very slightly from x, y
+    //  to subtly offset where the name is drawn
+    if (stationNameOffset && stationNameOffset.length > 0 && !drawAtX && !drawAtY) {
+      if (stationNameOffset.length == 2) {
+        drawAtX = x + stationNameOffset[0]
+        drawAtY = y + stationNameOffset[1]
+      } else if (stationNameOffset == 'endcap') {
+        // Kinda hacky patch to make endcaps "borrow" the spacing of transfer stations; consider refactoring
+        isTransferStation = true
+      }
+    }
   }
 
   if (!skipText) {
-    drawStationName(ctx, x, y, metroMap, isTransferStation, drawAsConnected)
+    drawStationName(ctx, stationX, stationY, metroMap, station, isTransferStation, drawAsConnected, drawAtX, drawAtY)
   }
 } // drawStation(ctx, x, y, metroMap)
 
-function drawStationName(ctx, x, y, metroMap, isTransferStation, drawAsConnected) {
+function drawStationName(ctx, x, y, metroMap, station, isTransferStation, drawAsConnected, drawAtX, drawAtY) {
   // Write the station name
   ctx.textAlign = 'start'
   ctx.fillStyle = '#000000';
   ctx.save();
-  var station = getStation(x, y, metroMap)
   var stationName = station["name"].replaceAll('_', ' ')
   var orientation = parseInt(station["orientation"])
   var textSize = ctx.measureText(stationName).width;
+
+  if (drawAtX !== undefined && drawAtY !== undefined) {
+    x = drawAtX
+    y = drawAtY
+  }
+
   if (isTransferStation)
     var xOffset = gridPixelMultiplier * 1.5
   else if (drawAsConnected)
@@ -1563,8 +1760,12 @@ function drawCircleStation(ctx, x, y, metroMap, isTransferStation, stationCircle
   ctx.fill();
 }
 
-function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, strokeColor, fillColor, radius, isIndicator) {
+function drawStyledStation_rectangles(ctx, x, y, metroMap, thisStation, isTransferStation, strokeColor, fillColor, radius, isIndicator, isMoving) {
   var lineColorWidthStyle = getActiveLine(x, y, metroMap, true)
+  if (!lineColorWidthStyle && isMoving) {
+    // Moving off a line, which isn't valid, but we want to preview
+    lineColorWidthStyle = ['bd1038', '1-solid']
+  }
   if (mapDataVersion == 3) {
     var lineColor = '#' + lineColorWidthStyle[0]
     var lineWidth = lineColorWidthStyle[1].split('-')[0]
@@ -1576,11 +1777,13 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     var lineWidth = 1
   }
   var lineDirection = getLineDirection(x, y, metroMap)["direction"]
+  if (!lineDirection && isMoving) {
+    lineDirection = 'singleton'
+  }
 
   var rectArgs = []
   var drawAsConnected = false
   var connectedStations = getConnectedStations(x, y, metroMap)
-  var thisStation = getStation(x, y, metroMap)
 
   var width = gridPixelMultiplier
   var height = gridPixelMultiplier
@@ -1630,7 +1833,7 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
       lineDirection = 'diagonal-ne'
       height = gridPixelMultiplier
     }
-  } else if (!connectedStations && !isIndicator) {
+  } else if (!connectedStations && !isIndicator && !isMoving) {
     // Eligible for connecting, but it's an interior station.
     // Don't draw this station.
     return
@@ -1646,6 +1849,8 @@ function drawStyledStation_rectangles(ctx, x, y, metroMap, isTransferStation, st
     } else if (!isTransferStation) {
       width = gridPixelMultiplier / 2
     }
+  } else if (isMoving && !isTransferStation && lineDirection != 'singleton') {
+    width = gridPixelMultiplier / 2
   }
 
   if (drawAsConnected && !isIndicator) {
@@ -1791,6 +1996,280 @@ function primitiveRoundRect(ctx, x, y, width, height, radius) {
   ctx.closePath()
 }
 
+function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fillColor, isMoving) {
+  var lineColorWidthStyle = getActiveLine(x, y, metroMap, true)
+  if (!lineColorWidthStyle && isMoving) {
+    // Moving off a line, which isn't valid, but we want to preview
+    // BUG (Minor display): when moving a station off an existing line,
+    //  this will show as a red station marker on the hover canvas
+    //  on the last valid mouse position, even though the cursor is elsewhere.
+    //  Curiously / a clue: this only shows for vertical and horizontal lines,
+    //    and not for diagonal lines.
+    lineColorWidthStyle = ['bd1038', '1-solid']
+  }
+  if (mapDataVersion == 3) {
+    var lineColor = '#' + lineColorWidthStyle[0]
+    var lineWidth = lineColorWidthStyle[1].split('-')[0]
+  } else if (mapDataVersion == 2) {
+    var lineColor = '#' + lineColorWidthStyle
+    var lineWidth = mapLineWidth
+  } else if (mapDataVersion == 1) {
+    var lineColor = '#' + lineColorWidthStyle
+    var lineWidth = 1
+  }
+  var lineDirection = getLineDirection(x, y, metroMap)
+  var isDiagonal = (lineDirection["direction"] && lineDirection["direction"].indexOf('diagonal') > -1)
+  var isEndcap = lineDirection["endcap"]
+  if (station) {
+    var markerDirection = station["orientation"]
+  } else {
+    var markerDirection = parseInt(window.localStorage.getItem('metroMapStationOrientation'))
+  }
+
+  // This adds a lot of complexity, but we need to adjust per line width as well,
+  //   otherwise stations placed on thicker lines don't look very good.
+  var height = gridPixelMultiplier / 2
+  var width = gridPixelMultiplier * 0.75
+  var markerOffset = 0.75
+  var markerMainSizeOffset = 1
+  if (lineWidth == 1) {
+    height = height * 1.5
+    markerMainSizeOffset = 2
+    width = width * markerMainSizeOffset
+    markerOffset = 1.5
+  } else if (lineWidth == 0.75) {
+    height = height * 1.25
+    markerMainSizeOffset = 1.5
+    width = width * markerMainSizeOffset
+    markerOffset = 1.25
+  }
+
+  ctx.strokeStyle = strokeColor || lineColor
+  ctx.fillStyle = fillColor || lineColor
+  var isIndicator = !!(strokeColor && fillColor)
+  ctx.lineWidth = 2
+
+  if (MMMDEBUG) {
+    console.log(`London x,y: ${x},${y} strokeColor: ${strokeColor} fillColor: ${fillColor} isIndicator: ${isIndicator} ctx.lineWidth: ${ctx.lineWidth} lineDirection: ${JSON.stringify(lineDirection)} station: ${JSON.stringify(station)}`)
+  }
+
+  if ((station && station["transfer"]) || lineDirection['direction'] == 'singleton') {
+    // Transfer stations are drawn as a thicker black and white circle.
+    ctx.strokeStyle = '#000000'
+    drawCircleStation(ctx, x, y, activeMap, true, .5, gridPixelMultiplier / 4, ctx.strokeStyle, ctx.strokeStyle)
+    if (isIndicator) {
+      ctx.fillStyle = fillColor
+    } else {
+      ctx.fillStyle = '#ffffff'
+    }
+    drawCircleStation(ctx, x, y, activeMap, true, .4, gridPixelMultiplier / 4, ctx.fillStyle, ctx.strokeStyle, true)
+
+    var londonConnections = getConnectedStations(x, y, activeMap, true)
+    if (londonConnections && !isIndicator) {
+      for (var direction in londonConnections) {
+        drawLondonTransferConnection(ctx, x, y, ...londonConnections[direction])
+      }
+    }
+  } else if (isEndcap) {
+    // Non-transfer stations on an endcap are drawn as a rectangle capping that line
+    var endcapMultiplier = 1.5
+    if (lineWidth == 1 || lineWidth == 0.75) {
+      endcapMultiplier = 1.75
+    }
+
+    width = gridPixelMultiplier * endcapMultiplier
+    var xOffset = (endcapMultiplier / 6)
+    var yOffset = (endcapMultiplier / 2)
+
+    if (isDiagonal) {
+      ctx.save()
+      ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier)
+    }
+
+    if (lineDirection["offset_endcap"]) {
+      xOffset = (endcapMultiplier / 4)
+    }
+
+    if (lineDirection["direction"] == 'horizontal') {
+      rectArgs = [(x - xOffset) * gridPixelMultiplier, (y - yOffset) * gridPixelMultiplier, height, width]
+    } else if (lineDirection["direction"] == 'vertical') {
+      rectArgs = [(x - yOffset) * gridPixelMultiplier, (y - xOffset) * gridPixelMultiplier, width, height]
+    } else if (lineDirection["direction"] == 'diagonal-se') {
+      ctx.rotate(-45 * (Math.PI / 180))
+      rectArgs = [(-1 * yOffset) * gridPixelMultiplier, (-1 * xOffset) * gridPixelMultiplier, width, height]
+    } else if (lineDirection["direction"] == 'diagonal-ne') {
+        ctx.rotate(45 * (Math.PI / 180))
+        rectArgs = [(-1 * yOffset) * gridPixelMultiplier, (-1 * xOffset) * gridPixelMultiplier, width, height]
+    }
+
+    ctx.fillRect(...rectArgs)
+    ctx.strokeRect(...rectArgs)
+    if (isDiagonal) {
+      ctx.restore()
+    }
+  } else if (!station || (station && !station["transfer"])) {
+    // The station name orientation for non-transfer stations also controls which side of the line the rectangular station marker appears on.
+    if (isDiagonal) {
+      ctx.save()
+      ctx.translate(x * gridPixelMultiplier, y * gridPixelMultiplier)
+    }
+
+    if (lineDirection["direction"] == 'horizontal') {
+      if ([0, -45, -135, 90, 1].indexOf(markerDirection) > -1) {
+        // Draw the marker above
+        rectArgs = [(x - 0.25) * gridPixelMultiplier, (y - markerOffset) * gridPixelMultiplier, height, width]
+      } else if ([180, 45, 135, -90, -1].indexOf(markerDirection) > -1) {
+        // Draw the marker below
+        rectArgs = [(x - 0.25) * gridPixelMultiplier, (y) * gridPixelMultiplier, height, width]
+      }
+    } else if (lineDirection["direction"] == 'vertical') {
+      if ([0, -45, 45, 90, 1].indexOf(markerDirection) > -1) {
+        // Draw the marker on the right
+        rectArgs = [(x) * gridPixelMultiplier, (y - 0.25) * gridPixelMultiplier, width, height]
+      } else if ([180, -135, 135, -90, -1].indexOf(markerDirection) > -1) {
+        // Draw the marker on the left
+        rectArgs = [(x - markerOffset) * gridPixelMultiplier, (y - 0.25) * gridPixelMultiplier, width, height]
+      }
+    } else if (lineDirection["direction"] == 'diagonal-se') {
+      if ([0, -45, 45, 90, 1].indexOf(markerDirection) > -1) {
+        // Draw the marker above right
+        ctx.rotate(-45 * (Math.PI / 180))
+        // In rectArgs, x moves the marker left/right across the line, y moves the marker up/down the line
+        rectArgs = [0, -0.25 * gridPixelMultiplier, width, height]
+      } else if ([180, -135, 135, -90, -1].indexOf(markerDirection) > -1) {
+        // Draw the marker below left
+        ctx.rotate(-45 * (Math.PI / 180))
+        rectArgs = [(-1 * markerOffset) * gridPixelMultiplier, -0.25 * gridPixelMultiplier, width, height]
+      }
+    } else if (lineDirection["direction"] == 'diagonal-ne') {
+      if ([0, -45, 45, -90, -1].indexOf(markerDirection) > -1) {
+        // Draw the marker below right
+        ctx.rotate(45 * (Math.PI / 180))
+        rectArgs = [0, -0.25 * gridPixelMultiplier, width, height]
+      } else if ([180, -135, 135, 90, 1].indexOf(markerDirection) > -1) {
+        // Draw the marker above left
+        ctx.rotate(45 * (Math.PI / 180))
+        rectArgs = [(-1 * markerOffset) * gridPixelMultiplier, -0.25 * gridPixelMultiplier, width, height]
+      }
+    }
+
+    ctx.fillRect(...rectArgs)
+    ctx.strokeRect(...rectArgs)
+    if (isDiagonal) {
+      ctx.restore()
+    }
+  } // non-transfer, non-endcap
+
+  if (station && station['transfer']) {
+    // Transfer stations already have a lot of spacing,
+    //  and since the circle takes up the full grid square,
+    //  we don't need special spacing.
+    return []
+  } else if (station && lineDirection["endcap"]) {
+    return 'endcap'
+  }
+
+  var stationNameOffset = []
+  if (lineDirection["direction"] == 'diagonal-se') {
+    if ([-45, 45, 90, 1].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0.5, -0.25]
+    } else if ([-135, 135, -90, -1].indexOf(markerDirection) > -1) {
+      stationNameOffset = [-0.5, 0.25]
+    } else if (markerDirection == 0) {
+      stationNameOffset = [0.5, -0.5]
+    } else if (markerDirection == 180) {
+      stationNameOffset = [-0.5, 0.5]
+    }
+
+    if (lineWidth >= 0.75) {
+      stationNameOffset[0] *= markerMainSizeOffset
+      stationNameOffset[1] *= markerMainSizeOffset
+    }
+  } else if (lineDirection["direction"] == 'diagonal-ne') {
+    if ([180, -135].indexOf(markerDirection) > -1) {
+      stationNameOffset = [-0.25, -0.5]
+    } else if ([0, 45].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0.25, 0.5]
+    } else if ([1, 90, 135].indexOf(markerDirection) > -1) {
+      stationNameOffset = [-0.5, -0.5]
+    } else if ([-1, -90, -45].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0.5, 0.5]
+    }
+
+    if (lineWidth >= 0.75) {
+      stationNameOffset[0] *= markerMainSizeOffset
+      stationNameOffset[1] *= markerMainSizeOffset
+    }
+  } else if (lineDirection["direction"] == 'vertical') {
+    if ([45, -45].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0.5, 0]
+    } else if ([135, -135].indexOf(markerDirection) > -1) {
+      stationNameOffset = [-0.5, 0]
+    } else if ([1, 90].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0.75, 0]
+    } else if ([-1, -90].indexOf(markerDirection) > -1) {
+      stationNameOffset = [-0.75, 0]
+    }
+
+    if (lineWidth >= 0.75) {
+      if (markerDirection == 0) {
+        stationNameOffset = [0.5, 0]
+      } else if (markerDirection == 180) {
+        stationNameOffset = [-0.5, 0]
+      }
+      stationNameOffset[0] *= markerMainSizeOffset
+    }
+  } else if (lineDirection["direction"] == 'horizontal') {
+    if ([1, 90, -135, -45].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0, -0.5]
+    } else if ([-1, -90, 135, 45].indexOf(markerDirection) > -1) {
+      stationNameOffset = [0, 0.5]
+    } else if (markerDirection == 0) {
+      stationNameOffset = [0, -0.75]
+    } else if (markerDirection == 180) {
+      stationNameOffset = [0, 0.75]
+    }
+
+    if (lineWidth >= 0.75) {
+      stationNameOffset[1] *= markerMainSizeOffset
+    }
+  }
+
+  return stationNameOffset
+} // drawStyledStation_London
+
+function drawLondonTransferConnection(ctx, x, y, x1, y1) {
+  var dx = x - x1
+  var dy = y - y1
+  var xOffset = (-0.25 * dx)
+  var yOffset = (-0.25 * dy)
+
+  // Horizontal and vertical lines look better
+  //  with slightly different offsets
+  //  than their diagonal counterparts (which have more space to begin with)
+  if (dx == 0 && Math.abs(dy) > 0) {
+    // Vertical
+    var yOffset = (-0.375 * dy)
+  } else if (dy == 0 && Math.abs(dx) > 0) {
+    // Horizontal
+    var xOffset = (-0.375 * dx)
+  }
+
+  ctx.strokeStyle = '#000000'
+  ctx.fillStyle = '#ffffff'
+
+  ctx.lineWidth = gridPixelMultiplier * .525
+  ctx.beginPath()
+  moveLineStroke(ctx, x + xOffset, y + yOffset, x1 - xOffset, y1 - yOffset)
+  ctx.stroke()
+
+  ctx.lineWidth = gridPixelMultiplier * 0.25
+  ctx.strokeStyle = '#ffffff'
+  ctx.beginPath()
+  moveLineStroke(ctx, x, y, x1, y1)
+  ctx.stroke()
+} // drawLondonTransferConnection(ctx, x, y, x1, y1)
+
 function drawIndicator(x, y) {
   // Place a temporary station marker on the canvas;
   // this will be overwritten by the drawCanvas() call
@@ -1827,10 +2306,12 @@ function drawIndicator(x, y) {
   } else if (thisStationStyle == 'rect') {
     // For this and rect-round, I don't actually want to draw the one continuous station
     //  even if I could; these all should be individually selectable.
-    drawStyledStation_rectangles(ctx, x, y, activeMap, isTransferStation, '#000000', '#00ff00', false, true)
+    drawStyledStation_rectangles(ctx, x, y, activeMap, permStation, isTransferStation, '#000000', '#00ff00', false, true)
   } else if (thisStationStyle == 'rect-round' || thisStationStyle == 'circles-thin') {
-    drawStyledStation_rectangles(ctx, x, y, activeMap, isTransferStation, '#000000', '#00ff00', 20, true)
-  } 
+    drawStyledStation_rectangles(ctx, x, y, activeMap, permStation, isTransferStation, '#000000', '#00ff00', 20, true)
+  } else if (thisStationStyle == 'london') {
+    drawStyledStation_London(ctx, x, y, activeMap, permStation, '#000000', '#00ff00')
+  }
 } // drawIndicator(x, y)
 
 function drawLabel(ctx, x, y, metroMap, indicatorColor) {
@@ -2003,6 +2484,12 @@ function loadMapFromUndoRedo(previousMap) {
     resetResizeButtons(gridCols)
     resetRailLineTooltips()
     resetStyleButtons()
+    // Re-create the Edit colors drop-down menu, because the delete unused colors might have been undone/redone
+    $('#tool-lines-to-change').html('<option>Edit which color?</option>')
+    // Now populate the select dropdown
+    for (var line in activeMap["global"]["lines"]) {
+      $('#tool-lines-to-change').append('<option value="' + line + '">' + activeMap["global"]["lines"][line]["displayName"] + '</option>')
+    } // for line in globals
   } // if (previousMap)
 } // loadMapFromUndoRedo(previousMap)
 
@@ -2300,6 +2787,7 @@ function setMapStyle(metroMap) {
 
 function isMapStretchable(size) {
   // Determine if the map is small enough to be stretched
+  // TODO: be smarter about whether I can actually stretch rather than basing it on gridRows/Cols
   if (size) {
     return size <= MAX_MAP_SIZE / 2
   } else {
@@ -2347,7 +2835,7 @@ function loadMapFromObject(metroMapObject, update) {
           } else {
             keyboardShortcut = ''
           }
-          $('#line-color-options fieldset').append('<button id="rail-line-' + line + '" class="rail-line has-tooltip" style="background-color: #' + line + ';"' + keyboardShortcut + '>' + metroMapObject['global']['lines'][line]['displayName'] + '</button>');
+          $('#line-color-options fieldset #line-colors').append('<button id="rail-line-' + line + '" class="rail-line has-tooltip" style="background-color: #' + line + ';"' + keyboardShortcut + '>' + metroMapObject['global']['lines'][line]['displayName'] + '</button>');
           numLines++;
       }
     }
@@ -2401,6 +2889,15 @@ function updateMapObject(x, y, key, data) {
       for (var lineWidthStyle in metroMap['points_by_color'][data]) {
         if (metroMap['points_by_color'] && metroMap['points_by_color'][data] && metroMap['points_by_color'][data][lineWidthStyle] && metroMap['points_by_color'][data][lineWidthStyle][x] && metroMap['points_by_color'][data][lineWidthStyle][x][y]) {
           delete metroMap['points_by_color'][data][lineWidthStyle][x][y]
+          if (Object.values(metroMap['points_by_color'][data][lineWidthStyle][x]).filter((o) => Object.keys(o)).length == 0) {
+            delete metroMap['points_by_color'][data][lineWidthStyle][x]
+          }
+          if (Object.values(metroMap['points_by_color'][data][lineWidthStyle]).filter((o) => Object.keys(o)).length == 0) {
+            delete metroMap['points_by_color'][data][lineWidthStyle]
+          }
+          if (Object.values(metroMap['points_by_color'][data]).filter((o) => Object.keys(o)).length == 0) {
+            delete metroMap['points_by_color'][data]
+          }
         }
       }
       if (metroMap["stations"] && metroMap["stations"][x] && metroMap["stations"][x][y]) {
@@ -2510,6 +3007,79 @@ function updateMapObject(x, y, key, data) {
 
   return metroMap;
 } // updateMapObject()
+
+function moveStationTo(fromX, fromY, x, y) {
+  // Moves an existing station (station) to the coordinates at (x,y),
+  //  if those are valid
+
+  if (!getActiveLine(x, y, activeMap)) {
+    return // TODO: Consider showing visual bell to indicate failure
+  }
+
+  if (getStation(x, y, activeMap)) {
+    return true // Want to swap to another station
+  }
+
+  // Set the hidden form fields station-coordinates-x, -y as well
+  $('#station-coordinates-x').val(x)
+  $('#station-coordinates-y').val(y)
+  moveStationOn = [x, y]
+
+  if (!activeMap['stations'][x]) {
+    activeMap['stations'][x] = {}
+  }
+  if (!activeMap['stations'][x][y]) {
+    activeMap['stations'][x][y] = {}
+  }
+  activeMap['stations'][x][y] = activeMap['stations'][fromX][fromY]
+  delete activeMap['stations'][fromX][fromY]
+  drawCanvas(activeMap, true)
+  autoSave(activeMap)
+} // moveStationTo(fromX, fromY, x, y)
+
+function moveStation(directions) {
+  // This is the keyboard shortcut version of moving stations;
+  //  contrast with moveStationTo which is the mouse version
+  if (!activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+    // Only allow moving a station when the station menu is open and active
+    return
+  }
+
+  var xOffset = 0;
+  var yOffset = 0;
+
+  // If you hold left and right (or up/down) at the same time, it'll prefer right (down),
+  //  and I guess you could say they should cancel each other out,
+  //  but why would you do that?
+  if (directions.has('left')) {
+      var xOffset = -1;
+  }
+  if (directions.has('right')) {
+      var xOffset = 1;
+  }
+  if (directions.has('up')) {
+      var yOffset = -1;
+  }
+  if (directions.has('down')) {
+      var yOffset = 1;
+  }
+
+  if (mapDataVersion == 3) {
+    // moveStationTo has this check, but when mousing, I want
+    //  to be able to switch which station is active,
+    //  not swap positions or place one station on top of another
+    if (getStation(x, y, activeMap)) {
+      return // TODO: Consider showing visual bell to indicate failure
+    }
+    var x = parseInt($('#station-coordinates-x').val())
+    var y = parseInt($('#station-coordinates-y').val())
+    moveStationTo(x, y, (x + xOffset), (y + yOffset))
+  }
+  if ($('#move-station-enabled').text().indexOf('Mouse') == -1) {
+    moveStationOn = [] // Don't enable the ability to move stations with the mouse if it isn't already on
+  }
+  return true
+} // moveStation(direction)
 
 function moveMap(direction) {
     // Much faster and easier to read replacement
@@ -3067,6 +3637,40 @@ $(document).ready(function() {
   // Trying without throttle to see if we get a smoother draw
   document.getElementById('canvas-container').addEventListener('mousemove', bindGridSquareMouseover, false);
   document.getElementById('canvas-container').addEventListener('mouseup', bindGridSquareMouseup, false);
+
+  // Better support for mobile
+  // TODO: This works okay, but but has a few big problems:
+  // 1. The canvas frequently crashes on iOS Safari and iOS Chrome,
+  //  rendering as a black field. Perhaps clearing the canvases in a different way would help.
+  // 2. Canvas performance is extremely poor. Possibly dropping bindGridSquareMouseover on touchmove could help, but this is surely linked with the canvas crashes.
+  // 3. Would need to add a better way of scrolling (perhaps use two fingers to scroll),
+  //  so that you don't draw/erase as you're scrolling
+  // document.getElementById('canvas-container').addEventListener('touchstart', function(e) {
+  //   console.log(`DEBUG: touchstart at ${e.pageX},${e.pageY}`)
+  //   bindGridSquareEvents(e)
+  // }, false);
+  // document.getElementById('canvas-container').addEventListener('touchmove', function(e) {
+  //   console.log(`DEBUG: touchmove at ${e.pageX},${e.pageY}`)
+  //   if (!$('#tool-flood-fill').prop('checked')) {
+  //     var xy = getCanvasXY(event.pageX, event.pageY)
+  //       if (activeTool == 'line' && activeToolOption) {
+  //       makeLine(xy[0], xy[1])
+  //     } else if (activeTool == 'eraser') {
+  //       erase(xy[0], xy[1])
+  //     }
+  //   }
+  //   bindGridSquareMouseover(e)
+  // }, false);
+  // document.getElementById('canvas-container').addEventListener('touchend', function(e) {
+  //   console.log(`DEBUG: touchend at ${e.pageX},${e.pageY}`)
+  //   bindGridSquareMouseup(e)
+  // }, false);
+  // document.getElementById('canvas-container').addEventListener('touchcancel', function(e) {
+  //   console.log(`DEBUG: touchcancel at ${e.pageX},${e.pageY}`)
+  //   bindGridSquareMouseup(e)
+  // }, false);
+  // -----------------------------------------------------------------------------------
+
   window.addEventListener('resize', unfreezeMapControls);
   window.addEventListener('scroll', function() {
     $('.tooltip').hide()
@@ -3111,15 +3715,7 @@ $(document).ready(function() {
     var possibleRailLines = $('.rail-line')
     var railKey = false
 
-    if (event.key.toLowerCase() == 'z' && (event.metaKey || event.ctrlKey)) {
-      // If Control+Z is pressed
-      event.preventDefault() // On Safari, don't open a recently-closed window
-      undo();
-    }if (event.key.toLowerCase() == 'y' && (event.metaKey || event.ctrlKey)) {
-      event.preventDefault() // Don't open the History menu
-      redo();
-    }
-    else if ((event.key.toLowerCase() == 'c') && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // C
+    if ((event.key.toLowerCase() == 'c') && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // C
       if (menuIsCollapsed) {
         $('#controls-expand-menu').trigger('click')
       } else {
@@ -3162,46 +3758,109 @@ $(document).ready(function() {
     else if (event.key.toLowerCase() == 'h') { // H
       $('#tool-grid').trigger('click')
     }
-    else if (event.key.toLowerCase() == 's') { // S
-      $('#tool-station').trigger('click')
+    else if (event.key.toLowerCase() == 'k' && (!event.metaKey && !event.altKey && !event.ctrlKey)) {
+      $('#tool-look').trigger('click')
     }
     else if (event.key.toLowerCase() == 'l')  { // L
       $('#tool-label').trigger('click')
     }
-    else if ((event.key.toLowerCase() == 'y') && (!event.metaKey && !event.ctrlKey)) { // Y
-      if (!menuIsCollapsed && mapDataVersion > 1) {
-        $('#tool-map-style').trigger('click')
+    else if (event.key.toLowerCase() == 'm')  { // M
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        $('#move-station').trigger('click')
+      } else {
+        setMoveStationAbility(true) // disable it
+      }
+    }
+    else if (event.key.toLowerCase() == 'o' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // O, except for Open
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        cycleSelectMenu(document.getElementById('station-name-orientation'), event.shiftKey ? -1 : 1)
+      }
+    }
+    else if (event.key.toLowerCase() == 'p' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // P, except for Print
+      $('#tool-eyedropper').trigger('click')
+    }
+    else if (event.key.toLowerCase() == 'q' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // Q, except for quit
+      if (mapDataVersion >= 3) {
+        cycleLineStyle(event.shiftKey ? -1 : 1)
       }
     }
     else if (event.key.toLowerCase() == 'r' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // R, except for Refresh
       $('#tool-ruler').trigger('click')
     }
+    else if (event.key.toLowerCase() == 's') { // S
+      $('#tool-station').trigger('click')
+    }
     else if (event.key.toLowerCase() == 'w' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // W, except for close window
       if (mapDataVersion >= 3) {
-        cycleLineWidth()
+        cycleLineWidth(event.shiftKey ? -1 : 1)
       }
     }
-    else if (event.key.toLowerCase() == 'q' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // Q, except for quit
-      if (mapDataVersion >= 3) {
-        cycleLineStyle()
+    else if ((event.key.toLowerCase() == 'x') && (!event.metaKey && !event.ctrlKey)) { // X
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        $('#station-transfer').trigger('click')
       }
+    }
+    else if (event.key.toLowerCase() == 'y' && (event.metaKey || event.ctrlKey)) { // Ctrl + Y
+      event.preventDefault() // Don't open the History menu
+      redo();
+    }
+    else if ((event.key.toLowerCase() == 'y') && (!event.metaKey && !event.ctrlKey)) { // Y
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        cycleSelectMenu(document.getElementById('station-style'), event.shiftKey ? -1 : 1)
+      }
+      else if (!menuIsCollapsed && mapDataVersion > 1) {
+        $('#tool-map-style').trigger('click')
+      }
+    }
+    else if (event.key.toLowerCase() == 'z' && (event.metaKey || event.ctrlKey)) { // Ctrl + Z
+      event.preventDefault() // On Safari, don't open a recently-closed window
+      undo();
     }
     else if (event.key == 'ArrowLeft' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // left arrow, except for "go back"
-      event.preventDefault(); moveMap('left')
+      event.preventDefault();
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        arrowKeys.add('left')
+      }
+      else {
+        moveMap('left')
+      }
     }
     else if (event.key == 'ArrowUp') { // up arrow
-      event.preventDefault(); moveMap('up')
+      event.preventDefault();
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        arrowKeys.add('up')
+      } else {
+        moveMap('up')
+      }
     }
     else if (event.key == 'ArrowRight' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // right arrow, except for "go forward"
-      event.preventDefault(); moveMap('right')
+      event.preventDefault();
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        arrowKeys.add('right')
+      } else {
+        moveMap('right')
+      }
     }
     else if (event.key == 'ArrowDown') { // down arrow
-      event.preventDefault(); moveMap('down')
+      event.preventDefault();
+      if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+        arrowKeys.add('down')
+      } else {
+        moveMap('down')
+      }
     }
     else if (event.key == '-' || event.key == '_') { // minus
+      if ((event.metaKey || event.ctrlKey) && (event.key == '-' || event.key == '_')) {
+        // Prevent the browser built-in Zoom out, because it's not actually helpful
+        event.preventDefault()
+      }
       $('#tool-zoom-out').trigger('click')
     }
     else if (event.key == '=' || event.key == '+') { // plus / equal sign
+      if ((event.metaKey || event.ctrlKey) && (event.key == '=' || event.key == '+')) {
+        // Prevent the browser built-in Zoom in, because it's not actually helpful
+        event.preventDefault()
+      }
       $('#tool-zoom-in').trigger('click')
     }
     else if (event.code == 'BracketLeft') { // [
@@ -3227,7 +3886,17 @@ $(document).ready(function() {
     if (railKey !== false && possibleRailLines[railKey]) {
       possibleRailLines[railKey].click()
     }
+
+    if (arrowKeys.size > 0 && activeTool == 'station' && $('#tool-station-options').is(':visible')) {
+      moveStation(arrowKeys)
+    }
   }); // document.addEventListener("keydown")
+
+  document.addEventListener("keyup", function(event) {
+    if (arrowKeys.size > 0) {
+      arrowKeys = new Set()
+    }
+  }); // keyup
 
   activeTool = 'look';
 
@@ -3269,8 +3938,8 @@ $(document).ready(function() {
       if (!$('#tool-station').hasClass('width-100')) {
         $(this).removeClass('width-100')
       }
-      // Also reset the + Add New Line button
-      $('#rail-line-new span').text('Add New Line')
+      // Also reset the + Add New Color button
+      $('#rail-line-new span').text('Add New Color')
       $('#tool-new-line-options').hide()
     } else {
       $('#tool-line-options').show();
@@ -3327,6 +3996,7 @@ $(document).ready(function() {
     $('#tool-station').addClass('active')
     if ($('#tool-station-options').is(':visible')) {
       $('#tool-station-options').hide();
+      setMoveStationAbility(true) // turn off "Move Station"
       $(this).removeClass('width-100')
     }
     $('.tooltip').hide();
@@ -3345,6 +4015,7 @@ $(document).ready(function() {
     $('.active').removeClass('active')
     $('#tool-eraser').addClass('active')
     $('#tool-station-options').hide();
+    setMoveStationAbility(true) // turn off "Move Station"
     $('.tooltip').hide();
     $('#tool-line').attr('style', '')
     if (!$('#tool-line-options').is(':visible')) {
@@ -3514,9 +4185,6 @@ $(document).ready(function() {
         })
         $('#name-this-map').click(function(e) {
 
-          // Sanitize the map name
-          $('#user-given-map-name').val($('#user-given-map-name').val().replaceAll('<', '').replaceAll('>', '').replaceAll('"', '').replaceAll('\\\\', '').replace('&amp;', '&').replaceAll('&', '&amp;').replaceAll('/', '-').replaceAll("'", '')) // use similar replaces to $('#create-new-rail-line').click()
-
           var formData = $('#name-map').serializeArray().reduce(function(obj, item) {
               obj[item.name] = item.value;
               return obj;
@@ -3581,6 +4249,7 @@ $(document).ready(function() {
     // On mobile, you need to tap and hold on the canvas to save the image
     drawCanvas(activeMap);
     $('#tool-station-options').hide();
+    setMoveStationAbility(true) // turn off "Move Station"
 
     $('.tooltip').hide();
     if ($('#grid-canvas').is(':visible')) {
@@ -3657,10 +4326,10 @@ $(document).ready(function() {
 
   $('#rail-line-new').click(function() {
     if ($('#tool-new-line-options').is(':visible')) {
-      $(this).children('span').text('Add New Line')
+      $(this).children('span').text('Add New Color')
       $('#tool-new-line-options').hide()
     } else {
-      $(this).children('span').text('Hide Add Line options')
+      $(this).children('span').text('Hide Add Color options')
       $('#tool-new-line-options').show()
     }
   }) // #rail-line-new.click() (expand tool-new-line-options)
@@ -3684,16 +4353,16 @@ $(document).ready(function() {
     if (allColors.indexOf($('#new-rail-line-color').val().slice(1, 7)) >= 0) {
       $('#tool-new-line-errors').text('This color already exists! Please choose a new color.');
     } else if (allNames.indexOf($('#new-rail-line-name').val()) >= 0) {
-      $('#tool-new-line-errors').text('This rail line name already exists! Please choose a new name.');
+      $('#tool-new-line-errors').text('This color name already exists! Please choose a new name.');
     } else if ($('#new-rail-line-name').val().length == 0) {
-      $('#tool-new-line-errors').text('This rail line name cannot be blank. Please enter a name.');
+      $('#tool-new-line-errors').text('This color name cannot be blank. Please enter a name.');
     } else if ($('#new-rail-line-name').val().length > 100) {
-      $('#tool-new-line-errors').text('This rail line name is too long. Please shorten it.');
+      $('#tool-new-line-errors').text('This color name is too long. Please shorten it.');
     } else if ($('.rail-line').length > 99) {
-      $('#tool-new-line-errors').text('Too many rail lines! Delete your unused ones before creating new ones.');
+      $('#tool-new-line-errors').text('Too many colors! Delete your unused ones before creating new ones.');
     } else {
       $('#tool-new-line-errors').text('');
-      $('#line-color-options fieldset').append('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line has-tooltip" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');
+      $('#line-color-options fieldset #line-colors').append('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line has-tooltip" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');
       if (!activeMap['global']) {
         activeMap['global'] = {"lines": {}}
       }
@@ -3714,7 +4383,7 @@ $(document).ready(function() {
     bindRailLineEvents();
     resetRailLineTooltips()
     // Repopulate the Edit Rail Lines dropdown menu, in case it's open
-    $('#tool-lines-to-change').html('<option>Edit which rail line?</option>')
+    $('#tool-lines-to-change').html('<option>Edit which color?</option>')
     for (var line in activeMap["global"]["lines"]) {
       $('#tool-lines-to-change').append('<option value="' + line + '">' + activeMap["global"]["lines"][line]["displayName"] + '</option>')
     }
@@ -3726,11 +4395,11 @@ $(document).ready(function() {
       $(this).children('span').html('Edit colors &amp; names')
       $('#tool-change-line-options').hide()
     } else {
-      $(this).children('span').text('Close Edit Line options')
+      $(this).children('span').text('Close Edit Color options')
       $('#tool-change-line-options').show()
     }
 
-    $('#tool-lines-to-change').html('<option>Edit which rail line?</option>')
+    $('#tool-lines-to-change').html('<option>Edit which color?</option>')
     $('#change-line-name').hide()
     $('#change-line-color').hide()
     $('#tool-change-line-options label').hide()
@@ -3745,7 +4414,7 @@ $(document).ready(function() {
   $('#tool-lines-to-change').on('change', function() {
     $('#tool-change-line-options label').show()
     // Set the name and color
-    if ($('#tool-lines-to-change option:selected').text() != 'Edit which rail line?') {
+    if ($('#tool-lines-to-change option:selected').text() != 'Edit which color?') {
       $('#change-line-name').show()
       $('#change-line-color').show()
       $('#change-line-name').val($('#tool-lines-to-change option:selected').text())
@@ -3759,7 +4428,7 @@ $(document).ready(function() {
 
   $('#save-rail-line-edits').click(function() {
     // Save edits
-    if ($('#tool-lines-to-change option:selected').text() != 'Edit which rail line?') {
+    if ($('#tool-lines-to-change option:selected').text() != 'Edit which color?') {
       var lineColorToChange = $('#tool-lines-to-change').val()
       var lineColorToChangeTo = $('#change-line-color').val().slice(1)
       var lineNameToChange = $('#tool-lines-to-change option:selected').text()
@@ -3774,7 +4443,7 @@ $(document).ready(function() {
         $('#cant-save-rail-line-edits').text('Can\'t change ' + lineNameToChange + ' - it has the same color as ' + activeMap["global"]["lines"][lineColorToChangeTo]["displayName"])
       }
       else if (allNames.indexOf(lineNameToChangeTo) > -1 && lineNameToChange != lineNameToChangeTo) {
-        $('#cant-save-rail-line-edits').text('This rail line name already exists! Please choose a new name.');
+        $('#cant-save-rail-line-edits').text('This color name already exists! Please choose a new name.');
       }
       else {
         replaceColors({
@@ -3794,7 +4463,7 @@ $(document).ready(function() {
           $('#tool-line').removeClass('active')
         } // if line
       } // else
-    } // # not Edit which rail line?
+    } // # not Edit which color?
     // If replacing the active line, change the active color too
     // or you'll end up drawing with a color that no longer exists among the globals
     if (activeTool == 'line' && rgb2hex(activeToolOption).slice(1, 7) == lineColorToChange)
@@ -3857,8 +4526,6 @@ $(document).ready(function() {
   })
 
   $('#station-name').change(function() {
-    $(this).val($(this).val().replaceAll('"', '').replaceAll("'", '').replaceAll('<', '').replaceAll('>', '').replaceAll('&', '').replaceAll('/', '').replaceAll('_', ' ').replaceAll('\\\\', '').replaceAll('%', ''))
-
     var x = $('#station-coordinates-x').val();
     var y = $('#station-coordinates-y').val();
 
@@ -4108,11 +4775,22 @@ function getLineDirection(x, y, metroMap) {
 
   info = {
     "direction": false,
+    "offset_endcap": false,
     "endcap": false
   }
 
   if (!origin) {
     return info
+  }
+
+  var neighboringPoints = [N, E, S, W, NE, SE, SW, NW].filter((d) => d !== undefined && d == origin)
+  if (neighboringPoints.length == 1) {
+    info['endcap'] = true
+    if ([S, E, SE, SW].filter((d) => d !== undefined).length == 1) {
+      // London styles need these endcaps drawn at a slightly different offset
+      // Note: these are the N, W, NE, NW endcaps; the points I'm checking are their neighboring points
+      info['offset_endcap'] = true
+    }
   }
 
   if (origin == W && W == E) {
@@ -4125,16 +4803,12 @@ function getLineDirection(x, y, metroMap) {
     info['direction'] = 'diagonal-ne'
   } else if (origin == W || origin == E) {
     info['direction'] = 'horizontal'
-    info['endcap'] = true
   } else if (origin == N || origin == S) {
     info['direction'] = 'vertical'
-    info['endcap'] = true
   } else if (origin == NW || origin == SE) {
     info['direction'] = 'diagonal-se'
-    info['endcap'] = true
   } else if (origin == SW || origin == NE) {
     info['direction'] = 'diagonal-ne'
-    info['endcap'] = true
   } else {
     info['direction'] = 'singleton'
   }
@@ -4142,10 +4816,24 @@ function getLineDirection(x, y, metroMap) {
   return info
 }
 
-function getConnectedStations(x, y, metroMap) {
+function stationIsStyle(station, style) {
+  if (station && station['style'] && station['style'] == style) {
+    // Return true if station is explicitly the given style,
+    return true
+  } else if (station && !station['style'] && mapStationStyle == style) {
+    //  or implicitly because the station is the default and there's a style set
+    return true
+  }
+  return false
+} // stationIsStyle(station, style)
+
+function getConnectedStations(x, y, metroMap, londonConnections) {
   // Finds connecting stations along a SINGLE direction,
   //  to aid in drawing one continuous station from multiple stations.
   // If applicable, returns a set of starting and ending x,y coordinates
+
+  // If londonConnections is true, return all connected transfer stations
+  //  along all directions
 
   // Known issue:
   // If you have several stations set up along multiple directions, for example:
@@ -4178,6 +4866,9 @@ function getConnectedStations(x, y, metroMap) {
   if (!origin) {
     return
   }
+  if (londonConnections && (!origin || !origin['transfer'])) {
+    return
+  }
 
   var NW = getStation(x-1, y-1, metroMap)
   var NE = getStation(x+1, y-1, metroMap)
@@ -4190,6 +4881,21 @@ function getConnectedStations(x, y, metroMap) {
 
   if (!NW && !NE && !SW && !SE && !N && !E && !S && !W) {
     return 'singleton'
+  }
+
+  if (londonConnections) {
+    var connectedTo = {}
+
+    if (stationIsStyle(NW, 'london') && NW['transfer']) { connectedTo["NW"] = [x-1, y-1] }
+    if (stationIsStyle(NE, 'london') && NE['transfer']) { connectedTo["NE"] = [x+1, y-1] }
+    if (stationIsStyle(SW, 'london') && SW['transfer']) { connectedTo["SW"] = [x-1, y+1] }
+    if (stationIsStyle(SE, 'london') && SE['transfer']) { connectedTo["SE"] = [x+1, y+1] }
+    if (stationIsStyle(N, 'london') && N['transfer']) { connectedTo["N"] = [x, y-1] }
+    if (stationIsStyle(E, 'london') && E['transfer']) { connectedTo["E"] = [x+1, y] }
+    if (stationIsStyle(S, 'london') && S['transfer']) { connectedTo["S"] = [x, y+1] }
+    if (stationIsStyle(W, 'london') && W['transfer']) { connectedTo["W"] = [x-1, y] }
+
+    return connectedTo
   }
 
   function shouldUseOvals(station) {
@@ -4624,7 +5330,7 @@ function collapseToolbox() {
   if ($('#hide-save-share-url').length == 1) {
     $('#hide-save-share-url').hide()
   }
-  $('#rail-line-new').children('span').text('Add New Line')
+  $('#rail-line-new').children('span').text('Add New Color')
   $('#rail-line-change').children('span').html('Edit colors &amp; names')
   $('#controls-expand-menu').show()
 }
@@ -4724,12 +5430,14 @@ $('.line-style-choice-width').on('click', function() {
   }
 })
 
-function cycleLineWidth() {
+function cycleLineWidth(direction) {
   var currentStep = ALLOWED_LINE_WIDTHS.indexOf(activeLineWidth * 100)
-  if (currentStep == -1 || currentStep == ALLOWED_LINE_WIDTHS.length-1) {
+  if (direction == 1 && (currentStep == -1 || currentStep == ALLOWED_LINE_WIDTHS.length-1)) {
     currentStep = 0
+  } else if (direction == -1 && currentStep <= 0) {
+    currentStep = ALLOWED_LINE_WIDTHS.length-1
   } else {
-    currentStep += 1
+    currentStep += direction
   }
   // This odd construction is because Javascript won't respect the zero after the decimal
   var button = $('button[data-linewidth="' + ALLOWED_LINE_WIDTHS[currentStep] + '"]')
@@ -4739,12 +5447,14 @@ function cycleLineWidth() {
   button.trigger('click')
 } // cycleLineWidth()
 
-function cycleLineStyle() {
+function cycleLineStyle(direction) {
   var currentStep = ALLOWED_LINE_STYLES.indexOf(activeLineStyle)
-  if (currentStep == -1 || currentStep == ALLOWED_LINE_STYLES.length-1) {
+  if (direction == 1 && (currentStep == -1 || currentStep == ALLOWED_LINE_STYLES.length-1)) {
     currentStep = 0
+  } else if (direction == -1 && currentStep <= 0) {
+    currentStep = ALLOWED_LINE_STYLES.length - 1
   } else {
-    currentStep += 1
+    currentStep += direction
   }
   $('button[data-linestyle="' + ALLOWED_LINE_STYLES[currentStep] + '"]').trigger('click')
 } // cycleLineStyle()
@@ -4759,29 +5469,83 @@ $('.line-style-choice-style').on('click', function() {
   if (activeToolOption) {
     activeTool = 'line'
   }
-})
+
+  // Hollow line buttons are two-tone and so need extra help
+  var twoToneButtons = ['hollow', 'hollow_round', 'hollow_open', 'wide_stripes', 'square_stripes', 'stripes']
+  var twoToneCurrent = $('#svgu_ls_' + activeLineStyle).attr('xlink:href')
+  if (twoToneButtons.indexOf(activeLineStyle) > -1 && !twoToneCurrent.endsWith('-active')) {
+    $('#svgu_ls_' + activeLineStyle).attr('xlink:href', twoToneCurrent + '-active')
+  }
+  for (var ttb of twoToneButtons) {
+    var ttSVG = $('#svgu_ls_' + ttb).attr('xlink:href')
+    if (activeLineStyle != ttb && ttSVG && ttSVG.endsWith('-active')) {
+      $('#svgu_ls_' + ttb).attr('xlink:href', ttSVG.split('-active')[0])
+    } // if was active
+  } // for ttb of twoToneButtons
+}) // .line-style-choice-style.click
 
 function setLineStyle(style, ctx) {
   var pattern;
+  if (ctx.globalCompositeOperation != 'source-over') {
+    ctx.globalCompositeOperation = 'source-over'
+  }
   if (style == 'solid') {
     pattern = []
     ctx.lineCap = 'round'
-  } else if (style == 'dashed') {
+  }
+  else if (style == 'dashed') {
     pattern = [gridPixelMultiplier, gridPixelMultiplier * 1.5]
     ctx.lineCap = 'square'
-  } else if (style == 'dotted_dense') {
+  }
+  else if (style == 'wide_stripes') {
+    pattern = [gridPixelMultiplier, gridPixelMultiplier * 2.5]
+    ctx.lineCap = 'square'
+  }
+  else if (style == 'dotted_dense') {
     ctx.lineCap = 'butt'
     pattern = [gridPixelMultiplier / 2, gridPixelMultiplier / 4]
-  } else if (style == 'dotted') {
+  }
+  else if (style == 'dotted') {
     ctx.lineCap = 'butt'
     pattern = [gridPixelMultiplier / 2, gridPixelMultiplier / 2]
-  } else if (style == 'dense_thick') {
+  }
+  else if (style == 'square_stripes') {
+    pattern = [gridPixelMultiplier, gridPixelMultiplier]
+    ctx.lineCap = 'butt'
+  }
+  else if (style == 'stripes') {
+    pattern = [gridPixelMultiplier, gridPixelMultiplier / 2]
+    ctx.lineCap = 'butt'
+  }
+  else if (style == 'dense_thick') {
     pattern = [2, 2]
     ctx.lineCap = 'butt'
-  } else if (style == 'dense_thin') {
+  }
+  else if (style == 'dense_thin') {
     pattern = [1, 1]
     ctx.lineCap = 'butt'
-  } else {
+  }
+  else if (style == 'hollow_round') {
+    pattern = []
+    ctx.lineCap = 'round'
+  }
+  else if (style == 'hollow') {
+    pattern = []
+    ctx.lineCap = 'square'
+  }
+  else if (style == 'hollow_open' || style == 'color_outline') {
+    pattern = []
+    ctx.lineCap = 'butt'
+  }
+  else if (style == 'dashed_uneven') {
+    pattern = [gridPixelMultiplier, gridPixelMultiplier / 5, gridPixelMultiplier / 2, gridPixelMultiplier / 5]
+    ctx.lineCap = 'butt'
+  }
+  else if (style == 'dotted_square') {
+    pattern = [ctx.lineWidth, ctx.lineWidth]
+    ctx.lineCap = 'butt'
+  }
+  else {
     // Safety: fallback to solid
     pattern = []
     ctx.lineCap = 'round'
@@ -4888,6 +5652,42 @@ function drawRuler(x, y, replaceOrigin) {
   }
 } // drawRuler(x, y, replaceOrigin)
 
+$('#tool-eyedropper').on('click', function() {
+  activeTool = 'eyedropper'
+})
+
+$('#tool-look').on('click', function() {
+  activeTool = 'look'
+})
+
+function setMoveStationAbility(disable) {
+  // By default, this should toggle,
+  //  but it's useful to always disable, like when closing the station menu
+  if (disable) {
+    moveStationOn = []
+  } else if (moveStationOn.length > 0) {
+    moveStationOn = []
+  } else {
+    moveStationOn = [
+      parseInt($('#station-coordinates-x').val()),
+      parseInt($('#station-coordinates-y').val())
+    ]
+  }
+
+  if (moveStationOn.length == 2) {
+    $('span#move-station-enabled').text(': Arrow Keys, Mouse')
+  } else {
+    setTimeout(function() {
+      $('#move-station').removeClass('active')
+    }, 1)
+    $('span#move-station-enabled').text(': Arrow Keys only')
+  }
+} // setMoveStationAbility(disable)
+
+$('#move-station').on('click', function() {
+  setMoveStationAbility()
+})
+
 function cycleGridStep() {
   var GRID_STEPS = [3, 5, 7, false]
   var currentStep = GRID_STEPS.indexOf(gridStep)
@@ -4904,6 +5704,17 @@ function cycleGridStep() {
   window.localStorage.setItem('metroMapGridStep', gridStep);
   drawGrid()
 } // cycleGridStep()
+
+function cycleSelectMenu(select, direction) {
+  if (direction == 1 && select.selectedIndex >= select.options.length - 1) {
+    select.selectedIndex = 0
+  } else if (direction == -1 && select.selectedIndex <= 0) {
+    select.selectedIndex = select.options.length - 1
+  } else {
+    select.selectedIndex += direction
+  }
+  $(select).trigger('change')
+} // cycleSelectMenu(select)
 
 $('#tool-undo').on('click', undo)
 $('#tool-redo').on('click', redo)

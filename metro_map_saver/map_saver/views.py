@@ -30,6 +30,7 @@ import os
 import pprint
 import pytz
 import random
+import re
 import requests
 import urllib.parse
 
@@ -41,21 +42,24 @@ from .forms import (
     CreateMapForm,
     IdentifyForm,
     RateForm,
+    CustomListForm,
 )
 from .models import SavedMap, IdentifyMap, City
 from .validator import (
     is_hex,
-    sanitize_string,
     validate_metro_map,
     hex64,
     ALLOWED_TAGS,
     ALLOWED_LINE_WIDTHS,
     ALLOWED_LINE_STYLES,
     ALLOWED_MAP_SIZES,
+    ALLOWED_STATION_STYLES,
 )
 from .common_cities import CITIES
 
 logger = logging.getLogger(__name__)
+
+INVALID_URLHASH_CHARS = re.compile(r'[^a-zA-Z0-9\-_]')
 
 class HomeView(TemplateView):
 
@@ -84,7 +88,7 @@ class HomeView(TemplateView):
             try:
                 saved_map = SavedMap.objects.get(urlhash=urlhash)
             except MultipleObjectsReturned:
-                saved_map = SavedMap.objects.filter(urlhash=urlhash).first()
+                saved_map = SavedMap.objects.filter(urlhash=urlhash).earliest('id')
             except ObjectDoesNotExist:
                 context = {
                     'today': timezone.now().date(),
@@ -119,6 +123,7 @@ class HomeView(TemplateView):
         context['ALLOWED_MAP_SIZES'] = ALLOWED_MAP_SIZES
         context['ALLOWED_LINE_WIDTHS'] = [w * 100 for w in ALLOWED_LINE_WIDTHS]
         context['ALLOWED_LINE_STYLES'] = ALLOWED_LINE_STYLES
+        context['ALLOWED_STATION_STYLES'] = ALLOWED_STATION_STYLES
 
         return render(request, self.template_name, context)
 
@@ -304,6 +309,13 @@ class MapSimilarView(TemplateView):
     @method_decorator(gzip_page)
     @method_decorator(login_required)
     def get(self, request, **kwargs):
+        # 2024: Does not scale well enough to use in prod, disable.
+        # Consider:
+        #   Reduce search space by only searching maps with:
+        #       * the same city
+        #       * the same map size
+        # Or maybe adding the .created_from column will obsolete this entirely
+        return render(request, 'MapGalleryView.html', context)
 
         # Filter by +/- 20% of the current map's number of stations instead of all visible maps
         STATION_THRESHOLD = 0.2
@@ -403,13 +415,13 @@ class CreatorNameMapView(TemplateView):
 
         if name or tags:
             try:
-                this_map = SavedMap.objects.get(urlhash=request.POST.get('urlhash'))
+                this_map = SavedMap.objects.filter(urlhash=request.POST.get('urlhash')).earliest('id')
             except (ObjectDoesNotExist, MultipleObjectsReturned):
                 pass
             else:
                 if this_map.naming_token and this_map.naming_token == naming_token:
                     # This is the original creator of the map; allow them to name the map.
-                    this_map.name = sanitize_string(f'{name} ({tags})' if tags in ALLOWED_TAGS else f'{name}')[:255]
+                    this_map.name = f'{name} ({tags})' if tags in ALLOWED_TAGS else f'{name}'[:255]
                     this_map.save()
                     context['saved_map'] = 'Success'
                 else:
@@ -518,8 +530,8 @@ class MapDiffView(TemplateView):
         pretty_printer = pprint.PrettyPrinter(indent=1)
 
         try:
-            maps.append(SavedMap.objects.get(urlhash=kwargs.get('urlhash_first')))
-            maps.append(SavedMap.objects.get(urlhash=kwargs.get('urlhash_second')))
+            maps.append(SavedMap.objects.filter(urlhash=kwargs.get('urlhash_first')).earliest('id'))
+            maps.append(SavedMap.objects.filter(urlhash=kwargs.get('urlhash_second')).earliest('id'))
         except ObjectDoesNotExist:
             context['error'] = '[ERROR] One or both of the maps does not exist (either {0} or {1})'.format(kwargs.get('urlhash_first'), kwargs.get('urlhash_second'))
         except MultipleObjectsReturned:
@@ -643,6 +655,8 @@ class AdminHomeView(TemplateView):
     """ A sort of 'home base' for admins like me
         to review important stats centrally
         and serve as a dashboard for all of the main reviewing tasks
+
+        TODO: revisit this, make it useful once more
     """
 
     template_name = 'AdminHome.html'
@@ -656,149 +670,11 @@ class AdminHomeView(TemplateView):
         if not request.user.is_superuser:
             raise PermissionDenied
 
-        action = request.POST.get('action')
-        if action == 'mass_hide':
-            group = request.POST.get('group', '').replace("'", '"')
-            group = json.loads(group)
-            maps = SavedMap.objects.filter(
-                gallery_visible=True,
-                tags__exact=None,
-                **group,
-            )
-            maps.update(gallery_visible=False)
-
         # Return empty response for success
         return render(request, 'MapDataView.html', {})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
-        # Get basic usage stats of number of maps created
-        eastern_time = pytz.timezone('US/Eastern')
-        today = datetime.datetime.now(tz=eastern_time).date()
-        yesterday = today - datetime.timedelta(days=1)
-        last_30 = today - datetime.timedelta(days=30)
-        last_90 = today - datetime.timedelta(days=90)
-        prev_90_start = today - datetime.timedelta(days=180)
-        prev_90_end = today - datetime.timedelta(days=91)
-
-        context['today'] = today
-        context['yesterday'] = yesterday
-
-        context['created_today'] = SavedMap.objects.filter(created_at=today).count()
-        context['created_yesterday'] = SavedMap.objects.filter(created_at=yesterday).count()
-        context['last_30'] = SavedMap.objects.filter(created_at__gt=last_30).count()
-        context['last_90'] = SavedMap.objects.filter(created_at__gt=last_90).count()
-        context['prev_90'] = SavedMap.objects.filter(
-            created_at__gt=prev_90_start,
-            created_at__lte=prev_90_end,
-        ).count()
-        context['last_90_change'] = context['last_90'] - context['prev_90']
-
-        # Get numbers of maps needing review
-        filter_groups = {
-            '0 stations': {'station_count': 0},
-            '1-10 stations': {'station_count__gte': 1, 'station_count__lte': 10},
-            '11-20 stations': {'station_count__gte': 11, 'station_count__lte': 20},
-            '21-30 stations': {'station_count__gte': 21, 'station_count__lte': 30},
-            '31-40 stations': {'station_count__gte': 31, 'station_count__lte': 40},
-            '41-50 stations': {'station_count__gte': 41, 'station_count__lte': 50},
-            '51-75 stations': {'station_count__gte': 51, 'station_count__lte': 75},
-            '76-100 stations': {'station_count__gte': 76, 'station_count__lte': 100},
-            '101-200 stations': {'station_count__gte': 101, 'station_count__lte': 200},
-            '201-500 stations': {'station_count__gte': 201, 'station_count__lte': 500},
-            '501+ stations': {'station_count__gte': 501},
-        }
-
-        maps_needing_review = SavedMap.objects.filter(tags__exact=None, gallery_visible=True)
-
-        PER_PAGE = 100
-
-        context['maps'] = {
-            group: {
-                'needing_review': maps_needing_review.filter(**filters).count(),
-                'total': SavedMap.objects.filter(**filters).count(),
-                'review_link': '/admin/gallery/notags/?per_page={0}&{1}'.format(
-                    PER_PAGE,
-                    urllib.parse.urlencode(filters)
-                ),
-                'filters': filters,
-            } for group, filters in filter_groups.items()
-        }
-
-        context['totals'] = {
-            'needing_review': maps_needing_review.count(),
-            'total': SavedMap.objects.count(),
-        }
-
-        maps_tagged_need_review = SavedMap.objects.filter(
-            tags__slug='needs-review',
-            gallery_visible=True,
-        ).count()
-        maps_no_tags = SavedMap.objects.filter(
-            tags__exact=None,
-            gallery_visible=True,
-        ).count()
-
-        context['maps_no_tags'] = maps_no_tags
-        context['maps_tagged_need_review'] = maps_tagged_need_review
-
-        # How many travel systems do we have a publicly visible real/speculative map for?
-        travel_system_names = [ts.name.split(',')[0] for ts in TravelSystem.objects.all()]
-        travel_system_has_real_map = set()
-        maps_tagged_real = SavedMap.objects.filter(
-            tags__slug='real',
-            publicly_visible=True,
-        )
-
-        travel_system_has_speculative_map = set()
-        maps_tagged_speculative = SavedMap.objects.filter(
-            tags__slug='speculative',
-            publicly_visible=True,
-        )
-
-        for real_map in maps_tagged_real:
-            if real_map.name in travel_system_names or \
-            real_map.suggested_city in travel_system_names:
-                travel_system_has_real_map.add(real_map.name)
-
-        for speculative_map in maps_tagged_speculative:
-            if speculative_map.name in travel_system_names or \
-            speculative_map.suggested_city in travel_system_names:
-                travel_system_has_speculative_map.add(speculative_map.name)
-
-        travel_system_names = set(travel_system_names)
-
-        context['travel_system_has_real_map'] = sorted(travel_system_has_real_map)
-        context['travel_system_missing_real_map'] = sorted(
-            travel_system_names - travel_system_has_real_map
-        )
-        context['travel_system_has_speculative_map'] = sorted(travel_system_has_speculative_map)
-        context['travel_system_missing_speculative_map'] = sorted(
-            travel_system_names - travel_system_has_speculative_map
-        )
-        context['total_travel_systems'] = TravelSystem.objects.count()
-
-        # Maps currently in the public gallery
-        public_tags = ['real', 'speculative', 'unknown', 'favorite']
-        public_tags = {tag: {} for tag in public_tags}
-        context['public_tags'] = {}
-        public = SavedMap.objects.filter(publicly_visible=True)
-        for tag in public_tags:
-            context['public_tags'][tag] = public.filter(tags__slug=tag).count()
-        context['public_total'] = public.count()
-
-        context['most_popular_cities'] = SavedMap.objects.exclude(suggested_city='') \
-            .values_list('suggested_city') \
-            .annotate(city_count=Count('suggested_city')) \
-            .order_by('-city_count')[:10]
-
-        context['most_popular_cities_by_name'] = SavedMap.objects.exclude(name='') \
-            .filter(publicly_visible=True) \
-            .values_list('name') \
-            .annotate(city_count=Count('name')) \
-            .order_by('-city_count')[:10]
-
         return context
 
 
@@ -903,7 +779,7 @@ class MapsPerDayView(DayArchiveView):
     """ Display the maps created this day
     """
 
-    queryset = SavedMap.objects.defer(*SavedMap.DEFER_FIELDS).all().exclude(tags__slug='calendar-hidden')
+    queryset = SavedMap.objects.defer(*SavedMap.DEFER_FIELDS).all().filter(browse_visible=True)
     date_field = 'created_at'
     paginate_by = 50
     context_object_name = 'maps'
@@ -936,7 +812,7 @@ class CityView(ListView):
     paginate_by = 50
 
     def get_queryset(self):
-        queryset = SavedMap.objects.all().defer(*SavedMap.DEFER_FIELDS)
+        queryset = SavedMap.objects.all().filter(browse_visible=True).defer(*SavedMap.DEFER_FIELDS)
         city = self.kwargs.get('city').title()
         if city == 'Unspecified':
             queryset = queryset.filter(city__exact=None)
@@ -945,7 +821,13 @@ class CityView(ListView):
                 queryset = queryset.filter(city__name=city)
             except Exception:
                 if city:
-                    queryset = queryset.filter(name__startswith=city)
+                    queryset = queryset.filter(name__istartswith=city)
+            else:
+                if city and not queryset.exists():
+                    queryset = SavedMap.objects.all().defer(*SavedMap.DEFER_FIELDS).filter(
+                        name__istartswith=city,
+                        browse_visible=True,
+                    )
         return queryset.order_by('-created_at')
 
     def get_context_data(self, **kwargs):
@@ -978,6 +860,7 @@ class SameDayView(ListView):
         return super().get_queryset().defer(*SavedMap.DEFER_FIELDS).filter(
             created_at__gte=this_map.created_at.date(),
             created_at__lt=this_map.created_at.date() + datetime.timedelta(days=1),
+            browse_visible=True,
         )
 
 class RecaptchaMixin:
@@ -1024,14 +907,14 @@ class IdentifyMapView(RecaptchaMixin, FormView):
         except Exception as exc:
             pass
         else:
-            if is_submission_valid:
+            already_identified = self.request.session.get('identified', [])
+            if is_submission_valid and urlhash not in already_identified:
                 self.model.objects.create(
                     saved_map=mmap,
                     name=name,
                     map_type=map_type,
                 )
-                already_identified = self.request.session.get('identified', [])
-                self.request.session['identified'] = already_identified + [mmap.id]
+                self.request.session['identified'] = already_identified + [urlhash]
 
         return HttpResponseRedirect(self.get_success_url(urlhash))
 
@@ -1056,7 +939,7 @@ class RateMapView(RecaptchaMixin, FormView, DetailView):
     def get_success_url(self, urlhash):
         return reverse_lazy('rate', args=(urlhash, ))
 
-    @method_decorator(cache_control(max_age=60))
+    @method_decorator(never_cache)
     @method_decorator(ensure_csrf_cookie)
     def get(self, request, *args, **kwargs):
         try:
@@ -1064,10 +947,10 @@ class RateMapView(RecaptchaMixin, FormView, DetailView):
         except MultipleObjectsReturned:
             self.object = SavedMap.objects.filter(urlhash=kwargs.get('urlhash')).earliest('id')
         context = self.get_context_data(object=self.object, map=self.object)
-        if not self.object.id in request.session.get('rated', []):
+        if not self.object.urlhash in request.session.get('rated', []):
             context['form_like'] = self.form_class(dict(urlhash=self.object.urlhash, choice='likes'))
             context['form_dislike'] = self.form_class(dict(urlhash=self.object.urlhash, choice='dislikes'))
-        if not self.object.id in request.session.get('identified', []):
+        if not self.object.urlhash in request.session.get('identified', []):
             context['identify_form'] = IdentifyForm(dict(urlhash=self.object.urlhash))
 
         return self.render_to_response(context)
@@ -1082,10 +965,10 @@ class RateMapView(RecaptchaMixin, FormView, DetailView):
         except Exception as exc:
             pass
         else:
-            if is_submission_valid:
+            already_rated = self.request.session.get('rated', [])
+            if is_submission_valid and urlhash not in already_rated:
                 mmap.update(**{choice: F(choice) + 1})
-                already_rated = self.request.session.get('rated', [])
-                self.request.session['rated'] = already_rated + [mmap.first().id]
+                self.request.session['rated'] = already_rated + [urlhash]
 
         return HttpResponseRedirect(self.get_success_url(urlhash))
 
@@ -1104,7 +987,7 @@ class RandomMapView(RateMapView):
         return super().get(request, *args, **kwargs)
 
     def get_object(self, *args, **kwargs):
-        pks = SavedMap.objects.all().values_list('pk', flat=True)
+        pks = SavedMap.objects.all().filter(browse_visible=True).values_list('pk', flat=True)
         return SavedMap.objects.get(pk=random.choice(pks))
 
 
@@ -1116,6 +999,7 @@ class HighestRatedMapsView(ListView):
     def get_queryset(self):
         queryset = super().get_queryset().filter(
             likes__gt=0,
+            browse_visible=True,
         ).defer(*SavedMap.DEFER_FIELDS).order_by('-likes')
         return queryset
 
@@ -1123,6 +1007,102 @@ class HighestRatedMapsView(ListView):
         context = super().get_context_data(**kwargs)
         context['showing_best'] = True
         return context
+
+
+def parse_map_ids_and_urlhashes(map_ids_and_urlhashes):
+
+    """ Given a set of mixed map IDs and urlhashes,
+        return a list of each, separated out.
+
+        Note: an all-numeric URLhash could incorrectly be sorted into the numbers category,
+            though this is likely to be pretty rare.
+    """
+
+    map_ids_and_urlhashes = map_ids_and_urlhashes.strip()
+    map_ids_and_urlhashes = map_ids_and_urlhashes.split('\n')
+
+    numeric_ids = []
+    urlhashes = []
+    ordered = []
+
+    common_prefixes = []
+    for host in settings.ALLOWED_HOSTS:
+        common_prefixes.append(f'https://{host}/map/')
+        common_prefixes.append(f'https://{host}/rate/')
+        common_prefixes.append(f'{host}/map/')
+        common_prefixes.append(f'{host}/rate/')
+        common_prefixes.append(f'{host}/?map=') # Support old-style bookmarks
+
+    if settings.DEBUG:
+        # Need to explicitly add the port
+        common_prefixes.append(f'http://{host}:8000/map/')
+        common_prefixes.append(f'http://{host}:8000/rate/')
+
+    for id_or_hash in map_ids_and_urlhashes:
+
+        for prefix in common_prefixes:
+            id_or_hash = id_or_hash.removeprefix(prefix)
+
+        id_or_hash = re.sub(INVALID_URLHASH_CHARS, '', id_or_hash).strip()
+
+        if not id_or_hash:
+            continue
+
+        if id_or_hash.isdigit() and id_or_hash not in numeric_ids:
+            numeric_ids.append(id_or_hash)
+            ordered.append(id_or_hash)
+        elif id_or_hash not in urlhashes and len(id_or_hash) == 8:
+            urlhashes.append(id_or_hash)
+            ordered.append(id_or_hash)
+
+    return (numeric_ids, urlhashes, ordered)
+
+
+class CustomListView(FormView):
+
+    """ While working on the "My Favorite Maps" series,
+            it would be really helpful to be able to create
+            a "Maps by Day"-style listing of the maps,
+            so I can browse them at a glance
+            and have them all in a single place.
+    """
+
+    model = SavedMap
+    context_object_name = 'maps'
+    template_name = 'map_saver/custom_list.html'
+    form_class = CustomListForm
+    CUSTOM_LIST_LIMIT = 100
+
+    def get_success_url(self, maps):
+        (numeric_ids, urlhashes, ordered) = parse_map_ids_and_urlhashes(
+            '\n'.join(maps.split(','))
+        )
+        return reverse_lazy('custom_list', args=(','.join(ordered),))
+
+    def form_valid(self, form):
+        return redirect(
+            self.get_success_url(
+                form.data['maps'].replace('\n', ',').replace('\r', ',').replace(',,', ',')
+            )
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['limit'] = self.CUSTOM_LIST_LIMIT
+        return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data()
+
+        map_ids_and_urlhashes = '\n'.join(kwargs.get('maps', '').strip().split(','))
+        if map_ids_and_urlhashes:
+            (numeric_ids, urlhashes, ordered) = parse_map_ids_and_urlhashes(map_ids_and_urlhashes)
+            maps_by_id = SavedMap.objects.defer(*SavedMap.DEFER_FIELDS).filter(id__in=numeric_ids)
+            maps_by_hash = SavedMap.objects.defer(*SavedMap.DEFER_FIELDS).filter(urlhash__in=urlhashes)
+            context['maps'] = maps_by_id.union(maps_by_hash).order_by('-id')[:self.CUSTOM_LIST_LIMIT]
+            context['form'].initial = {'maps': '\n'.join(ordered)}
+
+        return self.render_to_response(context)
 
 
 class CreditsView(TemplateView):

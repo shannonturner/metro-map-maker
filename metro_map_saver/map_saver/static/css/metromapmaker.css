@@ -25,6 +25,7 @@ label{display:inline-block;max-width:100%; font-weight:700; vertical-align: text
 input[type=checkbox]{margin:4px 0 0;margin-top:1px\9;line-height:normal}
 .container-fluid:after,.container-fluid:before,.container:after,.container:before,.row:after,.row:before{display:table;content:" "}.container-fluid:after,.container:after,.row:after{clear:both}
 .tooltip{position:absolute;z-index:1070;display:block;font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-style:normal;font-weight:400;line-height:1.42857143;line-break:auto;text-align:left;text-align:start;text-decoration:none;text-shadow:none;text-transform:none;letter-spacing:normal;word-break:normal;word-spacing:normal;word-wrap:normal;white-space:normal;font-size:12px;filter:alpha(opacity=0);opacity:0}.tooltip.in{filter:alpha(opacity=90);opacity:.9}.tooltip.top{padding:5px 0;margin-top:-3px}.tooltip.right{padding:0 5px;margin-left:3px}.tooltip.bottom{padding:5px 0;margin-top:3px}.tooltip.left{padding:0 5px;margin-left:-3px}.tooltip.top .tooltip-arrow{bottom:0;left:50%;margin-left:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.top-left .tooltip-arrow{right:5px;bottom:0;margin-bottom:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.top-right .tooltip-arrow{bottom:0;left:5px;margin-bottom:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.right .tooltip-arrow{top:50%;left:0;margin-top:-5px;border-width:5px 5px 5px 0;border-right-color:#000}.tooltip.left .tooltip-arrow{top:50%;right:0;margin-top:-5px;border-width:5px 0 5px 5px;border-left-color:#000}.tooltip.bottom .tooltip-arrow{top:0;left:50%;margin-left:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip.bottom-left .tooltip-arrow{top:0;right:5px;margin-top:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip.bottom-right .tooltip-arrow{top:0;left:5px;margin-top:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip-inner{max-width:200px;padding:3px 8px;color:#fff;text-align:center;background-color:#000;border-radius:4px}.tooltip-arrow{position:absolute;width:0;height:0;border-color:transparent;border-style:solid}.popover{position:absolute;top:0;left:0;z-index:1060;display:none;max-width:276px;padding:1px;font-family:\"Helvetica Neue\",Helvetica,Arial,sans-serif;font-style:normal;font-weight:400;line-height:1.42857143;line-break:auto;text-align:left;text-align:start;text-decoration:none;text-shadow:none;text-transform:none;letter-spacing:normal;word-break:normal;word-spacing:normal;word-wrap:normal;white-space:normal;font-size:14px;background-color:#fff;background-clip:padding-box;border:1px solid #ccc;border:1px solid rgba(0,0,0,.2);border-radius:6px;-webkit-box-shadow:0 5px 10px rgba(0,0,0,.2);box-shadow:0 5px 10px rgba(0,0,0,.2)}.popover.top{margin-top:-10px}.popover.right{margin-left:10px}.popover.bottom{margin-top:10px}.popover.left{margin-left:-10px}.popover>.arrow{border-width:11px}.popover>.arrow,.popover>.arrow:after{position:absolute;display:block;width:0;height:0;border-color:transparent;border-style:solid}
+.mt-3 { margin-top: 1rem; }
 
 html, body {
   /* Prevent swiping from navigating forward/back */
@@ -283,11 +284,17 @@ canvas#grid-canvas, canvas#hover-canvas, canvas#ruler-canvas {
   width: 100%;
 }
 
-#tool-line-options, div fieldset {
+#tool-line-options, div fieldset, #line-colors {
   display: flex;
   flex-flow: row wrap;
   justify-content: space-between;
   gap: 0.5rem;
+}
+
+#line-manage-options {
+  display: flex;
+  gap: 0.5rem;
+  flex-flow: column;
 }
 
 #tool-line-options div {
@@ -302,7 +309,7 @@ canvas#grid-canvas, canvas#hover-canvas, canvas#ruler-canvas {
   padding: 0.5rem;
 }
 
-#tool-line-options button.rail-line {
+#line-colors button.rail-line {
   text-shadow: -1px -1px 0 #333, 1px -1px 0 #333, -1px 1px 0 #333, 1px 1px 0 #333;
   color: #fff;
   justify-content: center;
@@ -345,10 +352,10 @@ canvas#grid-canvas, canvas#hover-canvas, canvas#ruler-canvas {
   overflow: clip;
 }
 
-#tool-line-options button.rail-line:hover {
+#line-colors button.rail-line:hover {
   border: 0.5rem solid rgba(255, 255, 255, 0.3);
 }
-#tool-line-options button.rail-line:active {
+#line-colors button.rail-line:active {
   border: 0.5rem solid rgba(0, 0, 0, 0.3);
 }
 
@@ -567,7 +574,18 @@ select {
 }
 
 #line-style-options button.active-mapstyle svg,
-#line-style-options button svg:active {
+#line-style-options button svg:not(.twotone):active {
   stroke: #bd1038;
 }
 
+/* TODO: Consider Applying this treatment to Circles Lg, Md, Sm also,
+  for improved readability */
+button#tool-map-style-station-london svg {
+  stroke: #ffffff;
+  fill: #ffffff;
+}
+button#tool-map-style-station-london.active-mapstyle svg,
+button#tool-map-style-station-london svg:active {
+  stroke: #bd1038;
+  fill: #bd1038;
+}

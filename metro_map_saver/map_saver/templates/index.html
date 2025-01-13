@@ -22,20 +22,19 @@
     {% if saved_map.png %}
       <meta property="og:image" content="{{ saved_map.png.url }}">
     {% elif saved_map %}
-      <meta property="og:image" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
+      <meta property="og:image" content="/media/{{ saved_map|get_media_image_url }}">
     {% endif %}
     <meta property="og:image" content="https://metromapmaker.com/static/assets/metromapmaker.png?version=3">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:site" content="https://metromapmaker.com">
-    <meta name="twitter:creator" content="@svthmc">
     <meta name="twitter:title" content="Metro Map Maker">
     <meta name="twitter:description" content="Make the Metro map of your dreams: create your own metro maps, save them, and share with friends!">
     <meta name="twitter:image:src" content="https://metromapmaker.com/static/assets/metromapmaker.png?version=3">
     {% if saved_map.png %}
       <meta name="twitter:image:src" content="{{ saved_map.png.url }}">
     {% elif saved_map %}
-      <meta name="twitter:image:src" content="https://metromapmaker.com/static/images/{{ saved_map.urlhash }}.png">
+      <meta name="twitter:image:src" content="/media/{{ saved_map|get_media_image_url }}">
     {% endif %}
 
     <title>
@@ -155,19 +154,62 @@
         <div id="straight-line-assist-options" class="mmm-help-setting">
           <input id="straight-line-assist" type="checkbox" checked="true">
           <label for="straight-line-assist" class="mmm-help-setting has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: G">
-            Show guide to help me draw straight lines
+            Use <u>G</u>uide to draw straight lines
           </label>
         </div>
         <div id="flood-fill-options" class="mmm-help-setting">
           <input id="tool-flood-fill" type="checkbox">
           <label for="tool-flood-fill" class="mmm-help-setting has-tooltip" data-toggle="tooltip" data-placement="left" title="Keyboard shortcut: F">
-            Flood fill instead of draw
+            <u>F</u>lood fill instead of draw
           </label>
         </div>
 
         <div id="line-color-options" class="text-left">
           <fieldset>
             <legend><span class="hide-when-collapsed">Line Color</legend>
+            <div id="line-colors"></div>
+            <div id="line-manage-options">
+              <button id="rail-line-new" class="styled styling-redline width-100">
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#plus-circle"/></svg>
+                <span>Add New Color</span>
+              </button>
+              <div id="tool-new-line-options" class="text-left" style="display: none">
+                <fieldset>
+                  <legend>Add New Color</legend>
+                  <label for="new-rail-line-color">Color</label>
+                  <input id="new-rail-line-color" type="color">
+
+                  <label for="new-rail-line-name">Name</label>
+                  <input id="new-rail-line-name" autocomplete="off" type="text" placeholder="Blue Line" maxlength="100">
+
+                  <p id="tool-new-line-errors" class="bg-danger"></p>
+                  <button id="create-new-rail-line" class="styled styling-redline width-100">Save this new color</button>
+                </fieldset>
+              </div>
+
+              <button id="rail-line-change" class="styled styling-redline width-100">
+                <span>Edit colors &amp; names</span>
+              </button>
+              <div id="tool-change-line-options" class="text-left" style="display: none;">
+                <fieldset>
+                  <legend>Edit Color</legend>
+                  <select id="tool-lines-to-change">
+                    <option>Edit which color?</option>
+                  </select>
+                  <label for="change-line-color" style="display: none;">Color</label>
+                  <input id="change-line-color" type="color">
+
+                  <label for="change-line-name" style="display: none;">Name</label>
+                  <input id="change-line-name" autocomplete="off" type="text" maxlength="100">
+                  <p id="cant-save-rail-line-edits" class="bg-danger"></p>
+                  <button id="save-rail-line-edits" class="styled styling-redline width-100">Save edits to this color</button>
+                </fieldset>
+              </div>
+              <button id="rail-line-delete" class="styled styling-silverline width-100">
+                <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#trash"/></svg>
+                <span class="button-label">Delete Unused Colors</span>
+              </button>
+            </div>
           </fieldset>
         </div>
 
@@ -185,53 +227,12 @@
             <legend>Line Style <span class="hide-when-collapsed">(Keyboard shortcut: Q)</span></legend>
             {% for line_style in ALLOWED_LINE_STYLES %}
               <button class="has-hover-preview styled styling-redline line-style-choice-style {% if forloop.first %}active-mapstyle{% endif%}" data-linestyle="{{ line_style }}">
-                <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#line_style_{{ line_style }}"/></svg></span>
+                <span class="style-hover-display"><svg class="bi {% if line_style|is_twotone %}twotone{% endif %}" width="64" height="48"><use id="svgu_ls_{{ line_style }}" xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#line_style_{{ line_style }}"/></svg></span>
                 <span class="style-description">{{ line_style|title|underscore_to_space }}</span>
               </button>
             {% endfor %}
           </fieldset>
         </div>
-
-        <button id="rail-line-new" class="styled styling-redline width-100">
-          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#plus-circle"/></svg>
-          <span>Add New Line</span>
-        </button>
-        <div id="tool-new-line-options" class="text-left" style="display: none">
-          <fieldset>
-            <legend>Add New Rail Line</legend>
-            <label for="new-rail-line-color">Color of this line</label>
-            <input id="new-rail-line-color" type="color">
-
-            <label for="new-rail-line-name">Name of this line</label>
-            <input id="new-rail-line-name" autocomplete="off" type="text" placeholder="Blue Line" maxlength="100">
-
-            <p id="tool-new-line-errors" class="bg-danger"></p>
-            <button id="create-new-rail-line" class="styled styling-redline width-100">Save this new line</button>
-          </fieldset>
-        </div>
-
-        <button id="rail-line-change" class="styled styling-redline width-100">
-          <span>Edit colors &amp; names</span>
-        </button>
-        <div id="tool-change-line-options" class="text-left" style="display: none;">
-          <fieldset>
-            <legend>Edit Rail Line</legend>
-            <select id="tool-lines-to-change">
-              <option>Edit which rail line?</option>
-            </select>
-            <label for="change-line-color" style="display: none;">Color of this line</label>
-            <input id="change-line-color" type="color">
-            
-            <label for="change-line-name" style="display: none;">Name of this line</label>
-            <input id="change-line-name" autocomplete="off" type="text" maxlength="100">
-            <p id="cant-save-rail-line-edits" class="bg-danger"></p>
-            <button id="save-rail-line-edits" class="styled styling-redline width-100">Save edits to this line</button>
-          </fieldset>
-        </div>
-        <button id="rail-line-delete" class="styled styling-silverline width-100">
-          <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#trash"/></svg>
-          <span class="button-label">Delete Unused Lines</span>
-        </button>
       </div>
 
       <button id="tool-station" class="has-tooltip styled styling-redline" data-toggle="tooltip" data-placement="left" title="Create a station on an existing rail line, or edit an existing station (Keyboard shortcut: S)">
@@ -258,8 +259,8 @@
             <option value="180">On the left</option>
             <option value="-45">Above-right, 45&deg;</option>
             <option value="45">Below-right, 45&deg;</option>
-            <option value="135">Below-left, 45&deg;</option>
             <option value="-135">Above-left, 45&deg;</option>
+            <option value="135">Below-left, 45&deg;</option>
             <option value="90">Above, 90&deg;</option>
             <option value="-90">Below, 90&deg;</option>
             <option value="1">Above</option>
@@ -269,14 +270,14 @@
           <label for="station-style">Style</label>
           <select id="station-style">
             <option value="">(Use Default)</option>
-            <option value="wmata">Metro (Classic)</option>
-            <option value="rect">Rectangles</option>
-            <option value="rect-round">Round Rectangles</option>
-            <option value="circles-thin">Circles (Thin)</option>
-            <option value="circles-lg">Circles (Large)</option>
-            <option value="circles-md">Circles (Medium)</option>
-            <option value="circles-sm">Circles (Small)</option>
+            {% for station_style, station_style_names in ALLOWED_STATION_STYLES.items %}
+                <option value="{{ station_style }}">{{ station_style_names.long }}</option>
+            {% endfor %}
           </select>
+
+          <button id="move-station" class="has-tooltip styled styling-redline width-100 mt-3" data-toggle="tooltip" data-placement="left" title="Allows you to place a station somewhere else on the map. (You must place a station on a drawn line, and it can't be placed on another station.) You can also use the arrow keys to move a station while the station menu is open, even if Move Station is off. (Keyboard shortcut: M)">
+            <span class="button-label"><b><u>M</u></b>ove station<span id="move-station-enabled">: Arrow Keys only</span></span>
+          </button>
         </fieldset>
       </div>
 
@@ -357,34 +358,13 @@
                   though it looks a little awkward when there's an odd number of options.
             -->
 
-            <button id="tool-map-style-station-wmata" class="has-hover-preview map-style-station styled styling-redline" data-station-style="wmata">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-wmata"/></svg></span>
-              <span class="style-description">Metro (Classic)</span>
-            </button>
-            <button id="tool-map-style-station-rect" class="has-hover-preview map-style-station styled styling-redline" data-station-style="rect">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-rect"/></svg></span>
-              <span class="style-description">Rect.</span>
-            </button>
-            <button id="tool-map-style-station-rect-round" class="has-hover-preview map-style-station styled styling-redline" data-station-style="rect-round">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-rect-round"/></svg></span>
-              <span class="style-description">Round Rect.</span>
-            </button>
-            <button id="tool-map-style-station-circles-thin" class="has-hover-preview map-style-station styled styling-redline" data-station-style="circles-thin">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-circles-thin"/></svg></span>
-              <span class="style-description">Circles (Thin)</span>
-            </button>
-            <button id="tool-map-style-station-circles-lg" class="has-hover-preview map-style-station styled styling-redline" data-station-style="circles-lg">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-circles-lg"/></svg></span>
-              <span class="style-description">Circles (Large)</span>
-            </button>
-            <button id="tool-map-style-station-circles-md" class="has-hover-preview map-style-station styled styling-redline" data-station-style="circles-md">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-circles-md"/></svg></span>
-              <span class="style-description">Circles (Medium)</span>
-            </button>
-            <button id="tool-map-style-station-circles-sm" class="has-hover-preview map-style-station styled styling-redline" data-station-style="circles-sm">
-              <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-circles-sm"/></svg></span>
-              <span class="style-description">Circles (Small)</span>
-            </button>
+            {% for station_style, station_style_names in ALLOWED_STATION_STYLES.items %}
+                <button id="tool-map-style-station-{{ station_style }}" class="has-hover-preview map-style-station styled styling-redline" data-station-style="{{ station_style }}">
+                  <span class="style-hover-display"><svg class="bi" width="64" height="48"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#style-{{ station_style }}"/></svg></span>
+                  <span class="style-description">{{ station_style_names.short }}</span>
+                </button>
+            {% endfor %}
+
             <button id="reset-all-station-styles" class="styled styling-redline width-100">Reset to default</button>
           </fieldset>
           <fieldset>
@@ -396,8 +376,8 @@
               <option value="180">On the left</option>
               <option value="-45">Above-right, 45&deg;</option>
               <option value="45">Below-right, 45&deg;</option>
-              <option value="135">Below-left, 45&deg;</option>
               <option value="-135">Above-left, 45&deg;</option>
+              <option value="135">Below-left, 45&deg;</option>
               <option value="90">Above, 90&deg;</option>
               <option value="-90">Below, 90&deg;</option>
               <option value="1">Above</option>
@@ -502,6 +482,24 @@
         <span>
             <span class="hide-when-collapsed"><b><u>R</u></b>uler: </span>
             <span id="ruler-xy"></span>
+        </span>
+      </button>
+
+      <button id="tool-eyedropper" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="When on, clicking a point on the map will switch to the Draw tool and use that point's color, line width, and line style. (Keyboard shortcut: P)">
+        <div id="ruler-icon-xy-container">
+          <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#eyedropper"/></svg>
+        </div>
+        <span class="button-label">
+            Eyedro<b><u>p</u></b>per
+        </span>
+      </button>
+
+      <button id="tool-look" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="When on and used with the Ruler tool, the ruler will update as you move the mouse, not just when you click. (Keyboard shortcut: K)">
+        <div id="ruler-icon-xy-container">
+          <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#look"/></svg>
+        </div>
+        <span class="button-label">
+            Loo<b><u>k</u></b>
         </span>
       </button>
 
@@ -660,37 +658,30 @@
   <script src='{% static "js/mmm-cheatcodes.js" %}' defer="defer"></script>
 
   <script type="text/javascript">
-    // TODO: Remove the "what's new" after a few weeks of Metro Map Maker being live, and replace with "how to"
-
-    // How many times has the user closed the "What's New" message?
-    var v7LaunchNewsCount = parseInt(window.localStorage.getItem('v7-close-launch-news-count') || 0)
-    if (v7LaunchNewsCount <= 1) {
+    // Announcements
+    var announcementStorage = 'announcement-2024-11-30' // UPDATE THIS WHEN CHANGING THE MESSAGE
+    var announcementMessage = '<h4 id="announce-whats-new" style="text-align: left;">Version 7.1 adds <a href="https://blog.metromapmaker.com/">so many new features</a>! If you <a href="https://blog.metromapmaker.com/">sign up for free email updates</a> you can be the first to know about new releases,'
+    // ----- ^^^ ----- EDITABLE PORTION ----- ^^^ -----
+    announcementMessage += ' or <span id="close-' + announcementStorage + '" class="close-announcement" style="text-decoration: underline; cursor: pointer;">close this message</span>.</h4>'
+    var announcement = parseInt(window.localStorage.getItem(announcementStorage) || 0)
+    if (announcement <= 1) {
       // They've seen it 0-2 times, show it until they've clicked hide twice
-      $('#announcement').append('<h4 id="announce-whats-new" style="text-align: left;">Metro Map Maker version 7 is live, with <a href="{% url "help" %}">lots of new features</a> like mixing and matching line styles and widths, and so much more! <br><br> <a href="{% url "help" %}">Explore what\'s new</a> or <span id="close-whats-new" class="close-announcement" style="text-decoration: underline; cursor: pointer;">close this message</span>.</h4>')
+      $('#announcement').append(announcementMessage)
     }
-
-    $('body').on('click', '#close-whats-new', function() {
+    $('body').on('click', '#close-' + announcementStorage, function() {
       $('#announce-whats-new').remove()
-      window.localStorage.setItem('v7-close-launch-news-count', v7LaunchNewsCount + 1)
+      window.localStorage.setItem(announcementStorage, announcement + 1)
     })
-
-    // TODO: After removing v7LaunchNewsCount, replace it with howToMMM:
-
-    // var howToMMMCount = parseInt(window.localStorage.getItem('how-to-mmm-count') || 0)
-    // if (howToMMMCount < 1) {
-    //   // How to make maps: only show until they've clicked hide once
-    //   $('#announcement').append('<h4 id="announce-how-to" style="text-align: left;"><a href="{% url "help" %}">[Video] How to make maps with Metro Map Maker</a> <span id="close-how-to-mmm" class="close-announcement" style="text-decoration: underline; cursor: pointer;">Close this message</span>')
-    // }
-
-    $('body').on('click', '#close-whats-new', function() {
-      $('#announce-whats-new').remove()
-      window.localStorage.setItem('v7-close-whats-new-count', v7CloseWhatsNewCount + 1)
+    // Evergreen How to use MMM message
+    var howToMMMCount = parseInt(window.localStorage.getItem('how-to-mmm-count') || 0)
+    if (howToMMMCount < 1) {
+      // How to make maps: only show until they've clicked hide once
+      $('#announcement').append('<h4 id="announce-how-to" style="text-align: left;"><a href="{% url "help" %}">[Video] How to make maps with Metro Map Maker</a> <span id="close-how-to-mmm" class="close-announcement" style="text-decoration: underline; cursor: pointer;">Close this message</span>')
+    }
+    $('body').on('click', '#close-how-to-mmm', function() {
+      $('#announce-how-to').remove()
+      window.localStorage.setItem('how-to-mmm-count', howToMMMCount + 1)
     })
-
-    // $('body').on('click', '#close-how-to-mmm', function() {
-    //   $('#announce-how-to').remove()
-    //   window.localStorage.setItem('how-to-mmm-count', howToMMMCount + 1)
-    // })
   </script>
 
   </body>

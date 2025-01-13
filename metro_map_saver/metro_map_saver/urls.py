@@ -51,6 +51,8 @@ urlpatterns = [
     path('city/', summary.views.CityListView.as_view(), name='city-list'),
     path('city/<str:city>/', map_saver.views.CityView.as_view(), name='city'),
 
+    re_path(r'custom_list/(?P<maps>[\w\-_\d,]+)?', map_saver.views.CustomListView.as_view(), name='custom_list'),
+
     path('random/', map_saver.views.RandomMapView.as_view(), name='random'),
     path('sameday/<slug:urlhash>', cache_page(60)(map_saver.views.SameDayView.as_view()), name='sameday'),
     path('best/', map_saver.views.HighestRatedMapsView.as_view(), name='best'),

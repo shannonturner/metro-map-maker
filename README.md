@@ -24,6 +24,11 @@ All Maps Ever
 
 Browse all of the 200,000 maps (and counting) in the library: [https://metromapmaker.com/calendar/](https://metromapmaker.com/calendar/)
 
+Development log
+----------------
+
+See sneak previews, how development is progressing, when you can expect new releases, what new features I'm prioritizing and what I want to build next plus so much more at [blog.metromapmaker.com/](https://blog.metromapmaker.com/)
+
 Made something cool?
 ---------------------
 I'd love to see it! [Say hi!](mailto:hello@shannonvturner.com?subject=Metro+Map+Maker)

@@ -83,3 +83,25 @@ class IdentifyForm(forms.ModelForm):
             'name',
             'map_type',
         ]
+
+class CustomListForm(forms.Form):
+    maps = forms.CharField(
+        widget=forms.Textarea(
+            attrs={
+                'rows': 10,
+                'class': 'w-100',
+                'placeholder': '''225,007
+215094
+wxtIWRy8
+metromapmaker.com/map/XI9PhazG
+''',
+            },
+        ),
+
+    )
+
+    def clean_maps(self):
+        maps = self.cleaned_data['maps'] or ''
+        maps = maps.strip()
+        maps = maps.replace(',', '').replace('#', '')
+        return maps

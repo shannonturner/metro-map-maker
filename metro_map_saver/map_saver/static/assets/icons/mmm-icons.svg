@@ -159,12 +159,25 @@
 
     <rect x="1.5" y="2.5" width="3" height="1" fill="#fff" stroke="#000" stroke-width="0.1" rx="0.5"/>
   </symbol>
+  <symbol id="style-london" width="64" height="48" viewBox="0 0 6 4">
+    <line x1="0.25" x2="3" y1="0.75" y2="3"  stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="2" y="1.5" width="0.75" height="0.5" stroke-width="0.1" transform="rotate(-45 3 3)"/>
+    <rect x="2" y="3" width="2" height="0.5" stroke-width="0.1" transform="rotate(-45 3 3)"/>
+    <circle cx="5" cy="1.25" r=".6" fill="#ffffff" stroke="#000000" stroke-width="0.25"/>
+  </symbol>
   <symbol id="tags" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
     <path d="M3 2v4.586l7 7L14.586 9l-7-7zM2 2a1 1 0 0 1 1-1h4.586a1 1 0 0 1 .707.293l7 7a1 1 0 0 1 0 1.414l-4.586 4.586a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 2 6.586z"/>
     <path d="M5.5 5a.5.5 0 1 1 0-1 .5.5 0 0 1 0 1m0 1a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M1 7.086a1 1 0 0 0 .293.707L8.75 15.25l-.043.043a1 1 0 0 1-1.414 0l-7-7A1 1 0 0 1 0 7.586V3a1 1 0 0 1 1-1z"/>
   </symbol>
   <symbol id="ruler" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
     <path d="M1 0a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5v-1H2v-1h4v-1H4v-1h2v-1H2v-1h4V9H4V8h2V7H2V6h4V2h1v4h1V4h1v2h1V2h1v4h1V4h1v2h1V2h1v4h1V1a1 1 0 0 0-1-1z"/>
+  </symbol>
+  <symbol id="eyedropper" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+    <path d="M13.354.646a1.207 1.207 0 0 0-1.708 0L8.5 3.793l-.646-.647a.5.5 0 1 0-.708.708L8.293 5l-7.147 7.146A.5.5 0 0 0 1 12.5v1.793l-.854.853a.5.5 0 1 0 .708.707L1.707 15H3.5a.5.5 0 0 0 .354-.146L11 7.707l1.146 1.147a.5.5 0 0 0 .708-.708l-.647-.646 3.147-3.146a1.207 1.207 0 0 0 0-1.708zM2 12.707l7-7L10.293 7l-7 7H2z"/>
+  </symbol>
+  <symbol id="look" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
   </symbol>
   <symbol id="undo" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
     <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z"/>
@@ -195,6 +208,21 @@
   <symbol id="line_style_dashed" width="64" height="48" viewBox="0 0 6 4">
     <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="square" stroke-linejoin="round" stroke-dasharray="1 1.5"/>
   </symbol>
+  <symbol id="line_style_dashed_uneven" width="64" height="48" viewBox="0 0 6 4">
+    <!-- The slightly smaller x2 value here looks better since the line is uneven; at 5 it gives an incorrect impression of the next line part being extremely thin -->
+    <line x1="1" x2="4.8" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="butt" stroke-linejoin="round" stroke-dasharray="1 .2 .5 .2"/>
+  </symbol>
+  <symbol id="line_style_dotted_square" width="64" height="48" viewBox="0 0 6 4">
+    <line x1=".5" x2="5.5" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="butt" stroke-linejoin="round" stroke-dasharray="1 1"/>
+  </symbol>
+  <symbol id="line_style_wide_stripes" width="64" height="48" viewBox="0 0 6 4">
+    <line x1=".5" x2="5.5" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="square"/>
+    <line x1=".75" x2="5.25" y1="2.25" y2="2.25" stroke-width=".75" stroke-linecap="square" stroke-dasharray="1 2.5" stroke="rgba(189, 16, 56, .7)"/>
+  </symbol>
+  <symbol id="line_style_wide_stripes-active" width="64" height="48" viewBox="0 0 6 4">
+    <line x1=".5" x2="5.5" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="square"/>
+    <line x1=".75" x2="5.25" y1="2.25" y2="2.25" stroke-width=".75" stroke-linecap="square" stroke-dasharray="1 2.5" stroke="#fff"/>
+  </symbol>
   <symbol id="line_style_dense_thin" width="64" height="48" viewBox="0 0 6 4">
     <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="round" stroke-dasharray=".05 .05"/>
   </symbol>
@@ -206,6 +234,57 @@
   </symbol>
   <symbol id="line_style_dotted" width="64" height="48" viewBox="0 0 6 4">
     <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="butt" stroke-linejoin="round" stroke-dasharray=".5 .5"/>
+  </symbol>
+  <symbol id="line_style_square_stripes" width="64" height="48" viewBox="0 0 6 4">
+    <line x1=".5" x2="5.5" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="butt"/>
+    <line x1=".75" x2="5.25" y1="2.25" y2="2.25" stroke-width=".75" stroke-linecap="butt" stroke-dasharray="1 1" stroke="rgba(189, 16, 56, .7)"/>
+  </symbol>
+  <symbol id="line_style_square_stripes-active" width="64" height="48" viewBox="0 0 6 4">
+    <line x1=".5" x2="5.5" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="butt"/>
+    <line x1=".75" x2="5.25" y1="2.25" y2="2.25" stroke-width=".75" stroke-linecap="butt" stroke-dasharray="1 1" stroke="#fff"/>
+  </symbol>
+  <symbol id="line_style_stripes" width="64" height="48" viewBox="0 0 6 4">
+    <line x1=".5" x2="5.5" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="butt"/>
+    <line x1=".75" x2="5.25" y1="2.25" y2="2.25" stroke-width=".75" stroke-linecap="butt" stroke-dasharray="1 .5" stroke="rgba(189, 16, 56, .7)"/>
+  </symbol>
+  <symbol id="line_style_stripes-active" width="64" height="48" viewBox="0 0 6 4">
+    <line x1=".5" x2="5.5" y1="2.25" y2="2.25" stroke-width="1" stroke-linecap="butt"/>
+    <line x1=".75" x2="5.25" y1="2.25" y2="2.25" stroke-width=".75" stroke-linecap="butt" stroke-dasharray="1 .5" stroke="#fff"/>
+  </symbol>
+  <symbol id="line_style_hollow" width="64" height="48" viewBox="0 0 6 4">
+    <!-- The mask didn't work at all here, hence the second line -->
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="round"/>
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="0.9" stroke-linecap="square" stroke-linejoin="round" stroke="rgba(189, 16, 56, .7)"/>
+  </symbol>
+  <symbol id="line_style_hollow-active" width="64" height="48" viewBox="0 0 6 4">
+    <!-- Unfortunately since the mask didn't work, I also need to add Javascript to handle this -->
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="round"/>
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="0.9" stroke-linecap="square" stroke-linejoin="round" stroke="#fff"/>
+  </symbol>
+  <symbol id="line_style_hollow_round" width="64" height="48" viewBox="0 0 6 4">
+    <!-- The mask didn't work at all here, hence the second line -->
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" stroke="rgba(189, 16, 56, .7)"/>
+  </symbol>
+  <symbol id="line_style_hollow_round-active" width="64" height="48" viewBox="0 0 6 4">
+    <!-- The mask didn't work at all here, hence the second line -->
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round" stroke="rgba(189, 16, 56, .7)"/>
+  </symbol>
+  <symbol id="line_style_color_outline" width="64" height="48" viewBox="0 0 6 4">
+    <line x1="1" x2="5" y1="1.5" y2="1.5" stroke-width="0.5" stroke-linecap="butt"/>
+    <line x1="1" x2="5" y1="2" y2="2" stroke-width="1.5" stroke-linecap="butt" stroke-opacity=".7"/>
+    <line x1="1" x2="5" y1="3" y2="3" stroke-width="0.5" stroke-linecap="butt"/>
+  </symbol>
+  <symbol id="line_style_hollow_open" width="64" height="48" viewBox="0 0 6 4">
+    <!-- The mask didn't work at all here, hence the second line -->
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="butt"/>
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="0.9" stroke-linecap="butt" stroke="rgba(189, 16, 56, .7)"/>
+  </symbol>
+  <symbol id="line_style_hollow_open-active" width="64" height="48" viewBox="0 0 6 4">
+    <!-- Unfortunately since the mask didn't work, I also need to add Javascript to handle this -->
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="1.5" stroke-linecap="butt"/>
+    <line x1="1" x2="5" y1="2.25" y2="2.25" stroke-width="0.9" stroke-linecap="butt" stroke="#fff"/>
   </symbol>
   <!-- Add new line styles here to populate their previews; see metromap_utils.SVG_STYLES for necessary SVG attributes -->
 
