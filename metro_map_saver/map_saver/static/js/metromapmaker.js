@@ -2587,7 +2587,7 @@ function autoLoad() {
     // I think this would be more intuitive than the blank slate,
     //    and might limit the number of blank / red-squiggle maps created.
     // If the WMATA map ever changes, I'll need to update it here too.
-    $.get('/load/2LVHmJ3r').done(function (savedMapData) {
+    $.get('/load/XGQTFuVM').done(function (savedMapData) {
       activeMap = savedMapData
       if (savedMapData.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
         // Fallback to an empty grid
