@@ -35,6 +35,9 @@ var gridStep = 5
 var rulerOn = false
 var rulerOrigin = []
 var moveStationOn = []
+var activeMarchingAnts = false
+var marchingAntsOffset = 0
+var selectedPoints = []
 
 var MMMDEBUG = false
 var MMMDEBUG_UNDO = false
@@ -799,6 +802,10 @@ function bindGridSquareMouseover(event) {
   if (mouseIsDown && (rulerOn && rulerOrigin.length > 0 && (activeTool == 'look' || activeTool == 'line' || activeTool == 'eraser'))) {
     drawRuler(hoverX, hoverY)
   }
+  if (mouseIsDown && activeTool == 'select') {
+    // Draw the marching ants preview
+    drawSelectionBox(clickX, clickY, xy[0], xy[1])
+  }
 } // bindGridSquareMouseover()
 
 function bindGridSquareMouseup(event) {
@@ -809,6 +816,16 @@ function bindGridSquareMouseup(event) {
   }
   // Unset current click's x, y coordinates,
   // since we don't need to do straight line assist drawing anymore
+  clearMarchingAnts()
+  if (activeTool == 'select') {
+    // Capture these because clickX and clickY are about to be unset
+    var x1 = clickX
+    var y1 = clickY
+    xy = getCanvasXY(event.pageX, event.pageY)
+    drawMarchingAnts(x1, y1, xy[0], xy[1])
+    selectedPoints = getPointsWithinBoundingBox(x1, y1, xy[0], xy[1])
+  }
+
   clickX = false
   clickY = false
 
@@ -838,6 +855,8 @@ function bindGridSquareMousedown(event) {
     // Right click
     rightClicking = true
   }
+
+  clearMarchingAnts()
 
   // Visually indicate which squares you can fill in with
   //  straight line assist
@@ -3790,6 +3809,9 @@ $(document).ready(function() {
     else if (event.key.toLowerCase() == 's') { // S
       $('#tool-station').trigger('click')
     }
+    else if (event.key.toLowerCase() == 't') {
+      $('#tool-select').trigger('click')
+    }
     else if (event.key.toLowerCase() == 'w' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // W, except for close window
       if (mapDataVersion >= 3) {
         cycleLineWidth(event.shiftKey ? -1 : 1)
@@ -5659,6 +5681,84 @@ $('#tool-eyedropper').on('click', function() {
 $('#tool-look').on('click', function() {
   activeTool = 'look'
 })
+
+$('#tool-select').on('click', function() {
+  activeTool = 'select'
+  // TODO: disable ruler when select is enabled, and vice-versa
+})
+
+function drawSelectionBox(x1, y1, x2, y2) {
+  var canvas = document.getElementById('ruler-canvas') // Ruler and select can't be active at the same time, so let's borrow it
+  // TODO: Consider whether ruler should be allowed to be active at the same time as Select; if I change this canvas, I'll want to change it in clearMarchingAnts() too
+  var ctx = canvas.getContext('2d')
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.setLineDash([4, 2])
+  ctx.lineDashOffset = marchingAntsOffset
+
+  var width = 1
+  var height = 1
+  var xOffset = -0.5
+  var yOffset = -0.5
+
+  if (x1 < x2) {
+    width = x2 - x1
+    width += 1
+  } else if (x1 > x2) {
+    width = (x1 - x2) * -1
+    width -= 1
+    xOffset *= -1
+  }
+
+  if (y1 < y2) {
+    height = y2 - y1
+    height += 1
+  } else if (y1 > y2) {
+    height = (y1 - y2) * -1
+    height -= 1
+    yOffset *= -1
+  }
+
+  ctx.strokeRect((x1 + xOffset) * gridPixelMultiplier, (y1 + yOffset) * gridPixelMultiplier, (width) * gridPixelMultiplier, (height) * gridPixelMultiplier)
+} // drawSelectionBox(x1, y1, x2, y2)
+
+function drawMarchingAnts(x1, y1, x2, y2) {
+  marchingAntsOffset++
+  if (marchingAntsOffset > 5) {
+    marchingAntsOffset = 0
+  }
+  drawSelectionBox(x1, y1, x2, y2)
+  activeMarchingAnts = setTimeout(function() {
+    drawMarchingAnts(x1, y1, x2, y2)
+  }, 35)
+  return activeMarchingAnts
+}
+
+function clearMarchingAnts() {
+  if (activeMarchingAnts) {
+    clearTimeout(activeMarchingAnts)
+    var canvas = document.getElementById('ruler-canvas')
+    var ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+  }
+} // clearMarchingAnts()
+
+function getPointsWithinBoundingBox(x1, y1, x2, y2) {
+  // Return an array of all points within the bounding box x1, y1, x2, y2,
+  //  (inclusive) in the format x, y, x, y, x, y
+  var pointsWithin = []
+  var startX = (x1 < x2) ? x1 : x2
+  var startY = (y1 < y2) ? y1 : y2
+  var endX = (x2 > x1) ? x2 : x1
+  var endY = (y2 > y1) ? y2 : y1
+
+  for (var xn=startX; xn<=endX; xn++) {
+    for (var yn=startY; yn<=endY; yn++) {
+      pointsWithin.push(xn)
+      pointsWithin.push(yn)
+    }
+  }
+  return pointsWithin
+} // getPointsWithinBoundingBox(x1, y1, x2, y2)
 
 function setMoveStationAbility(disable) {
   // By default, this should toggle,
