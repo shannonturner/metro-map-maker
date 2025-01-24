@@ -174,4 +174,5 @@ CITIES = (
     'Alexandria',
     'Jinan',
     'Guadalajara',
+    'Kraków',
 )
