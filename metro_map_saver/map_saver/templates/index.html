@@ -492,20 +492,29 @@
       </button>
 
       <button id="tool-eyedropper" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="When on, clicking a point on the map will switch to the Draw tool and use that point's color, line width, and line style. (Keyboard shortcut: P)">
-        <div id="ruler-icon-xy-container">
           <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#eyedropper"/></svg>
-        </div>
         <span class="button-label">
             Eyedro<b><u>p</u></b>per
         </span>
       </button>
 
       <button id="tool-look" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="When on and used with the Ruler tool, the ruler will update as you move the mouse, not just when you click. (Keyboard shortcut: K)">
-        <div id="ruler-icon-xy-container">
-          <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#look"/></svg>
-        </div>
+        <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#look"/></svg>
         <span class="button-label">
             Loo<b><u>k</u></b>
+        </span>
+      </button>
+
+      <button id="tool-select" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Use to select an area of the map to move, stretch, style, or erase independent of the rest of the map. (Keyboard shortcut: T)">
+        <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#select"/></svg>
+        <span class="button-label">
+            Selec<b><u>t</u></b>
+        </span>
+      </button>
+      <button id="tool-placeholder" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="Deselect the current selection. (Keyboard shortcut: T)">
+        <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#cancel"/></svg>
+        <span class="button-label">
+            Deselec<b><u>t</u></b>
         </span>
       </button>
 

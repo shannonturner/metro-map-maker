@@ -39,7 +39,7 @@ var activeMarchingAnts = false
 var marchingAntsOffset = 0
 var selectedPoints = []
 
-var MMMDEBUG = false
+var MMMDEBUG = true
 var MMMDEBUG_UNDO = false
 
 if (typeof mapDataVersion === 'undefined') {
@@ -5753,10 +5753,13 @@ function getPointsWithinBoundingBox(x1, y1, x2, y2) {
 
   for (var xn=startX; xn<=endX; xn++) {
     for (var yn=startY; yn<=endY; yn++) {
-      pointsWithin.push(xn)
-      pointsWithin.push(yn)
+      // pointsWithin.push(xn)
+      // pointsWithin.push(yn)
+      pointsWithin.push([xn, yn])
     }
   }
+
+  console.log(`pointsWithin is: ${pointsWithin}`)
   return pointsWithin
 } // getPointsWithinBoundingBox(x1, y1, x2, y2)
 
