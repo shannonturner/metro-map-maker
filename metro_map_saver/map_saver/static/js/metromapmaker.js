@@ -40,6 +40,9 @@ var colorShardMap = {}
 var MMMDEBUG = false
 var MMMDEBUG_UNDO = false
 
+var MAX_CANVAS_SIZE = 3600
+var LOW_RES_CANVAS_SIZE = 1600
+
 if (typeof mapDataVersion === 'undefined') {
     var mapDataVersion = undefined
 }
@@ -185,7 +188,7 @@ function snapCanvasToGrid() {
   // Chrome can handle higher sizes easily; in my tests, 7200 was fine.
   // Increasing this improves the image sharpness at larger map sizes,
   //  because the gridPixelMultiplier gets larger
-  var MAX_CANVAS_SIZE = 3600
+
   /* HEY: You've tried SO many times to optimize canvas performance
       and have thought "the best optimization is a smaller canvas"
       but the image quality suffers SO much at smaller sizes
@@ -200,7 +203,8 @@ function snapCanvasToGrid() {
   var canvasHover = document.getElementById('hover-canvas')
   var canvasRuler = document.getElementById('ruler-canvas')
   var colorCanvases = document.getElementById('color-canvas-container').children
-  var allCanvases = [canvas, canvasStations, canvasGrid, canvasHover, canvasRuler, ...colorCanvases]
+  var highResCanvases = [canvas, canvasStations, canvasGrid, ...colorCanvases]
+  var lowResCanvases = [canvasHover, canvasRuler]
 
   var width = MAX_CANVAS_SIZE
   var height = MAX_CANVAS_SIZE
@@ -217,9 +221,15 @@ function snapCanvasToGrid() {
       width = gridRows * preferredGridPixelMultiplier;
     }
 
-    for (var canvas of allCanvases) {
+    for (var canvas of highResCanvases) {
       canvas.width = width
       canvas.height = height
+    }
+
+    for (var canvas of lowResCanvases) {
+      // For some canvases, like the hover canvas, you really can't tell the difference
+      canvasHover.width = LOW_RES_CANVAS_SIZE
+      canvasHover.height = LOW_RES_CANVAS_SIZE
     }
   } // if canvas.height / gridCols != preferredGridPixelMultiplier
 
@@ -1201,26 +1211,6 @@ function drawColor(color, canvas) {
     } // singletons
   } // mapDataVersion
 } // drawColor(ctx, color)
-
-function createColorCanvasIfNeeded(color, resize) {
-  var colorCanvas = document.getElementById('metro-map-color-canvas-' + color)
-  if (!colorCanvas) {
-    var mmCanvas = document.getElementById('metro-map-canvas')
-    var colorCanvasContainer = document.getElementById('color-canvas-container')
-    var colorCanvas = document.createElement("canvas")
-    colorCanvas.id =  "metro-map-color-canvas-" + color
-    colorCanvas.classList = 'hidden'
-    colorCanvas.width = mmCanvas.width
-    colorCanvas.height = mmCanvas.height
-    colorCanvasContainer.appendChild(colorCanvas)
-  }
-  if (resize) {
-    var mmCanvas = document.getElementById('metro-map-canvas')
-    colorCanvas.width = mmCanvas.width
-    colorCanvas.height = mmCanvas.height
-  }
-  return colorCanvas
-} // createColorCanvasIfNeeded(color)
 
 function getColorShard(color) {
   // Return the canvas this color belongs to,
@@ -5648,7 +5638,7 @@ function drawRuler(x, y, replaceOrigin) {
 
     // Draw the distance near the cursor
     ctx.textAlign = 'start'
-    ctx.font = '700 ' + gridPixelMultiplier + 'px sans-serif'
+    ctx.font = '700 ' + (gridPixelMultiplier * (document.getElementById('metro-map-canvas').width / canvas.width / 1.5)) + 'px sans-serif'
     ctx.globalAlpha = 0.67
     ctx.fillStyle = '#000000'
     var pointDistance = ''
