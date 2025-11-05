@@ -187,7 +187,7 @@ function resizeCanvas(zoomDirection) {
   $('#canvas-container').height(size)
 } // resizeCanvas(zoomDirection)
 
-function snapCanvasToGrid() {
+function snapCanvasToGrid(always) {
   // Whenever the pixel width or height of the grid changes,
   // like on page load, map resize, or zoom in/out, 
   // the #metro-map-canvas size needs to be updated as well so they overlap
@@ -216,7 +216,7 @@ function snapCanvasToGrid() {
 
   var width = MAX_CANVAS_SIZE
   var height = MAX_CANVAS_SIZE
-  if (canvas.height / gridCols != preferredGridPixelMultiplier) {
+  if (canvas.height / gridCols != preferredGridPixelMultiplier || always) {
     // Maintain a nice, even gridPixelMultiplier so the map looks uniform at every size
     // On iPhone for Safari, canvases larger than 4096x4096 would crash, so cap it
     // Note: Now capping this at 3600x3600, which will affect maps 200x200 and above;
@@ -4391,8 +4391,7 @@ $(document).ready(function() {
     }
 
     colorShardMap = new Set()
-    setColorShardMap()
-    snapCanvasToGrid()
+    snapCanvasToGrid(true) // Resize all canvases, even though the main is already the correct size
     drawGrid()
     drawCanvas()
   }) // #graphics-quality-low.click()
