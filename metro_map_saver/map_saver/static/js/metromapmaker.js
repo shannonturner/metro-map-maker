@@ -35,6 +35,7 @@ var gridStep = 5
 var rulerOn = false
 var rulerOrigin = []
 var moveStationOn = []
+var colorShardMap = {}
 
 var MMMDEBUG = false
 var MMMDEBUG_UNDO = false
@@ -144,11 +145,6 @@ function resizeGrid(size) {
   drawGrid()
   lastStrokeStyle = undefined; // Prevent odd problem where snapping canvas to grid would cause lines to paint with an undefined color (singletons were unaffected)
 
-  // Resize the color canvases too, otherwise any previously existing canvases won't allow drawing on the new boundaries
-  for (var color in activeMap["points_by_color"]) {
-    createColorCanvasIfNeeded(color, true)
-  }
-
   drawCanvas(activeMap)
 } // resizeGrid(size)
 
@@ -203,6 +199,11 @@ function snapCanvasToGrid() {
   var canvasGrid = document.getElementById('grid-canvas')
   var canvasHover = document.getElementById('hover-canvas')
   var canvasRuler = document.getElementById('ruler-canvas')
+  var colorCanvases = document.getElementById('color-canvas-container').children
+  var allCanvases = [canvas, canvasStations, canvasGrid, canvasHover, canvasRuler, ...colorCanvases]
+
+  var width = MAX_CANVAS_SIZE
+  var height = MAX_CANVAS_SIZE
   if (canvas.height / gridCols != preferredGridPixelMultiplier) {
     // Maintain a nice, even gridPixelMultiplier so the map looks uniform at every size
     // On iPhone for Safari, canvases larger than 4096x4096 would crash, so cap it
@@ -210,30 +211,15 @@ function snapCanvasToGrid() {
     //  because I noticed some highly detailed maps failed to load on iPhone for Safari
     //  with the same symptoms as before
     if (gridCols * preferredGridPixelMultiplier <= MAX_CANVAS_SIZE) {
-      canvas.height = gridCols * preferredGridPixelMultiplier;
-      canvasStations.height = gridCols * preferredGridPixelMultiplier;
-      canvasGrid.height = gridCols * preferredGridPixelMultiplier;
-      canvasHover.height = gridCols * preferredGridPixelMultiplier;
-      canvasRuler.height = gridCols * preferredGridPixelMultiplier;
-    } else {
-      canvas.height = MAX_CANVAS_SIZE;
-      canvasStations.height = MAX_CANVAS_SIZE;
-      canvasGrid.height = MAX_CANVAS_SIZE;
-      canvasHover.height = MAX_CANVAS_SIZE;
-      canvasRuler.height = MAX_CANVAS_SIZE;
+      height = gridCols * preferredGridPixelMultiplier;
     }
     if (gridRows * preferredGridPixelMultiplier <= MAX_CANVAS_SIZE) {
-      canvas.width = gridRows * preferredGridPixelMultiplier;
-      canvasStations.width = gridRows * preferredGridPixelMultiplier;
-      canvasGrid.width = gridRows * preferredGridPixelMultiplier;
-      canvasHover.width = gridRows * preferredGridPixelMultiplier;
-      canvasRuler.width = gridRows * preferredGridPixelMultiplier;
-    } else {
-      canvas.width = MAX_CANVAS_SIZE;
-      canvasStations.width = MAX_CANVAS_SIZE;
-      canvasGrid.width = MAX_CANVAS_SIZE;
-      canvasHover.width = MAX_CANVAS_SIZE;
-      canvasRuler.width = MAX_CANVAS_SIZE;
+      width = gridRows * preferredGridPixelMultiplier;
+    }
+
+    for (var canvas of allCanvases) {
+      canvas.width = width
+      canvas.height = height
     }
   } // if canvas.height / gridCols != preferredGridPixelMultiplier
 
@@ -421,11 +407,7 @@ function makeLine(x, y, deferSave) {
     autoSave(metroMap);
   }
   if (mapDataVersion >= 2) {
-    if (previousColor) {
-      // If there's nothing here previously, we don't need to clear/redraw
-      redrawCanvasForColor(previousColor)
-    }
-    redrawCanvasForColor(color, isOnOrAdjacentToStation(x, y, activeMap))
+    redrawCanvasForColor(color, isOnOrAdjacentToStation(x, y, activeMap), previousColor)
   } else if (mapDataVersion == 1) {
     drawArea(x, y, activeMap)
   }
@@ -475,27 +457,38 @@ function erase(x, y) {
   }
 } // erase(x, y)
 
-function redrawCanvasForColor(color, isOnOrAdjacentToStation) {
+function redrawCanvasForColor(color, isOnOrAdjacentToStation, previousColor) {
   var t0 = performance.now()
-  // Clear the main canvas
+  var shardsRedrawn = []
+  var colorsToRedraw = [color]
+  if (previousColor) { colorsToRedraw.push(previousColor) }
+  for (var col of colorsToRedraw) {
+    // Redraw the current color's shard
+    var shard = getColorShard(col)[1]
+    if (shardsRedrawn.indexOf(shard) > -1) {
+      // Minor optimization, but if by chance previousColor is on the same shard as color,
+      //  we only have to draw that shard once
+      continue
+    }
+    var canvas = document.getElementById('color-canvas-' + shard)
+    var ctx = canvas.getContext('2d', {alpha: true})
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    // Then redraw all colors in that shard
+    for (var shardColor of colorShardMap[shard]) {
+      drawColor(shardColor, canvas)
+    }
+    shardsRedrawn.push(shard)
+  }
+
+  // Clear the main canvas, then draw all of the shards onto the newly-cleared canvas
   drawCanvas(false, false, true)
-  // var t1 = performance.now()
-  // console.log(`drawCanvas(false, false, true) in ${(t1 - t0)} ms`)
-
-  // Only redraw the current color; the others we can use as-is
-  drawColor(color)
-  // var t2 = performance.now()
-  // console.log(`drawColor(${color}) in ${(t2 - t1)} ms`)
-
-  // Draw all of the colors onto the newly-cleared canvas
   var canvas = document.getElementById('metro-map-canvas');
   var ctx = canvas.getContext('2d', {alpha: true});
-  for (var color in activeMap["points_by_color"]) {
-    var colorCanvas = createColorCanvasIfNeeded(color)
-    ctx.drawImage(colorCanvas, 0, 0); // Layer the stations on top of the canvas
+  for (var shard of Object.keys(colorShardMap)) {
+    var canvasShard = document.getElementById('color-canvas-' + shard)
+    ctx.drawImage(canvasShard, 0, 0)
   }
-  // var t3 = performance.now()
-  // console.log(`ctx.drawImage() loop in ${(t3 - t2)} ms`)
 
   // Redraw the stations canvas too, if any stations were deleted or edited nearby
   if (isOnOrAdjacentToStation) {
@@ -705,8 +698,7 @@ function bindGridSquareEvents(event) {
       floodFill(x, y, getActiveLine(x, y, activeMap, (mapDataVersion >= 3)), replacementColor)
       autoSave(activeMap)
       if (mapDataVersion >= 2) {
-        drawColor(initialColor)
-        redrawCanvasForColor(replacementColor, isOnOrAdjacentToStation(x, y, activeMap))
+        redrawCanvasForColor(replacementColor, isOnOrAdjacentToStation(x, y, activeMap), initialColor)
       } else if (mapDataVersion == 1) {
         drawCanvas(activeMap)
       }
@@ -1105,18 +1097,17 @@ function drawArea(x, y, metroMap, erasedLine, redrawStations) {
   } // if redrawStations
 } // drawArea(x, y, metroMap, redrawStations)
 
-function drawColor(color) {
+function drawColor(color, canvas) {
   // Draws only a single color
   if (!color) {
     // When flood filling on an empty area, the initial color is undefined,
     //  so end here -- there's nothing to do.
     return
   }
-  var colorCanvas = createColorCanvasIfNeeded(color)
-  var ctx = colorCanvas.getContext('2d', {alpha: true})
-  if (typeof window.scrollByPages == 'undefined') {
-    ctx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
+  if (!canvas) {
+    var canvas = getColorShard(color)[0]
   }
+  var ctx = canvas.getContext('2d', {alpha: true})
   if (mapDataVersion == 3) {
     for (var lineWidthStyle in activeMap['points_by_color'][color]) {
       ctx.strokeStyle = '#' + color
@@ -1230,6 +1221,27 @@ function createColorCanvasIfNeeded(color, resize) {
   }
   return colorCanvas
 } // createColorCanvasIfNeeded(color)
+
+function getColorShard(color) {
+  // Return the canvas this color belongs to,
+  //  and update colorShardMap
+  var shardNumber = Object.keys(activeMap["global"]["lines"]).sort().indexOf(color) % document.getElementsByClassName('color-canvas').length
+  var canvas = document.getElementById('color-canvas-' + shardNumber)
+  if (!colorShardMap[shardNumber]) {
+    colorShardMap[shardNumber] = new Set()
+  }
+  colorShardMap[shardNumber].add(color)
+  return [canvas, shardNumber]
+}
+
+function setColorShardMap() {
+  for (var color of Object.keys(activeMap["global"]["lines"]).sort()) {
+    // This is lazy, and I don't love a function named "get" being the one that sets the thing,
+    //   but it has the advantage of always being in sync with getColorShard,
+    //   so I think it's worth it.
+    getColorShard(color)
+  }
+}
 
 function findLines(color, lineWidthStyle) {
   // JS implementation of mapdata_optimizer.find_lines
@@ -1379,11 +1391,20 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
   ctx.lineCap = 'round';
 
   if (mapDataVersion >= 2) {
-    for (var color in metroMap['points_by_color']) {
-      drawColor(color)
-      var colorCanvas = document.getElementById('metro-map-color-canvas-' + color)
-      ctx.drawImage(colorCanvas, 0, 0); // Layer the stations on top of the canvas
-    } // color
+    setColorShardMap()
+    for (var shardCanvas of document.getElementsByClassName('color-canvas')) {
+        var shard = shardCanvas.id.split('-')[2]
+        if (!colorShardMap[shard]) {
+          continue // Nothing at this shard yet
+        }
+        // Clear this shard, then draw all of its colors
+        var shardCanvasCtx = shardCanvas.getContext('2d', {alpha: true});
+        shardCanvasCtx.clearRect(0, 0, shardCanvas.width, shardCanvas.height);
+        for (var shardColor of colorShardMap[shard]) {
+          drawColor(shardColor, shardCanvas)
+      }
+      ctx.drawImage(shardCanvas, 0, 0)
+    }
   } else if (mapDataVersion == 1) {
     for (var x in metroMap) {
       for (var y in metroMap[x]) {
@@ -2048,10 +2069,6 @@ function drawStyledStation_London(ctx, x, y, metroMap, station, strokeColor, fil
   ctx.fillStyle = fillColor || lineColor
   var isIndicator = !!(strokeColor && fillColor)
   ctx.lineWidth = 2
-
-  if (MMMDEBUG) {
-    console.log(`London x,y: ${x},${y} strokeColor: ${strokeColor} fillColor: ${fillColor} isIndicator: ${isIndicator} ctx.lineWidth: ${ctx.lineWidth} lineDirection: ${JSON.stringify(lineDirection)} station: ${JSON.stringify(station)}`)
-  }
 
   if ((station && station["transfer"]) || lineDirection['direction'] == 'singleton') {
     // Transfer stations are drawn as a thicker black and white circle.

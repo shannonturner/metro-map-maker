@@ -131,7 +131,11 @@
     <div id="loading"></div>
     <canvas id='metro-map-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
     <canvas id='metro-map-stations-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
-    <div id="color-canvas-container"></div>
+    <div id="color-canvas-container">
+      {% for n in '01234567'|make_list %}
+        <canvas id="color-canvas-{{ n }}" width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}" class="hidden color-canvas"></canvas>
+      {% endfor %}
+    </div>
     <canvas id='grid-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
     <canvas id="hover-canvas" width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
     <canvas id="ruler-canvas" width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
