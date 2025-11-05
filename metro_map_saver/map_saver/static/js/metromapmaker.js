@@ -41,7 +41,15 @@ var MMMDEBUG = false
 var MMMDEBUG_UNDO = false
 
 var MAX_CANVAS_SIZE = 3600
-var LOW_RES_CANVAS_SIZE = 1600
+var MAX_SHARDS = 8
+
+var lowGraphicsMode = false
+var HIGH_QUAL_MAX_CANVAS_SIZE = 3600
+var HIGH_QUAL_MAX_SHARDS = 8
+var LOW_QUAL_MAX_CANVAS_SIZE = 2400 // MAX_CANVAS_SIZE equivalent when lowGraphicsMode == true
+var LOW_QUAL_MAX_SHARDS = 4
+
+var LOW_RES_CANVAS_SIZE = 1600 // For canvases like hover/ruler; not to be confused with LOW_QUAL_*
 
 if (typeof mapDataVersion === 'undefined') {
     var mapDataVersion = undefined
@@ -230,6 +238,12 @@ function snapCanvasToGrid() {
       // For some canvases, like the hover canvas, you really can't tell the difference
       canvasHover.width = LOW_RES_CANVAS_SIZE
       canvasHover.height = LOW_RES_CANVAS_SIZE
+    }
+
+    if (lowGraphicsMode) {
+      // Perf: Actually, this one can be extremely low resolution since it's just showing which squares are hovered
+      canvasHover.width = gridCols * 2
+      canvasHover.height = gridRows * 2
     }
   } // if canvas.height / gridCols != preferredGridPixelMultiplier
 
@@ -2577,6 +2591,20 @@ function autoLoad() {
   // 2. from a map object saved in localStorage
   // 3. If neither 1 or 2, load a preset map (WMATA)
   gridStep = parseInt(window.localStorage.getItem('metroMapGridStep') || gridStep) || false
+  lowGraphicsMode = window.localStorage.getItem('graphicsQualityLow') == 1 || false
+
+  if (lowGraphicsMode) {
+    MAX_CANVAS_SIZE = LOW_QUAL_MAX_CANVAS_SIZE
+    MAX_SHARDS = LOW_QUAL_MAX_SHARDS
+    $('#graphics-quality-low').prop('checked', true) // Show it as already checked
+    console.log(`Using low graphics mode to improve performance! MAX_CANVAS_SIZE: ${MAX_CANVAS_SIZE} MAX_SHARDS: ${MAX_SHARDS}`)
+    var shards = document.getElementById('color-canvas-container').children
+    if (shards.length > MAX_SHARDS) {
+      for (var x=shards.length;x>MAX_SHARDS;x--) {
+        shards[x-1].remove()
+      }
+    }
+  }
 
   // Load from the savedMapData injected into the index.html template
   if (typeof savedMapData !== 'undefined') {
@@ -4330,6 +4358,44 @@ $(document).ready(function() {
     showGrid() // If the grid was hidden, show it or the page looks blank
     $('.tooltip').hide();
   }); // #tool-clear-map.click()
+
+  $('#tool-settings').on("click", function() {
+    $('#tool-settings-options').toggle()
+  })
+
+  $('#graphics-quality-low').on("click", function() {
+    lowGraphicsMode = $('#graphics-quality-low').prop('checked')
+    window.localStorage.setItem('graphicsQualityLow', lowGraphicsMode ? 1 : 0)
+
+    if (lowGraphicsMode) {
+      MAX_CANVAS_SIZE = LOW_QUAL_MAX_CANVAS_SIZE
+      MAX_SHARDS = LOW_QUAL_MAX_SHARDS
+      console.log(`Using low graphics mode to improve performance! MAX_CANVAS_SIZE: ${MAX_CANVAS_SIZE} MAX_SHARDS: ${MAX_SHARDS}`)
+      MAX_SHARDS
+    } else {
+      MAX_CANVAS_SIZE = HIGH_QUAL_MAX_CANVAS_SIZE
+      MAX_SHARDS = HIGH_QUAL_MAX_SHARDS
+      console.log(`Exiting lowGraphicsMode. MAX_CANVAS_SIZE: ${MAX_CANVAS_SIZE} MAX_SHARDS: ${MAX_SHARDS}`)
+    }
+
+    var shards = document.getElementById('color-canvas-container').children
+    if (shards.length > MAX_SHARDS) {
+      for (var x=shards.length;x>MAX_SHARDS;x--) {
+        shards[x-1].remove()
+      }
+    } else {
+      if (MMMDEBUG) { console.log("Scaling shards up ...") }
+      for (var x=shards.length;x<MAX_SHARDS;x++) {
+        $('#color-canvas-container').append(`<canvas id="color-canvas-${x}" width="1600" height="1600" class="hidden color-canvas"></canvas>`)
+      }
+    }
+
+    colorShardMap = new Set()
+    setColorShardMap()
+    snapCanvasToGrid()
+    drawGrid()
+    drawCanvas()
+  }) // #graphics-quality-low.click()
 
   $('#rail-line-new').click(function() {
     if ($('#tool-new-line-options').is(':visible')) {
