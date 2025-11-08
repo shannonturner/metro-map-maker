@@ -5713,7 +5713,11 @@ function drawRuler(x, y, replaceOrigin) {
 
     // Draw the distance near the cursor
     ctx.textAlign = 'start'
-    ctx.font = '700 ' + gridPixelMultiplier + 'px sans-serif'
+    if (gridPixelMultiplier < preferredGridPixelMultiplier) {
+      ctx.font = '700 ' + Math.max(gridPixelMultiplier, Math.floor(HIGH_QUAL_PGPM * 0.6)) + 'px sans-serif'
+    } else {
+      ctx.font = '700 ' + gridPixelMultiplier + 'px sans-serif'
+    }
     ctx.globalAlpha = 0.67
     ctx.fillStyle = '#000000'
     var pointDistance = ''
