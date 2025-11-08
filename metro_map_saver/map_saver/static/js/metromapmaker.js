@@ -40,17 +40,6 @@ var colorShardMap = {}
 var MMMDEBUG = false
 var MMMDEBUG_UNDO = false
 
-var MAX_CANVAS_SIZE = 3600
-var MAX_SHARDS = 8
-
-var lowGraphicsMode = false
-var HIGH_QUAL_MAX_CANVAS_SIZE = 3600
-var HIGH_QUAL_MAX_SHARDS = 8
-var LOW_QUAL_MAX_CANVAS_SIZE = 2400 // MAX_CANVAS_SIZE equivalent when lowGraphicsMode == true
-var LOW_QUAL_MAX_SHARDS = 4
-
-var LOW_RES_CANVAS_SIZE = 1600 // For canvases like hover/ruler; not to be confused with LOW_QUAL_*
-
 if (typeof mapDataVersion === 'undefined') {
     var mapDataVersion = undefined
 }
@@ -81,6 +70,20 @@ const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin', 'london']
 const ALLOWED_SIZES = [80, 120, 160, 200, 240, 360]
 const MAX_MAP_SIZE = ALLOWED_SIZES[ALLOWED_SIZES.length-1]
+
+var MAX_CANVAS_SIZE = 3600
+var MAX_SHARDS = 8
+
+var lowGraphicsMode = false
+var HIGH_QUAL_MAX_CANVAS_SIZE = MAX_MAP_SIZE * 10
+var HIGH_QUAL_MAX_SHARDS = 8
+var HIGH_QUAL_PGPM = 20
+
+var LOW_QUAL_MAX_CANVAS_SIZE = MAX_MAP_SIZE * 8 // MAX_CANVAS_SIZE equivalent when lowGraphicsMode == true
+var LOW_QUAL_MAX_SHARDS = 4
+var LOW_QUAL_PGPM = 12
+
+var LOW_RES_CANVAS_SIZE = 1600 // For canvases like hover/ruler; not to be confused with LOW_QUAL_*
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -202,6 +205,10 @@ function snapCanvasToGrid(always) {
       but the image quality suffers SO much at smaller sizes
       and the performance gains are SO meager.
       Find gains elsewhere, they aren't to be had here!
+
+      ^ This note was true when I had only a few canvases (all colors, stations, grid, hover),
+        but is less true since 7.0 when each color got its own canvas,
+        so may be worth revisiting
   */
 
   // Resize the canvas as needed
@@ -2596,8 +2603,9 @@ function autoLoad() {
   if (lowGraphicsMode) {
     MAX_CANVAS_SIZE = LOW_QUAL_MAX_CANVAS_SIZE
     MAX_SHARDS = LOW_QUAL_MAX_SHARDS
+    preferredGridPixelMultiplier = LOW_QUAL_PGPM
     $('#graphics-quality-low').prop('checked', true) // Show it as already checked
-    console.log(`Using low graphics mode to improve performance! MAX_CANVAS_SIZE: ${MAX_CANVAS_SIZE} MAX_SHARDS: ${MAX_SHARDS}`)
+    console.log(`Using low graphics mode to improve performance! MAX_CANVAS_SIZE: ${MAX_CANVAS_SIZE} MAX_SHARDS: ${MAX_SHARDS} preferredGridPixelMultiplier: ${preferredGridPixelMultiplier}`)
     var shards = document.getElementById('color-canvas-container').children
     if (shards.length > MAX_SHARDS) {
       for (var x=shards.length;x>MAX_SHARDS;x--) {
@@ -4370,12 +4378,14 @@ $(document).ready(function() {
     if (lowGraphicsMode) {
       MAX_CANVAS_SIZE = LOW_QUAL_MAX_CANVAS_SIZE
       MAX_SHARDS = LOW_QUAL_MAX_SHARDS
-      console.log(`Using low graphics mode to improve performance! MAX_CANVAS_SIZE: ${MAX_CANVAS_SIZE} MAX_SHARDS: ${MAX_SHARDS}`)
+      preferredGridPixelMultiplier = LOW_QUAL_PGPM
+      console.log(`Using low graphics mode to improve performance! MAX_CANVAS_SIZE: ${MAX_CANVAS_SIZE} MAX_SHARDS: ${MAX_SHARDS} preferredGridPixelMultiplier: ${preferredGridPixelMultiplier}`)
       MAX_SHARDS
     } else {
       MAX_CANVAS_SIZE = HIGH_QUAL_MAX_CANVAS_SIZE
       MAX_SHARDS = HIGH_QUAL_MAX_SHARDS
-      console.log(`Exiting lowGraphicsMode. MAX_CANVAS_SIZE: ${MAX_CANVAS_SIZE} MAX_SHARDS: ${MAX_SHARDS}`)
+      preferredGridPixelMultiplier = HIGH_QUAL_PGPM
+      console.log(`Exiting lowGraphicsMode. MAX_CANVAS_SIZE: ${MAX_CANVAS_SIZE} MAX_SHARDS: ${MAX_SHARDS} preferredGridPixelMultiplier: ${preferredGridPixelMultiplier}`)
     }
 
     var shards = document.getElementById('color-canvas-container').children
@@ -5703,7 +5713,7 @@ function drawRuler(x, y, replaceOrigin) {
 
     // Draw the distance near the cursor
     ctx.textAlign = 'start'
-    ctx.font = '700 ' + (gridPixelMultiplier * (document.getElementById('metro-map-canvas').width / canvas.width / 1.5)) + 'px sans-serif'
+    ctx.font = '700 ' + gridPixelMultiplier + 'px sans-serif'
     ctx.globalAlpha = 0.67
     ctx.fillStyle = '#000000'
     var pointDistance = ''
