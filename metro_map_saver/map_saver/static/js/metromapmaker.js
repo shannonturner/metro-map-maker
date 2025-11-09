@@ -2600,6 +2600,17 @@ function autoLoad() {
   gridStep = parseInt(window.localStorage.getItem('metroMapGridStep') || gridStep) || false
   lowGraphicsMode = window.localStorage.getItem('graphicsQualityLow') == 1 || false
 
+  if (window.localStorage.getItem('loadingAttemptsWithoutSuccess') > 2) {
+    // Attempt to catch when low graphics mode isn't enabled yet,
+    //  but it should be, because loading a large map is causing an issue
+    window.localStorage.setItem('graphicsQualityLow', 1)
+    lowGraphicsMode = true
+  } else {
+    // Increment number of attempts; if we're successful, we'll set this to 0 below
+    var loadingAttemptsWithoutSuccess = window.localStorage.getItem('loadingAttemptsWithoutSuccess') || 0
+    window.localStorage.setItem('loadingAttemptsWithoutSuccess', loadingAttemptsWithoutSuccess + 1)
+  }
+
   if (lowGraphicsMode) {
     MAX_CANVAS_SIZE = LOW_QUAL_MAX_CANVAS_SIZE
     MAX_SHARDS = LOW_QUAL_MAX_SHARDS
@@ -2714,6 +2725,9 @@ function autoLoad() {
   var zoomLevel = window.sessionStorage.getItem('zoomLevel')
   if (zoomLevel)
     resizeCanvas(zoomLevel)
+
+  // Successful in loading the map, reset the counter
+  window.localStorage.setItem('loadingAttemptsWithoutSuccess', 0)
 } // autoLoad()
 autoLoad();
 
