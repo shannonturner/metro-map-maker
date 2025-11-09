@@ -1402,6 +1402,9 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
   ctx.lineCap = 'round';
 
   if (mapDataVersion >= 2) {
+    // IMPORTANT NOTE: If I ever stop fully resetting the colorShardMap here,
+    //  I'll need to do it when adding/editing/removing lines
+    colorShardMap = new Object()
     setColorShardMap()
     for (var shardCanvas of document.getElementsByClassName('color-canvas')) {
         var shard = shardCanvas.id.split('-')[2]
@@ -4046,6 +4049,7 @@ $(document).ready(function() {
       }
       resetRailLineTooltips()
     } // if linesToDelete.length > 0
+    drawCanvas() // This also does a full reset of the color map
   }); // #rail-line-delete.click() (Delete unused lines)
   $('#tool-station').click(function() {
     activeTool = 'station';
@@ -4483,6 +4487,7 @@ $(document).ready(function() {
     for (var line in activeMap["global"]["lines"]) {
       $('#tool-lines-to-change').append('<option value="' + line + '">' + activeMap["global"]["lines"][line]["displayName"] + '</option>')
     }
+    drawCanvas() // This also does a full reset of the color map
   }); // $('#create-new-rail-line').click()
 
   $('#rail-line-change').click(function() {
@@ -4565,6 +4570,7 @@ $(document).ready(function() {
     if (activeTool == 'line' && rgb2hex(activeToolOption).slice(1, 7) == lineColorToChange)
       activeToolOption = '#' + lineColorToChangeTo
     resetRailLineTooltips()
+    drawCanvas() // This also does a full reset of the color map
   }) // #save-rail-line-edits.click()
 
   $('#tool-map-style').on('click', function() {
