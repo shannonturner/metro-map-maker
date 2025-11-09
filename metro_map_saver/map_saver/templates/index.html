@@ -131,7 +131,11 @@
     <div id="loading"></div>
     <canvas id='metro-map-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
     <canvas id='metro-map-stations-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
-    <div id="color-canvas-container"></div>
+    <div id="color-canvas-container" class="hidden">
+      {% for n in '01234567'|make_list %}
+        <canvas id="color-canvas-{{ n }}" width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}" class="hidden color-canvas"></canvas>
+      {% endfor %}
+    </div>
     <canvas id='grid-canvas' width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
     <canvas id="hover-canvas" width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
     <canvas id="ruler-canvas" width="{{ canvas_size|default:1600 }}" height="{{ canvas_size|default:1600 }}"></canvas>
@@ -492,18 +496,14 @@
       </button>
 
       <button id="tool-eyedropper" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="When on, clicking a point on the map will switch to the Draw tool and use that point's color, line width, and line style. (Keyboard shortcut: P)">
-        <div id="ruler-icon-xy-container">
-          <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#eyedropper"/></svg>
-        </div>
+        <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#eyedropper"/></svg>
         <span class="button-label">
             Eyedro<b><u>p</u></b>per
         </span>
       </button>
 
       <button id="tool-look" class="has-tooltip styled styling-greenline" data-toggle="tooltip" data-placement="left" title="When on and used with the Ruler tool, the ruler will update as you move the mouse, not just when you click. (Keyboard shortcut: K)">
-        <div id="ruler-icon-xy-container">
-          <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#look"/></svg>
-        </div>
+        <svg class="" width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#look"/></svg>
         <span class="button-label">
             Loo<b><u>k</u></b>
         </span>
@@ -543,6 +543,24 @@
         <span class="button-label">Dock</span> <!-- TODO: this should replace "snap controls to left" and cycle between top,right,bottom,left (clockwise) -->
       </button>
       {% endcomment %}
+
+      <button id="tool-settings" class="has-tooltip styled styling-greenline width-100" data-toggle="tooltip" data-placement="left" title="Settings">
+        <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#gear"/></svg>
+        <span class="button-label">Settings</span>
+      </button>
+
+      <div id="tool-settings-options" class="text-left" style="display: none;">
+          <fieldset>
+            <legend>Settings</legend>
+            <label for="graphics-quality-low" class="mmm-help-setting">
+              <input id="graphics-quality-low" type="checkbox">
+                Use lower graphics quality to improve performance.
+            </label>
+            <p>
+              Checking this box may make Metro Map Maker run more smoothly in some cases, especially for users on Firefox, mobile, older computers, or when editing very large, detailed maps.
+            </p>
+          </fieldset>
+      </div>
 
       <button id="tool-clear-map" class="has-tooltip styled styling-silverline width-100" data-toggle="tooltip" data-placement="left" title="Be careful: this will delete your map">
         <svg width="16" height="16"><use xlink:href="{% static 'assets/icons/mmm-icons.svg' %}?version={{ mmmiconscachetoken }}#trash"/></svg>
@@ -657,7 +675,7 @@
   {% if debug %}
     <script src='{% static "js/metromapmaker.js" as mmmjs %}{{ mmmjs }}?version={{ "js/metromapmaker.js"|static_cache_version }}' async></script>
   {% else %}
-    <script src='{% static "js/metromapmaker.min.js" %}{{ mmmjs }}?version={{ "js/metromapmaker.min.js"|static_cache_version }}' async></script>
+    <script src='{% static "js/metromapmaker.min.js" as mmmjs %}{{ mmmjs }}?version={{ "js/metromapmaker.min.js"|static_cache_version }}' async></script>
   {% endif %}
   <script src='{% static "js/tooltips.min.js" %}' defer="defer"></script>
   <script src='{% static "js/django-csrf.js" %}' defer="defer"></script>
