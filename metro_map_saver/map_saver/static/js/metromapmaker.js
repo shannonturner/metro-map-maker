@@ -218,8 +218,8 @@ function snapCanvasToGrid(always) {
   var canvasHover = document.getElementById('hover-canvas')
   var canvasRuler = document.getElementById('ruler-canvas')
   var colorCanvases = document.getElementById('color-canvas-container').children
-  var highResCanvases = [canvas, canvasStations, canvasGrid, ...colorCanvases]
-  var lowResCanvases = [canvasHover, canvasRuler]
+  var highResCanvases = [canvas, canvasStations, canvasGrid, canvasHover, ...colorCanvases]
+  var lowResCanvases = [canvasRuler]
 
   var width = MAX_CANVAS_SIZE
   var height = MAX_CANVAS_SIZE
@@ -242,15 +242,11 @@ function snapCanvasToGrid(always) {
     }
 
     for (var canvas of lowResCanvases) {
-      // For some canvases, like the hover canvas, you really can't tell the difference
-      canvasHover.width = LOW_RES_CANVAS_SIZE
-      canvasHover.height = LOW_RES_CANVAS_SIZE
-    }
-
-    if (lowGraphicsMode) {
-      // Perf: Actually, this one can be extremely low resolution since it's just showing which squares are hovered
-      canvasHover.width = gridCols * 2
-      canvasHover.height = gridRows * 2
+      // For some canvases you can't tell the difference.
+      // At first I thought the hover canvas was a perfect candidate for this,
+      //  until I remembered that moving stations happens there, so hoverCanvas has to be the same size!
+      canvas.width = LOW_RES_CANVAS_SIZE
+      canvas.height = LOW_RES_CANVAS_SIZE
     }
   } // if canvas.height / gridCols != preferredGridPixelMultiplier
 
