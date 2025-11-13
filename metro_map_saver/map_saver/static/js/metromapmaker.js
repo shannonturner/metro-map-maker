@@ -88,8 +88,6 @@ var LOW_QUAL_MAX_CANVAS_SIZE = MAX_MAP_SIZE * 8 // MAX_CANVAS_SIZE equivalent wh
 var LOW_QUAL_MAX_SHARDS = 4
 var LOW_QUAL_PGPM = 12
 
-var LOW_RES_CANVAS_SIZE = 1600 // For canvases like hover/ruler; not to be confused with LOW_QUAL_*
-
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
     return target.replace(new RegExp(search, 'g'), replacement);
@@ -223,8 +221,7 @@ function snapCanvasToGrid(always) {
   var canvasHover = document.getElementById('hover-canvas')
   var canvasRuler = document.getElementById('ruler-canvas')
   var colorCanvases = document.getElementById('color-canvas-container').children
-  var highResCanvases = [canvas, canvasStations, canvasGrid, canvasHover, ...colorCanvases]
-  var lowResCanvases = [canvasRuler]
+  var allCanvases = [canvas, canvasStations, canvasGrid, canvasHover, canvasRuler, ...colorCanvases]
 
   var width = MAX_CANVAS_SIZE
   var height = MAX_CANVAS_SIZE
@@ -241,17 +238,9 @@ function snapCanvasToGrid(always) {
       width = gridRows * preferredGridPixelMultiplier;
     }
 
-    for (var canvas of highResCanvases) {
+    for (var canvas of allCanvases) {
       canvas.width = width
       canvas.height = height
-    }
-
-    for (var canvas of lowResCanvases) {
-      // For some canvases you can't tell the difference.
-      // At first I thought the hover canvas was a perfect candidate for this,
-      //  until I remembered that moving stations happens there, so hoverCanvas has to be the same size!
-      canvas.width = LOW_RES_CANVAS_SIZE
-      canvas.height = LOW_RES_CANVAS_SIZE
     }
   } // if canvas.height / gridCols != preferredGridPixelMultiplier
 
