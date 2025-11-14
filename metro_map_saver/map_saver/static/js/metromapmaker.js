@@ -409,7 +409,7 @@ function bindRailLineEvents() {
 } // bindRailLineEvents()
 
 function makeLine(x, y, deferSave) {
-  if (selectedPoints.length > 0 && !isWithinSelectedPoints(x, y)) {
+  if (!isWithinSelectedPoints(x, y)) {
     return
   }
   var color = rgb2hex(activeToolOption).slice(1, 7);
@@ -438,7 +438,7 @@ function makeLine(x, y, deferSave) {
 } // makeLine(x, y, deferSave)
 
 function erase(x, y) {
-  if (selectedPoints.length > 0 && !isWithinSelectedPoints(x, y)) {
+  if (!isWithinSelectedPoints(x, y)) {
     return
   }
 
@@ -5872,6 +5872,9 @@ function getPointsWithinBoundingBox(x1, y1, x2, y2) {
 } // getPointsWithinBoundingBox(x1, y1, x2, y2)
 
 function isWithinSelectedPoints(x, y) {
+  // For simplicity with other functions, if selectedPoints is empty,
+  //  this should be trivially true (if empty, all are selected)
+  if (selectedPoints.length == 0) { return true }
   var selectedPointsClone = structuredClone(selectedPoints)
   do {
     xy = selectedPointsClone.pop()
