@@ -409,6 +409,9 @@ function bindRailLineEvents() {
 } // bindRailLineEvents()
 
 function makeLine(x, y, deferSave) {
+  if (selectedPoints.length > 0 && !isWithinSelectedPoints(x, y)) {
+    return
+  }
   var color = rgb2hex(activeToolOption).slice(1, 7);
   if (mapDataVersion == 1) { drawArea(x, y, activeMap, true) }
   else if (mapDataVersion >= 2) {
@@ -435,6 +438,10 @@ function makeLine(x, y, deferSave) {
 } // makeLine(x, y, deferSave)
 
 function erase(x, y) {
+  if (selectedPoints.length > 0 && !isWithinSelectedPoints(x, y)) {
+    return
+  }
+
   // I need to check for the old line and station
   // BEFORE actually doing the erase operations
   var erasedLine = getActiveLine(x, y, activeMap);
@@ -826,9 +833,10 @@ function bindGridSquareMouseup(event) {
   }
   // Unset current click's x, y coordinates,
   // since we don't need to do straight line assist drawing anymore
-  clearMarchingAnts()
+
   if (activeTool == 'select') {
     // Capture these because clickX and clickY are about to be unset
+    clearMarchingAnts()
     var x1 = clickX
     var y1 = clickY
     xy = getCanvasXY(event.pageX, event.pageY)
@@ -866,7 +874,9 @@ function bindGridSquareMousedown(event) {
     rightClicking = true
   }
 
-  clearMarchingAnts()
+  if (activeTool == 'select') {
+    clearMarchingAnts()
+  }
 
   // Visually indicate which squares you can fill in with
   //  straight line assist
@@ -5777,6 +5787,11 @@ $('#tool-look').on('click', function() {
 
 $('#tool-select').on('click', function() {
   activeTool = 'select'
+  if (selectedPoints) {
+    // De-select current selection
+    selectedPoints = []
+    clearMarchingAnts()
+  }
   // TODO: disable ruler when select is enabled, and vice-versa
 })
 
@@ -5855,6 +5870,17 @@ function getPointsWithinBoundingBox(x1, y1, x2, y2) {
   console.log(`pointsWithin is: ${pointsWithin}`)
   return pointsWithin
 } // getPointsWithinBoundingBox(x1, y1, x2, y2)
+
+function isWithinSelectedPoints(x, y) {
+  var selectedPointsClone = structuredClone(selectedPoints)
+  do {
+    xy = selectedPointsClone.pop()
+    if (x == xy[0] && y == xy[1]) {
+      return true
+    }
+  } while (selectedPointsClone.length > 0)
+  return false
+} // isWithinSelectedPoints(x, y)
 
 function setMoveStationAbility(disable) {
   // By default, this should toggle,
