@@ -3444,6 +3444,7 @@ function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
     {
       y = coords.pop()
       x = coords.pop()
+      if (!isWithinSelectedPoints(x, y)) { continue } // This handles the rows
       x1 = x;
       while(x1 >= 0 && ffSpan(getActiveLine(x1, y, activeMap, mapDataVersion >= 3), initialColor))
         x1--;
@@ -3456,12 +3457,16 @@ function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
             break
           if (!ignoreCoords.hasOwnProperty(x1))
             ignoreCoords[x1] = {}
-          drawHoverIndicator(x1, y, replacementColor, 0.5)
-          ignoreCoords[x1][y] = true
+          if (isWithinSelectedPoints(x1, y)) {
+            drawHoverIndicator(x1, y, replacementColor, 0.5)
+            ignoreCoords[x1][y] = true
+          }
         } else {
-          updateMapObject(x1, y, "line", replacementColor);
+          if (isWithinSelectedPoints(x1, y)) {
+            updateMapObject(x1, y, "line", replacementColor);
+          }
         }
-        if(!spanAbove && y > 0 && ffSpan(getActiveLine(x1, y-1, activeMap, mapDataVersion >= 3), initialColor))
+        if(!spanAbove && y > 0 && ffSpan(getActiveLine(x1, y-1, activeMap, mapDataVersion >= 3), initialColor) && isWithinSelectedPoints(x1, y-1))
         {
           coords.push(x1, y - 1);
           spanAbove = 1;
@@ -3470,7 +3475,7 @@ function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
         {
           spanAbove = 0;
         }
-        if(!spanBelow && y < gridRows - 1 && ffSpan(getActiveLine(x1, y+1, activeMap, mapDataVersion >= 3), initialColor))
+        if(!spanBelow && y < gridRows - 1 && ffSpan(getActiveLine(x1, y+1, activeMap, mapDataVersion >= 3), initialColor) && isWithinSelectedPoints(x1, y+1))
         {
           coords.push(x1, y + 1);
           spanBelow = 1;
