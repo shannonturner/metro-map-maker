@@ -4679,7 +4679,21 @@ $(document).ready(function() {
   })
 
   $('.map-style-station').on('click', function() {
-    mapStationStyle = $(this).data('station-style')
+    var chosenStationStyle = $(this).data('station-style')
+    if (selectedPoints.length > 0) {
+      for (xy of selectedPoints) {
+        var x = xy[0]
+        var y = xy[1]
+        if (!activeMap["stations"][x] || !activeMap["stations"][x][y]) {
+          continue
+        }
+        activeMap["stations"][x][y]["style"] = chosenStationStyle
+      }
+      autoSave(activeMap)
+      drawCanvas(activeMap)
+      return
+    }
+    mapStationStyle = chosenStationStyle
     $('.map-style-station.active-mapstyle').removeClass('active-mapstyle')
     $(this).addClass('active-mapstyle')
     $('#reset-all-station-styles').text('Set ALL stations to ' + $(this).text())
@@ -4884,6 +4898,21 @@ $('#set-all-station-name-orientation').on('click', function() {
 })
 
 function resetAllStationStyles(metroMap) {
+
+  if (selectedPoints.length > 0) {
+    for (xy of selectedPoints) {
+      var x = xy[0]
+      var y = xy[1]
+      if (!activeMap["stations"][x] || !activeMap["stations"][x][y]) {
+        continue
+      }
+      delete activeMap["stations"][x][y]["style"]
+    }
+    autoSave(activeMap)
+    drawCanvas(activeMap)
+    return
+  }
+
   if (mapDataVersion == 2 || mapDataVersion == 3) {
     for (var x in metroMap['stations']) {
       for (var y in metroMap['stations'][x]) {
