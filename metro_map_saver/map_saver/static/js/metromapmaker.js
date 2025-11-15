@@ -3,6 +3,7 @@
 var gridRows = 80, gridCols = 80;
 var activeTool = 'look';
 var activeToolOption = false;
+var lastToolUsed = undefined;
 var activeMap = false;
 var preferredGridPixelMultiplier = 20;
 var lastStrokeStyle;
@@ -385,7 +386,7 @@ function bindRailLineEvents() {
   // Needs to be done whenever a new rail line is created and on page load
   $('.rail-line').click(function() {
     // Existing Rail Line
-    activeTool = 'line';
+    setActiveTool('line')
     activeToolOption = $(this).css('background-color');
     $('#tool-line').addClass('draw-rail-line')
     if (activeToolOption) {
@@ -3814,6 +3815,11 @@ $(document).ready(function() {
         $('#tool-flood-fill').prop('checked', false)
       } else {
         $('#tool-flood-fill').prop('checked', true)
+        if (activeToolOption) {
+          // On the assumption that activeToolOption is only for line color,
+          //  which has been true so far
+          setActiveTool('line')
+        }
       }
       setFloodFillUI()
     }
@@ -3982,7 +3988,7 @@ $(document).ready(function() {
     }
   }); // keyup
 
-  activeTool = 'look';
+  setActiveTool('look')
 
   $('#toolbox button:not(.rail-line)').on('click', function() {
     $('.active').removeClass('active')
@@ -4008,12 +4014,12 @@ $(document).ready(function() {
     $('.active').removeClass('active')
     $('#tool-line').addClass('active')
     if ($(this).hasClass('draw-rail-line') && activeToolOption) {
-      activeTool = 'line'
+      setActiveTool('line')
       $(this).css({"background-color": activeToolOption})
     } else if (activeTool == 'eraser' && activeToolOption) {
-      activeTool = 'line'
+      setActiveTool('line')
     } else if (activeTool == 'eraser') {
-      activeTool = 'look'
+      setActiveTool('look')
     }
     // Expand Rail line options
     if ($('#tool-line-options').is(':visible')) {
@@ -4041,7 +4047,7 @@ $(document).ready(function() {
     var metroMap = Object.assign({}, activeMap) // make a copy so we can check to see which lines exist
     // If the line tool is in use, unset it so we don't get a stale color
     if (activeTool == 'line') {
-      activeTool = 'look'
+      setActiveTool('look')
       $('#tool-line').attr('style', '')
       $('#tool-line').removeClass('active')
     }
@@ -4076,7 +4082,7 @@ $(document).ready(function() {
     drawCanvas() // This also does a full reset of the color map
   }); // #rail-line-delete.click() (Delete unused lines)
   $('#tool-station').click(function() {
-    activeTool = 'station';
+    setActiveTool('station')
     $('.active').removeClass('active')
     $('#tool-station').addClass('active')
     if ($('#tool-station-options').is(':visible')) {
@@ -4087,7 +4093,7 @@ $(document).ready(function() {
     $('.tooltip').hide();
   }); // #tool-station.click()
   $('#tool-label').on('click', function() {
-    activeTool = 'label'
+    setActiveTool('label')
     $('.active').removeClass('active')
     $(this).addClass('active')
     if ($('#tool-label-options').is(':visible')) {
@@ -4096,7 +4102,7 @@ $(document).ready(function() {
     }
   })
   $('#tool-eraser').on('click', function() {
-    activeTool = 'eraser';
+    setActiveTool('eraser')
     $('.active').removeClass('active')
     $('#tool-eraser').addClass('active')
     $('#tool-station-options').hide();
@@ -4161,7 +4167,7 @@ $(document).ready(function() {
   }); // #tool-resize-all.click()
   $('.resize-grid').click(function() {
     var lastToolUsed = activeTool;
-    activeTool = 'resize'
+    setActiveTool('resize')
     size = $(this).attr('id').split('-').slice(2);
     // Indicate which size the map is now sized to, and reset any other buttons
     resetResizeButtons(size)
@@ -4200,7 +4206,7 @@ $(document).ready(function() {
     moveMap("right");
   }); // #tool-move-right.click()
   $('#tool-save-map').click(function() {
-    activeTool = 'look';
+    setActiveTool('look')
     var savedMap = JSON.stringify(activeMap);
     autoSave(savedMap);
     var saveMapURL = '/save/';
@@ -4320,7 +4326,7 @@ $(document).ready(function() {
     $('.tooltip').hide();
   }); // $('#tool-save-map').click()
   $('#tool-download-image').click(function() {
-    activeTool = 'look';
+    setActiveTool('look')
 
     // Download image on desktop, which is more robust than on mobile
 
@@ -4330,7 +4336,7 @@ $(document).ready(function() {
     $('.tooltip').hide();
   }); // #tool-download-image.click()
   $('#tool-export-canvas').click(function() {
-    activeTool = 'look';
+    setActiveTool('look')
     // On mobile, you need to tap and hold on the canvas to save the image
     drawCanvas(activeMap);
     $('#tool-station-options').hide();
@@ -4583,7 +4589,7 @@ $(document).ready(function() {
         $('#tool-change-line-options').hide()
         // If the line tool is in use, unset it so we don't get a stale color
         if (activeTool == 'line') {
-          activeTool = 'look'
+          setActiveTool('look')
           $('#tool-line').attr('style', '')
           $('#tool-line').removeClass('active')
         } // if line
@@ -4613,10 +4619,44 @@ $(document).ready(function() {
 
   $('.map-style-line').on('click', function() {
     if ($(this).attr('id') == 'tool-map-style-line-750') {
-      mapLineWidth = 0.75
+      var chosenWidth = 0.75
     } else {
-      mapLineWidth = 1 / parseInt($(this).data('line-width-divisor'))
+      var chosenWidth = 1 / parseInt($(this).data('line-width-divisor'))
     }
+    if (selectedPoints.length > 0) {
+      for (xy of selectedPoints) {
+        var x = xy[0]
+        var y = xy[1]
+        var clws = getActiveLine(x, y, activeMap, true)
+        if (!clws) {
+          continue
+        }
+        var color = clws[0]
+        var lws = clws[1]
+
+        // Not using updateMapObject here, because it presumes the activeLineWidthStyle;
+        //  handle it manually
+        var oldWidth = lws.split("-1")[0]
+        if (oldWidth == chosenWidth) {
+          continue
+        }
+        var style = lws.split("-")[1]
+        var newLws = chosenWidth + "-" + style
+        if (!activeMap["points_by_color"][color][newLws]) {
+          activeMap["points_by_color"][color][newLws] = {}
+        }
+        if (!activeMap["points_by_color"][color][newLws][x]) {
+          activeMap["points_by_color"][color][newLws][x] = {}
+        }
+        delete activeMap["points_by_color"][color][lws][x][y]
+        activeMap["points_by_color"][color][newLws][x][y] = 1
+      }
+      drawCanvas(activeMap)
+      autoSave(activeMap)
+      return
+    }
+
+    mapLineWidth = chosenWidth
     $('.map-style-line.active-mapstyle').removeClass('active-mapstyle')
     $(this).addClass('active-mapstyle')
     if (activeMap && activeMap['global'] && activeMap['global']['style']) {
@@ -5552,7 +5592,7 @@ $('.line-style-choice-width').on('click', function() {
   activeLineWidth = $(this).attr('data-linewidth') / 100
   activeLineWidthStyle = activeLineWidth + '-' + activeLineStyle
   if (activeToolOption) {
-    activeTool = 'line'
+    setActiveTool('line')
   }
 })
 
@@ -5593,7 +5633,7 @@ $('.line-style-choice-style').on('click', function() {
   activeLineStyle = $(this).attr('data-linestyle')
   activeLineWidthStyle = activeLineWidth + '-' + activeLineStyle
   if (activeToolOption) {
-    activeTool = 'line'
+    setActiveTool('line')
   }
 
   // Hollow line buttons are two-tone and so need extra help
@@ -5782,20 +5822,27 @@ function drawRuler(x, y, replaceOrigin) {
   }
 } // drawRuler(x, y, replaceOrigin)
 
+function setActiveTool(tool) {
+  lastToolUsed = activeTool
+  activeTool = tool
+}
+
 $('#tool-eyedropper').on('click', function() {
-  activeTool = 'eyedropper'
+  setActiveTool('eyedropper')
 })
 
 $('#tool-look').on('click', function() {
-  activeTool = 'look'
+  setActiveTool('look')
 })
 
 $('#tool-select').on('click', function() {
-  activeTool = 'select'
-  if (selectedPoints) {
+  if (selectedPoints.length > 0) {
     // De-select current selection
     selectedPoints = []
     clearMarchingAnts()
+    setActiveTool(lastToolUsed)
+  } else {
+    setActiveTool('select')
   }
   // TODO: disable ruler when select is enabled, and vice-versa
 })
