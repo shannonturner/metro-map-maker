@@ -3187,6 +3187,16 @@ function moveMap(direction) {
         var yOffset = -1;
     }
 
+    if (selectedPoints.length > 0) {
+      // Prevent from going out of bounds, which we don't need to do in a loop
+      // Bounds-checking when no selectedPoints is done below
+      var sXYs = getCornersOfSelection(selectedPoints)
+      if (sXYs[0] == 0 && direction == 'left') { return }
+      else if (sXYs[1] == 0 && direction == 'up') { return }
+      else if (sXYs[2] == (gridCols - 1) && direction == 'right') { return }
+      else if (sXYs[3] == (gridRows - 1) && direction == 'down') { return }
+    }
+
     if (mapDataVersion == 3) {
       var newPointsByColor = {}
       var newStations = {}
@@ -3198,6 +3208,7 @@ function moveMap(direction) {
             for (var y in activeMap['points_by_color'][color][lineWidthStyle][x]) {
               x = parseInt(x);
               y = parseInt(y);
+              var skipDrawing = false;
               if (!Number.isInteger(x) || !Number.isInteger(y)) {
                 continue;
               }
@@ -3207,27 +3218,61 @@ function moveMap(direction) {
               }
 
               // Prevent going out of bounds
-              if (x == 0 && direction == 'left') { return }
-              else if (x == (gridCols - 1) && direction == 'right') { return }
-              else if (y == 0 && direction == 'up') { return }
-              else if (y == (gridRows - 1) && direction == 'down') { return }
+              if (selectedPoints.length == 0) {
+                if (x == 0 && direction == 'left') { return }
+                else if (x == (gridCols - 1) && direction == 'right') { return }
+                else if (y == 0 && direction == 'up') { return }
+                else if (y == (gridRows - 1) && direction == 'down') { return }
+              } else {
+                // Also prevent moving a portion of the map into existing lines
+                // TODO: Could improve this by only enforcing this if there's something at that boundary
+                if (direction == 'right' && (sXYs[2] + 1 == x) && (sXYs[1] <= y && sXYs[3] >= y)) {
+                  return
+                } else if (direction == 'left' && (sXYs[0] - 1 == x) && (sXYs[1] <= y && sXYs[3] >= y)) {
+                  return
+                } else if (direction == 'down' && (sXYs[3] + 1 == y) && (sXYs[0] <= x && sXYs[2] >= x)) {
+                  return
+                } else if (direction == 'up' && (sXYs[1] - 1 == y) && (sXYs[0] <= x && sXYs[2] >= x)) {
+                  return
+                }
+              }
+
+              if (!isWithinSelectedPoints(x, y)) {
+                if (!newPointsByColor[color][lineWidthStyle][x]) {
+                  newPointsByColor[color][lineWidthStyle][x] = {}
+                }
+                newPointsByColor[color][lineWidthStyle][x][y] = 1
+                // "continue" would be more obvious but then the stations don't get set;
+                //  but without this, everything doubles when drawn
+                skipDrawing = true
+              }
 
               // If x,y is within the boundaries
               if ((0 <= x && x < gridCols && 0 <= y && y < gridCols)) {
                 // If the next square is within the boundaries
                 if (0 <= x + xOffset && x + xOffset < gridCols && 0 <= y + yOffset && y + yOffset < gridCols) {
-                  newPointsByColor[color][lineWidthStyle][x + xOffset][y + yOffset] = activeMap['points_by_color'][color][lineWidthStyle][x][y]
                   if (activeMap['stations'] && activeMap['stations'][x] && activeMap['stations'][x][y]) {
-                    // v2 drawback is needing to do stations and lines separately
-                    if (!newStations[x + xOffset]) { newStations[x + xOffset] = {} }
-                    newStations[x + xOffset][y + yOffset] = activeMap['stations'][x][y]
+                    // drawback of v2 is needing to do stations and lines separately
+                    if (!isWithinSelectedPoints(x, y)) {
+                      if (!newStations[x]) { newStations[x] = {} }
+                      newStations[x][y] = activeMap['stations'][x][y]
+                    } else {
+                      if (!newStations[x + xOffset]) { newStations[x + xOffset] = {} }
+                      newStations[x + xOffset][y + yOffset] = activeMap['stations'][x][y]
+                    }
                   } // if stations
+                  if (!skipDrawing) {
+                    newPointsByColor[color][lineWidthStyle][x + xOffset][y + yOffset] = activeMap['points_by_color'][color][lineWidthStyle][x][y]
+                  }
                 } // next within boundaries
               } // x,y within boundaries
             } // for y
           } // for x
         } // lineWidthStyle
       } // color
+      if (selectedPoints.length > 0) {
+        updateSelectionUponMove(xOffset, yOffset)
+      }
       activeMap['points_by_color'] = newPointsByColor
       activeMap['stations'] = newStations
     } else if (mapDataVersion == 2) {
@@ -3307,6 +3352,30 @@ function moveMap(direction) {
     // If I do that, I should defer autoSave until it's over, and only do it once.
     return true
 } // moveMap(direction)
+
+function getCornersOfSelection(points) {
+  var allX = []
+  var allY = []
+  for (var xy of points) {
+    allX.push(xy[0])
+    allY.push(xy[1])
+  }
+  return [Math.min(...allX), Math.min(...allY), Math.max(...allX), Math.max(...allY)]
+} // getCornersOfSelection
+
+function updateSelectionUponMove(xOffset, yOffset) {
+  // After moving the map, the selectedPoints needs to also move
+  var newSelectedPoints = structuredClone(selectedPoints)
+  var x1 = MAX_MAP_SIZE, y1 = MAX_MAP_SIZE
+  var x2 = 0, y2 = 0
+  for (var coords in newSelectedPoints) {
+    newSelectedPoints[coords][0] += xOffset || 0
+    newSelectedPoints[coords][1] += yOffset || 0
+  }
+  selectedPoints = newSelectedPoints
+  clearMarchingAnts()
+  drawSelectionBox(...getCornersOfSelection(newSelectedPoints))
+} // updateSelectionUponMove(xOffset, yOffset)
 
 function disableRightClick(event) {
   // Sometimes when creating a map it's too easy to accidentally right click and it's annoying
