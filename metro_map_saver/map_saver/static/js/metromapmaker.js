@@ -4865,6 +4865,18 @@ function setAllStationOrientations(metroMap, orientation) {
   if (ALLOWED_ORIENTATIONS.indexOf(orientation) == -1)
     return
 
+  if (selectedPoints.length > 0) {
+    for (xy of selectedPoints) {
+      var x = xy[0]
+      var y = xy[1]
+      if (!metroMap["stations"][x] || !metroMap["stations"][x][y]) {
+        continue
+      }
+      metroMap["stations"][x][y]["orientation"] = orientation
+    }
+    return
+  }
+
   if (mapDataVersion == 2 || mapDataVersion == 3) {
     for (var x in metroMap['stations']) {
       for (var y in metroMap['stations'][x]) {
@@ -4903,13 +4915,11 @@ function resetAllStationStyles(metroMap) {
     for (xy of selectedPoints) {
       var x = xy[0]
       var y = xy[1]
-      if (!activeMap["stations"][x] || !activeMap["stations"][x][y]) {
+      if (!metroMap["stations"][x] || !metroMap["stations"][x][y]) {
         continue
       }
-      delete activeMap["stations"][x][y]["style"]
+      delete metroMap["stations"][x][y]["style"]
     }
-    autoSave(activeMap)
-    drawCanvas(activeMap)
     return
   }
 
