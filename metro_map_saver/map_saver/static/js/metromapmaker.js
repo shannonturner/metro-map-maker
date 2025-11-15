@@ -889,7 +889,11 @@ function bindGridSquareMousedown(event) {
     for (var x=0; x<gridRows; x++) {
       for (var y=0; y<gridCols; y++) {
         if (x == clickX || y == clickY || Math.abs(x - clickX) == Math.abs(y - clickY)) {
-          drawHoverIndicator(x, y, '#2E71CC')
+          if (isWithinSelectedPoints(x, y)) {
+            drawHoverIndicator(x, y, '#2E71CC')
+          } else {
+            drawHoverIndicator(x, y, '#CC2E70')
+          }
         } // if it's a straight line from the origin
       } // for y
     } // for x
