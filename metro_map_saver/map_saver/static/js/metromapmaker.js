@@ -57,14 +57,17 @@ function compatibilityModeIndicator() {
     $('.M:not(.mobile)').css({"background-color": "#bd1038"}) // red
     $('#title').css({"color": "#bd1038"})
     $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
+    $('#tool-select, #tool-deselect').hide()
   } else if (mapDataVersion == 2) {
     $('.M:not(.mobile)').css({"background-color": "#df8600"}) // orange
     $('#title').css({"color": "#df8600"})
     $('#tool-move-v1-warning').attr('style', 'display: none')
+    $('#tool-select, #tool-deselect').hide()
   } else {
     $('.M:not(.mobile)').css({"background-color": "#000"})
     $('#title').css({"color": "#000"})
     $('#tool-move-v1-warning').attr('style', 'display: none')
+    $('#tool-select, #tool-deselect').show()
   }
 }
 compatibilityModeIndicator()
@@ -5836,6 +5839,7 @@ $('#tool-look').on('click', function() {
 })
 
 $('#tool-select').on('click', function() {
+  if (mapDataVersion < 3) { return }
   if (selectedPoints.length > 0) {
     // De-select current selection
     selectedPoints = []
