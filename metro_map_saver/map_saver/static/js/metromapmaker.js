@@ -966,8 +966,12 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
     } else {
       ctx.globalAlpha = 0.25
       ctx.fillStyle = '#CC2E70'
-      // TODO: invalid placement box doesn't get drawn correctly -- sometimes it's too thin, other times too thick
-      ctx.fillRect((x * gridPixelMultiplier) - (gridPixelMultiplier / 2), (y * gridPixelMultiplier) - (gridPixelMultiplier / 2), (((sliceCoords[2] - sliceCoords[0]) + x)), (((sliceCoords[3] - sliceCoords[1]) + y)))
+      ctx.fillRect(
+        (x * gridPixelMultiplier) - (gridPixelMultiplier / 2),
+        (y * gridPixelMultiplier) - (gridPixelMultiplier / 2),
+        (sliceCoords[2] - sliceCoords[0] + gridPixelMultiplier),
+        (sliceCoords[3] - sliceCoords[1] + gridPixelMultiplier)
+      )
     }
 
     // TODO: it may be possible to get better performance by defining these above and using the willreadfrequently flag -- test on a slower computer to see if it's worth it!
