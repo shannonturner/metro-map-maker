@@ -955,8 +955,6 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
         var xOffset = (selectedPoints[c][0] - selectOrigin[0])
         var yOffset = (selectedPoints[c][1] - selectOrigin[1])
 
-        // TODO: Seems as though very small selections don't get drawn properly
-
         if (validPlacement && getActiveLine(x + xOffset, y + yOffset, activeMap)) {
           // Only worth doing this check if the placement is still valid
           validPlacement = false
@@ -968,6 +966,7 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
     } else {
       ctx.globalAlpha = 0.25
       ctx.fillStyle = '#CC2E70'
+      // TODO: invalid placement box doesn't get drawn correctly -- sometimes it's too thin, other times too thick
       ctx.fillRect((x * gridPixelMultiplier) - (gridPixelMultiplier / 2), (y * gridPixelMultiplier) - (gridPixelMultiplier / 2), (((sliceCoords[2] - sliceCoords[0]) + x)), (((sliceCoords[3] - sliceCoords[1]) + y)))
     }
 
@@ -977,8 +976,28 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
     var mainCanvas = document.getElementById('metro-map-canvas')
     var stationCanvas = document.getElementById('metro-map-stations-canvas')
 
-    ctx.drawImage(mainCanvas, sliceCoords[0], sliceCoords[1], (sliceCoords[2] - sliceCoords[0]), (sliceCoords[3] - sliceCoords[1]), x * gridPixelMultiplier, y * gridPixelMultiplier, (sliceCoords[2] - sliceCoords[0]), (sliceCoords[3] - sliceCoords[1]))
-    ctx.drawImage(stationCanvas, sliceCoords[0], sliceCoords[1], (sliceCoords[2] - sliceCoords[0]), (sliceCoords[3] - sliceCoords[1]), x * gridPixelMultiplier, y * gridPixelMultiplier, (sliceCoords[2] - sliceCoords[0]), (sliceCoords[3] - sliceCoords[1]))
+    ctx.drawImage( // image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+      mainCanvas,
+      sliceCoords[0] - (gridPixelMultiplier / 2),
+      sliceCoords[1] - (gridPixelMultiplier / 2),
+      (sliceCoords[2] - sliceCoords[0]) + gridPixelMultiplier,
+      (sliceCoords[3] - sliceCoords[1]) + gridPixelMultiplier,
+      (x * gridPixelMultiplier) - (gridPixelMultiplier / 2),
+      (y * gridPixelMultiplier) - (gridPixelMultiplier / 2),
+      (gridPixelMultiplier, sliceCoords[2] - sliceCoords[0]) + gridPixelMultiplier,
+      (gridPixelMultiplier, sliceCoords[3] - sliceCoords[1]) + gridPixelMultiplier
+    )
+    ctx.drawImage(
+      stationCanvas,
+      sliceCoords[0]  - (gridPixelMultiplier / 2),
+      sliceCoords[1]  - (gridPixelMultiplier / 2),
+      (sliceCoords[2] - sliceCoords[0]) + gridPixelMultiplier,
+      (sliceCoords[3] - sliceCoords[1]) + gridPixelMultiplier,
+      (x * gridPixelMultiplier) - (gridPixelMultiplier / 2),
+      (y * gridPixelMultiplier) - (gridPixelMultiplier / 2),
+      (sliceCoords[2] - sliceCoords[0]) + gridPixelMultiplier,
+      (sliceCoords[3] - sliceCoords[1]) + gridPixelMultiplier
+    )
   }
   ctx.fillStyle = fillColor || activeColor || '#2ECC71'
   ctx.fillRect((x * gridPixelMultiplier) - (gridPixelMultiplier / 2), (y * gridPixelMultiplier) - (gridPixelMultiplier / 2), gridPixelMultiplier, gridPixelMultiplier)
