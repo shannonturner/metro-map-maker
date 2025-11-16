@@ -4158,6 +4158,12 @@ $(document).ready(function() {
       // Draw rail colors in order of appearance, 1-10 (0 is 10)
       railKey = numberKeys.indexOf(event.code)
     }
+    else if (event.key == 'Escape' && selectedPoints.length > 0) {
+      // De-select current selection, cancel any move in progress
+      setActiveTool(lastToolUsed, true)
+      selectedPoints = []
+      clearMarchingAnts()
+    }
 
     // ----- Note: This is a separate conditional from the event.code keydowns
     if (railKey !== false && possibleRailLines[railKey]) {
@@ -6047,9 +6053,12 @@ function drawRuler(x, y, replaceOrigin) {
   }
 } // drawRuler(x, y, replaceOrigin)
 
-function setActiveTool(tool) {
-  lastToolUsed = activeTool
-  activeTool = tool
+function setActiveTool(tool, skipSaveLast) {
+  if (!skipSaveLast) {
+    lastToolUsed = activeTool
+  }
+  activeTool = tool || 'look'
+  // TODO: Would be nice to visually show which tool is active rather than just changing it
 }
 
 $('#tool-eyedropper').on('click', function() {
