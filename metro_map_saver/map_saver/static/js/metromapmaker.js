@@ -765,6 +765,10 @@ function bindGridSquareEvents(event) {
       $('#tool-eyedropper').removeClass('active')
       $('#tool-eyedropper').removeAttr('style')
     } // if color, lineWidthStyle
+  } else if (activeTool == 'move') {
+    var corners = getCornersOfSelection(selectedPoints)
+    var bbox2 = getPointsWithinBoundingBox(x, y, x + (corners[2] - corners[0]), y + (corners[3] - corners[1]))
+    moveSelectionTo(selectedPoints, bbox2)
   }
 } // bindGridSquareEvents()
 
@@ -915,6 +919,7 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
   // Displays a hover indicator on the hover canvas at x,y
   var canvas = document.getElementById('hover-canvas')
   var ctx = canvas.getContext('2d')
+  var gridPixelMultiplier = canvas.width / gridCols
   if (!fillColor) {
     // Only clear the canvas if we aren't indicating straight line assist
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -932,7 +937,6 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
   else if (activeTool == 'eraser')
     var activeColor = '#ffffff'
   else if (activeTool == 'station' && moveStationOn.length == 2) {
-    var gridPixelMultiplier = canvas.width / gridCols
     ctx.font = '700 ' + gridPixelMultiplier + 'px sans-serif';
     if (!getActiveLine(x, y, activeMap) || getStation(x, y, activeMap)) {
       ctx.globalAlpha = 0.25 // Visually indicate that it's not valid
@@ -940,9 +944,19 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
       ctx.globalAlpha = 0.75
     }
     drawStation(ctx, moveStationOn[0], moveStationOn[1], activeMap, false, x, y)
+  } else if (activeTool == 'move') {
+    // TODO: Consider: it may be more legible if the full station names were also part of what gets displayed,
+    //  though that may add quite a bit of complexity
+    ctx.globalAlpha = 0.75 // TODO: Set the globalAlpha to 0.25 and/or show some other indication when there isn't a valid placement
+
+    var sliceCoords = getCornersOfSelection(selectedPoints).map((n) => n * gridPixelMultiplier)
+    var mainCanvas = document.getElementById('metro-map-canvas')
+    var stationCanvas = document.getElementById('metro-map-stations-canvas')
+
+    ctx.drawImage(mainCanvas, sliceCoords[0], sliceCoords[1], (sliceCoords[2] - sliceCoords[0]), (sliceCoords[3] - sliceCoords[1]), x * gridPixelMultiplier, y * gridPixelMultiplier, (sliceCoords[2] - sliceCoords[0]), (sliceCoords[3] - sliceCoords[1]))
+    ctx.drawImage(stationCanvas, sliceCoords[0], sliceCoords[1], (sliceCoords[2] - sliceCoords[0]), (sliceCoords[3] - sliceCoords[1]), x * gridPixelMultiplier, y * gridPixelMultiplier, (sliceCoords[2] - sliceCoords[0]), (sliceCoords[3] - sliceCoords[1]))
   }
   ctx.fillStyle = fillColor || activeColor || '#2ECC71'
-  var gridPixelMultiplier = canvas.width / gridCols
   ctx.fillRect((x * gridPixelMultiplier) - (gridPixelMultiplier / 2), (y * gridPixelMultiplier) - (gridPixelMultiplier / 2), gridPixelMultiplier, gridPixelMultiplier)
 } // drawHoverIndicator(x, y)
 
@@ -3092,6 +3106,52 @@ function updateMapObject(x, y, key, data) {
   return metroMap;
 } // updateMapObject()
 
+function moveSelectionTo(bbox1, bbox2) {
+  // Moves a selection (bbox1) to the coordinates at bbox2,
+  //  if those are valid
+
+  for (var xy of bbox2) {
+    if (getActiveLine(xy[0], xy[1], activeMap)) {
+      // Can't move to this space if any coords in bbox2 have a point already
+      return // TODO: Consider showing visual bell to indicate failure
+    }
+  }
+
+  // Now: iterate over coords in bbox1, apply them to bbox2 coords,
+  //  then delete the coords from bbox1
+  //  make sure to move stations too.
+  for (var c in bbox1) {
+    var clws = getActiveLine(bbox1[c][0], bbox1[c][1], activeMap, true)
+    if (!clws) { continue } // Nothing at this point
+    var color = clws[0]
+    var lws = clws[1]
+    var xy = bbox2[c]
+    var x = xy[0]
+    var y = xy[1]
+    if (!activeMap["points_by_color"][color][lws][x]) {
+      activeMap["points_by_color"][color][lws][x] = {}
+    }
+    activeMap["points_by_color"][color][lws][x][y] = 1
+    delete activeMap["points_by_color"][color][lws][bbox1[c][0]][bbox1[c][1]]
+    if (activeMap["stations"][bbox1[c][0]] && activeMap["stations"][bbox1[c][0]][bbox1[c][1]]) {
+      if (!activeMap["stations"][x]) {
+        activeMap["stations"][x] = {}
+      }
+      if (!activeMap["stations"][x][y]) {
+        activeMap["stations"][x][y] = {}
+      }
+      // If there's a station here, copy it too
+      activeMap["stations"][x][y] = Object.assign({}, activeMap["stations"][bbox1[c][0]][bbox1[c][1]])
+      delete activeMap["stations"][bbox1[c][0]][bbox1[c][1]]
+    }
+  }
+  selectedPoints = bbox2
+  clearMarchingAnts()
+  drawSelectionBox(...getCornersOfSelection(selectedPoints))
+  drawCanvas(activeMap)
+  autoSave(activeMap)
+} // moveSelectionTo(bbox1, bbox2)
+
 function moveStationTo(fromX, fromY, x, y) {
   // Moves an existing station (station) to the coordinates at (x,y),
   //  if those are valid
@@ -3190,6 +3250,7 @@ function moveMap(direction) {
     if (selectedPoints.length > 0) {
       // Prevent from going out of bounds, which we don't need to do in a loop
       // Bounds-checking when no selectedPoints is done below
+      // CONSIDER: Major improvement here would be to get the minimal points excluding blank spaces
       var sXYs = getCornersOfSelection(selectedPoints)
       if (sXYs[0] == 0 && direction == 'left') { return }
       else if (sXYs[1] == 0 && direction == 'up') { return }
@@ -3932,6 +3993,9 @@ $(document).ready(function() {
         $('#move-station').trigger('click')
       } else {
         setMoveStationAbility(true) // disable it
+      }
+      if (activeTool == 'select' && selectedPoints.length > 0) {
+        $('#tool-move-selection').trigger('click')
       }
     }
     else if (event.key.toLowerCase() == 'o' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // O, except for Open
@@ -5965,7 +6029,6 @@ $('#tool-select').on('click', function() {
 
 function drawSelectionBox(x1, y1, x2, y2) {
   var canvas = document.getElementById('ruler-canvas') // Ruler and select can't be active at the same time, so let's borrow it
-  // TODO: Consider whether ruler should be allowed to be active at the same time as Select; if I change this canvas, I'll want to change it in clearMarchingAnts() too
   var ctx = canvas.getContext('2d')
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   ctx.setLineDash([4, 2])
@@ -6035,7 +6098,7 @@ function getPointsWithinBoundingBox(x1, y1, x2, y2) {
     }
   }
 
-  console.log(`pointsWithin is: ${pointsWithin}`)
+  if (MMMDEBUG) { console.log(`pointsWithin is: ${pointsWithin}`) }
   return pointsWithin
 } // getPointsWithinBoundingBox(x1, y1, x2, y2)
 
@@ -6052,6 +6115,13 @@ function isWithinSelectedPoints(x, y) {
   } while (selectedPointsClone.length > 0)
   return false
 } // isWithinSelectedPoints(x, y)
+
+$('#tool-move-selection').on("click", function() {
+  if (selectedPoints.length == 0) {
+    return
+  }
+  activeTool = 'move' // TODO: should this be setActiveTool() or nah?
+})
 
 function setMoveStationAbility(disable) {
   // By default, this should toggle,
