@@ -57,17 +57,17 @@ function compatibilityModeIndicator() {
     $('.M:not(.mobile)').css({"background-color": "#bd1038"}) // red
     $('#title').css({"color": "#bd1038"})
     $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
-    $('#tool-select, #tool-deselect').hide()
+    $('#tool-select, #tool-move-selection').hide()
   } else if (mapDataVersion == 2) {
     $('.M:not(.mobile)').css({"background-color": "#df8600"}) // orange
     $('#title').css({"color": "#df8600"})
     $('#tool-move-v1-warning').attr('style', 'display: none')
-    $('#tool-select, #tool-deselect').hide()
+    $('#tool-select, #tool-move-selection').hide()
   } else {
     $('.M:not(.mobile)').css({"background-color": "#000"})
     $('#title').css({"color": "#000"})
     $('#tool-move-v1-warning').attr('style', 'display: none')
-    $('#tool-select, #tool-deselect').show()
+    $('#tool-select, #tool-move-selection').show()
   }
 }
 compatibilityModeIndicator()
@@ -5992,6 +5992,11 @@ $('#tool-ruler').on('click', function() {
   var canvas = document.getElementById('ruler-canvas')
   var ctx = canvas.getContext('2d')
   ctx.clearRect(0, 0, canvas.width, canvas.height)
+  if (selectedPoints.length > 0 || activeTool == 'select') {
+    activeTool = 'look'
+    selectedPoints = []
+    clearMarchingAnts()
+  }
 })
 
 function drawRuler(x, y, replaceOrigin) {
@@ -6078,13 +6083,22 @@ $('#tool-select').on('click', function() {
     setActiveTool(lastToolUsed)
   } else {
     setActiveTool('select')
+    rulerOn = false
+    rulerOrigin = []
+    $('#tool-ruler').removeClass('active')
+    $('#tool-ruler').removeClass('remains-active')
   }
-  // TODO: disable ruler when select is enabled, and vice-versa
 })
 
 function drawSelectionBox(x1, y1, x2, y2) {
   var canvas = document.getElementById('ruler-canvas') // Ruler and select can't be active at the same time, so let's borrow it
   var ctx = canvas.getContext('2d')
+
+  // Reset to defaults so ruler doesn't take over
+  ctx.fillStyle = '#000000'
+  ctx.strokeStyle = '#000000'
+  ctx.lineWidth = 1
+
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   ctx.setLineDash([4, 2])
   ctx.lineDashOffset = marchingAntsOffset
