@@ -946,9 +946,34 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
   } else if (activeTool == 'move') {
     // CONSIDER: it may be more legible if the full station names were also part of what gets displayed,
     //  though that may add quite a bit of complexity
-    ctx.globalAlpha = 0.75 // TODO: Set the globalAlpha to 0.25 and/or show some other indication when there isn't a valid placement
-
     var sliceCoords = getCornersOfSelection(selectedPoints).map((n) => n * gridPixelMultiplier)
+
+    var validPlacement = true
+    if (selectedPoints.length > 0) {
+      var selectOrigin = selectedPoints[0]
+      for (var c in selectedPoints) {
+        var xOffset = (selectedPoints[c][0] - selectOrigin[0])
+        var yOffset = (selectedPoints[c][1] - selectOrigin[1])
+
+        // TODO: Seems as though very small selections don't get drawn properly
+
+        if (validPlacement && getActiveLine(x + xOffset, y + yOffset, activeMap)) {
+          // Only worth doing this check if the placement is still valid
+          validPlacement = false
+        }
+      }
+    }
+    if (validPlacement) {
+      ctx.globalAlpha = 0.75
+    } else {
+      ctx.globalAlpha = 0.25
+      ctx.fillStyle = '#CC2E70'
+      ctx.fillRect((x * gridPixelMultiplier) - (gridPixelMultiplier / 2), (y * gridPixelMultiplier) - (gridPixelMultiplier / 2), (((sliceCoords[2] - sliceCoords[0]) + x)), (((sliceCoords[3] - sliceCoords[1]) + y)))
+    }
+
+    // TODO: it may be possible to get better performance by defining these above and using the willreadfrequently flag -- test on a slower computer to see if it's worth it!
+    // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext#willreadfrequently for additional flags
+    // May also benefit from throttling drawHoverIndicator altogether
     var mainCanvas = document.getElementById('metro-map-canvas')
     var stationCanvas = document.getElementById('metro-map-stations-canvas')
 
