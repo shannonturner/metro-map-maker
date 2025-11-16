@@ -276,9 +276,10 @@ function getActiveLine(x, y, metroMap, returnLineWidthStyle) {
   // Given an x, y coordinate pair, return the hex code for the line you're on.
   // Use this to retrieve the line for a given point on a map.
   if (mapDataVersion == 3 && metroMap["global"]["lines"]) {
-    // TODO: I can avoid looping over colors and styles by keeping a v1-style
+    // CONSIDER: I can avoid looping over colors and styles by keeping a v1-style
     // mapping of all of the points, like:
     // [10][20] = {"color": "bd1038", "line_width": 0.25, "line_style": "solid"}
+    // ^ THIS WOULD BE AN EXCELLENT THING TO DO FOR EASE AND MAINTAINABILITY
     for (var color in metroMap["points_by_color"]) {
       for (var lineWidthStyle in metroMap["points_by_color"][color]) {
         if (coordinateInColor(x, y, metroMap, color, lineWidthStyle)) {
@@ -524,8 +525,6 @@ function redrawCanvasForColor(color, isOnOrAdjacentToStation, previousColor) {
 
   // Redraw the stations canvas too, if any stations were deleted or edited nearby
   if (isOnOrAdjacentToStation) {
-    // TODO: Is it possible to improve performance even further
-    //  by separating out the station drawing and the station name drawing?
     drawCanvas(activeMap, true)
   }
 
@@ -783,7 +782,7 @@ function bindGridSquareMouseover(event) {
   hoverY = xy[1]
 
   if (rightClicking) {
-    // TODO: Pan-scroll on right click
+    // CONSIDER: Pan-scroll on right click
   }
 
   if (!mouseIsDown && activeTool == 'eyedropper') {
@@ -945,7 +944,7 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
     }
     drawStation(ctx, moveStationOn[0], moveStationOn[1], activeMap, false, x, y)
   } else if (activeTool == 'move') {
-    // TODO: Consider: it may be more legible if the full station names were also part of what gets displayed,
+    // CONSIDER: it may be more legible if the full station names were also part of what gets displayed,
     //  though that may add quite a bit of complexity
     ctx.globalAlpha = 0.75 // TODO: Set the globalAlpha to 0.25 and/or show some other indication when there isn't a valid placement
 
@@ -2885,7 +2884,7 @@ function setMapStyle(metroMap) {
 
 function isMapStretchable(size) {
   // Determine if the map is small enough to be stretched
-  // TODO: be smarter about whether I can actually stretch rather than basing it on gridRows/Cols
+  // CONSIDER: be smarter about whether I can actually stretch rather than basing it on gridRows/Cols
   if (size) {
     return size <= MAX_MAP_SIZE / 2
   } else {
@@ -3113,7 +3112,7 @@ function moveSelectionTo(bbox1, bbox2) {
   for (var xy of bbox2) {
     if (getActiveLine(xy[0], xy[1], activeMap)) {
       // Can't move to this space if any coords in bbox2 have a point already
-      return // TODO: Consider showing visual bell to indicate failure
+      return // CONSIDER: Consider showing visual bell to indicate failure
     }
   }
 
@@ -3157,7 +3156,7 @@ function moveStationTo(fromX, fromY, x, y) {
   //  if those are valid
 
   if (!getActiveLine(x, y, activeMap)) {
-    return // TODO: Consider showing visual bell to indicate failure
+    return // CONSIDER: Consider showing visual bell to indicate failure
   }
 
   if (getStation(x, y, activeMap)) {
@@ -3213,7 +3212,7 @@ function moveStation(directions) {
     //  to be able to switch which station is active,
     //  not swap positions or place one station on top of another
     if (getStation(x, y, activeMap)) {
-      return // TODO: Consider showing visual bell to indicate failure
+      return // CONSIDER: Consider showing visual bell to indicate failure
     }
     var x = parseInt($('#station-coordinates-x').val())
     var y = parseInt($('#station-coordinates-y').val())
@@ -3534,7 +3533,7 @@ function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
     // While it might be simpler to have a unified version of this function,
     //  the differences in the return values of getActiveLine() are significant enough
     //  among the versions, and this avoids an infinite loop when flood filling over a black line (000000) in v2
-    // TODO: Revisit a unified version; might be able to special-case the 000000 problem
+    // CONSIDER: Revisit a unified version; might be able to special-case the 000000 problem
     while (coords.length > 0)
     {
       y = coords.pop()
@@ -5474,7 +5473,6 @@ function stretchMap(metroMapObject) {
         if (!colorLineWidthStyle) { continue }
         var color = colorLineWidthStyle[0]
         var lineWidthStyle = colorLineWidthStyle[1]
-        // TODO: stretching _Zco941M gives kiz6hQ8Y -- pretty much everything is gone
         if (!newMapObject['points_by_color'][color][lineWidthStyle]) {
           newMapObject['points_by_color'][color][lineWidthStyle] = {}
         }
@@ -5663,7 +5661,7 @@ function collapseToolbox() {
   menuIsCollapsed = true
   $('#controls').addClass('collapsed')
 
-  // TODO: Can replace most of these hide/shows here and in expandToolbox with editing index.html to use the .hide-when-collapsed class
+  // CONSIDER: Can replace most of these hide/shows here and in expandToolbox with editing index.html to use the .hide-when-collapsed class
 
   $('#toolbox button span.button-label').hide()
   $('#title, #remix, #credits, #rail-line-new, #tool-new-line-options, #line-style-options, #rail-line-change, #tool-change-line-options, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-move-options, #tool-resize-all, #tool-resize-options, #tool-map-style, #tool-map-style-options, #name-map, #name-this-map').hide()
@@ -6200,7 +6198,7 @@ function restyleAllLines(toWidth, toStyle, deferSave) {
           newMapObject["points_by_color"][color][newLws] = {}
         }
 
-        // TODO: This could maybe be made more efficient?
+        // CONSIDER: This could maybe be made more efficient?
         // Using Object.assign is ~40x faster here (0.2ms vs 8ms on a 360x fully-filled map),
         //  but I was running into intermittent issues where some line data could be lost
         //  when a given line had multiple points within the same X value, leading to Y values being dropped
