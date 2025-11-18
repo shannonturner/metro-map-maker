@@ -958,6 +958,7 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
         if (validPlacement && getActiveLine(x + xOffset, y + yOffset, activeMap)) {
           // Only worth doing this check if the placement is still valid
           validPlacement = false
+          break
         }
       }
     }
@@ -3153,20 +3154,82 @@ function updateMapObject(x, y, key, data) {
   return metroMap;
 } // updateMapObject()
 
+function getIntersectionAndDifferences(bbox1, bbox2) {
+  // Given two bounding boxes,
+  //  return the intersection (overlap)
+  //  as well as all of the points from bbox1 that don't appear in bbox2
+  //    (which are the ones to be deleted when moveSelectionTo occurs)
+  //  and the points from bbox2 that don't appear in bbox1
+  //    (which determines whether or not this is a valid placement)
+
+  // As-is, can't get intersection/difference here like in findLines,
+  //  because that uses coords in "x,y" format (as strings) rather than [x,y]
+  // So let's convert it.
+  var bbox1_set = new Set()
+  for (var xy of bbox1) {
+    bbox1_set.add(`${xy[0]},${xy[1]}`)
+  }
+  var bbox2_set = new Set()
+  for (var xy of bbox2) {
+    bbox2_set.add(`${xy[0]},${xy[1]}`)
+  }
+
+  // This would be so much easier if Javascript recognized Array equality
+  if (typeof bbox1_set.difference == 'function') {
+    var difference1 = bbox1_set.difference(bbox2_set)
+    var difference2 = bbox2_set.difference(bbox1_set)
+  } else {
+    var difference1 = new Set()
+    var difference2 = new Set()
+    for (var c of bbox2_set) {
+      if (!bbox1_set.has(c)) {
+        difference1.add(c)
+      }
+    }
+    for (var c of bbox1_set) {
+      if (!bbox2_set.has(c)) {
+        difference2.add(c)
+      }
+    }
+  } // .difference compatibility check
+  return [bbox1_set.intersection(bbox2_set), difference1, difference2, bbox1_set, bbox2_set]
+} // getIntersectionAndDifferences(bbox1, bbox2)
+
 function moveSelectionTo(bbox1, bbox2) {
   // Moves a selection (bbox1) to the coordinates at bbox2,
   //  if those are valid
 
-  for (var xy of bbox2) {
+  // CONSIDER: This is a pretty naive implementation, and could be improved upon.
+  // Worth profiling to see what the performance is like, and whether there are optimizations
+
+  var t0 = performance.now()
+
+  var bboxes = getIntersectionAndDifferences(bbox1, bbox2)
+  var intersection = bboxes[0]
+  var bbox2diff1 = bboxes[2] // Determines whether this is a valid placement
+
+  var t1 = performance.now()
+
+  if (intersection.size == selectedPoints.length) {
+    // Selections are the same, end early
+    return
+  }
+
+  for (var xy of bbox2diff1) {
+    xy = xy.split(",")
     if (getActiveLine(xy[0], xy[1], activeMap)) {
-      // Can't move to this space if any coords in bbox2 have a point already
-      return // CONSIDER: Consider showing visual bell to indicate failure
+      // Can't move to this space if any coords
+      //  in the non-overlapping portion of bbox2 has a point already
+      return // CONSIDER: Consider showing a visual bell to indicate failure
     }
   }
 
   // Now: iterate over coords in bbox1, apply them to bbox2 coords,
   //  then delete the coords from bbox1
   //  make sure to move stations too.
+  var pointsToAdd = {}
+  var stationsToAdd = {}
+  var newMapObject = structuredClone(activeMap)
   for (var c in bbox1) {
     var clws = getActiveLine(bbox1[c][0], bbox1[c][1], activeMap, true)
     if (!clws) { continue } // Nothing at this point
@@ -3175,28 +3238,78 @@ function moveSelectionTo(bbox1, bbox2) {
     var xy = bbox2[c]
     var x = xy[0]
     var y = xy[1]
-    if (!activeMap["points_by_color"][color][lws][x]) {
-      activeMap["points_by_color"][color][lws][x] = {}
+
+    // Delete the point from newMapObject
+    delete newMapObject["points_by_color"][color][lws][bbox1[c][0]][bbox1[c][1]]
+
+    // Add these after all deletes have occurred
+    if (!pointsToAdd[color]) {
+      pointsToAdd[color] = {}
     }
-    activeMap["points_by_color"][color][lws][x][y] = 1
-    delete activeMap["points_by_color"][color][lws][bbox1[c][0]][bbox1[c][1]]
-    if (activeMap["stations"][bbox1[c][0]] && activeMap["stations"][bbox1[c][0]][bbox1[c][1]]) {
-      if (!activeMap["stations"][x]) {
-        activeMap["stations"][x] = {}
+    if (!pointsToAdd[color][lws]) {
+      pointsToAdd[color][lws] = {}
+    }
+    if (!pointsToAdd[color][lws][x]) {
+      pointsToAdd[color][lws][x] = {}
+    }
+    pointsToAdd[color][lws][x][y] = 1
+
+    // Delete the station if existing, too
+    if (newMapObject["stations"][bbox1[c][0]] && newMapObject["stations"][bbox1[c][0]][bbox1[c][1]]) {
+      delete newMapObject["stations"][bbox1[c][0]][bbox1[c][1]]
+      if (Object.keys(newMapObject["stations"][bbox1[c][0]]).length == 0) {
+        delete newMapObject["stations"][bbox1[c][0]]
       }
-      if (!activeMap["stations"][x][y]) {
-        activeMap["stations"][x][y] = {}
+
+      if (!stationsToAdd[x]) {
+        stationsToAdd[x] = {}
       }
-      // If there's a station here, copy it too
-      activeMap["stations"][x][y] = Object.assign({}, activeMap["stations"][bbox1[c][0]][bbox1[c][1]])
-      delete activeMap["stations"][bbox1[c][0]][bbox1[c][1]]
+      if (!stationsToAdd[x][y]) {
+        stationsToAdd[x][y] = {}
+      }
+      stationsToAdd[x][y] = Object.assign({}, activeMap["stations"][bbox1[c][0]][bbox1[c][1]])
     }
   }
+
+  for (var color of Object.keys(pointsToAdd)) {
+    for (var lws of Object.keys(pointsToAdd[color])) {
+      for (var x of Object.keys(pointsToAdd[color][lws])) {
+        for (var y of Object.keys(pointsToAdd[color][lws][x])) {
+          if (!newMapObject["points_by_color"][color]) {
+            newMapObject["points_by_color"][color] = {}
+          }
+          if (!newMapObject["points_by_color"][color][lws]) {
+            newMapObject["points_by_color"][color][lws] = {}
+          }
+          if (!newMapObject["points_by_color"][color][lws][x]) {
+            newMapObject["points_by_color"][color][lws][x] = {}
+          }
+          newMapObject["points_by_color"][color][lws][x][y] = 1
+        } // for y
+      } // for x
+    } // for lws
+  } // for color
+
+  // Drawing the stations
+  for (var x of Object.keys(stationsToAdd)) {
+    for (var y of Object.keys(stationsToAdd[x])) {
+      if (!newMapObject["stations"][x]) {
+        newMapObject["stations"][x] = {}
+      }
+      if (!newMapObject["stations"][x][y]) {
+        newMapObject["stations"][x][y] = {}
+      }
+      newMapObject["stations"][x][y] = Object.assign({}, stationsToAdd[x][y])
+    } // for y
+  } // for x
+
   selectedPoints = bbox2
   clearMarchingAnts()
   drawSelectionBox(...getCornersOfSelection(selectedPoints))
-  drawCanvas(activeMap)
-  autoSave(activeMap)
+  var t2 = performance.now()
+  if (MMMDEBUG) { console.log(`PERF OF moveSelectionTo: t1-t0: ${(t1-t0)}ms t2-t1: ${t2-t1}ms`) }
+  autoSave(newMapObject)
+  drawCanvas(newMapObject)
 } // moveSelectionTo(bbox1, bbox2)
 
 function moveStationTo(fromX, fromY, x, y) {
@@ -6167,7 +6280,7 @@ function getPointsWithinBoundingBox(x1, y1, x2, y2) {
     }
   }
 
-  if (MMMDEBUG) { console.log(`pointsWithin is: ${pointsWithin}`) }
+  // if (MMMDEBUG) { console.log(`pointsWithin is: ${pointsWithin}`) }
   return pointsWithin
 } // getPointsWithinBoundingBox(x1, y1, x2, y2)
 
