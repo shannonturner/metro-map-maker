@@ -6216,7 +6216,11 @@ $('#tool-select').on('click', function() {
     // De-select current selection
     selectedPoints = []
     clearMarchingAnts()
-    setActiveTool(lastToolUsed)
+    if (activeTool == 'move') {
+      setActiveTool('select')
+    } else if (activeTool == 'select' && lastToolUsed != 'move') {
+      setActiveTool(lastToolUsed)
+    }
   } else {
     setActiveTool('select')
     rulerOn = false
