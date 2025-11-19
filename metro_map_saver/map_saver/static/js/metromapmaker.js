@@ -764,7 +764,7 @@ function bindGridSquareEvents(event) {
       $('#tool-eyedropper').removeClass('active')
       $('#tool-eyedropper').removeAttr('style')
     } // if color, lineWidthStyle
-  } else if (activeTool == 'move') {
+  } else if (activeTool == 'move' && selectedPoints.length > 0) {
     var corners = getCornersOfSelection(selectedPoints)
     var bbox2 = getPointsWithinBoundingBox(x, y, x + (corners[2] - corners[0]), y + (corners[3] - corners[1]))
     moveSelectionTo(selectedPoints, bbox2)
@@ -943,35 +943,33 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
       ctx.globalAlpha = 0.75
     }
     drawStation(ctx, moveStationOn[0], moveStationOn[1], activeMap, false, x, y)
-  } else if (activeTool == 'move') {
+  } else if (activeTool == 'move' && selectedPoints.length > 0) {
     // CONSIDER: it may be more legible if the full station names were also part of what gets displayed,
     //  though that may add quite a bit of complexity
     var sliceCoords = getCornersOfSelection(selectedPoints).map((n) => n * gridPixelMultiplier)
 
     var validPlacement = true
-    if (selectedPoints.length > 0) {
-      var selectOrigin = selectedPoints[0]
+    var selectOrigin = selectedPoints[0]
 
-      var bbox2 = createNewBoundingBox(selectedPoints, x - selectOrigin[0], y - selectOrigin[1])
-      var bboxes = getIntersectionAndDifferences(selectedPoints, bbox2)
-      var intersection = bboxes[0]
-      var bbox2diff1 = bboxes[2] // Determines whether this is a valid placement
+    var bbox2 = createNewBoundingBox(selectedPoints, x - selectOrigin[0], y - selectOrigin[1])
+    var bboxes = getIntersectionAndDifferences(selectedPoints, bbox2)
+    var intersection = bboxes[0]
+    var bbox2diff1 = bboxes[2] // Determines whether this is a valid placement
 
-      if (intersection.size == selectedPoints.length) {
-        // Selections are the same, placement is valid
-      }
+    if (intersection.size == selectedPoints.length) {
+      // Selections are the same, placement is valid
+    }
 
-      for (var bbxy of bbox2diff1) {
-        bbxy = bbxy.split(",")
-        if (validPlacement && getActiveLine(bbxy[0], bbxy[1], activeMap)) {
-          // Can't move to this space if any coords
-          //  in the non-overlapping portion of bbox2 has a point already
-          // This is almost perfect except it counts empty space in the bounding box.
-          // However, I'm not sure that's necessarily a bad thing, because
-          //  if you wanted to move it again, it might be very difficult to get this point again
-          //  unless/until I make the Lasso select tool
-          validPlacement = false // CONSIDER: Consider showing a visual bell to indicate failure
-        }
+    for (var bbxy of bbox2diff1) {
+      bbxy = bbxy.split(",")
+      if (validPlacement && getActiveLine(bbxy[0], bbxy[1], activeMap)) {
+        // Can't move to this space if any coords
+        //  in the non-overlapping portion of bbox2 has a point already
+        // This is almost perfect except it counts empty space in the bounding box.
+        // However, I'm not sure that's necessarily a bad thing, because
+        //  if you wanted to move it again, it might be very difficult to get this point again
+        //  unless/until I make the Lasso select tool
+        validPlacement = false // CONSIDER: Consider showing a visual bell to indicate failure
       }
     }
     if (validPlacement) {
@@ -3597,6 +3595,9 @@ function moveMap(direction) {
 } // moveMap(direction)
 
 function getCornersOfSelection(points) {
+  if (points.length == 0) {
+    return []
+  }
   var allX = []
   var allY = []
   for (var xy of points) {
