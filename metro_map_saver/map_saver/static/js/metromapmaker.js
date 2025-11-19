@@ -951,14 +951,26 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
     var validPlacement = true
     if (selectedPoints.length > 0) {
       var selectOrigin = selectedPoints[0]
-      for (var c in selectedPoints) {
-        var xOffset = (selectedPoints[c][0] - selectOrigin[0])
-        var yOffset = (selectedPoints[c][1] - selectOrigin[1])
 
-        if (validPlacement && getActiveLine(x + xOffset, y + yOffset, activeMap)) {
-          // Only worth doing this check if the placement is still valid
-          validPlacement = false
-          break
+      var bbox2 = createNewBoundingBox(selectedPoints, x - selectOrigin[0], y - selectOrigin[1])
+      var bboxes = getIntersectionAndDifferences(selectedPoints, bbox2)
+      var intersection = bboxes[0]
+      var bbox2diff1 = bboxes[2] // Determines whether this is a valid placement
+
+      if (intersection.size == selectedPoints.length) {
+        // Selections are the same, placement is valid
+      }
+
+      for (var bbxy of bbox2diff1) {
+        bbxy = bbxy.split(",")
+        if (validPlacement && getActiveLine(bbxy[0], bbxy[1], activeMap)) {
+          // Can't move to this space if any coords
+          //  in the non-overlapping portion of bbox2 has a point already
+          // This is almost perfect except it counts empty space in the bounding box.
+          // However, I'm not sure that's necessarily a bad thing, because
+          //  if you wanted to move it again, it might be very difficult to get this point again
+          //  unless/until I make the Lasso select tool
+          validPlacement = false // CONSIDER: Consider showing a visual bell to indicate failure
         }
       }
     }
@@ -3153,6 +3165,16 @@ function updateMapObject(x, y, key, data) {
 
   return metroMap;
 } // updateMapObject()
+
+function createNewBoundingBox(bbox1, xOffset, yOffset) {
+  // Use to create a temporary bounding box during hover
+  //  that we can use to determine whether this is a valid placement
+  var bbox2 = []
+  for (var c in bbox1) {
+    bbox2[c] = [bbox1[c][0] + xOffset, bbox1[c][1] + yOffset]
+  }
+  return bbox2
+} // createNewBoundingBox(bbox1, xOffset, yOffset)
 
 function getIntersectionAndDifferences(bbox1, bbox2) {
   // Given two bounding boxes,
