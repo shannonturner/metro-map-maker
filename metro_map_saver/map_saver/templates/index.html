@@ -352,7 +352,7 @@
       <div id="tool-map-style-options" class="text-left" style="display: none;">
           <fieldset>
             <legend>Map Line Size</legend>
-            <h5>Change the line width for ALL lines at once.</h5>
+            <h5>Change the width for ALL lines, or all selected points.</h5>
             {# TODO: Refactor this to use ALLOWED_LINE_WIDTHS #}
             <button id="tool-map-style-line-1000" class="map-style-line styled styling-redline width-100" data-line-width-divisor="1">100%</button>
             <button id="tool-map-style-line-750" class="map-style-line styled styling-redline width-100" data-line-width-divisor="">75%</button>
@@ -362,7 +362,7 @@
           </fieldset>
           <fieldset>
             <legend>Station Shape</legend>
-            <h5>Change the shape of all stations that don't have a specific shape.</h5>
+            <h5>Change the shape of all stations (or all selected stations) that don't have a specified shape.</h5>
 
             <!-- I like the look of these buttons not having width-100 better,
                   though it looks a little awkward when there's an odd number of options.
@@ -379,7 +379,7 @@
           </fieldset>
           <fieldset>
             <legend>Station Orientations</legend>
-            <h5 style="width: 100%;">Changes label orientation for ALL stations at once.</h5>
+            <h5 style="width: 100%;">Changes label orientation for ALL stations, or all selected stations.</h5>
             <label for="set-all-station-name-orientation-choice">Orientation</label>
             <select id="set-all-station-name-orientation-choice">
               <option value="0">On the right</option>
