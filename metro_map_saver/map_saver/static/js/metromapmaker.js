@@ -2923,6 +2923,11 @@ function setMapSize(metroMapObject, getFromGlobal) {
     }
   } // if getFromGlobal/else
   
+  if (prevSize > gridRows && selectedPoints.length > 0 && (selectedPoints[selectedPoints.length-1][0] > gridRows || selectedPoints[selectedPoints.length-1][1] > gridRows)) {
+    // Sizing down, should clear selectedPoints if it's in the portion that's now gone
+    selectedPoints = []
+  }
+
   resizeGrid(gridRows)
 
   if (gridRows != prevSize) {
