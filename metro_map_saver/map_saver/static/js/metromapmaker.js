@@ -442,7 +442,7 @@ function makeLine(x, y, deferSave) {
   }
 } // makeLine(x, y, deferSave)
 
-function erase(x, y) {
+function erase(x, y, deferSaveAndDraw) {
   if (!isWithinSelectedPoints(x, y)) {
     return
   }
@@ -471,23 +471,29 @@ function erase(x, y) {
   }
   if (erasedLine && $('#tool-flood-fill').prop('checked')) {
     floodFill(x, y, getActiveLine(x, y, activeMap, (mapDataVersion >= 3)), '')
-    autoSave(activeMap)
-    if (mapDataVersion >= 2) {
+    if (mapDataVersion >= 2 && !deferSaveAndDraw) {
       // If Flood Fill is on, we actually do always want to redraw all stations,
       //  because you might have erased the line the stations were on
-      redrawCanvasForColor(erasedLine, true)
+      var redrawCanvasArgs = [erasedLine, true]
     } else if (mapDataVersion == 1) {
       drawCanvas(activeMap)
     }
   } else {
-    metroMap = updateMapObject(x, y);
-    autoSave(metroMap);
-    if (mapDataVersion >= 2) {
-      redrawCanvasForColor(erasedLine, (redrawStations || isOnOrAdjacentToStation(x, y, metroMap)))
+    activeMap = updateMapObject(x, y);
+    if (mapDataVersion >= 2 && !deferSaveAndDraw) {
+      var redrawCanvasArgs = [erasedLine, (redrawStations || isOnOrAdjacentToStation(x, y, activeMap))]
     } else if (mapDataVersion == 1) {
-      drawArea(x, y, metroMap, erasedLine, redrawStations);
+      drawArea(x, y, activeMap, erasedLine, redrawStations);
     }
   }
+
+  if (!deferSaveAndDraw) {
+    autoSave(activeMap)
+    redrawCanvasForColor(...redrawCanvasArgs)
+  } else {
+    return redrawCanvasArgs
+  }
+
 } // erase(x, y)
 
 function redrawCanvasForColor(color, isOnOrAdjacentToStation, previousColor) {
@@ -4304,6 +4310,18 @@ $(document).ready(function() {
       setActiveTool(lastToolUsed, true)
       selectedPoints = []
       clearMarchingAnts()
+    }
+    else if ((event.key == 'Delete' || event.key == 'Backspace') && selectedPoints.length > 0) {
+      var useSelectAgain = activeTool == 'select'
+      setActiveTool('eraser')
+      for (var xy of selectedPoints) {
+        erase(xy[0], xy[1], true) // defer save and drawCanvas, but we have to do it manually
+      }
+      autoSave(activeMap)
+      drawCanvas(activeMap)
+      if (useSelectAgain) {
+        setActiveTool('select')
+      }
     }
 
     // ----- Note: This is a separate conditional from the event.code keydowns
