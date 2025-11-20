@@ -4202,7 +4202,7 @@ $(document).ready(function() {
       } else {
         setMoveStationAbility(true) // disable it
       }
-      if (activeTool == 'select' && selectedPoints.length > 0) {
+      if (activeTool != 'station' && selectedPoints.length > 0) {
         $('#tool-move-selection').trigger('click')
       }
     }
@@ -6244,16 +6244,29 @@ function setActiveTool(tool, skipSaveLast) {
     lastToolUsed = activeTool
   }
   activeTool = tool || 'look'
-  // TODO: Would be nice to visually show which tool is active rather than just changing it
   $('.active').removeClass('active')
   if (activeTool == 'line') {
     $('#tool-line').addClass('active')
+    if (activeToolOption) {
+      $('#tool-line').css({
+        "background-color": activeToolOption,
+        "color": determineDarkOrLightContrast(activeToolOption)
+      })
+    }
   } else if (activeTool == 'eraser') {
     $('#tool-eraser').addClass('active')
   } else if (activeTool == 'station') {
     $('#tool-station').addClass('active')
+  } else if (activeTool == 'select') {
+    $('#tool-select').addClass('active')
+  } else if (activeTool == 'eyedropper') {
+    $('#tool-eyedropper').addClass('active')
+  } else if (activeTool == 'look') {
+    $('#tool-look').addClass('active')
+  } else if (activeTool == 'move') {
+    $('#tool-move-selection').addClass('active')
   }
-}
+} // setActiveTool(tool, skipSaveLast)
 
 $('#tool-eyedropper').on('click', function() {
   setActiveTool('eyedropper')
@@ -6382,7 +6395,7 @@ $('#tool-move-selection').on("click", function() {
   if (selectedPoints.length == 0) {
     return
   }
-  activeTool = 'move' // TODO: should this be setActiveTool() or nah?
+  setActiveTool('move')
 })
 
 function setMoveStationAbility(disable) {
