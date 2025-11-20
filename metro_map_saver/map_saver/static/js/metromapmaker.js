@@ -2580,6 +2580,9 @@ function autoSave(metroMap) {
   // This should be called AFTER the event that changes the map, not before.
   if (typeof metroMap == 'object') {
     activeMap = metroMap;
+    if (selectedPoints.length > 0) {
+      metroMap["selectedPoints"] = structuredClone(selectedPoints)
+    }
     saveMapHistory(activeMap)
     metroMap = JSON.stringify(metroMap);
   }
@@ -2607,6 +2610,15 @@ function loadMapFromUndoRedo(previousMap) {
     loadMapFromObject(previousMap)
     setMapSize(previousMap, true)
     drawCanvas(previousMap)
+    if ((activeTool == 'select' || activeTool == 'move') && previousMap["selectedPoints"] && previousMap["selectedPoints"].length > 0) {
+      selectedPoints = previousMap["selectedPoints"]
+      clearMarchingAnts()
+      drawSelectionBox(...getCornersOfSelection(selectedPoints))
+    } else {
+      // If not using the select/move tools right now, discard the selection
+      selectedPoints = []
+      clearMarchingAnts()
+    }
     if (previousMap['global'] && previousMap['global']['style']) {
       mapLineWidth = previousMap['global']['style']['mapLineWidth'] || mapLineWidth || 1
       mapStationStyle = previousMap['global']['style']['mapStationStyle'] || mapStationStyle || 'wmata'
@@ -5627,6 +5639,12 @@ function stretchMap(metroMapObject) {
   // Next, loop through all the spaces and check:
   //   is that space surrounded by similar neighbors?
   //   if so, set that space equal to the color of its neighbors
+
+  if (selectedPoints.length > 0) {
+    // Disable the selection, it's not relevant now
+    selectedPoints = []
+    clearMarchingAnts()
+  }
 
   if (!metroMapObject) {
     metroMapObject = activeMap;
