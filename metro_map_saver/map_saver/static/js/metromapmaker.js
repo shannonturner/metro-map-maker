@@ -4326,16 +4326,13 @@ $(document).ready(function() {
       clearMarchingAnts()
     }
     else if ((event.key == 'Delete' || event.key == 'Backspace') && selectedPoints.length > 0) {
-      var useSelectAgain = activeTool == 'select'
       setActiveTool('eraser')
       for (var xy of selectedPoints) {
         erase(xy[0], xy[1], true) // defer save and drawCanvas, but we have to do it manually
       }
       autoSave(activeMap)
       drawCanvas(activeMap)
-      if (useSelectAgain) {
-        setActiveTool('select')
-      }
+      setActiveTool(lastToolUsed, true)
     }
 
     // ----- Note: This is a separate conditional from the event.code keydowns
