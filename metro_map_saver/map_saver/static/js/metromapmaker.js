@@ -4227,6 +4227,11 @@ $(document).ready(function() {
     }
     else if (event.key.toLowerCase() == 't') {
       $('#tool-select').trigger('click')
+      // If you press T, to me, you want to select again,
+      //  even if you're clearing the selection.
+      // If you press Escape, you're just clearing the selection,
+      //  and will return to your previous tool
+      setActiveTool('select', true)
     }
     else if (event.key.toLowerCase() == 'w' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // W, except for close window
       if (mapDataVersion >= 3) {
@@ -6240,6 +6245,14 @@ function setActiveTool(tool, skipSaveLast) {
   }
   activeTool = tool || 'look'
   // TODO: Would be nice to visually show which tool is active rather than just changing it
+  $('.active').removeClass('active')
+  if (activeTool == 'line') {
+    $('#tool-line').addClass('active')
+  } else if (activeTool == 'eraser') {
+    $('#tool-eraser').addClass('active')
+  } else if (activeTool == 'station') {
+    $('#tool-station').addClass('active')
+  }
 }
 
 $('#tool-eyedropper').on('click', function() {
