@@ -4158,7 +4158,9 @@ $(document).ready(function() {
         $('#tool-flood-fill').prop('checked', false)
       } else {
         $('#tool-flood-fill').prop('checked', true)
-        if (activeToolOption) {
+        if (activeTool == 'eraser') {
+          setActiveTool('eraser')
+        } else if (activeToolOption) {
           // On the assumption that activeToolOption is only for line color,
           //  which has been true so far
           setActiveTool('line')
