@@ -3476,6 +3476,12 @@ function moveMap(direction) {
               if (!Number.isInteger(x) || !Number.isInteger(y)) {
                 continue;
               }
+              var outsideSelection = false
+
+              // For performance, don't bother checking points that are out of the boundaries
+              if (selectedPoints.length > 0 && (x < sXYs[0] || x > sXYs[2] || y < sXYs[1] || y > sXYs[3])) {
+                outsideSelection = true
+              }
 
               if (!newPointsByColor[color][lineWidthStyle][x + xOffset]) {
                   newPointsByColor[color][lineWidthStyle][x + xOffset] = {}
@@ -3501,7 +3507,7 @@ function moveMap(direction) {
                 }
               }
 
-              if (!isWithinSelectedPoints(x, y)) {
+              if (outsideSelection || !isWithinSelectedPoints(x, y)) {
                 if (!newPointsByColor[color][lineWidthStyle][x]) {
                   newPointsByColor[color][lineWidthStyle][x] = {}
                 }
@@ -3517,7 +3523,7 @@ function moveMap(direction) {
                 if (0 <= x + xOffset && x + xOffset < gridCols && 0 <= y + yOffset && y + yOffset < gridCols) {
                   if (activeMap['stations'] && activeMap['stations'][x] && activeMap['stations'][x][y]) {
                     // drawback of v2 is needing to do stations and lines separately
-                    if (!isWithinSelectedPoints(x, y)) {
+                    if (outsideSelection || !isWithinSelectedPoints(x, y)) {
                       if (!newStations[x]) { newStations[x] = {} }
                       newStations[x][y] = activeMap['stations'][x][y]
                     } else {
