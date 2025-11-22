@@ -906,7 +906,18 @@ function bindGridSquareMousedown(event) {
         } // if it's a straight line from the origin
       } // for y
     } // for x
-  } // if straight line assist is checked
+  } else if (!$('#straight-line-assist').prop('checked') && (activeTool == 'line' || activeTool == 'eraser') && selectedPoints.length > 0) {
+    // When selectedPoints is active but the guide isn't, it's nice to have some way of showing
+    // which coordinates you can/can't draw/erase
+    // CONSIDER: Showing this even when the guide is active, though that's probably
+    //  unnecessary since when the guide is active, you get the guide immediately at your clickXY
+    var canvas = document.getElementById('hover-canvas')
+    var ctx = canvas.getContext('2d')
+    var inBounds = getCornersOfSelection(selectedPoints).map((n) => n * gridPixelMultiplier)
+    ctx.fillStyle = '#CC2E70'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.clearRect(inBounds[0] - (gridPixelMultiplier / 2), inBounds[1] - (gridPixelMultiplier / 2), (inBounds[2] - inBounds[0]) + (gridPixelMultiplier), (inBounds[3] - inBounds[1])  + (gridPixelMultiplier))
+  }// if straight line assist is checked
 
   if (mouseIsDown && dragX) {
     // Already clicking and dragging
