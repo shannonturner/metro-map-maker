@@ -954,7 +954,7 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
     var activeColor = '#ffffff'
   else if (activeTool == 'station' && moveStationOn.length == 2) {
     ctx.font = '700 ' + gridPixelMultiplier + 'px sans-serif';
-    if (!getActiveLine(x, y, activeMap) || getStation(x, y, activeMap)) {
+    if ((!getActiveLine(x, y, activeMap) && getLineDirection(moveStationOn[0], moveStationOn[1], activeMap).direction != 'singleton') || getStation(x, y, activeMap)) {
       ctx.globalAlpha = 0.25 // Visually indicate that it's not valid
     } else {
       ctx.globalAlpha = 0.75
@@ -3370,7 +3370,14 @@ function moveStationTo(fromX, fromY, x, y) {
   // Moves an existing station (station) to the coordinates at (x,y),
   //  if those are valid
 
-  if (!getActiveLine(x, y, activeMap)) {
+  // If it's a singleton, move the station and the line underneath it
+  if (getLineDirection(fromX, fromY, activeMap).direction == 'singleton') {
+    var isSingleton = true
+  } else {
+    var isSingleton = false
+  }
+
+  if (!isSingleton && !getActiveLine(x, y, activeMap)) {
     return // CONSIDER: Consider showing visual bell to indicate failure
   }
 
@@ -3391,7 +3398,24 @@ function moveStationTo(fromX, fromY, x, y) {
   }
   activeMap['stations'][x][y] = activeMap['stations'][fromX][fromY]
   delete activeMap['stations'][fromX][fromY]
-  drawCanvas(activeMap, true)
+
+  if (isSingleton) {
+    // Move the point it was under, too
+    var clws = getActiveLine(fromX, fromY, activeMap, true)
+    var color = clws[0]
+    var lws = clws[1]
+
+    // Only delete the old point if moving to an empty space
+    if (!getActiveLine(x, y, activeMap)) {
+      if (!activeMap["points_by_color"][color][lws][x]) {
+        activeMap["points_by_color"][color][lws][x] = {}
+      }
+      activeMap["points_by_color"][color][lws][x][y] = 1
+      delete activeMap["points_by_color"][color][lws][fromX][fromY]
+    }
+  }
+
+  drawCanvas(activeMap, !isSingleton)
   autoSave(activeMap)
 } // moveStationTo(fromX, fromY, x, y)
 
