@@ -77,7 +77,7 @@ const ALLOWED_LINE_WIDTHS = [100, 75.0, 50.0, 25.0, 12.5]
 const ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dashed_uneven', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted', 'dotted_square', 'hollow', 'hollow_open', 'color_outline', 'wide_stripes', 'square_stripes', 'stripes']
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin', 'london']
-const ALLOWED_SIZES = [80, 120, 160, 200, 240, 360]
+const ALLOWED_SIZES = [80, 120, 160, 200, 240, 300, 360]
 const MAX_MAP_SIZE = ALLOWED_SIZES[ALLOWED_SIZES.length-1]
 
 var MAX_CANVAS_SIZE = 3600
