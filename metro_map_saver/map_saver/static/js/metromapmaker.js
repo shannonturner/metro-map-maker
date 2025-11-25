@@ -1117,7 +1117,7 @@ function drawGrid() {
     ctx.closePath()
   }
   if (!gridStep) {
-    $('#grid-step').text('off')
+    $('#grid-step').text('off') // I18N
   } else {
     $('#grid-step').text(gridStep)
   }
@@ -2602,7 +2602,7 @@ function autoSave(metroMap) {
   $('#tool-redo').prop('disabled', true)
   $('span#redo-buffer-count').text('')
   if (!menuIsCollapsed) {
-    $('#autosave-indicator').text('Saving locally ...');
+    $('#autosave-indicator').text('Saving locally ...'); // I18N
     $('#title').hide()
     setTimeout(function() {
       $('#autosave-indicator').text('');
@@ -2789,7 +2789,7 @@ function autoLoad() {
         loadMapFromObject(activeMap)
         mapHistory.push(JSON.stringify(activeMap)) // See note about saveMapHistory below
         setTimeout(function() {
-          $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
+          $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')'); // I18N
         }, 1000);
       }
     }).fail(function(err) {
@@ -2846,7 +2846,7 @@ function autoLoad() {
   } // autoLoadError
 
   setTimeout(function() {
-    $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
+    $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')'); // I18N
   }, 1000);
 
   // Remember the last-used zoomLevel for this session
@@ -3457,7 +3457,7 @@ function moveStation(directions) {
     var y = parseInt($('#station-coordinates-y').val())
     moveStationTo(x, y, (x + xOffset), (y + yOffset))
   }
-  if ($('#move-station-enabled').text().indexOf('Mouse') == -1) {
+  if ($('#move-station-enabled').text().indexOf('Mouse') == -1) { // I18N
     moveStationOn = [] // Don't enable the ability to move stations with the mouse if it isn't already on
   }
   return true
@@ -3939,16 +3939,16 @@ function downloadImage(canvas, showImg) {
 
 function resetResizeButtons(size) {
   $('.resize-grid').each(function() {
-    if ($(this).text().indexOf('Current') > -1) {
+    if ($(this).text().indexOf('Current') > -1) { // I18N
       var resizeButtonSize = $(this).attr('id').split('-').slice(2);
       var resizeButtonLabel = resizeButtonSize + 'x' + resizeButtonSize;
       $(this).text(resizeButtonLabel);
     }
   })
-  $('#tool-resize-' + size).text('Current size (' + size + 'x' + size + ')');
+  $('#tool-resize-' + size).text('Current size (' + size + 'x' + size + ')'); // I18N
   if (isMapStretchable(size)) {
     $('#tool-resize-stretch').show()
-    $('#tool-resize-stretch').text('Stretch map to ' + size * 2 + 'x' + size * 2)
+    $('#tool-resize-stretch').text('Stretch map to ' + size * 2 + 'x' + size * 2) // I18N
   } else {
     $('#tool-resize-stretch').hide()
   }
@@ -3967,7 +3967,7 @@ function resetStyleButtons() {
     }
     if (stationStyle) {
       $('#tool-map-style-station-' + stationStyle).addClass('active-mapstyle')
-      $('#reset-all-station-styles').text('Set ALL stations to ' + $('#tool-map-style-station-' + stationStyle).text())
+      $('#reset-all-station-styles').text('Set ALL stations to ' + $('#tool-map-style-station-' + stationStyle).text()) // I18N
     }
   }
 } // resetStyleButtons()
@@ -4438,7 +4438,7 @@ $(document).ready(function() {
         $(this).removeClass('width-100')
       }
       // Also reset the + Add New Color button
-      $('#rail-line-new span').text('Add New Color')
+      $('#rail-line-new span').text('Add New Color') // I18N
       $('#tool-new-line-options').hide()
     } else {
       $('#tool-line-options').show();
@@ -4567,7 +4567,7 @@ $(document).ready(function() {
       $(this).addClass('width-100')
       if (isMapStretchable()) {
         $('#tool-resize-stretch').show()
-        $('#tool-resize-stretch').text('Stretch map to ' + gridRows * 2 + 'x' + gridCols * 2)
+        $('#tool-resize-stretch').text('Stretch map to ' + gridRows * 2 + 'x' + gridCols * 2) // I18N
       } else {
         $('#tool-resize-stretch').hide()
       }
@@ -4622,7 +4622,7 @@ $(document).ready(function() {
     csrftoken = getCookie('csrftoken');
     // Disable button (and re-enable it shortly thereafter
     $('#tool-save-map').prop('disabled', 'disabled')
-    $('#tool-save-map span').text('Saving ...')
+    $('#tool-save-map span').text('Saving ...') // I18N
     setTimeout(function() {
       // Re-enable it after 1 second no matter what,
       //  but the visual cue ("Saving ...")
@@ -4681,7 +4681,7 @@ $(document).ready(function() {
           $(this).parent().hide()
           $('#name-this-map').removeClass();
           $('#name-this-map').addClass('styling-blueline width-100');
-          $('#name-this-map').text('Name this map')
+          $('#name-this-map').text('Name this map') // I18N
         })
         $('#name-this-map').click(function(e) {
 
@@ -4699,7 +4699,7 @@ $(document).ready(function() {
 
           $.post('/name/', formData, function() {
             $('#name-map').hide();
-            $('#name-this-map').text('Thanks!')
+            $('#name-this-map').text('Thanks!') // I18N
             setTimeout(function() {
               $('#name-this-map').hide();
             }, 500);
@@ -4729,7 +4729,7 @@ $(document).ready(function() {
       $('#tool-save-options').show();
     }).always(function() {
       setTimeout(function() {
-        $('#tool-save-map span').text('Save & Share')
+        $('#tool-save-map span').text('Save & Share') // I18N
       }, 350) // A short delay looks nicer than immediate
     });
     $('.tooltip').hide();
@@ -4865,10 +4865,10 @@ $(document).ready(function() {
 
   $('#rail-line-new').click(function() {
     if ($('#tool-new-line-options').is(':visible')) {
-      $(this).children('span').text('Add New Color')
+      $(this).children('span').text('Add New Color') // I18N
       $('#tool-new-line-options').hide()
     } else {
-      $(this).children('span').text('Hide Add Color options')
+      $(this).children('span').text('Hide Add Color options') // I18N
       $('#tool-new-line-options').show()
     }
   }) // #rail-line-new.click() (expand tool-new-line-options)
@@ -4890,15 +4890,15 @@ $(document).ready(function() {
     }
 
     if (allColors.indexOf($('#new-rail-line-color').val().slice(1, 7)) >= 0) {
-      $('#tool-new-line-errors').text('This color already exists! Please choose a new color.');
+      $('#tool-new-line-errors').text('This color already exists! Please choose a new color.'); // I18N
     } else if (allNames.indexOf($('#new-rail-line-name').val()) >= 0) {
-      $('#tool-new-line-errors').text('This color name already exists! Please choose a new name.');
+      $('#tool-new-line-errors').text('This color name already exists! Please choose a new name.'); // I18N
     } else if ($('#new-rail-line-name').val().length == 0) {
-      $('#tool-new-line-errors').text('This color name cannot be blank. Please enter a name.');
+      $('#tool-new-line-errors').text('This color name cannot be blank. Please enter a name.'); // I18N
     } else if ($('#new-rail-line-name').val().length > 100) {
-      $('#tool-new-line-errors').text('This color name is too long. Please shorten it.');
+      $('#tool-new-line-errors').text('This color name is too long. Please shorten it.'); // I18N
     } else if ($('.rail-line').length > 99) {
-      $('#tool-new-line-errors').text('Too many colors! Delete your unused ones before creating new ones.');
+      $('#tool-new-line-errors').text('Too many colors! Delete your unused ones before creating new ones.'); // I18N
     } else {
       $('#tool-new-line-errors').text('');
       $('#line-color-options fieldset #line-colors').append('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line has-tooltip" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');
@@ -4932,14 +4932,14 @@ $(document).ready(function() {
   $('#rail-line-change').click(function() {
     // Expand the options
     if ($('#tool-change-line-options').is(':visible')) {
-      $(this).children('span').html('Edit colors &amp; names')
+      $(this).children('span').html('Edit colors &amp; names') // I18N
       $('#tool-change-line-options').hide()
     } else {
-      $(this).children('span').text('Close Edit Color options')
+      $(this).children('span').text('Close Edit Color options') // I18N
       $('#tool-change-line-options').show()
     }
 
-    $('#tool-lines-to-change').html('<option>Edit which color?</option>')
+    $('#tool-lines-to-change').html('<option>Edit which color?</option>') // I18N
     $('#change-line-name').hide()
     $('#change-line-color').hide()
     $('#tool-change-line-options label').hide()
@@ -4954,7 +4954,7 @@ $(document).ready(function() {
   $('#tool-lines-to-change').on('change', function() {
     $('#tool-change-line-options label').show()
     // Set the name and color
-    if ($('#tool-lines-to-change option:selected').text() != 'Edit which color?') {
+    if ($('#tool-lines-to-change option:selected').text() != 'Edit which color?') { // I18N
       $('#change-line-name').show()
       $('#change-line-color').show()
       $('#change-line-name').val($('#tool-lines-to-change option:selected').text())
@@ -4968,7 +4968,7 @@ $(document).ready(function() {
 
   $('#save-rail-line-edits').click(function() {
     // Save edits
-    if ($('#tool-lines-to-change option:selected').text() != 'Edit which color?') {
+    if ($('#tool-lines-to-change option:selected').text() != 'Edit which color?') { // I18N
       var lineColorToChange = $('#tool-lines-to-change').val()
       var lineColorToChangeTo = $('#change-line-color').val().slice(1)
       var lineNameToChange = $('#tool-lines-to-change option:selected').text()
@@ -4980,10 +4980,10 @@ $(document).ready(function() {
       });
 
       if ((lineColorToChange != lineColorToChangeTo) && (Object.keys(activeMap["global"]["lines"]).indexOf(lineColorToChangeTo) >= 0)) {
-        $('#cant-save-rail-line-edits').text('Can\'t change ' + lineNameToChange + ' - it has the same color as ' + activeMap["global"]["lines"][lineColorToChangeTo]["displayName"])
+        $('#cant-save-rail-line-edits').text('Can\'t change ' + lineNameToChange + ' - it has the same color as ' + activeMap["global"]["lines"][lineColorToChangeTo]["displayName"]) // I18N
       }
       else if (allNames.indexOf(lineNameToChangeTo) > -1 && lineNameToChange != lineNameToChangeTo) {
-        $('#cant-save-rail-line-edits').text('This color name already exists! Please choose a new name.');
+        $('#cant-save-rail-line-edits').text('This color name already exists! Please choose a new name.'); // I18N
       }
       else {
         replaceColors({
@@ -4993,7 +4993,7 @@ $(document).ready(function() {
           "color": lineColorToChangeTo,
           "name": lineNameToChangeTo
         })
-        $('#rail-line-change span').html('Edit colors &amp; names')
+        $('#rail-line-change span').html('Edit colors &amp; names') // I18N
         $('#cant-save-rail-line-edits').text('')
         $('#tool-change-line-options').hide()
         // If the line tool is in use, unset it so we don't get a stale color
@@ -5102,7 +5102,7 @@ $(document).ready(function() {
     mapStationStyle = chosenStationStyle
     $('.map-style-station.active-mapstyle').removeClass('active-mapstyle')
     $(this).addClass('active-mapstyle')
-    $('#reset-all-station-styles').text('Set ALL stations to ' + $(this).text())
+    $('#reset-all-station-styles').text('Set ALL stations to ' + $(this).text()) // I18N
     if (activeMap && activeMap['global'] && activeMap['global']['style']) {
       activeMap['global']['style']['mapStationStyle'] = mapStationStyle
     } else if (activeMap && activeMap['global']) {
@@ -5949,8 +5949,8 @@ function collapseToolbox() {
   if ($('#hide-save-share-url').length == 1) {
     $('#hide-save-share-url').hide()
   }
-  $('#rail-line-new').children('span').text('Add New Color')
-  $('#rail-line-change').children('span').html('Edit colors &amp; names')
+  $('#rail-line-new').children('span').text('Add New Color') // I18N
+  $('#rail-line-change').children('span').html('Edit colors &amp; names') // I18N
   $('#controls-expand-menu').show()
 }
 
@@ -6000,7 +6000,7 @@ function expandToolbox() {
     $('#hide-save-share-url').show()
   }
 
-  if ($('#name-this-map').text() == 'Name this map') {
+  if ($('#name-this-map').text() == 'Name this map') { // I18N
     $('#name-map, #name-this-map').show()
   }
 
@@ -6454,12 +6454,12 @@ function setMoveStationAbility(disable) {
   }
 
   if (moveStationOn.length == 2) {
-    $('span#move-station-enabled').text(': Arrow Keys, Mouse')
+    $('span#move-station-enabled').text(': Arrow Keys, Mouse') // I18N
   } else {
     setTimeout(function() {
       $('#move-station').removeClass('active')
     }, 1)
-    $('span#move-station-enabled').text(': Arrow Keys only')
+    $('span#move-station-enabled').text(': Arrow Keys only') // I18N
   }
 } // setMoveStationAbility(disable)
 
