@@ -1603,7 +1603,7 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
   ctx.textAlign = 'start'
   ctx.font = '700 ' + fontSize + 'px sans-serif';
   ctx.fillStyle = '#000000';
-  var mapCredit = 'Created with MetroMapMaker.com';
+  var mapCredit = 'Created with MetroMapMaker.com'; // I18N
   var textWidth = ctx.measureText(mapCredit).width;
   ctx.fillText(mapCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 50);
 
@@ -1612,7 +1612,7 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
   if (shareableLink) {
     shareableLink = shareableLink.text;
     if (shareableLink.length > 0 && shareableLink.slice(0, 26) == "https://metromapmaker.com/") {
-      var remixCredit = 'Remix this map! Go to ' + shareableLink;
+      var remixCredit = 'Remix this map! Go to ' + shareableLink; // I18N
       var textWidth = ctx.measureText(remixCredit).width;
       ctx.fillText(remixCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 25);
     }
@@ -2468,7 +2468,7 @@ function drawLabel(ctx, x, y, metroMap, indicatorColor) {
     // This is an indicator only,
     // let's see if a placeholder looks nice?
     label = {
-      'text': 'Label',
+      'text': 'Label', // I18N
       'shape': $('#label-shape').val(),
       'text-color': '#333333'
     }
@@ -2641,7 +2641,7 @@ function loadMapFromUndoRedo(previousMap) {
     resetRailLineTooltips()
     resetStyleButtons()
     // Re-create the Edit colors drop-down menu, because the delete unused colors might have been undone/redone
-    $('#tool-lines-to-change').html('<option>Edit which color?</option>')
+    $('#tool-lines-to-change').html('<option>Edit which color?</option>') // I18N
     // Now populate the select dropdown
     for (var line in activeMap["global"]["lines"]) {
       $('#tool-lines-to-change').append('<option value="' + line + '">' + activeMap["global"]["lines"][line]["displayName"] + '</option>')
@@ -2762,7 +2762,7 @@ function autoLoad() {
     //  so test carefully that v1 still works
     activeMap = JSON.parse(window.localStorage.getItem('metroMap'));
     if (typeof autoLoadError !== 'undefined') {
-      autoLoadError = autoLoadError + 'Loading your last-edited map.'
+      autoLoadError = autoLoadError + 'Loading your last-edited map.' // I18N
     }
   } else {
     // If no map URLParameter and no locally stored map, default to the WMATA map
@@ -2802,7 +2802,7 @@ function autoLoad() {
       setMapStyle(activeMap)
     })
     if (typeof autoLoadError !== 'undefined') {
-      autoLoadError = autoLoadError + 'Loading the default map.'
+      autoLoadError = autoLoadError + 'Loading the default map.' // I18N
       $('#announcement').append('<h4 id="autoLoadError" class="bg-warning" style="text-align: left;">' + autoLoadError + '</h4>')
       setTimeout(function() {
         $('#autoLoadError').remove()
@@ -3017,11 +3017,11 @@ function loadMapFromObject(metroMapObject, update) {
     for (var line in metroMapObject['global']['lines']) {
       if (metroMapObject['global']['lines'].hasOwnProperty(line) && document.getElementById('rail-line-' + line) === null) {
           if (numLines < 11) {
-            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: ' + numberKeys[numLines - 1].replace('Digit', '') + '"'
+            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: ' + numberKeys[numLines - 1].replace('Digit', '') + '"' // I18N
           } else if (numLines < 21) {
-            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: Shift + ' + numberKeys[numLines - 1].replace('Digit', '') + '"'
+            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: Shift + ' + numberKeys[numLines - 1].replace('Digit', '') + '"' // I18N
           } else if (numLines < 31) {
-            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: Alt + ' + numberKeys[numLines - 1].replace('Digit', '') + '"'
+            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: Alt + ' + numberKeys[numLines - 1].replace('Digit', '') + '"' // I18N
           } else {
             keyboardShortcut = ''
           }
@@ -4005,11 +4005,11 @@ function resetRailLineTooltips() {
   for (var a=0; a<allLines.length; a++) {
     var line = $('.rail-line')[a].id.slice(10, 16)
     if (a < 10) {
-      keyboardShortcut = 'Keyboard shortcut: ' + numberKeys[a].replace('Digit', '')
+      keyboardShortcut = 'Keyboard shortcut: ' + numberKeys[a].replace('Digit', '') // I18N
     } else if (a < 20) {
-      keyboardShortcut = 'Keyboard shortcut: Shift + ' + numberKeys[a].replace('Digit', '')
+      keyboardShortcut = 'Keyboard shortcut: Shift + ' + numberKeys[a].replace('Digit', '') // I18N
     } else if (a < 30) {
-      keyboardShortcut = 'Keyboard shortcut: Alt + ' + numberKeys[a].replace('Digit', '')
+      keyboardShortcut = 'Keyboard shortcut: Alt + ' + numberKeys[a].replace('Digit', '') // I18N
     } else {
       keyboardShortcut = '' // remove old tooltips
     }
@@ -4634,11 +4634,11 @@ $(document).ready(function() {
       'csrfmiddlewaretoken': csrftoken
     }).done(function(data) {
       if (data.replace(/\n/g, '').indexOf('No points_by_color') > -1) {
-        $('#tool-save-options').html('<h5 class="bg-danger">You can\'t save an empty map.</h5>');
+        $('#tool-save-options').html('<h5 class="bg-danger">You can\'t save an empty map.</h5>'); // I18N
         $('#tool-save-options').show();
       }
       else if (data.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
-        $('#tool-save-options').html('<h5 class="bg-danger">Sorry, there was a problem saving your map: ' + data.slice(9) + '</h5>');
+        $('#tool-save-options').html('<h5 class="bg-danger">Sorry, there was a problem saving your map: ' + data.slice(9) + '</h5>'); // I18N
         console.log("[WARN] Problem was: " + data)
         $('#tool-save-options').show();
       }
@@ -4650,19 +4650,19 @@ $(document).ready(function() {
         data = data.split(',');
         var urlhash = data[0].replace(/\s/g,'');
         var namingToken = data[1].replace(/\s/g,'');
-        var toolSaveOptions = '<button id="hide-save-share-url" class="styling-greenline width-100">Hide sharing explanation</button><h5 style="overflow-x: hidden;" class="text-left">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="/map/' + urlhash + '" target="_blank">metromapmaker.com/map/' + urlhash + '</a></h5> <h5 class="text-left">You can then share this URL with a friend - and they can remix your map without you losing your original! <b>If you make changes to this map, click Save &amp; Share again to get a new URL.</b></h5>';
+        var toolSaveOptions = '<button id="hide-save-share-url" class="styling-greenline width-100">Hide sharing explanation</button><h5 style="overflow-x: hidden;" class="text-left">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="/map/' + urlhash + '" target="_blank">metromapmaker.com/map/' + urlhash + '</a></h5> <h5 class="text-left">You can then share this URL with a friend - and they can remix your map without you losing your original! <b>If you make changes to this map, click Save &amp; Share again to get a new URL.</b></h5>'; // I18N
         // setURLAfterSave(urlhash)
         if (namingToken) {
           // Only show the naming form if the map could actually be renamed.
-          toolSaveOptions += '<form id="name-map" class="text-left"><input type="hidden" name="urlhash" value="' + urlhash + '"><input id="naming-token" type="hidden" name="naming_token" value="' + namingToken + '"><label for="name">Where is this a map of?</label><input id="user-given-map-name" type="text" name="name"><select id="user-given-map-tags" name="tags"><option value="">What kind of map is this?</option><option value="real">This is a real metro system</option><option value="speculative">This is a real place, but a fantasy map</option><option value="unknown">This is an imaginary place</option></select></form><button id="name-this-map" class="styling-blueline width-100">Name this map</button>'
+          toolSaveOptions += '<form id="name-map" class="text-left"><input type="hidden" name="urlhash" value="' + urlhash + '"><input id="naming-token" type="hidden" name="naming_token" value="' + namingToken + '"><label for="name">Where is this a map of?</label><input id="user-given-map-name" type="text" name="name"><select id="user-given-map-tags" name="tags"><option value="">What kind of map is this?</option><option value="real">This is a real metro system</option><option value="speculative">This is a real place, but a fantasy map</option><option value="unknown">This is an imaginary place</option></select></form><button id="name-this-map" class="styling-blueline width-100">Name this map</button>' // I18N
         }
         var userGivenMapName = window.sessionStorage.getItem('userGivenMapName')
         var userGivenMapTags = window.sessionStorage.getItem('userGivenMapTags')
 
         if (namingToken && userGivenMapName && userGivenMapTags) {
-          toolSaveOptions += '<h5><a id="map-somewhere-else">Not a map of ' + userGivenMapName + '? Click here to rename</a></h5>'
+          toolSaveOptions += '<h5><a id="map-somewhere-else">Not a map of ' + userGivenMapName + '? Click here to rename</a></h5>' // I18N
         }
-        $('#tool-save-options').html('<fieldset><legend>Save &amp; Share</legend>' + toolSaveOptions + '</fieldset>');
+        $('#tool-save-options').html('<fieldset><legend>Save &amp; Share</legend>' + toolSaveOptions + '</fieldset>'); // I18N
 
         // Pre-fill the name and tags with what we have in sessionStorage
         if (namingToken && userGivenMapName) {
@@ -4719,11 +4719,11 @@ $(document).ready(function() {
       } // else (success)
     }).fail(function(data) {
       if (data.status == 400) {
-        var message = 'Sorry, your map could not be saved. Did you flood fill the whole map? Use flood fill with the eraser to erase and try again.'
+        var message = 'Sorry, your map could not be saved. Did you flood fill the whole map? Use flood fill with the eraser to erase and try again.' // I18N
       } else if (data.status == 500) {
-        var message = 'Sorry, your map could not be saved right now. This may be a bug, and the admin has been notified.'
+        var message = 'Sorry, your map could not be saved right now. This may be a bug, and the admin has been notified.' // I18N
       } else if (data.status >= 502) {
-        var message = 'Sorry, your map could not be saved right now. Metro Map Maker is currently undergoing routine maintenance including bugfixes and upgrades. Please try again in a few minutes.'
+        var message = 'Sorry, your map could not be saved right now. Metro Map Maker is currently undergoing routine maintenance including bugfixes and upgrades. Please try again in a few minutes.' // I18N
       }
       $('#tool-save-options').html('<h5 class="text-left bg-warning">' + message + '</h5>');
       $('#tool-save-options').show();
@@ -4770,7 +4770,7 @@ $(document).ready(function() {
       $('button:not(.mobile-browse)').attr('disabled', true);
       $(this).attr('disabled', false);
 
-      $(this).attr('title', "Go back to editing your map").tooltip('fixTitle').tooltip('show');
+      $(this).attr('title', "Go back to editing your map").tooltip('fixTitle').tooltip('show'); // I18N
     } else {
       $('#grid-canvas').show();
       $('#hover-canvas').show();
@@ -4781,7 +4781,7 @@ $(document).ready(function() {
       $('#export-canvas-help').hide();
       $('button').attr('disabled', false);
 
-      $(this).attr('title', "Download your map to share with friends").tooltip('fixTitle').tooltip('show');
+      $(this).attr('title', "Download your map to share with friends").tooltip('fixTitle').tooltip('show'); // I18N
     }
   }); // #tool-export-canvas.click()
   $('#tool-clear-map').click(function() {
@@ -4813,7 +4813,7 @@ $(document).ready(function() {
       var resizeButtonSize = $(this).attr('id').split('-').slice(2);
       var resizeButtonLabel = resizeButtonSize + ' x ' + resizeButtonSize;
       if (resizeButtonSize == ALLOWED_SIZES[0]) {
-        resizeButtonLabel = resizeButtonLabel + ' (Current size)';
+        resizeButtonLabel = resizeButtonLabel + ' (Current size)'; // I18N
       } else {
         resizeButtonLabel = resizeButtonLabel;
       }
@@ -4922,7 +4922,7 @@ $(document).ready(function() {
     bindRailLineEvents();
     resetRailLineTooltips()
     // Repopulate the Edit Rail Lines dropdown menu, in case it's open
-    $('#tool-lines-to-change').html('<option>Edit which color?</option>')
+    $('#tool-lines-to-change').html('<option>Edit which color?</option>') // I18N
     for (var line in activeMap["global"]["lines"]) {
       $('#tool-lines-to-change').append('<option value="' + line + '">' + activeMap["global"]["lines"][line]["displayName"] + '</option>')
     }
