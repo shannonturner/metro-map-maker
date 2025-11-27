@@ -235,11 +235,15 @@ function snapCanvasToGrid(always) {
     // Note: Now capping this at 3600x3600, which will affect maps 200x200 and above;
     //  because I noticed some highly detailed maps failed to load on iPhone for Safari
     //  with the same symptoms as before
-    if (gridCols * preferredGridPixelMultiplier <= MAX_CANVAS_SIZE) {
-      height = gridCols * preferredGridPixelMultiplier;
-    }
     if (gridRows * preferredGridPixelMultiplier <= MAX_CANVAS_SIZE) {
-      width = gridRows * preferredGridPixelMultiplier;
+      height = gridRows * preferredGridPixelMultiplier;
+    } else if ((height / gridRows) % 1 != 0) {
+      height = Math.floor(MAX_CANVAS_SIZE / gridRows) * gridRows
+    }
+    if (gridCols * preferredGridPixelMultiplier <= MAX_CANVAS_SIZE) {
+      width = gridCols * preferredGridPixelMultiplier;
+    } else if ((width / gridCols) % 1 != 0) {
+      width = Math.floor(MAX_CANVAS_SIZE / gridCols) * gridCols
     }
 
     for (var canvas of allCanvases) {
