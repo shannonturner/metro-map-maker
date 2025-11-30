@@ -991,6 +991,14 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
         //  if you wanted to move it again, it might be very difficult to get this point again
         //  unless/until I make the Lasso select tool
         validPlacement = false // CONSIDER: Consider showing a visual bell to indicate failure
+        break
+      }
+      if (validPlacement && (bbxy[0] >= gridCols || bbxy[1] >= gridRows)) {
+        // If any points in bbox2 are outside of the map boundaries, don't allow it.
+        // You already can't try to place above y=0 or left of x=0,
+        //  so just check for being >=
+        validPlacement = false
+        break
       }
     }
     if (validPlacement) {
@@ -3280,6 +3288,12 @@ function moveSelectionTo(bbox1, bbox2) {
       //  in the non-overlapping portion of bbox2 has a point already
       return // CONSIDER: Consider showing a visual bell to indicate failure
     }
+    if (xy[0] >= gridCols || xy[1] >= gridRows) {
+      // If any points in bbox2 are outside of the map boundaries, don't allow it.
+      // You already can't try to place above y=0 or left of x=0,
+      //  so just check for being >=
+      return // CONSIDER: Consider showing a visual bell to indicate failure
+    }
   }
 
   // Now: iterate over coords in bbox1, apply them to bbox2 coords,
@@ -3678,8 +3692,6 @@ function getCornersOfSelection(points) {
 function updateSelectionUponMove(xOffset, yOffset) {
   // After moving the map, the selectedPoints needs to also move
   var newSelectedPoints = structuredClone(selectedPoints)
-  var x1 = MAX_MAP_SIZE, y1 = MAX_MAP_SIZE
-  var x2 = 0, y2 = 0
   for (var coords in newSelectedPoints) {
     newSelectedPoints[coords][0] += xOffset || 0
     newSelectedPoints[coords][1] += yOffset || 0
