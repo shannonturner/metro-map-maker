@@ -43,7 +43,7 @@ var selectedPoints = []
 
 var colorShardMap = {}
 
-var MMMDEBUG = true
+var MMMDEBUG = false
 var MMMDEBUG_UNDO = false
 
 if (typeof mapDataVersion === 'undefined') {
@@ -2603,7 +2603,7 @@ function autoSave(metroMap) {
   // This should be called AFTER the event that changes the map, not before.
   if (typeof metroMap == 'object') {
     activeMap = metroMap;
-    if (selectedPoints.length > 0) {
+    if ((activeTool == 'select' || activeTool == 'move') && selectedPoints.length > 0) {
       metroMap["selectedPoints"] = structuredClone(selectedPoints)
     }
     saveMapHistory(activeMap)
