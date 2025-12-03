@@ -6331,6 +6331,11 @@ $('#tool-eyedropper').on('click', function() {
 
 $('#tool-look').on('click', function() {
   setActiveTool('look')
+  if (selectedPoints.length > 0) {
+    // De-select current selection
+    selectedPoints = []
+    clearMarchingAnts()
+  }
 })
 
 $('#tool-select').on('click', function() {
