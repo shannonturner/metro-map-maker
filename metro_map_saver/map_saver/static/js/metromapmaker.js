@@ -3,6 +3,7 @@
 var gridRows = 80, gridCols = 80;
 var activeTool = 'look';
 var activeToolOption = false;
+var lastToolUsed = undefined;
 var activeMap = false;
 var preferredGridPixelMultiplier = 20;
 var lastStrokeStyle;
@@ -35,6 +36,11 @@ var gridStep = 5
 var rulerOn = false
 var rulerOrigin = []
 var moveStationOn = []
+
+var activeMarchingAnts = false
+var marchingAntsOffset = 0
+var selectedPoints = []
+
 var colorShardMap = {}
 
 var MMMDEBUG = false
@@ -51,14 +57,17 @@ function compatibilityModeIndicator() {
     $('.M:not(.mobile)').css({"background-color": "#bd1038"}) // red
     $('#title').css({"color": "#bd1038"})
     $('#tool-move-v1-warning').attr('style', '') // Remove the display: none
+    $('#tool-select, #tool-move-selection').hide()
   } else if (mapDataVersion == 2) {
     $('.M:not(.mobile)').css({"background-color": "#df8600"}) // orange
     $('#title').css({"color": "#df8600"})
     $('#tool-move-v1-warning').attr('style', 'display: none')
+    $('#tool-select, #tool-move-selection').hide()
   } else {
     $('.M:not(.mobile)').css({"background-color": "#000"})
     $('#title').css({"color": "#000"})
     $('#tool-move-v1-warning').attr('style', 'display: none')
+    $('#tool-select, #tool-move-selection').show()
   }
 }
 compatibilityModeIndicator()
@@ -68,7 +77,7 @@ const ALLOWED_LINE_WIDTHS = [100, 75.0, 50.0, 25.0, 12.5]
 const ALLOWED_LINE_STYLES = ['solid', 'dashed', 'dashed_uneven', 'dense_thin', 'dense_thick', 'dotted_dense', 'dotted', 'dotted_square', 'hollow', 'hollow_open', 'color_outline', 'wide_stripes', 'square_stripes', 'stripes']
 const ALLOWED_ORIENTATIONS = [0, 45, -45, 90, -90, 135, -135, 180, 1, -1];
 const ALLOWED_STYLES = ['wmata', 'rect', 'rect-round', 'circles-lg', 'circles-md', 'circles-sm', 'circles-thin', 'london']
-const ALLOWED_SIZES = [80, 120, 160, 200, 240, 360]
+const ALLOWED_SIZES = [80, 120, 160, 200, 240, 300, 360]
 const MAX_MAP_SIZE = ALLOWED_SIZES[ALLOWED_SIZES.length-1]
 
 var MAX_CANVAS_SIZE = 3600
@@ -82,8 +91,6 @@ var HIGH_QUAL_PGPM = 20
 var LOW_QUAL_MAX_CANVAS_SIZE = MAX_MAP_SIZE * 8 // MAX_CANVAS_SIZE equivalent when lowGraphicsMode == true
 var LOW_QUAL_MAX_SHARDS = 4
 var LOW_QUAL_PGPM = 12
-
-var LOW_RES_CANVAS_SIZE = 1600 // For canvases like hover/ruler; not to be confused with LOW_QUAL_*
 
 String.prototype.replaceAll = function(search, replacement) {
     var target = this;
@@ -218,8 +225,7 @@ function snapCanvasToGrid(always) {
   var canvasHover = document.getElementById('hover-canvas')
   var canvasRuler = document.getElementById('ruler-canvas')
   var colorCanvases = document.getElementById('color-canvas-container').children
-  var highResCanvases = [canvas, canvasStations, canvasGrid, canvasHover, ...colorCanvases]
-  var lowResCanvases = [canvasRuler]
+  var allCanvases = [canvas, canvasStations, canvasGrid, canvasHover, canvasRuler, ...colorCanvases]
 
   var width = MAX_CANVAS_SIZE
   var height = MAX_CANVAS_SIZE
@@ -229,24 +235,20 @@ function snapCanvasToGrid(always) {
     // Note: Now capping this at 3600x3600, which will affect maps 200x200 and above;
     //  because I noticed some highly detailed maps failed to load on iPhone for Safari
     //  with the same symptoms as before
-    if (gridCols * preferredGridPixelMultiplier <= MAX_CANVAS_SIZE) {
-      height = gridCols * preferredGridPixelMultiplier;
-    }
     if (gridRows * preferredGridPixelMultiplier <= MAX_CANVAS_SIZE) {
-      width = gridRows * preferredGridPixelMultiplier;
+      height = gridRows * preferredGridPixelMultiplier;
+    } else if ((height / gridRows) % 1 != 0) {
+      height = Math.floor(MAX_CANVAS_SIZE / gridRows) * gridRows
+    }
+    if (gridCols * preferredGridPixelMultiplier <= MAX_CANVAS_SIZE) {
+      width = gridCols * preferredGridPixelMultiplier;
+    } else if ((width / gridCols) % 1 != 0) {
+      width = Math.floor(MAX_CANVAS_SIZE / gridCols) * gridCols
     }
 
-    for (var canvas of highResCanvases) {
+    for (var canvas of allCanvases) {
       canvas.width = width
       canvas.height = height
-    }
-
-    for (var canvas of lowResCanvases) {
-      // For some canvases you can't tell the difference.
-      // At first I thought the hover canvas was a perfect candidate for this,
-      //  until I remembered that moving stations happens there, so hoverCanvas has to be the same size!
-      canvas.width = LOW_RES_CANVAS_SIZE
-      canvas.height = LOW_RES_CANVAS_SIZE
     }
   } // if canvas.height / gridCols != preferredGridPixelMultiplier
 
@@ -278,9 +280,10 @@ function getActiveLine(x, y, metroMap, returnLineWidthStyle) {
   // Given an x, y coordinate pair, return the hex code for the line you're on.
   // Use this to retrieve the line for a given point on a map.
   if (mapDataVersion == 3 && metroMap["global"]["lines"]) {
-    // TODO: I can avoid looping over colors and styles by keeping a v1-style
+    // CONSIDER: I can avoid looping over colors and styles by keeping a v1-style
     // mapping of all of the points, like:
     // [10][20] = {"color": "bd1038", "line_width": 0.25, "line_style": "solid"}
+    // ^ THIS WOULD BE AN EXCELLENT THING TO DO FOR EASE AND MAINTAINABILITY
     for (var color in metroMap["points_by_color"]) {
       for (var lineWidthStyle in metroMap["points_by_color"][color]) {
         if (coordinateInColor(x, y, metroMap, color, lineWidthStyle)) {
@@ -391,7 +394,7 @@ function bindRailLineEvents() {
   // Needs to be done whenever a new rail line is created and on page load
   $('.rail-line').click(function() {
     // Existing Rail Line
-    activeTool = 'line';
+    setActiveTool('line')
     activeToolOption = $(this).css('background-color');
     $('#tool-line').addClass('draw-rail-line')
     if (activeToolOption) {
@@ -415,6 +418,9 @@ function bindRailLineEvents() {
 } // bindRailLineEvents()
 
 function makeLine(x, y, deferSave) {
+  if (!isWithinSelectedPoints(x, y)) {
+    return
+  }
   var color = rgb2hex(activeToolOption).slice(1, 7);
   if (mapDataVersion == 1) { drawArea(x, y, activeMap, true) }
   else if (mapDataVersion >= 2) {
@@ -440,7 +446,11 @@ function makeLine(x, y, deferSave) {
   }
 } // makeLine(x, y, deferSave)
 
-function erase(x, y) {
+function erase(x, y, deferSaveAndDraw) {
+  if (!isWithinSelectedPoints(x, y)) {
+    return
+  }
+
   // I need to check for the old line and station
   // BEFORE actually doing the erase operations
   var erasedLine = getActiveLine(x, y, activeMap);
@@ -465,23 +475,29 @@ function erase(x, y) {
   }
   if (erasedLine && $('#tool-flood-fill').prop('checked')) {
     floodFill(x, y, getActiveLine(x, y, activeMap, (mapDataVersion >= 3)), '')
-    autoSave(activeMap)
-    if (mapDataVersion >= 2) {
+    if (mapDataVersion >= 2 && !deferSaveAndDraw) {
       // If Flood Fill is on, we actually do always want to redraw all stations,
       //  because you might have erased the line the stations were on
-      redrawCanvasForColor(erasedLine, true)
+      var redrawCanvasArgs = [erasedLine, true]
     } else if (mapDataVersion == 1) {
       drawCanvas(activeMap)
     }
   } else {
-    metroMap = updateMapObject(x, y);
-    autoSave(metroMap);
-    if (mapDataVersion >= 2) {
-      redrawCanvasForColor(erasedLine, (redrawStations || isOnOrAdjacentToStation(x, y, metroMap)))
+    activeMap = updateMapObject(x, y);
+    if (mapDataVersion >= 2 && !deferSaveAndDraw) {
+      var redrawCanvasArgs = [erasedLine, (redrawStations || isOnOrAdjacentToStation(x, y, activeMap))]
     } else if (mapDataVersion == 1) {
-      drawArea(x, y, metroMap, erasedLine, redrawStations);
+      drawArea(x, y, activeMap, erasedLine, redrawStations);
     }
   }
+
+  if (!deferSaveAndDraw) {
+    autoSave(activeMap)
+    redrawCanvasForColor(...redrawCanvasArgs)
+  } else {
+    return redrawCanvasArgs
+  }
+
 } // erase(x, y)
 
 function redrawCanvasForColor(color, isOnOrAdjacentToStation, previousColor) {
@@ -519,8 +535,6 @@ function redrawCanvasForColor(color, isOnOrAdjacentToStation, previousColor) {
 
   // Redraw the stations canvas too, if any stations were deleted or edited nearby
   if (isOnOrAdjacentToStation) {
-    // TODO: Is it possible to improve performance even further
-    //  by separating out the station drawing and the station name drawing?
     drawCanvas(activeMap, true)
   }
 
@@ -760,6 +774,10 @@ function bindGridSquareEvents(event) {
       $('#tool-eyedropper').removeClass('active')
       $('#tool-eyedropper').removeAttr('style')
     } // if color, lineWidthStyle
+  } else if (activeTool == 'move' && selectedPoints.length > 0) {
+    var corners = getCornersOfSelection(selectedPoints)
+    var bbox2 = getPointsWithinBoundingBox(x, y, x + (corners[2] - corners[0]), y + (corners[3] - corners[1]))
+    moveSelectionTo(selectedPoints, bbox2)
   }
 } // bindGridSquareEvents()
 
@@ -774,7 +792,7 @@ function bindGridSquareMouseover(event) {
   hoverY = xy[1]
 
   if (rightClicking) {
-    // TODO: Pan-scroll on right click
+    // CONSIDER: Pan-scroll on right click
   }
 
   if (!mouseIsDown && activeTool == 'eyedropper') {
@@ -818,6 +836,10 @@ function bindGridSquareMouseover(event) {
   if (mouseIsDown && (rulerOn && rulerOrigin.length > 0 && (activeTool == 'look' || activeTool == 'line' || activeTool == 'eraser'))) {
     drawRuler(hoverX, hoverY)
   }
+  if (mouseIsDown && activeTool == 'select') {
+    // Draw the marching ants preview
+    drawSelectionBox(clickX, clickY, xy[0], xy[1])
+  }
 } // bindGridSquareMouseover()
 
 function bindGridSquareMouseup(event) {
@@ -828,6 +850,17 @@ function bindGridSquareMouseup(event) {
   }
   // Unset current click's x, y coordinates,
   // since we don't need to do straight line assist drawing anymore
+
+  if (activeTool == 'select') {
+    // Capture these because clickX and clickY are about to be unset
+    clearMarchingAnts()
+    var x1 = clickX
+    var y1 = clickY
+    xy = getCanvasXY(event.pageX, event.pageY)
+    drawMarchingAnts(x1, y1, xy[0], xy[1])
+    selectedPoints = getPointsWithinBoundingBox(x1, y1, xy[0], xy[1])
+  }
+
   clickX = false
   clickY = false
 
@@ -858,6 +891,10 @@ function bindGridSquareMousedown(event) {
     rightClicking = true
   }
 
+  if (activeTool == 'select') {
+    clearMarchingAnts()
+  }
+
   // Visually indicate which squares you can fill in with
   //  straight line assist
   if ($('#straight-line-assist').prop('checked') && (activeTool == 'line' || activeTool == 'eraser')) {
@@ -865,11 +902,26 @@ function bindGridSquareMousedown(event) {
     for (var x=0; x<gridRows; x++) {
       for (var y=0; y<gridCols; y++) {
         if (x == clickX || y == clickY || Math.abs(x - clickX) == Math.abs(y - clickY)) {
-          drawHoverIndicator(x, y, '#2E71CC')
+          if (isWithinSelectedPoints(x, y)) {
+            drawHoverIndicator(x, y, '#2E71CC')
+          } else {
+            drawHoverIndicator(x, y, '#CC2E70')
+          }
         } // if it's a straight line from the origin
       } // for y
     } // for x
-  } // if straight line assist is checked
+  } else if (!$('#straight-line-assist').prop('checked') && (activeTool == 'line' || activeTool == 'eraser') && selectedPoints.length > 0) {
+    // When selectedPoints is active but the guide isn't, it's nice to have some way of showing
+    // which coordinates you can/can't draw/erase
+    // CONSIDER: Showing this even when the guide is active, though that's probably
+    //  unnecessary since when the guide is active, you get the guide immediately at your clickXY
+    var canvas = document.getElementById('hover-canvas')
+    var ctx = canvas.getContext('2d')
+    var inBounds = getCornersOfSelection(selectedPoints).map((n) => n * gridPixelMultiplier)
+    ctx.fillStyle = '#CC2E70'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.clearRect(inBounds[0] - (gridPixelMultiplier / 2), inBounds[1] - (gridPixelMultiplier / 2), (inBounds[2] - inBounds[0]) + (gridPixelMultiplier), (inBounds[3] - inBounds[1])  + (gridPixelMultiplier))
+  }// if straight line assist is checked
 
   if (mouseIsDown && dragX) {
     // Already clicking and dragging
@@ -887,6 +939,7 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
   // Displays a hover indicator on the hover canvas at x,y
   var canvas = document.getElementById('hover-canvas')
   var ctx = canvas.getContext('2d')
+  var gridPixelMultiplier = canvas.width / gridCols
   if (!fillColor) {
     // Only clear the canvas if we aren't indicating straight line assist
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -904,17 +957,93 @@ function drawHoverIndicator(x, y, fillColor, opacity) {
   else if (activeTool == 'eraser')
     var activeColor = '#ffffff'
   else if (activeTool == 'station' && moveStationOn.length == 2) {
-    var gridPixelMultiplier = canvas.width / gridCols
     ctx.font = '700 ' + gridPixelMultiplier + 'px sans-serif';
-    if (!getActiveLine(x, y, activeMap) || getStation(x, y, activeMap)) {
+    if ((!getActiveLine(x, y, activeMap) && getLineDirection(moveStationOn[0], moveStationOn[1], activeMap).direction != 'singleton') || getStation(x, y, activeMap)) {
       ctx.globalAlpha = 0.25 // Visually indicate that it's not valid
     } else {
       ctx.globalAlpha = 0.75
     }
     drawStation(ctx, moveStationOn[0], moveStationOn[1], activeMap, false, x, y)
+  } else if (activeTool == 'move' && selectedPoints.length > 0) {
+    // CONSIDER: it may be more legible if the full station names were also part of what gets displayed,
+    //  though that may add quite a bit of complexity
+    var sliceCoords = getCornersOfSelection(selectedPoints).map((n) => n * gridPixelMultiplier)
+
+    var validPlacement = true
+    var selectOrigin = selectedPoints[0]
+
+    var bbox2 = createNewBoundingBox(selectedPoints, x - selectOrigin[0], y - selectOrigin[1])
+    var bboxes = getIntersectionAndDifferences(selectedPoints, bbox2)
+    var intersection = bboxes[0]
+    var bbox2diff1 = bboxes[2] // Determines whether this is a valid placement
+
+    if (intersection.size == selectedPoints.length) {
+      // Selections are the same, placement is valid
+    }
+
+    for (var bbxy of bbox2diff1) {
+      bbxy = bbxy.split(",")
+      if (validPlacement && getActiveLine(bbxy[0], bbxy[1], activeMap)) {
+        // Can't move to this space if any coords
+        //  in the non-overlapping portion of bbox2 has a point already
+        // This is almost perfect except it counts empty space in the bounding box.
+        // However, I'm not sure that's necessarily a bad thing, because
+        //  if you wanted to move it again, it might be very difficult to get this point again
+        //  unless/until I make the Lasso select tool
+        validPlacement = false // CONSIDER: Consider showing a visual bell to indicate failure
+        break
+      }
+      if (validPlacement && (bbxy[0] >= gridCols || bbxy[1] >= gridRows)) {
+        // If any points in bbox2 are outside of the map boundaries, don't allow it.
+        // You already can't try to place above y=0 or left of x=0,
+        //  so just check for being >=
+        validPlacement = false
+        break
+      }
+    }
+    if (validPlacement) {
+      ctx.globalAlpha = 0.75
+    } else {
+      ctx.globalAlpha = 0.25
+      ctx.fillStyle = '#CC2E70'
+      ctx.fillRect(
+        (x * gridPixelMultiplier) - (gridPixelMultiplier / 2),
+        (y * gridPixelMultiplier) - (gridPixelMultiplier / 2),
+        (sliceCoords[2] - sliceCoords[0] + gridPixelMultiplier),
+        (sliceCoords[3] - sliceCoords[1] + gridPixelMultiplier)
+      )
+    }
+
+    // TODO: it may be possible to get better performance by defining these above and using the willreadfrequently flag -- test on a slower computer to see if it's worth it!
+    // See https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext#willreadfrequently for additional flags
+    // May also benefit from throttling drawHoverIndicator altogether
+    var mainCanvas = document.getElementById('metro-map-canvas')
+    var stationCanvas = document.getElementById('metro-map-stations-canvas')
+
+    ctx.drawImage( // image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+      mainCanvas,
+      sliceCoords[0] - (gridPixelMultiplier / 2),
+      sliceCoords[1] - (gridPixelMultiplier / 2),
+      (sliceCoords[2] - sliceCoords[0]) + gridPixelMultiplier,
+      (sliceCoords[3] - sliceCoords[1]) + gridPixelMultiplier,
+      (x * gridPixelMultiplier) - (gridPixelMultiplier / 2),
+      (y * gridPixelMultiplier) - (gridPixelMultiplier / 2),
+      (gridPixelMultiplier, sliceCoords[2] - sliceCoords[0]) + gridPixelMultiplier,
+      (gridPixelMultiplier, sliceCoords[3] - sliceCoords[1]) + gridPixelMultiplier
+    )
+    ctx.drawImage(
+      stationCanvas,
+      sliceCoords[0]  - (gridPixelMultiplier / 2),
+      sliceCoords[1]  - (gridPixelMultiplier / 2),
+      (sliceCoords[2] - sliceCoords[0]) + gridPixelMultiplier,
+      (sliceCoords[3] - sliceCoords[1]) + gridPixelMultiplier,
+      (x * gridPixelMultiplier) - (gridPixelMultiplier / 2),
+      (y * gridPixelMultiplier) - (gridPixelMultiplier / 2),
+      (sliceCoords[2] - sliceCoords[0]) + gridPixelMultiplier,
+      (sliceCoords[3] - sliceCoords[1]) + gridPixelMultiplier
+    )
   }
   ctx.fillStyle = fillColor || activeColor || '#2ECC71'
-  var gridPixelMultiplier = canvas.width / gridCols
   ctx.fillRect((x * gridPixelMultiplier) - (gridPixelMultiplier / 2), (y * gridPixelMultiplier) - (gridPixelMultiplier / 2), gridPixelMultiplier, gridPixelMultiplier)
 } // drawHoverIndicator(x, y)
 
@@ -1000,7 +1129,7 @@ function drawGrid() {
     ctx.closePath()
   }
   if (!gridStep) {
-    $('#grid-step').text('off')
+    $('#grid-step').text('off') // I18N
   } else {
     $('#grid-step').text(gridStep)
   }
@@ -1486,7 +1615,7 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
   ctx.textAlign = 'start'
   ctx.font = '700 ' + fontSize + 'px sans-serif';
   ctx.fillStyle = '#000000';
-  var mapCredit = 'Created with MetroMapMaker.com';
+  var mapCredit = 'Created with MetroMapMaker.com'; // I18N
   var textWidth = ctx.measureText(mapCredit).width;
   ctx.fillText(mapCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 50);
 
@@ -1495,7 +1624,7 @@ function drawCanvas(metroMap, stationsOnly, clearOnly) {
   if (shareableLink) {
     shareableLink = shareableLink.text;
     if (shareableLink.length > 0 && shareableLink.slice(0, 26) == "https://metromapmaker.com/") {
-      var remixCredit = 'Remix this map! Go to ' + shareableLink;
+      var remixCredit = 'Remix this map! Go to ' + shareableLink; // I18N
       var textWidth = ctx.measureText(remixCredit).width;
       ctx.fillText(remixCredit, (gridRows * gridPixelMultiplier) - textWidth, (gridCols * gridPixelMultiplier) - 25);
     }
@@ -2351,7 +2480,7 @@ function drawLabel(ctx, x, y, metroMap, indicatorColor) {
     // This is an indicator only,
     // let's see if a placeholder looks nice?
     label = {
-      'text': 'Label',
+      'text': 'Label', // I18N
       'shape': $('#label-shape').val(),
       'text-color': '#333333'
     }
@@ -2474,6 +2603,9 @@ function autoSave(metroMap) {
   // This should be called AFTER the event that changes the map, not before.
   if (typeof metroMap == 'object') {
     activeMap = metroMap;
+    if ((activeTool == 'select' || activeTool == 'move') && selectedPoints.length > 0) {
+      metroMap["selectedPoints"] = structuredClone(selectedPoints)
+    }
     saveMapHistory(activeMap)
     metroMap = JSON.stringify(metroMap);
   }
@@ -2482,7 +2614,7 @@ function autoSave(metroMap) {
   $('#tool-redo').prop('disabled', true)
   $('span#redo-buffer-count').text('')
   if (!menuIsCollapsed) {
-    $('#autosave-indicator').text('Saving locally ...');
+    $('#autosave-indicator').text('Saving locally ...'); // I18N
     $('#title').hide()
     setTimeout(function() {
       $('#autosave-indicator').text('');
@@ -2501,6 +2633,15 @@ function loadMapFromUndoRedo(previousMap) {
     loadMapFromObject(previousMap)
     setMapSize(previousMap, true)
     drawCanvas(previousMap)
+    if ((activeTool == 'select' || activeTool == 'move') && previousMap["selectedPoints"] && previousMap["selectedPoints"].length > 0) {
+      selectedPoints = previousMap["selectedPoints"]
+      clearMarchingAnts()
+      drawSelectionBox(...getCornersOfSelection(selectedPoints))
+    } else {
+      // If not using the select/move tools right now, discard the selection
+      selectedPoints = []
+      clearMarchingAnts()
+    }
     if (previousMap['global'] && previousMap['global']['style']) {
       mapLineWidth = previousMap['global']['style']['mapLineWidth'] || mapLineWidth || 1
       mapStationStyle = previousMap['global']['style']['mapStationStyle'] || mapStationStyle || 'wmata'
@@ -2512,7 +2653,7 @@ function loadMapFromUndoRedo(previousMap) {
     resetRailLineTooltips()
     resetStyleButtons()
     // Re-create the Edit colors drop-down menu, because the delete unused colors might have been undone/redone
-    $('#tool-lines-to-change').html('<option>Edit which color?</option>')
+    $('#tool-lines-to-change').html('<option>Edit which color?</option>') // I18N
     // Now populate the select dropdown
     for (var line in activeMap["global"]["lines"]) {
       $('#tool-lines-to-change').append('<option value="' + line + '">' + activeMap["global"]["lines"][line]["displayName"] + '</option>')
@@ -2633,7 +2774,7 @@ function autoLoad() {
     //  so test carefully that v1 still works
     activeMap = JSON.parse(window.localStorage.getItem('metroMap'));
     if (typeof autoLoadError !== 'undefined') {
-      autoLoadError = autoLoadError + 'Loading your last-edited map.'
+      autoLoadError = autoLoadError + 'Loading your last-edited map.' // I18N
     }
   } else {
     // If no map URLParameter and no locally stored map, default to the WMATA map
@@ -2660,7 +2801,7 @@ function autoLoad() {
         loadMapFromObject(activeMap)
         mapHistory.push(JSON.stringify(activeMap)) // See note about saveMapHistory below
         setTimeout(function() {
-          $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
+          $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')'); // I18N
         }, 1000);
       }
     }).fail(function(err) {
@@ -2673,7 +2814,7 @@ function autoLoad() {
       setMapStyle(activeMap)
     })
     if (typeof autoLoadError !== 'undefined') {
-      autoLoadError = autoLoadError + 'Loading the default map.'
+      autoLoadError = autoLoadError + 'Loading the default map.' // I18N
       $('#announcement').append('<h4 id="autoLoadError" class="bg-warning" style="text-align: left;">' + autoLoadError + '</h4>')
       setTimeout(function() {
         $('#autoLoadError').remove()
@@ -2717,7 +2858,7 @@ function autoLoad() {
   } // autoLoadError
 
   setTimeout(function() {
-    $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')');
+    $('#tool-resize-' + gridRows).text('Initial size (' + gridRows + 'x' + gridCols + ')'); // I18N
   }, 1000);
 
   // Remember the last-used zoomLevel for this session
@@ -2823,6 +2964,11 @@ function setMapSize(metroMapObject, getFromGlobal) {
     }
   } // if getFromGlobal/else
   
+  if (prevSize > gridRows && selectedPoints.length > 0 && (selectedPoints[selectedPoints.length-1][0] > gridRows || selectedPoints[selectedPoints.length-1][1] > gridRows)) {
+    // Sizing down, should clear selectedPoints if it's in the portion that's now gone
+    selectedPoints = []
+  }
+
   resizeGrid(gridRows)
 
   if (gridRows != prevSize) {
@@ -2843,7 +2989,7 @@ function setMapStyle(metroMap) {
 
 function isMapStretchable(size) {
   // Determine if the map is small enough to be stretched
-  // TODO: be smarter about whether I can actually stretch rather than basing it on gridRows/Cols
+  // CONSIDER: be smarter about whether I can actually stretch rather than basing it on gridRows/Cols
   if (size) {
     return size <= MAX_MAP_SIZE / 2
   } else {
@@ -2883,11 +3029,11 @@ function loadMapFromObject(metroMapObject, update) {
     for (var line in metroMapObject['global']['lines']) {
       if (metroMapObject['global']['lines'].hasOwnProperty(line) && document.getElementById('rail-line-' + line) === null) {
           if (numLines < 11) {
-            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: ' + numberKeys[numLines - 1].replace('Digit', '') + '"'
+            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: ' + numberKeys[numLines - 1].replace('Digit', '') + '"' // I18N
           } else if (numLines < 21) {
-            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: Shift + ' + numberKeys[numLines - 1].replace('Digit', '') + '"'
+            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: Shift + ' + numberKeys[numLines - 1].replace('Digit', '') + '"' // I18N
           } else if (numLines < 31) {
-            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: Alt + ' + numberKeys[numLines - 1].replace('Digit', '') + '"'
+            keyboardShortcut = ' data-toggle="tooltip" title="Keyboard shortcut: Alt + ' + numberKeys[numLines - 1].replace('Digit', '') + '"' // I18N
           } else {
             keyboardShortcut = ''
           }
@@ -3064,12 +3210,193 @@ function updateMapObject(x, y, key, data) {
   return metroMap;
 } // updateMapObject()
 
+function createNewBoundingBox(bbox1, xOffset, yOffset) {
+  // Use to create a temporary bounding box during hover
+  //  that we can use to determine whether this is a valid placement
+  var bbox2 = []
+  for (var c in bbox1) {
+    bbox2[c] = [bbox1[c][0] + xOffset, bbox1[c][1] + yOffset]
+  }
+  return bbox2
+} // createNewBoundingBox(bbox1, xOffset, yOffset)
+
+function getIntersectionAndDifferences(bbox1, bbox2) {
+  // Given two bounding boxes,
+  //  return the intersection (overlap)
+  //  as well as all of the points from bbox1 that don't appear in bbox2
+  //    (which are the ones to be deleted when moveSelectionTo occurs)
+  //  and the points from bbox2 that don't appear in bbox1
+  //    (which determines whether or not this is a valid placement)
+
+  // As-is, can't get intersection/difference here like in findLines,
+  //  because that uses coords in "x,y" format (as strings) rather than [x,y]
+  // So let's convert it.
+  var bbox1_set = new Set()
+  for (var xy of bbox1) {
+    bbox1_set.add(`${xy[0]},${xy[1]}`)
+  }
+  var bbox2_set = new Set()
+  for (var xy of bbox2) {
+    bbox2_set.add(`${xy[0]},${xy[1]}`)
+  }
+
+  // This would be so much easier if Javascript recognized Array equality
+  if (typeof bbox1_set.difference == 'function') {
+    var difference1 = bbox1_set.difference(bbox2_set)
+    var difference2 = bbox2_set.difference(bbox1_set)
+  } else {
+    var difference1 = new Set()
+    var difference2 = new Set()
+    for (var c of bbox2_set) {
+      if (!bbox1_set.has(c)) {
+        difference1.add(c)
+      }
+    }
+    for (var c of bbox1_set) {
+      if (!bbox2_set.has(c)) {
+        difference2.add(c)
+      }
+    }
+  } // .difference compatibility check
+  return [bbox1_set.intersection(bbox2_set), difference1, difference2, bbox1_set, bbox2_set]
+} // getIntersectionAndDifferences(bbox1, bbox2)
+
+function moveSelectionTo(bbox1, bbox2) {
+  // Moves a selection (bbox1) to the coordinates at bbox2,
+  //  if those are valid
+
+  // CONSIDER: This is a pretty naive implementation, and could be improved upon.
+  // Worth profiling to see what the performance is like, and whether there are optimizations
+
+  var t0 = performance.now()
+
+  var bboxes = getIntersectionAndDifferences(bbox1, bbox2)
+  var intersection = bboxes[0]
+  var bbox2diff1 = bboxes[2] // Determines whether this is a valid placement
+
+  var t1 = performance.now()
+
+  if (intersection.size == selectedPoints.length) {
+    // Selections are the same, end early
+    return
+  }
+
+  for (var xy of bbox2diff1) {
+    xy = xy.split(",")
+    if (getActiveLine(xy[0], xy[1], activeMap)) {
+      // Can't move to this space if any coords
+      //  in the non-overlapping portion of bbox2 has a point already
+      return // CONSIDER: Consider showing a visual bell to indicate failure
+    }
+    if (xy[0] >= gridCols || xy[1] >= gridRows) {
+      // If any points in bbox2 are outside of the map boundaries, don't allow it.
+      // You already can't try to place above y=0 or left of x=0,
+      //  so just check for being >=
+      return // CONSIDER: Consider showing a visual bell to indicate failure
+    }
+  }
+
+  // Now: iterate over coords in bbox1, apply them to bbox2 coords,
+  //  then delete the coords from bbox1
+  //  make sure to move stations too.
+  var pointsToAdd = {}
+  var stationsToAdd = {}
+  var newMapObject = structuredClone(activeMap)
+  for (var c in bbox1) {
+    var clws = getActiveLine(bbox1[c][0], bbox1[c][1], activeMap, true)
+    if (!clws) { continue } // Nothing at this point
+    var color = clws[0]
+    var lws = clws[1]
+    var xy = bbox2[c]
+    var x = xy[0]
+    var y = xy[1]
+
+    // Delete the point from newMapObject
+    delete newMapObject["points_by_color"][color][lws][bbox1[c][0]][bbox1[c][1]]
+
+    // Add these after all deletes have occurred
+    if (!pointsToAdd[color]) {
+      pointsToAdd[color] = {}
+    }
+    if (!pointsToAdd[color][lws]) {
+      pointsToAdd[color][lws] = {}
+    }
+    if (!pointsToAdd[color][lws][x]) {
+      pointsToAdd[color][lws][x] = {}
+    }
+    pointsToAdd[color][lws][x][y] = 1
+
+    // Delete the station if existing, too
+    if (newMapObject["stations"][bbox1[c][0]] && newMapObject["stations"][bbox1[c][0]][bbox1[c][1]]) {
+      delete newMapObject["stations"][bbox1[c][0]][bbox1[c][1]]
+      if (Object.keys(newMapObject["stations"][bbox1[c][0]]).length == 0) {
+        delete newMapObject["stations"][bbox1[c][0]]
+      }
+
+      if (!stationsToAdd[x]) {
+        stationsToAdd[x] = {}
+      }
+      if (!stationsToAdd[x][y]) {
+        stationsToAdd[x][y] = {}
+      }
+      stationsToAdd[x][y] = Object.assign({}, activeMap["stations"][bbox1[c][0]][bbox1[c][1]])
+    }
+  }
+
+  for (var color of Object.keys(pointsToAdd)) {
+    for (var lws of Object.keys(pointsToAdd[color])) {
+      for (var x of Object.keys(pointsToAdd[color][lws])) {
+        for (var y of Object.keys(pointsToAdd[color][lws][x])) {
+          if (!newMapObject["points_by_color"][color]) {
+            newMapObject["points_by_color"][color] = {}
+          }
+          if (!newMapObject["points_by_color"][color][lws]) {
+            newMapObject["points_by_color"][color][lws] = {}
+          }
+          if (!newMapObject["points_by_color"][color][lws][x]) {
+            newMapObject["points_by_color"][color][lws][x] = {}
+          }
+          newMapObject["points_by_color"][color][lws][x][y] = 1
+        } // for y
+      } // for x
+    } // for lws
+  } // for color
+
+  // Drawing the stations
+  for (var x of Object.keys(stationsToAdd)) {
+    for (var y of Object.keys(stationsToAdd[x])) {
+      if (!newMapObject["stations"][x]) {
+        newMapObject["stations"][x] = {}
+      }
+      if (!newMapObject["stations"][x][y]) {
+        newMapObject["stations"][x][y] = {}
+      }
+      newMapObject["stations"][x][y] = Object.assign({}, stationsToAdd[x][y])
+    } // for y
+  } // for x
+
+  selectedPoints = bbox2
+  clearMarchingAnts()
+  drawSelectionBox(...getCornersOfSelection(selectedPoints))
+  var t2 = performance.now()
+  if (MMMDEBUG) { console.log(`PERF OF moveSelectionTo: t1-t0: ${(t1-t0)}ms t2-t1: ${t2-t1}ms`) }
+  autoSave(newMapObject)
+  drawCanvas(newMapObject)
+} // moveSelectionTo(bbox1, bbox2)
+
 function moveStationTo(fromX, fromY, x, y) {
   // Moves an existing station (station) to the coordinates at (x,y),
   //  if those are valid
 
-  if (!getActiveLine(x, y, activeMap)) {
-    return // TODO: Consider showing visual bell to indicate failure
+  // If it's a singleton, move the station and the line underneath it
+  if (getLineDirection(fromX, fromY, activeMap).direction == 'singleton') {
+    var isSingleton = true
+  } else {
+    var isSingleton = false
+  }
+
+  if (!isSingleton && !getActiveLine(x, y, activeMap)) {
+    return // CONSIDER: Consider showing visual bell to indicate failure
   }
 
   if (getStation(x, y, activeMap)) {
@@ -3089,7 +3416,24 @@ function moveStationTo(fromX, fromY, x, y) {
   }
   activeMap['stations'][x][y] = activeMap['stations'][fromX][fromY]
   delete activeMap['stations'][fromX][fromY]
-  drawCanvas(activeMap, true)
+
+  if (isSingleton) {
+    // Move the point it was under, too
+    var clws = getActiveLine(fromX, fromY, activeMap, true)
+    var color = clws[0]
+    var lws = clws[1]
+
+    // Only delete the old point if moving to an empty space
+    if (!getActiveLine(x, y, activeMap)) {
+      if (!activeMap["points_by_color"][color][lws][x]) {
+        activeMap["points_by_color"][color][lws][x] = {}
+      }
+      activeMap["points_by_color"][color][lws][x][y] = 1
+      delete activeMap["points_by_color"][color][lws][fromX][fromY]
+    }
+  }
+
+  drawCanvas(activeMap, !isSingleton)
   autoSave(activeMap)
 } // moveStationTo(fromX, fromY, x, y)
 
@@ -3125,13 +3469,13 @@ function moveStation(directions) {
     //  to be able to switch which station is active,
     //  not swap positions or place one station on top of another
     if (getStation(x, y, activeMap)) {
-      return // TODO: Consider showing visual bell to indicate failure
+      return // CONSIDER: Consider showing visual bell to indicate failure
     }
     var x = parseInt($('#station-coordinates-x').val())
     var y = parseInt($('#station-coordinates-y').val())
     moveStationTo(x, y, (x + xOffset), (y + yOffset))
   }
-  if ($('#move-station-enabled').text().indexOf('Mouse') == -1) {
+  if ($('#move-station-enabled').text().indexOf('Mouse') == -1) { // I18N
     moveStationOn = [] // Don't enable the ability to move stations with the mouse if it isn't already on
   }
   return true
@@ -3159,6 +3503,17 @@ function moveMap(direction) {
         var yOffset = -1;
     }
 
+    if (selectedPoints.length > 0) {
+      // Prevent from going out of bounds, which we don't need to do in a loop
+      // Bounds-checking when no selectedPoints is done below
+      // CONSIDER: Major improvement here would be to get the minimal points excluding blank spaces
+      var sXYs = getCornersOfSelection(selectedPoints)
+      if (sXYs[0] == 0 && direction == 'left') { return }
+      else if (sXYs[1] == 0 && direction == 'up') { return }
+      else if (sXYs[2] == (gridCols - 1) && direction == 'right') { return }
+      else if (sXYs[3] == (gridRows - 1) && direction == 'down') { return }
+    }
+
     if (mapDataVersion == 3) {
       var newPointsByColor = {}
       var newStations = {}
@@ -3170,8 +3525,15 @@ function moveMap(direction) {
             for (var y in activeMap['points_by_color'][color][lineWidthStyle][x]) {
               x = parseInt(x);
               y = parseInt(y);
+              var skipDrawing = false;
               if (!Number.isInteger(x) || !Number.isInteger(y)) {
                 continue;
+              }
+              var outsideSelection = false
+
+              // For performance, don't bother checking points that are out of the boundaries
+              if (selectedPoints.length > 0 && (x < sXYs[0] || x > sXYs[2] || y < sXYs[1] || y > sXYs[3])) {
+                outsideSelection = true
               }
 
               if (!newPointsByColor[color][lineWidthStyle][x + xOffset]) {
@@ -3179,27 +3541,61 @@ function moveMap(direction) {
               }
 
               // Prevent going out of bounds
-              if (x == 0 && direction == 'left') { return }
-              else if (x == (gridCols - 1) && direction == 'right') { return }
-              else if (y == 0 && direction == 'up') { return }
-              else if (y == (gridRows - 1) && direction == 'down') { return }
+              if (selectedPoints.length == 0) {
+                if (x == 0 && direction == 'left') { return }
+                else if (x == (gridCols - 1) && direction == 'right') { return }
+                else if (y == 0 && direction == 'up') { return }
+                else if (y == (gridRows - 1) && direction == 'down') { return }
+              } else {
+                // Also prevent moving a portion of the map into existing lines
+                // TODO: Could improve this by only enforcing this if there's something at that boundary
+                if (direction == 'right' && (sXYs[2] + 1 == x) && (sXYs[1] <= y && sXYs[3] >= y)) {
+                  return
+                } else if (direction == 'left' && (sXYs[0] - 1 == x) && (sXYs[1] <= y && sXYs[3] >= y)) {
+                  return
+                } else if (direction == 'down' && (sXYs[3] + 1 == y) && (sXYs[0] <= x && sXYs[2] >= x)) {
+                  return
+                } else if (direction == 'up' && (sXYs[1] - 1 == y) && (sXYs[0] <= x && sXYs[2] >= x)) {
+                  return
+                }
+              }
+
+              if (outsideSelection || !isWithinSelectedPoints(x, y)) {
+                if (!newPointsByColor[color][lineWidthStyle][x]) {
+                  newPointsByColor[color][lineWidthStyle][x] = {}
+                }
+                newPointsByColor[color][lineWidthStyle][x][y] = 1
+                // "continue" would be more obvious but then the stations don't get set;
+                //  but without this, everything doubles when drawn
+                skipDrawing = true
+              }
 
               // If x,y is within the boundaries
               if ((0 <= x && x < gridCols && 0 <= y && y < gridCols)) {
                 // If the next square is within the boundaries
                 if (0 <= x + xOffset && x + xOffset < gridCols && 0 <= y + yOffset && y + yOffset < gridCols) {
-                  newPointsByColor[color][lineWidthStyle][x + xOffset][y + yOffset] = activeMap['points_by_color'][color][lineWidthStyle][x][y]
                   if (activeMap['stations'] && activeMap['stations'][x] && activeMap['stations'][x][y]) {
-                    // v2 drawback is needing to do stations and lines separately
-                    if (!newStations[x + xOffset]) { newStations[x + xOffset] = {} }
-                    newStations[x + xOffset][y + yOffset] = activeMap['stations'][x][y]
+                    // drawback of v2 is needing to do stations and lines separately
+                    if (outsideSelection || !isWithinSelectedPoints(x, y)) {
+                      if (!newStations[x]) { newStations[x] = {} }
+                      newStations[x][y] = activeMap['stations'][x][y]
+                    } else {
+                      if (!newStations[x + xOffset]) { newStations[x + xOffset] = {} }
+                      newStations[x + xOffset][y + yOffset] = activeMap['stations'][x][y]
+                    }
                   } // if stations
+                  if (!skipDrawing) {
+                    newPointsByColor[color][lineWidthStyle][x + xOffset][y + yOffset] = activeMap['points_by_color'][color][lineWidthStyle][x][y]
+                  }
                 } // next within boundaries
               } // x,y within boundaries
             } // for y
           } // for x
         } // lineWidthStyle
       } // color
+      if (selectedPoints.length > 0) {
+        updateSelectionUponMove(xOffset, yOffset)
+      }
       activeMap['points_by_color'] = newPointsByColor
       activeMap['stations'] = newStations
     } else if (mapDataVersion == 2) {
@@ -3279,6 +3675,31 @@ function moveMap(direction) {
     // If I do that, I should defer autoSave until it's over, and only do it once.
     return true
 } // moveMap(direction)
+
+function getCornersOfSelection(points) {
+  if (points.length == 0) {
+    return []
+  }
+  var allX = []
+  var allY = []
+  for (var xy of points) {
+    allX.push(xy[0])
+    allY.push(xy[1])
+  }
+  return [Math.min(...allX), Math.min(...allY), Math.max(...allX), Math.max(...allY)]
+} // getCornersOfSelection
+
+function updateSelectionUponMove(xOffset, yOffset) {
+  // After moving the map, the selectedPoints needs to also move
+  var newSelectedPoints = structuredClone(selectedPoints)
+  for (var coords in newSelectedPoints) {
+    newSelectedPoints[coords][0] += xOffset || 0
+    newSelectedPoints[coords][1] += yOffset || 0
+  }
+  selectedPoints = newSelectedPoints
+  clearMarchingAnts()
+  drawSelectionBox(...getCornersOfSelection(newSelectedPoints))
+} // updateSelectionUponMove(xOffset, yOffset)
 
 function disableRightClick(event) {
   // Sometimes when creating a map it's too easy to accidentally right click and it's annoying
@@ -3376,7 +3797,7 @@ function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
     // While it might be simpler to have a unified version of this function,
     //  the differences in the return values of getActiveLine() are significant enough
     //  among the versions, and this avoids an infinite loop when flood filling over a black line (000000) in v2
-    // TODO: Revisit a unified version; might be able to special-case the 000000 problem
+    // CONSIDER: Revisit a unified version; might be able to special-case the 000000 problem
     while (coords.length > 0)
     {
       y = coords.pop()
@@ -3424,6 +3845,7 @@ function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
     {
       y = coords.pop()
       x = coords.pop()
+      if (!isWithinSelectedPoints(x, y)) { continue } // This handles the rows
       x1 = x;
       while(x1 >= 0 && ffSpan(getActiveLine(x1, y, activeMap, mapDataVersion >= 3), initialColor))
         x1--;
@@ -3436,12 +3858,16 @@ function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
             break
           if (!ignoreCoords.hasOwnProperty(x1))
             ignoreCoords[x1] = {}
-          drawHoverIndicator(x1, y, replacementColor, 0.5)
-          ignoreCoords[x1][y] = true
+          if (isWithinSelectedPoints(x1, y)) {
+            drawHoverIndicator(x1, y, replacementColor, 0.5)
+            ignoreCoords[x1][y] = true
+          }
         } else {
-          updateMapObject(x1, y, "line", replacementColor);
+          if (isWithinSelectedPoints(x1, y)) {
+            updateMapObject(x1, y, "line", replacementColor);
+          }
         }
-        if(!spanAbove && y > 0 && ffSpan(getActiveLine(x1, y-1, activeMap, mapDataVersion >= 3), initialColor))
+        if(!spanAbove && y > 0 && ffSpan(getActiveLine(x1, y-1, activeMap, mapDataVersion >= 3), initialColor) && isWithinSelectedPoints(x1, y-1))
         {
           coords.push(x1, y - 1);
           spanAbove = 1;
@@ -3450,7 +3876,7 @@ function floodFill(x, y, initialColor, replacementColor, hoverIndicator) {
         {
           spanAbove = 0;
         }
-        if(!spanBelow && y < gridRows - 1 && ffSpan(getActiveLine(x1, y+1, activeMap, mapDataVersion >= 3), initialColor))
+        if(!spanBelow && y < gridRows - 1 && ffSpan(getActiveLine(x1, y+1, activeMap, mapDataVersion >= 3), initialColor) && isWithinSelectedPoints(x1, y+1))
         {
           coords.push(x1, y + 1);
           spanBelow = 1;
@@ -3529,16 +3955,16 @@ function downloadImage(canvas, showImg) {
 
 function resetResizeButtons(size) {
   $('.resize-grid').each(function() {
-    if ($(this).text().indexOf('Current') > -1) {
+    if ($(this).text().indexOf('Current') > -1) { // I18N
       var resizeButtonSize = $(this).attr('id').split('-').slice(2);
       var resizeButtonLabel = resizeButtonSize + 'x' + resizeButtonSize;
       $(this).text(resizeButtonLabel);
     }
   })
-  $('#tool-resize-' + size).text('Current size (' + size + 'x' + size + ')');
+  $('#tool-resize-' + size).text('Current size (' + size + 'x' + size + ')'); // I18N
   if (isMapStretchable(size)) {
     $('#tool-resize-stretch').show()
-    $('#tool-resize-stretch').text('Stretch map to ' + size * 2 + 'x' + size * 2)
+    $('#tool-resize-stretch').text('Stretch map to ' + size * 2 + 'x' + size * 2) // I18N
   } else {
     $('#tool-resize-stretch').hide()
   }
@@ -3557,7 +3983,7 @@ function resetStyleButtons() {
     }
     if (stationStyle) {
       $('#tool-map-style-station-' + stationStyle).addClass('active-mapstyle')
-      $('#reset-all-station-styles').text('Set ALL stations to ' + $('#tool-map-style-station-' + stationStyle).text())
+      $('#reset-all-station-styles').text('Set ALL stations to ' + $('#tool-map-style-station-' + stationStyle).text()) // I18N
     }
   }
 } // resetStyleButtons()
@@ -3595,11 +4021,11 @@ function resetRailLineTooltips() {
   for (var a=0; a<allLines.length; a++) {
     var line = $('.rail-line')[a].id.slice(10, 16)
     if (a < 10) {
-      keyboardShortcut = 'Keyboard shortcut: ' + numberKeys[a].replace('Digit', '')
+      keyboardShortcut = 'Keyboard shortcut: ' + numberKeys[a].replace('Digit', '') // I18N
     } else if (a < 20) {
-      keyboardShortcut = 'Keyboard shortcut: Shift + ' + numberKeys[a].replace('Digit', '')
+      keyboardShortcut = 'Keyboard shortcut: Shift + ' + numberKeys[a].replace('Digit', '') // I18N
     } else if (a < 30) {
-      keyboardShortcut = 'Keyboard shortcut: Alt + ' + numberKeys[a].replace('Digit', '')
+      keyboardShortcut = 'Keyboard shortcut: Alt + ' + numberKeys[a].replace('Digit', '') // I18N
     } else {
       keyboardShortcut = '' // remove old tooltips
     }
@@ -3789,6 +4215,13 @@ $(document).ready(function() {
         $('#tool-flood-fill').prop('checked', false)
       } else {
         $('#tool-flood-fill').prop('checked', true)
+        if (activeTool == 'eraser') {
+          setActiveTool('eraser')
+        } else if (activeToolOption) {
+          // On the assumption that activeToolOption is only for line color,
+          //  which has been true so far
+          setActiveTool('line')
+        }
       }
       setFloodFillUI()
     }
@@ -3826,6 +4259,9 @@ $(document).ready(function() {
       } else {
         setMoveStationAbility(true) // disable it
       }
+      if (activeTool != 'station' && selectedPoints.length > 0) {
+        $('#tool-move-selection').trigger('click')
+      }
     }
     else if (event.key.toLowerCase() == 'o' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // O, except for Open
       if (activeTool == 'station' && $('#tool-station-options').is(':visible')) {
@@ -3845,6 +4281,14 @@ $(document).ready(function() {
     }
     else if (event.key.toLowerCase() == 's') { // S
       $('#tool-station').trigger('click')
+    }
+    else if (event.key.toLowerCase() == 't') {
+      $('#tool-select').trigger('click')
+      // If you press T, to me, you want to select again,
+      //  even if you're clearing the selection.
+      // If you press Escape, you're just clearing the selection,
+      //  and will return to your previous tool
+      setActiveTool('select', true)
     }
     else if (event.key.toLowerCase() == 'w' && (!event.metaKey && !event.altKey && !event.ctrlKey)) { // W, except for close window
       if (mapDataVersion >= 3) {
@@ -3937,6 +4381,21 @@ $(document).ready(function() {
       // Draw rail colors in order of appearance, 1-10 (0 is 10)
       railKey = numberKeys.indexOf(event.code)
     }
+    else if (event.key == 'Escape' && selectedPoints.length > 0) {
+      // De-select current selection, cancel any move in progress
+      setActiveTool(lastToolUsed, true)
+      selectedPoints = []
+      clearMarchingAnts()
+    }
+    else if ((event.key == 'Delete' || event.key == 'Backspace') && selectedPoints.length > 0) {
+      setActiveTool('eraser')
+      for (var xy of selectedPoints) {
+        erase(xy[0], xy[1], true) // defer save and drawCanvas, but we have to do it manually
+      }
+      autoSave(activeMap)
+      drawCanvas(activeMap)
+      setActiveTool(lastToolUsed, true)
+    }
 
     // ----- Note: This is a separate conditional from the event.code keydowns
     if (railKey !== false && possibleRailLines[railKey]) {
@@ -3954,7 +4413,7 @@ $(document).ready(function() {
     }
   }); // keyup
 
-  activeTool = 'look';
+  setActiveTool('look')
 
   $('#toolbox button:not(.rail-line)').on('click', function() {
     $('.active').removeClass('active')
@@ -3980,12 +4439,12 @@ $(document).ready(function() {
     $('.active').removeClass('active')
     $('#tool-line').addClass('active')
     if ($(this).hasClass('draw-rail-line') && activeToolOption) {
-      activeTool = 'line'
+      setActiveTool('line')
       $(this).css({"background-color": activeToolOption})
     } else if (activeTool == 'eraser' && activeToolOption) {
-      activeTool = 'line'
+      setActiveTool('line')
     } else if (activeTool == 'eraser') {
-      activeTool = 'look'
+      setActiveTool('look')
     }
     // Expand Rail line options
     if ($('#tool-line-options').is(':visible')) {
@@ -3995,7 +4454,7 @@ $(document).ready(function() {
         $(this).removeClass('width-100')
       }
       // Also reset the + Add New Color button
-      $('#rail-line-new span').text('Add New Color')
+      $('#rail-line-new span').text('Add New Color') // I18N
       $('#tool-new-line-options').hide()
     } else {
       $('#tool-line-options').show();
@@ -4013,7 +4472,7 @@ $(document).ready(function() {
     var metroMap = Object.assign({}, activeMap) // make a copy so we can check to see which lines exist
     // If the line tool is in use, unset it so we don't get a stale color
     if (activeTool == 'line') {
-      activeTool = 'look'
+      setActiveTool('look')
       $('#tool-line').attr('style', '')
       $('#tool-line').removeClass('active')
     }
@@ -4048,7 +4507,7 @@ $(document).ready(function() {
     drawCanvas() // This also does a full reset of the color map
   }); // #rail-line-delete.click() (Delete unused lines)
   $('#tool-station').click(function() {
-    activeTool = 'station';
+    setActiveTool('station')
     $('.active').removeClass('active')
     $('#tool-station').addClass('active')
     if ($('#tool-station-options').is(':visible')) {
@@ -4059,7 +4518,7 @@ $(document).ready(function() {
     $('.tooltip').hide();
   }); // #tool-station.click()
   $('#tool-label').on('click', function() {
-    activeTool = 'label'
+    setActiveTool('label')
     $('.active').removeClass('active')
     $(this).addClass('active')
     if ($('#tool-label-options').is(':visible')) {
@@ -4068,7 +4527,7 @@ $(document).ready(function() {
     }
   })
   $('#tool-eraser').on('click', function() {
-    activeTool = 'eraser';
+    setActiveTool('eraser')
     $('.active').removeClass('active')
     $('#tool-eraser').addClass('active')
     $('#tool-station-options').hide();
@@ -4124,7 +4583,7 @@ $(document).ready(function() {
       $(this).addClass('width-100')
       if (isMapStretchable()) {
         $('#tool-resize-stretch').show()
-        $('#tool-resize-stretch').text('Stretch map to ' + gridRows * 2 + 'x' + gridCols * 2)
+        $('#tool-resize-stretch').text('Stretch map to ' + gridRows * 2 + 'x' + gridCols * 2) // I18N
       } else {
         $('#tool-resize-stretch').hide()
       }
@@ -4133,7 +4592,7 @@ $(document).ready(function() {
   }); // #tool-resize-all.click()
   $('.resize-grid').click(function() {
     var lastToolUsed = activeTool;
-    activeTool = 'resize'
+    setActiveTool('resize')
     size = $(this).attr('id').split('-').slice(2);
     // Indicate which size the map is now sized to, and reset any other buttons
     resetResizeButtons(size)
@@ -4172,14 +4631,14 @@ $(document).ready(function() {
     moveMap("right");
   }); // #tool-move-right.click()
   $('#tool-save-map').click(function() {
-    activeTool = 'look';
+    setActiveTool('look')
     var savedMap = JSON.stringify(activeMap);
     autoSave(savedMap);
     var saveMapURL = '/save/';
     csrftoken = getCookie('csrftoken');
     // Disable button (and re-enable it shortly thereafter
     $('#tool-save-map').prop('disabled', 'disabled')
-    $('#tool-save-map span').text('Saving ...')
+    $('#tool-save-map span').text('Saving ...') // I18N
     setTimeout(function() {
       // Re-enable it after 1 second no matter what,
       //  but the visual cue ("Saving ...")
@@ -4191,11 +4650,11 @@ $(document).ready(function() {
       'csrfmiddlewaretoken': csrftoken
     }).done(function(data) {
       if (data.replace(/\n/g, '').indexOf('No points_by_color') > -1) {
-        $('#tool-save-options').html('<h5 class="bg-danger">You can\'t save an empty map.</h5>');
+        $('#tool-save-options').html('<h5 class="bg-danger">You can\'t save an empty map.</h5>'); // I18N
         $('#tool-save-options').show();
       }
       else if (data.replace(/\s/g,'').slice(0,7) == '[ERROR]') {
-        $('#tool-save-options').html('<h5 class="bg-danger">Sorry, there was a problem saving your map: ' + data.slice(9) + '</h5>');
+        $('#tool-save-options').html('<h5 class="bg-danger">Sorry, there was a problem saving your map: ' + data.slice(9) + '</h5>'); // I18N
         console.log("[WARN] Problem was: " + data)
         $('#tool-save-options').show();
       }
@@ -4207,19 +4666,19 @@ $(document).ready(function() {
         data = data.split(',');
         var urlhash = data[0].replace(/\s/g,'');
         var namingToken = data[1].replace(/\s/g,'');
-        var toolSaveOptions = '<button id="hide-save-share-url" class="styling-greenline width-100">Hide sharing explanation</button><h5 style="overflow-x: hidden;" class="text-left">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="/map/' + urlhash + '" target="_blank">metromapmaker.com/map/' + urlhash + '</a></h5> <h5 class="text-left">You can then share this URL with a friend - and they can remix your map without you losing your original! <b>If you make changes to this map, click Save &amp; Share again to get a new URL.</b></h5>';
+        var toolSaveOptions = '<button id="hide-save-share-url" class="styling-greenline width-100">Hide sharing explanation</button><h5 style="overflow-x: hidden;" class="text-left">Map Saved! You can share your map with a friend by using this link: <a id="shareable-map-link" href="/map/' + urlhash + '" target="_blank">metromapmaker.com/map/' + urlhash + '</a></h5> <h5 class="text-left">You can then share this URL with a friend - and they can remix your map without you losing your original! <b>If you make changes to this map, click Save &amp; Share again to get a new URL.</b></h5>'; // I18N
         // setURLAfterSave(urlhash)
         if (namingToken) {
           // Only show the naming form if the map could actually be renamed.
-          toolSaveOptions += '<form id="name-map" class="text-left"><input type="hidden" name="urlhash" value="' + urlhash + '"><input id="naming-token" type="hidden" name="naming_token" value="' + namingToken + '"><label for="name">Where is this a map of?</label><input id="user-given-map-name" type="text" name="name"><select id="user-given-map-tags" name="tags"><option value="">What kind of map is this?</option><option value="real">This is a real metro system</option><option value="speculative">This is a real place, but a fantasy map</option><option value="unknown">This is an imaginary place</option></select></form><button id="name-this-map" class="styling-blueline width-100">Name this map</button>'
+          toolSaveOptions += '<form id="name-map" class="text-left"><input type="hidden" name="urlhash" value="' + urlhash + '"><input id="naming-token" type="hidden" name="naming_token" value="' + namingToken + '"><label for="name">Where is this a map of?</label><input id="user-given-map-name" type="text" name="name"><select id="user-given-map-tags" name="tags"><option value="">What kind of map is this?</option><option value="real">This is a real metro system</option><option value="speculative">This is a real place, but a fantasy map</option><option value="unknown">This is an imaginary place</option></select></form><button id="name-this-map" class="styling-blueline width-100">Name this map</button>' // I18N
         }
         var userGivenMapName = window.sessionStorage.getItem('userGivenMapName')
         var userGivenMapTags = window.sessionStorage.getItem('userGivenMapTags')
 
         if (namingToken && userGivenMapName && userGivenMapTags) {
-          toolSaveOptions += '<h5><a id="map-somewhere-else">Not a map of ' + userGivenMapName + '? Click here to rename</a></h5>'
+          toolSaveOptions += '<h5><a id="map-somewhere-else">Not a map of ' + userGivenMapName + '? Click here to rename</a></h5>' // I18N
         }
-        $('#tool-save-options').html('<fieldset><legend>Save &amp; Share</legend>' + toolSaveOptions + '</fieldset>');
+        $('#tool-save-options').html('<fieldset><legend>Save &amp; Share</legend>' + toolSaveOptions + '</fieldset>'); // I18N
 
         // Pre-fill the name and tags with what we have in sessionStorage
         if (namingToken && userGivenMapName) {
@@ -4238,7 +4697,7 @@ $(document).ready(function() {
           $(this).parent().hide()
           $('#name-this-map').removeClass();
           $('#name-this-map').addClass('styling-blueline width-100');
-          $('#name-this-map').text('Name this map')
+          $('#name-this-map').text('Name this map') // I18N
         })
         $('#name-this-map').click(function(e) {
 
@@ -4256,7 +4715,7 @@ $(document).ready(function() {
 
           $.post('/name/', formData, function() {
             $('#name-map').hide();
-            $('#name-this-map').text('Thanks!')
+            $('#name-this-map').text('Thanks!') // I18N
             setTimeout(function() {
               $('#name-this-map').hide();
             }, 500);
@@ -4276,23 +4735,23 @@ $(document).ready(function() {
       } // else (success)
     }).fail(function(data) {
       if (data.status == 400) {
-        var message = 'Sorry, your map could not be saved. Did you flood fill the whole map? Use flood fill with the eraser to erase and try again.'
+        var message = 'Sorry, your map could not be saved. Did you flood fill the whole map? Use flood fill with the eraser to erase and try again.' // I18N
       } else if (data.status == 500) {
-        var message = 'Sorry, your map could not be saved right now. This may be a bug, and the admin has been notified.'
+        var message = 'Sorry, your map could not be saved right now. This may be a bug, and the admin has been notified.' // I18N
       } else if (data.status >= 502) {
-        var message = 'Sorry, your map could not be saved right now. Metro Map Maker is currently undergoing routine maintenance including bugfixes and upgrades. Please try again in a few minutes.'
+        var message = 'Sorry, your map could not be saved right now. Metro Map Maker is currently undergoing routine maintenance including bugfixes and upgrades. Please try again in a few minutes.' // I18N
       }
       $('#tool-save-options').html('<h5 class="text-left bg-warning">' + message + '</h5>');
       $('#tool-save-options').show();
     }).always(function() {
       setTimeout(function() {
-        $('#tool-save-map span').text('Save & Share')
+        $('#tool-save-map span').text('Save & Share') // I18N
       }, 350) // A short delay looks nicer than immediate
     });
     $('.tooltip').hide();
   }); // $('#tool-save-map').click()
   $('#tool-download-image').click(function() {
-    activeTool = 'look';
+    setActiveTool('look')
 
     // Download image on desktop, which is more robust than on mobile
 
@@ -4302,7 +4761,7 @@ $(document).ready(function() {
     $('.tooltip').hide();
   }); // #tool-download-image.click()
   $('#tool-export-canvas').click(function() {
-    activeTool = 'look';
+    setActiveTool('look')
     // On mobile, you need to tap and hold on the canvas to save the image
     drawCanvas(activeMap);
     $('#tool-station-options').hide();
@@ -4327,7 +4786,7 @@ $(document).ready(function() {
       $('button:not(.mobile-browse)').attr('disabled', true);
       $(this).attr('disabled', false);
 
-      $(this).attr('title', "Go back to editing your map").tooltip('fixTitle').tooltip('show');
+      $(this).attr('title', "Go back to editing your map").tooltip('fixTitle').tooltip('show'); // I18N
     } else {
       $('#grid-canvas').show();
       $('#hover-canvas').show();
@@ -4338,7 +4797,7 @@ $(document).ready(function() {
       $('#export-canvas-help').hide();
       $('button').attr('disabled', false);
 
-      $(this).attr('title', "Download your map to share with friends").tooltip('fixTitle').tooltip('show');
+      $(this).attr('title', "Download your map to share with friends").tooltip('fixTitle').tooltip('show'); // I18N
     }
   }); // #tool-export-canvas.click()
   $('#tool-clear-map').click(function() {
@@ -4370,7 +4829,7 @@ $(document).ready(function() {
       var resizeButtonSize = $(this).attr('id').split('-').slice(2);
       var resizeButtonLabel = resizeButtonSize + ' x ' + resizeButtonSize;
       if (resizeButtonSize == ALLOWED_SIZES[0]) {
-        resizeButtonLabel = resizeButtonLabel + ' (Current size)';
+        resizeButtonLabel = resizeButtonLabel + ' (Current size)'; // I18N
       } else {
         resizeButtonLabel = resizeButtonLabel;
       }
@@ -4422,10 +4881,10 @@ $(document).ready(function() {
 
   $('#rail-line-new').click(function() {
     if ($('#tool-new-line-options').is(':visible')) {
-      $(this).children('span').text('Add New Color')
+      $(this).children('span').text('Add New Color') // I18N
       $('#tool-new-line-options').hide()
     } else {
-      $(this).children('span').text('Hide Add Color options')
+      $(this).children('span').text('Hide Add Color options') // I18N
       $('#tool-new-line-options').show()
     }
   }) // #rail-line-new.click() (expand tool-new-line-options)
@@ -4447,15 +4906,15 @@ $(document).ready(function() {
     }
 
     if (allColors.indexOf($('#new-rail-line-color').val().slice(1, 7)) >= 0) {
-      $('#tool-new-line-errors').text('This color already exists! Please choose a new color.');
+      $('#tool-new-line-errors').text('This color already exists! Please choose a new color.'); // I18N
     } else if (allNames.indexOf($('#new-rail-line-name').val()) >= 0) {
-      $('#tool-new-line-errors').text('This color name already exists! Please choose a new name.');
+      $('#tool-new-line-errors').text('This color name already exists! Please choose a new name.'); // I18N
     } else if ($('#new-rail-line-name').val().length == 0) {
-      $('#tool-new-line-errors').text('This color name cannot be blank. Please enter a name.');
+      $('#tool-new-line-errors').text('This color name cannot be blank. Please enter a name.'); // I18N
     } else if ($('#new-rail-line-name').val().length > 100) {
-      $('#tool-new-line-errors').text('This color name is too long. Please shorten it.');
+      $('#tool-new-line-errors').text('This color name is too long. Please shorten it.'); // I18N
     } else if ($('.rail-line').length > 99) {
-      $('#tool-new-line-errors').text('Too many colors! Delete your unused ones before creating new ones.');
+      $('#tool-new-line-errors').text('Too many colors! Delete your unused ones before creating new ones.'); // I18N
     } else {
       $('#tool-new-line-errors').text('');
       $('#line-color-options fieldset #line-colors').append('<button id="rail-line-' + $('#new-rail-line-color').val().slice(1, 7) + '" class="rail-line has-tooltip" style="background-color: ' + $('#new-rail-line-color').val() + ';">' + $('#new-rail-line-name').val() + '</button>');
@@ -4479,7 +4938,7 @@ $(document).ready(function() {
     bindRailLineEvents();
     resetRailLineTooltips()
     // Repopulate the Edit Rail Lines dropdown menu, in case it's open
-    $('#tool-lines-to-change').html('<option>Edit which color?</option>')
+    $('#tool-lines-to-change').html('<option>Edit which color?</option>') // I18N
     for (var line in activeMap["global"]["lines"]) {
       $('#tool-lines-to-change').append('<option value="' + line + '">' + activeMap["global"]["lines"][line]["displayName"] + '</option>')
     }
@@ -4489,14 +4948,14 @@ $(document).ready(function() {
   $('#rail-line-change').click(function() {
     // Expand the options
     if ($('#tool-change-line-options').is(':visible')) {
-      $(this).children('span').html('Edit colors &amp; names')
+      $(this).children('span').html('Edit colors &amp; names') // I18N
       $('#tool-change-line-options').hide()
     } else {
-      $(this).children('span').text('Close Edit Color options')
+      $(this).children('span').text('Close Edit Color options') // I18N
       $('#tool-change-line-options').show()
     }
 
-    $('#tool-lines-to-change').html('<option>Edit which color?</option>')
+    $('#tool-lines-to-change').html('<option>Edit which color?</option>') // I18N
     $('#change-line-name').hide()
     $('#change-line-color').hide()
     $('#tool-change-line-options label').hide()
@@ -4511,7 +4970,7 @@ $(document).ready(function() {
   $('#tool-lines-to-change').on('change', function() {
     $('#tool-change-line-options label').show()
     // Set the name and color
-    if ($('#tool-lines-to-change option:selected').text() != 'Edit which color?') {
+    if ($('#tool-lines-to-change option:selected').text() != 'Edit which color?') { // I18N
       $('#change-line-name').show()
       $('#change-line-color').show()
       $('#change-line-name').val($('#tool-lines-to-change option:selected').text())
@@ -4525,7 +4984,7 @@ $(document).ready(function() {
 
   $('#save-rail-line-edits').click(function() {
     // Save edits
-    if ($('#tool-lines-to-change option:selected').text() != 'Edit which color?') {
+    if ($('#tool-lines-to-change option:selected').text() != 'Edit which color?') { // I18N
       var lineColorToChange = $('#tool-lines-to-change').val()
       var lineColorToChangeTo = $('#change-line-color').val().slice(1)
       var lineNameToChange = $('#tool-lines-to-change option:selected').text()
@@ -4537,10 +4996,10 @@ $(document).ready(function() {
       });
 
       if ((lineColorToChange != lineColorToChangeTo) && (Object.keys(activeMap["global"]["lines"]).indexOf(lineColorToChangeTo) >= 0)) {
-        $('#cant-save-rail-line-edits').text('Can\'t change ' + lineNameToChange + ' - it has the same color as ' + activeMap["global"]["lines"][lineColorToChangeTo]["displayName"])
+        $('#cant-save-rail-line-edits').text('Can\'t change ' + lineNameToChange + ' - it has the same color as ' + activeMap["global"]["lines"][lineColorToChangeTo]["displayName"]) // I18N
       }
       else if (allNames.indexOf(lineNameToChangeTo) > -1 && lineNameToChange != lineNameToChangeTo) {
-        $('#cant-save-rail-line-edits').text('This color name already exists! Please choose a new name.');
+        $('#cant-save-rail-line-edits').text('This color name already exists! Please choose a new name.'); // I18N
       }
       else {
         replaceColors({
@@ -4550,12 +5009,12 @@ $(document).ready(function() {
           "color": lineColorToChangeTo,
           "name": lineNameToChangeTo
         })
-        $('#rail-line-change span').html('Edit colors &amp; names')
+        $('#rail-line-change span').html('Edit colors &amp; names') // I18N
         $('#cant-save-rail-line-edits').text('')
         $('#tool-change-line-options').hide()
         // If the line tool is in use, unset it so we don't get a stale color
         if (activeTool == 'line') {
-          activeTool = 'look'
+          setActiveTool('look')
           $('#tool-line').attr('style', '')
           $('#tool-line').removeClass('active')
         } // if line
@@ -4585,10 +5044,44 @@ $(document).ready(function() {
 
   $('.map-style-line').on('click', function() {
     if ($(this).attr('id') == 'tool-map-style-line-750') {
-      mapLineWidth = 0.75
+      var chosenWidth = 0.75
     } else {
-      mapLineWidth = 1 / parseInt($(this).data('line-width-divisor'))
+      var chosenWidth = 1 / parseInt($(this).data('line-width-divisor'))
     }
+    if (selectedPoints.length > 0) {
+      for (xy of selectedPoints) {
+        var x = xy[0]
+        var y = xy[1]
+        var clws = getActiveLine(x, y, activeMap, true)
+        if (!clws) {
+          continue
+        }
+        var color = clws[0]
+        var lws = clws[1]
+
+        // Not using updateMapObject here, because it presumes the activeLineWidthStyle;
+        //  handle it manually
+        var oldWidth = lws.split("-1")[0]
+        if (oldWidth == chosenWidth) {
+          continue
+        }
+        var style = lws.split("-")[1]
+        var newLws = chosenWidth + "-" + style
+        if (!activeMap["points_by_color"][color][newLws]) {
+          activeMap["points_by_color"][color][newLws] = {}
+        }
+        if (!activeMap["points_by_color"][color][newLws][x]) {
+          activeMap["points_by_color"][color][newLws][x] = {}
+        }
+        delete activeMap["points_by_color"][color][lws][x][y]
+        activeMap["points_by_color"][color][newLws][x][y] = 1
+      }
+      drawCanvas(activeMap)
+      autoSave(activeMap)
+      return
+    }
+
+    mapLineWidth = chosenWidth
     $('.map-style-line.active-mapstyle').removeClass('active-mapstyle')
     $(this).addClass('active-mapstyle')
     if (activeMap && activeMap['global'] && activeMap['global']['style']) {
@@ -4608,10 +5101,24 @@ $(document).ready(function() {
   })
 
   $('.map-style-station').on('click', function() {
-    mapStationStyle = $(this).data('station-style')
+    var chosenStationStyle = $(this).data('station-style')
+    if (selectedPoints.length > 0) {
+      for (xy of selectedPoints) {
+        var x = xy[0]
+        var y = xy[1]
+        if (!activeMap["stations"][x] || !activeMap["stations"][x][y]) {
+          continue
+        }
+        activeMap["stations"][x][y]["style"] = chosenStationStyle
+      }
+      autoSave(activeMap)
+      drawCanvas(activeMap)
+      return
+    }
+    mapStationStyle = chosenStationStyle
     $('.map-style-station.active-mapstyle').removeClass('active-mapstyle')
     $(this).addClass('active-mapstyle')
-    $('#reset-all-station-styles').text('Set ALL stations to ' + $(this).text())
+    $('#reset-all-station-styles').text('Set ALL stations to ' + $(this).text()) // I18N
     if (activeMap && activeMap['global'] && activeMap['global']['style']) {
       activeMap['global']['style']['mapStationStyle'] = mapStationStyle
     } else if (activeMap && activeMap['global']) {
@@ -4780,6 +5287,18 @@ function setAllStationOrientations(metroMap, orientation) {
   if (ALLOWED_ORIENTATIONS.indexOf(orientation) == -1)
     return
 
+  if (selectedPoints.length > 0) {
+    for (xy of selectedPoints) {
+      var x = xy[0]
+      var y = xy[1]
+      if (!metroMap["stations"][x] || !metroMap["stations"][x][y]) {
+        continue
+      }
+      metroMap["stations"][x][y]["orientation"] = orientation
+    }
+    return
+  }
+
   if (mapDataVersion == 2 || mapDataVersion == 3) {
     for (var x in metroMap['stations']) {
       for (var y in metroMap['stations'][x]) {
@@ -4813,6 +5332,19 @@ $('#set-all-station-name-orientation').on('click', function() {
 })
 
 function resetAllStationStyles(metroMap) {
+
+  if (selectedPoints.length > 0) {
+    for (xy of selectedPoints) {
+      var x = xy[0]
+      var y = xy[1]
+      if (!metroMap["stations"][x] || !metroMap["stations"][x][y]) {
+        continue
+      }
+      delete metroMap["stations"][x][y]["style"]
+    }
+    return
+  }
+
   if (mapDataVersion == 2 || mapDataVersion == 3) {
     for (var x in metroMap['stations']) {
       for (var y in metroMap['stations'][x]) {
@@ -5169,6 +5701,12 @@ function stretchMap(metroMapObject) {
   //   is that space surrounded by similar neighbors?
   //   if so, set that space equal to the color of its neighbors
 
+  if (selectedPoints.length > 0) {
+    // Disable the selection, it's not relevant now
+    selectedPoints = []
+    clearMarchingAnts()
+  }
+
   if (!metroMapObject) {
     metroMapObject = activeMap;
   }
@@ -5227,7 +5765,6 @@ function stretchMap(metroMapObject) {
         if (!colorLineWidthStyle) { continue }
         var color = colorLineWidthStyle[0]
         var lineWidthStyle = colorLineWidthStyle[1]
-        // TODO: stretching _Zco941M gives kiz6hQ8Y -- pretty much everything is gone
         if (!newMapObject['points_by_color'][color][lineWidthStyle]) {
           newMapObject['points_by_color'][color][lineWidthStyle] = {}
         }
@@ -5416,7 +5953,7 @@ function collapseToolbox() {
   menuIsCollapsed = true
   $('#controls').addClass('collapsed')
 
-  // TODO: Can replace most of these hide/shows here and in expandToolbox with editing index.html to use the .hide-when-collapsed class
+  // CONSIDER: Can replace most of these hide/shows here and in expandToolbox with editing index.html to use the .hide-when-collapsed class
 
   $('#toolbox button span.button-label').hide()
   $('#title, #remix, #credits, #rail-line-new, #tool-new-line-options, #line-style-options, #rail-line-change, #tool-change-line-options, #rail-line-delete, #straight-line-assist-options, #flood-fill-options, #tool-move-all, #tool-move-options, #tool-resize-all, #tool-resize-options, #tool-map-style, #tool-map-style-options, #name-map, #name-this-map').hide()
@@ -5428,8 +5965,8 @@ function collapseToolbox() {
   if ($('#hide-save-share-url').length == 1) {
     $('#hide-save-share-url').hide()
   }
-  $('#rail-line-new').children('span').text('Add New Color')
-  $('#rail-line-change').children('span').html('Edit colors &amp; names')
+  $('#rail-line-new').children('span').text('Add New Color') // I18N
+  $('#rail-line-change').children('span').html('Edit colors &amp; names') // I18N
   $('#controls-expand-menu').show()
 }
 
@@ -5479,7 +6016,7 @@ function expandToolbox() {
     $('#hide-save-share-url').show()
   }
 
-  if ($('#name-this-map').text() == 'Name this map') {
+  if ($('#name-this-map').text() == 'Name this map') { // I18N
     $('#name-map, #name-this-map').show()
   }
 
@@ -5524,7 +6061,7 @@ $('.line-style-choice-width').on('click', function() {
   activeLineWidth = $(this).attr('data-linewidth') / 100
   activeLineWidthStyle = activeLineWidth + '-' + activeLineStyle
   if (activeToolOption) {
-    activeTool = 'line'
+    setActiveTool('line')
   }
 })
 
@@ -5565,7 +6102,7 @@ $('.line-style-choice-style').on('click', function() {
   activeLineStyle = $(this).attr('data-linestyle')
   activeLineWidthStyle = activeLineWidth + '-' + activeLineStyle
   if (activeToolOption) {
-    activeTool = 'line'
+    setActiveTool('line')
   }
 
   // Hollow line buttons are two-tone and so need extra help
@@ -5693,6 +6230,11 @@ $('#tool-ruler').on('click', function() {
   var canvas = document.getElementById('ruler-canvas')
   var ctx = canvas.getContext('2d')
   ctx.clearRect(0, 0, canvas.width, canvas.height)
+  if (selectedPoints.length > 0 || activeTool == 'select') {
+    activeTool = 'look'
+    selectedPoints = []
+    clearMarchingAnts()
+  }
 })
 
 function drawRuler(x, y, replaceOrigin) {
@@ -5754,12 +6296,163 @@ function drawRuler(x, y, replaceOrigin) {
   }
 } // drawRuler(x, y, replaceOrigin)
 
+function setActiveTool(tool, skipSaveLast) {
+  if (!skipSaveLast) {
+    lastToolUsed = activeTool
+  }
+  activeTool = tool || 'look'
+  $('.active').removeClass('active')
+  if (activeTool == 'line') {
+    $('#tool-line').addClass('active')
+    if (activeToolOption) {
+      $('#tool-line').css({
+        "background-color": activeToolOption,
+        "color": determineDarkOrLightContrast(activeToolOption)
+      })
+    }
+  } else if (activeTool == 'eraser') {
+    $('#tool-eraser').addClass('active')
+  } else if (activeTool == 'station') {
+    $('#tool-station').addClass('active')
+  } else if (activeTool == 'select') {
+    $('#tool-select').addClass('active')
+  } else if (activeTool == 'eyedropper') {
+    $('#tool-eyedropper').addClass('active')
+  } else if (activeTool == 'look') {
+    $('#tool-look').addClass('active')
+  } else if (activeTool == 'move') {
+    $('#tool-move-selection').addClass('active')
+  }
+} // setActiveTool(tool, skipSaveLast)
+
 $('#tool-eyedropper').on('click', function() {
-  activeTool = 'eyedropper'
+  setActiveTool('eyedropper')
 })
 
 $('#tool-look').on('click', function() {
-  activeTool = 'look'
+  setActiveTool('look')
+})
+
+$('#tool-select').on('click', function() {
+  if (mapDataVersion < 3) { return }
+  if (selectedPoints.length > 0) {
+    // De-select current selection
+    selectedPoints = []
+    clearMarchingAnts()
+    if (activeTool == 'move') {
+      setActiveTool('select')
+    } else if (activeTool == 'select' && lastToolUsed != 'move') {
+      setActiveTool(lastToolUsed)
+    }
+  } else {
+    setActiveTool('select')
+    rulerOn = false
+    rulerOrigin = []
+    $('#tool-ruler').removeClass('active')
+    $('#tool-ruler').removeClass('remains-active')
+  }
+})
+
+function drawSelectionBox(x1, y1, x2, y2) {
+  var canvas = document.getElementById('ruler-canvas') // Ruler and select can't be active at the same time, so let's borrow it
+  var ctx = canvas.getContext('2d')
+
+  // Reset to defaults so ruler doesn't take over
+  ctx.fillStyle = '#000000'
+  ctx.strokeStyle = '#000000'
+  ctx.lineWidth = 1
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+  ctx.setLineDash([4, 2])
+  ctx.lineDashOffset = marchingAntsOffset
+
+  var width = 1
+  var height = 1
+  var xOffset = -0.5
+  var yOffset = -0.5
+
+  if (x1 < x2) {
+    width = x2 - x1
+    width += 1
+  } else if (x1 > x2) {
+    width = (x1 - x2) * -1
+    width -= 1
+    xOffset *= -1
+  }
+
+  if (y1 < y2) {
+    height = y2 - y1
+    height += 1
+  } else if (y1 > y2) {
+    height = (y1 - y2) * -1
+    height -= 1
+    yOffset *= -1
+  }
+
+  ctx.strokeRect((x1 + xOffset) * gridPixelMultiplier, (y1 + yOffset) * gridPixelMultiplier, (width) * gridPixelMultiplier, (height) * gridPixelMultiplier)
+} // drawSelectionBox(x1, y1, x2, y2)
+
+function drawMarchingAnts(x1, y1, x2, y2) {
+  marchingAntsOffset++
+  if (marchingAntsOffset > 5) {
+    marchingAntsOffset = 0
+  }
+  drawSelectionBox(x1, y1, x2, y2)
+  activeMarchingAnts = setTimeout(function() {
+    drawMarchingAnts(x1, y1, x2, y2)
+  }, 35)
+  return activeMarchingAnts
+}
+
+function clearMarchingAnts() {
+  if (activeMarchingAnts) {
+    clearTimeout(activeMarchingAnts)
+    var canvas = document.getElementById('ruler-canvas')
+    var ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+  }
+} // clearMarchingAnts()
+
+function getPointsWithinBoundingBox(x1, y1, x2, y2) {
+  // Return an array of all points within the bounding box x1, y1, x2, y2,
+  //  (inclusive) in the format x, y, x, y, x, y
+  var pointsWithin = []
+  var startX = (x1 < x2) ? x1 : x2
+  var startY = (y1 < y2) ? y1 : y2
+  var endX = (x2 > x1) ? x2 : x1
+  var endY = (y2 > y1) ? y2 : y1
+
+  for (var xn=startX; xn<=endX; xn++) {
+    for (var yn=startY; yn<=endY; yn++) {
+      // pointsWithin.push(xn)
+      // pointsWithin.push(yn)
+      pointsWithin.push([xn, yn])
+    }
+  }
+
+  // if (MMMDEBUG) { console.log(`pointsWithin is: ${pointsWithin}`) }
+  return pointsWithin
+} // getPointsWithinBoundingBox(x1, y1, x2, y2)
+
+function isWithinSelectedPoints(x, y) {
+  // For simplicity with other functions, if selectedPoints is empty,
+  //  this should be trivially true (if empty, all are selected)
+  if (selectedPoints.length == 0) { return true }
+  var selectedPointsClone = structuredClone(selectedPoints)
+  do {
+    xy = selectedPointsClone.pop()
+    if (x == xy[0] && y == xy[1]) {
+      return true
+    }
+  } while (selectedPointsClone.length > 0)
+  return false
+} // isWithinSelectedPoints(x, y)
+
+$('#tool-move-selection').on("click", function() {
+  if (selectedPoints.length == 0) {
+    return
+  }
+  setActiveTool('move')
 })
 
 function setMoveStationAbility(disable) {
@@ -5777,12 +6470,12 @@ function setMoveStationAbility(disable) {
   }
 
   if (moveStationOn.length == 2) {
-    $('span#move-station-enabled').text(': Arrow Keys, Mouse')
+    $('span#move-station-enabled').text(': Arrow Keys, Mouse') // I18N
   } else {
     setTimeout(function() {
       $('#move-station').removeClass('active')
     }, 1)
-    $('span#move-station-enabled').text(': Arrow Keys only')
+    $('span#move-station-enabled').text(': Arrow Keys only') // I18N
   }
 } // setMoveStationAbility(disable)
 
@@ -5839,7 +6532,7 @@ function restyleAllLines(toWidth, toStyle, deferSave) {
           newMapObject["points_by_color"][color][newLws] = {}
         }
 
-        // TODO: This could maybe be made more efficient?
+        // CONSIDER: This could maybe be made more efficient?
         // Using Object.assign is ~40x faster here (0.2ms vs 8ms on a 360x fully-filled map),
         //  but I was running into intermittent issues where some line data could be lost
         //  when a given line had multiple points within the same X value, leading to Y values being dropped
