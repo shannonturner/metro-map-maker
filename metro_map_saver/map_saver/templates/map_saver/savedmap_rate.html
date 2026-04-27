@@ -110,10 +110,11 @@
         </div>
 
         <div class="m-3">
+            {# Note: Removed map.name on purpose #}
             {% if map.svg %}
-                <img src="{{ map.svg.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}">
+                <img src="{{ map.svg.url }}" class="mx-auto">
             {% elif map.png %}
-                <img src="{{ map.png.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}">
+                <img src="{{ map.png.url }}" class="mx-auto">
             {% else %}
                 The thumbnail for this map is still generating (check back in a couple of minutes), but you can <a href="{% url 'home_map' map.urlhash %}">remix this map</a>.
             {% endif %}
