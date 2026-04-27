@@ -17,11 +17,14 @@
             <a href="{% url 'home_map' map.urlhash %}" class="flex-grow-1 align-self-center d-flex">
         {% endif %}
             {% if map.thumbnail_svg and map.thumbnail_png and map.thumbnail_svg.size > 5000 and map.thumbnail_png.size <  map.thumbnail_svg.size %}
-                <img src="{{ map.thumbnail_png.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">
+                {#<img src="{{ map.thumbnail_png.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">#}
+                <img src="{{ map.thumbnail_png.url }}" class="mx-auto" width="120" height="120">
             {% elif map.thumbnail_svg %}
-                <img src="{{ map.thumbnail_svg.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">
+                {#<img src="{{ map.thumbnail_svg.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">#}
+                <img src="{{ map.thumbnail_svg.url }}" class="mx-auto" width="120" height="120">
             {% elif map.thumbnail_png %}
-                <img src="{{ map.thumbnail_png.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">
+                {#<img src="{{ map.thumbnail_png.url }}" class="mx-auto" alt="{{ map.name }}" title="{{ map.name }}" width="120" height="120">#}
+                <img src="{{ map.thumbnail_png.url }}" class="mx-auto" width="120" height="120">
             {% else %}
                 <div class="align-self-center">(Thumbnail being generated, please check back soon)</div>
             {% endif %}
@@ -43,13 +46,17 @@
             </div>
         </div>
 
+        {% comment %}
         <a href="{% url 'home_map' map.urlhash %}">
-            {% if map.name %}
-                <h4>{{ map.name|striptags }}</h4>
-            {% else %}
-                <h4>(No name)</h4>
-            {% endif %}
+                Gotta remove the ability to see map name because some people can't behave nicely.
+
+                {% if map.name %}
+                    <h4>{{ map.name|striptags }}</h4>
+                {% else %}
+                    <h4>(No name)</h4>
+                {% endif %}
         </a>
+        {% endcomment %}
 
         <div class="card-footer d-flex justify-content-evenly">
             <a href="{% url 'home_map' map.urlhash %}"><i class="bi bi-tools"></i> Remix</a>
